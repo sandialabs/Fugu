@@ -51,4 +51,4 @@ A tuple (graph, dimensionality, complete_node, output_lists, output_codings)
 - Dimensionliaty dictionary should be removed
 - Inputs/Outputs should be bundled as a list of dictionaries rather than parallel lists
 - Plotting functions likely do not and wll need to be re-tested
--
+- Bricks in brick_1.py are likely broken and will need to be fixed.
