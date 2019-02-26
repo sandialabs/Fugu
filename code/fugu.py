@@ -262,6 +262,7 @@ class Scaffold:
 class Brick(ABC):
     def __init__(self):
         self.name = "Empty Brick"
+        self.is_built = False
         self.supported_codings = []
 
     @abstractmethod
