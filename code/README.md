@@ -39,11 +39,11 @@ A tuple (graph, dimensionality, complete_node, output_lists, output_codings)
 
 ## Known Bugs and todos
 - Inputs that take both pre-computed values and input spikes will not lay correctly.
-- Nodes only accept input from the first output of an input node.
+- ~~Nodes only accept input from the first output of an input node.~~
 - `_create_ds_injection` only works on vector-shaped input
 - `_create_ds_injection` only works on input layers with 1 input (this may be okay)
 - Input handling needs to be re-written.  Currently relies on fragile order of nodes.  Additionally, we should support streaming data.
-= Many checks are missing
+- Many checks are missing
 - Mismatch between input and output layer namings.  Bricks should be able to be input and/or hidden and/or output layers.
 - Maximum runtime should be determined by the depth of the graph.
 - Delay brick needs to be updated as well as conversion bricks
