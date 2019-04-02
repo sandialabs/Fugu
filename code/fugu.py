@@ -252,7 +252,7 @@ class Scaffold:
                 if 'spike_history' in results[group]:
                     spike_history = results[group]['spike_history']
                     for entry in spike_history:
-                        if entry not in spike_result:
+                        if entry[0] not in spike_result:
                             spike_result[entry[0]] = []
                         spike_result[entry[0]].extend(entry[1].tolist())
         return spike_result
@@ -340,13 +340,13 @@ class Threshold(Brick):
     def __init__(self, threshold, decay=0.0, p=1.0, name=None, output_coding=None):
         super(Brick, self).__init__()
         self.is_built=False
-        self.dimensionality = {'D':0}
+        self.dimensionality = {}
         self.name = name
         self.p = p
         self.decay = decay
         self.threshold = threshold
         self.output_coding=output_coding
-        self.supported_codings = ['current', 'Undefined']
+        self.supported_codings = ['current', 'Undefined', 'temporal-L']
     def build(self,
              graph,
              dimensionality,
@@ -360,16 +360,55 @@ class Threshold(Brick):
                              + str(self.supported_codings)
                              + " Found: "
                              + str(input_codings[0]))
-        graph.add_node(self.name,
-                       threshold=self.threshold,
-                      decay=self.decay,
-                      p=self.p)
-        for edge in input_lists[0]:
-            graph.add_edge(edge['source'],
-                           self.name,
-                           weight=edge['weight'],
-                           delay=edge['delay'])
-        output_lists = [[self.name]]
+        if input_codings[0] == 'current' or input_codings[0] == 'Undefined':
+            graph.add_node(self.name,
+                           threshold=self.threshold,
+                          decay=self.decay,
+                          p=self.p)
+            for edge in input_lists[0]:
+                graph.add_edge(edge['source'],
+                               self.name,
+                               weight=edge['weight'],
+                               delay=edge['delay'])
+            new_complete_node = complete_node
+            self.dimensionality['D'] = 0
+            output_lists = [[self.name]]
+        elif input_codings[0] == 'temporal-L':
+            self.dimensionality['D'] = None
+            graph.add_node(self.name+'_complete',
+                           index = -1,
+                           threshold = len(input_lists[0])-1.0001,
+                           decay = 1.0,
+                           p=1.0)
+            new_complete_node = [self.name+'_complete']
+            output_neurons = []
+            #Find 'begin' neuron -- We need to fix this
+            for input_neuron in [input_n for input_n in input_lists[0] if graph.nodes[input_n]['index']==-2]:
+                begin_neuron = input_neuron
+                
+            for input_neuron in [input_n for input_n in input_lists[0] if graph.nodes[input_n]['index'] is not -2]:
+                threshold_neuron_name = self.name+'_'+str(graph.nodes[input_neuron]['index'])
+                graph.add_node(threshold_neuron_name,
+                           index = graph.nodes[input_neuron]['index'],
+                           threshold=1.0,
+                           decay = 0.0,
+                           p=self.p)
+                output_neurons.append(threshold_neuron_name)
+                graph.add_edge(begin_neuron, 
+                           threshold_neuron_name,
+                           weight=2.0,
+                           delay=self.threshold)
+                graph.add_edge(input_neuron,
+                               threshold_neuron_name,
+                               weight = -3.0,
+                               delay = 1)
+                graph.add_edge(input_neuron,
+                               self.name+'_complete',
+                               weight=1.0,
+                               delay=1)
+                output_lists = [output_neurons]
+        else:
+            raise ValueError("Invalid coding")
         if self.output_coding is None:
             output_codings = ['Unary']
         else:
@@ -377,7 +416,7 @@ class Threshold(Brick):
         self.is_built = True
         return (graph,
                self.dimensionality,
-                complete_node,
+                new_complete_node,
                 output_lists,
                 output_codings
                )
