@@ -278,18 +278,19 @@ class Scaffold:
             print(self.circuit.edges[edge])
         print("-------------------------------------------------------")
         print("\r\n")
-        print("List of Neurons:")
-        print("\r\n")
-        for i, neuron in enumerate(self.graph.nodes):
-            print("Neuron Number | Neuron Name | Neuron Properties")
-            print(str(i) + " | " + str(neuron) + " | " + str(self.graph.nodes[neuron]))
-        print("\r\n")
-        print("-------------------------------------------------------")
-        print("List of Synapses:")
-        print("\r\n")
-        for i, synapse in enumerate(self.graph.edges):
-            print("Synapse Between | Synapse Properties")
-            print(str(synapse) + " | " + str(self.graph.edges[synapse]))
+        if self.graph is not None:
+            print("List of Neurons:")
+            print("\r\n")
+            for i, neuron in enumerate(self.graph.nodes):
+                print("Neuron Number | Neuron Name | Neuron Properties")
+                print(str(i) + " | " + str(neuron) + " | " + str(self.graph.nodes[neuron]))
+            print("\r\n")
+            print("-------------------------------------------------------")
+            print("List of Synapses:")
+            print("\r\n")
+            for i, synapse in enumerate(self.graph.edges):
+                print("Synapse Between | Synapse Properties")
+                print(str(synapse) + " | " + str(self.graph.edges[synapse]))
 
 
 class Brick(ABC):
