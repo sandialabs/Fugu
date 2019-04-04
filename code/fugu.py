@@ -256,7 +256,40 @@ class Scaffold:
                             spike_result[entry[0]] = []
                         spike_result[entry[0]].extend(entry[1].tolist())
         return spike_result
-
+    
+    def summary(self):
+        print("Scaffold is built: " + str(self.is_built))
+        print("-------------------------------------------------------")
+        print("List of Bricks:")
+        print("\r\n")
+        for i,node in enumerate(self.circuit.nodes):
+            print("Brick No.: " + str(i))
+            print("Brick Name: " + str(node))
+            print(self.circuit.nodes[node])
+            print("Brick is built: " + str(self.circuit.nodes[node]['brick'].is_built))
+            print("\r\n")
+        print("-------------------------------------------------------")
+        print("\r\n")
+        print("-------------------------------------------------------")
+        print("List of Brick Edges:")
+        print("\r\n")
+        for i, edge in enumerate(self.circuit.edges):
+            print("Edge: " + str(edge))
+            print(self.circuit.edges[edge])
+        print("-------------------------------------------------------")
+        print("\r\n")
+        print("List of Neurons:")
+        print("\r\n")
+        for i, neuron in enumerate(self.graph.nodes):
+            print("Neuron Number | Neuron Name | Neuron Properties")
+            print(str(i) + " | " + str(neuron) + " | " + str(self.graph.nodes[neuron]))
+        print("\r\n")
+        print("-------------------------------------------------------")
+        print("List of Synapses:")
+        print("\r\n")
+        for i, synapse in enumerate(self.graph.edges):
+            print("Synapse Between | Synapse Properties")
+            print(str(synapse) + " | " + str(self.graph.edges[synapse]))
 
 
 class Brick(ABC):
