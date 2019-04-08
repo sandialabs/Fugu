@@ -566,3 +566,172 @@ class Copy(Brick):
                        delay=1)
         self.is_built = True
         return (graph, self.dimensionality, [self.name+"_complete"]*num_copies , output_lists, output_codings)
+    
+class ParityCheck(Brick):
+    '''Brick to compute the parity of a 4 bit input. 
+    The output spikes after 2 time steps if the input has odd parity
+    
+    author: Srideep Musuvathy
+    email: smusuva@sandia.gov
+    last updated: April 8, 2019'''
+    
+    def __init__(self, name=None):
+        super().__init__()
+        self.is_built = False
+        self.dimensionality = {'D': 1}
+        self.name = name
+        self.supported_codings = ['binary-B', 'binary-L', 'Raster']
+    
+    def build(self,
+              graph,
+              dimensionality,
+              complete_node,
+              input_lists,
+              input_codings):
+        
+        if len(input_codings) != 1:
+            raise ValueError('Parity check takes in 1 input')
+            
+        output_codings = [input_codings[0]]
+        
+        new_complete_node_name = self.name + '_complete'
+        
+        graph.add_node(new_complete_node_name,
+                      index = -1,
+                      threshold = 0.0,
+                      decay =0.0,
+                      p=1.0,
+                      potential=0.0)
+        graph.add_edge(complete_node[0], new_complete_node_name, weight=1.0, delay=2)
+        complete_node = [new_complete_node_name]
+        
+        #add 4 hidden nodes with thresholds <=1, >=1, <=3, >=3. 
+        #since the thresholds only compute >=, the <=1, <=3 computations are performed by negating 
+        #the threshold weights and the inputs (via the weights on incomming edges)
+        
+        #first hidden node and connect edges from input layer
+        graph.add_node('h_00',
+                      index=0,
+                      threshold=-1.1,
+                      decay=1.0,
+                      p=1.0,
+                      potential=0.0)
+        graph.add_edge(input_lists[0][0],
+                      'h_00',
+                      weight=-1.0,
+                      delay=1)
+        graph.add_edge(input_lists[0][1],
+                      'h_00',
+                      weight=-1.0,
+                      delay=1)
+        graph.add_edge(input_lists[0][2],
+                      'h_00',
+                      weight=-1.0,
+                      delay=1)
+        graph.add_edge(input_lists[0][3],
+                      'h_00',
+                      weight=-1.0,
+                      delay=1)
+        
+        #second hidden node and edges from input layer
+        graph.add_node('h_01',
+                      index=1,
+                      threshold=0.9,
+                      decay=1.0,
+                      p=1.0,
+                      potential=0.0)
+        graph.add_edge(input_lists[0][0],
+                      'h_01',
+                      weight=1.0,
+                      delay=1)
+        graph.add_edge(input_lists[0][1],
+                      'h_01',
+                      weight=1.0,
+                      delay=1)
+        graph.add_edge(input_lists[0][2],
+                      'h_01',
+                      weight=1.0,
+                      delay=1)
+        graph.add_edge(input_lists[0][3],
+                      'h_01',
+                      weight=1.0,
+                      delay=1)
+        
+        #third hidden node and edges from input layer
+        graph.add_node('h_02',
+                      index=2,
+                      threshold=-3.1,
+                      decay=1.0,
+                      p=1.0,
+                      potential=0.0)
+        graph.add_edge(input_lists[0][0],
+                      'h_02',
+                      weight=-1.0,
+                      delay=1)
+        graph.add_edge(input_lists[0][1],
+                      'h_02',
+                      weight=-1.0,
+                      delay=1)
+        graph.add_edge(input_lists[0][2],
+                      'h_02',
+                      weight=-1.0,
+                      delay=1)
+        graph.add_edge(input_lists[0][3],
+                      'h_02',
+                      weight=-1.0,
+                      delay=1)
+        
+        #fourth hidden node and edges from input layer
+        graph.add_node('h_03',
+                      index=3,
+                      threshold=2.9,
+                      decay=1.0,
+                      p=1.0,
+                      potential=0.0)
+        graph.add_edge(input_lists[0][0],
+                      'h_03',
+                      weight=1.0,
+                      delay=1)
+        graph.add_edge(input_lists[0][1],
+                      'h_03',
+                      weight=1.0,
+                      delay=1)
+        graph.add_edge(input_lists[0][2],
+                      'h_03',
+                      weight=1.0,
+                      delay=1)
+        graph.add_edge(input_lists[0][3],
+                      'h_03',
+                      weight=1.0,
+                      delay=1)
+        
+        #output_node and edges from hidden nodes
+        graph.add_node('parity',
+                      index=4,
+                      threshold=2.9,
+                      decay=1.0,
+                      p=1.0,
+                      potential=0.0)
+        graph.add_edge('h_00',
+                      'parity',
+                      weight=1.0,
+                      delay=1)
+        graph.add_edge('h_01',
+                      'parity',
+                      weight=1.0,
+                      delay=1)
+        graph.add_edge('h_02',
+                      'parity',
+                      weight=1.0,
+                      delay=1)
+        graph.add_edge('h_03',
+                      'parity',
+                      weight=1.0,
+                      delay=1)
+        
+        self.is_built=True
+        
+        output_lists = [['parity']]
+        
+        return (graph, self.dimensionality, complete_node, output_lists, 
+                output_codings)
