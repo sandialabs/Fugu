@@ -198,7 +198,7 @@ class Scaffold:
 
     def lay_bricks(self, verbose=0):
         """
-        Builds a computational graph that can be used by the backend.
+        Build a computational graph that can be used by the backend.
         
         Arguments:
             + verbose - int value to specify level of verbosity (Default: 0 to indicate None)
@@ -283,7 +283,7 @@ class Scaffold:
 
     def evaluate(self, max_runtime=10, backend='ds', record_all=False):
         """
-        Runs the computaational graph through the backend.
+        Run the computational graph through the backend.
         
         Arguments:
             + max_runtime - int value to specify number of time steps (Default: 10)
@@ -370,6 +370,8 @@ class Scaffold:
 
 
 class Brick(ABC):
+    """Abstract Base Class definition of a Brick class"""
+    
     def __init__(self):
         self.name = "Empty Brick"
         self.is_built = False
@@ -381,8 +383,11 @@ class Brick(ABC):
                    complete_node,
                    input_lists,
                    input_codings):
+        """Build the computational graph of the brick"""
         pass
+    
 class InputBrick(Brick):
+    """Abstract Base class for handling inputs inherited from Brick"""
 
     @abstractmethod
     def get_input_value(self, t=None):
@@ -403,15 +408,32 @@ class Spike_Input(InputBrick):
         if t is None:
             return self.vector
         else:
-            assert type(t_range) is int
+            assert type(t) is int
             return self.vector[...,t:t+1][...,-1]
-
 
     def build(self, graph,
              dimensionality,
              complete_node,
              input_lists,
              input_codings):
+        """
+        Build spike input brick.
+        
+        Arguments:
+            + graph - networkx graph to define connections of hte computational graph
+            + dimensionality - dictionary to define the dimensionality of the brick
+            + complete_node - list of networkx nodes to indicate completion of the computation
+            + input_lists - list of nodes that will contain input
+            + input_coding - list of input coding formats
+            
+        Returns:
+            + graph of a computational elements and connections
+            + dictionary of output parameters (shape, coding, layers, depth, etc)
+            + list of complete nodes
+            + list of output
+            + list of coding formats of output
+        """
+        
         if not self.time_dimension:
             self.vector = np.expand_dims(self.vector,
                                          len(self.vector.shape))
