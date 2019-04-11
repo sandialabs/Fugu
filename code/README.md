@@ -59,3 +59,4 @@ A tuple (graph, dimensionality, complete_node, output_lists, output_codings)
 - Not Sam: Need scaffolds to be bricks
 - Not Sam: Redo how handle control nodes (Perphaps use dictionaries)
 - Expand outputs 
+- Create backend class to handle backend simulators
