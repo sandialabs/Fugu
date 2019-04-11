@@ -63,12 +63,14 @@ class Scaffold:
             self.count[brick_type] = self.count[brick_type]+1
         elif name in self.circuit.nodes:
             raise ValueError("Node name already used.")
+        if name in [self.circuit.nodes[node]['name'] for node in self.circuit.nodes]:
+            raise ValueError("Node name already used.")
 
         if brick_function.name is None:
             brick_function.name = name
 
         node_number = self.circuit.number_of_nodes()
-        self.circuit.add_node(node_number,
+        self.circuit.add_node(node_number, name=name,
                              brick=brick_function)#,dimensionality=dimensionality)
 
         #Make sure we're working with a list of inputs
@@ -76,7 +78,15 @@ class Scaffold:
             input_nodes = [input_nodes]
 
         #Make sure our inputs are integer formatted
-        input_nodes = [-2 if node == 'input' else node for node in input_nodes]
+<<<<<<< HEAD
+        
+=======
+        input_nodes = [-2 if node is 'input' else node for node in input_nodes]
+        node_names = {self.circuit.nodes[node]['name']:node for node in self.circuit.nodes}
+        input_nodes = [node_names[node] if type(node) is str else node for node in input_nodes]
+        input_nodes = [(node_names[node[0]], node[1]) if type(node) is tuple and type(node[0]) is str else node for node in input_nodes] 
+        
+>>>>>>> refs/remotes/origin/master
 
         #Replace -1 with last node
         input_nodes = [node_number-1 if node==-1 else node for node in input_nodes]
@@ -286,7 +296,7 @@ class Scaffold:
         print("\r\n")
         for i,node in enumerate(self.circuit.nodes):
             print("Brick No.: " + str(i))
-            print("Brick Name: " + str(node))
+            print("Brick Name: " + str(self.circuit.nodes[node]['name']))
             print(self.circuit.nodes[node])
             print("Brick is built: " + str(self.circuit.nodes[node]['brick'].is_built))
             print("\r\n")
