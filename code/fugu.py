@@ -78,15 +78,11 @@ class Scaffold:
             input_nodes = [input_nodes]
 
         #Make sure our inputs are integer formatted
-<<<<<<< HEAD
-        
-=======
-        input_nodes = [-2 if node is 'input' else node for node in input_nodes]
+        input_nodes = [-2 if node == 'input' else node for node in input_nodes]
         node_names = {self.circuit.nodes[node]['name']:node for node in self.circuit.nodes}
         input_nodes = [node_names[node] if type(node) is str else node for node in input_nodes]
         input_nodes = [(node_names[node[0]], node[1]) if type(node) is tuple and type(node[0]) is str else node for node in input_nodes] 
         
->>>>>>> refs/remotes/origin/master
 
         #Replace -1 with last node
         input_nodes = [node_number-1 if node==-1 else node for node in input_nodes]
