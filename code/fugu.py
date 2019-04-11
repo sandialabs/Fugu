@@ -330,6 +330,10 @@ class Scaffold:
         return spike_result
     
     def summary(self):
+        """
+        Display a summary of the scaffold.
+        """
+        
         print("Scaffold is built: " + str(self.is_built))
         print("-------------------------------------------------------")
         print("List of Bricks:")
