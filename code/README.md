@@ -36,8 +36,21 @@ A tuple (graph, dimensionality, complete_node, output_lists, output_codings)
 - output_lists: A list of lists of output neurons.  Each neuron is marked with a local index used for encodings.
 - output_codings: A list of types of codings.  See input_coding_types
 
+## Documentation
+Documentation is currently spread across several files.  We are working on including docstrings on all the classes and methods.
+
+For now, you can check:
+- This README.md
+- docs.md
+- Ipython notebook examples
+- For details on ds, check the README.md of the ds_simulator package
+
+To build the documentation, use pydocmd https://pypi.org/project/pydoc-markdown/ with a command similar to 
+`pydocmd simple fugu++ > docs.md`
+
 
 ## Known Bugs and todos
+- Combine and organize documentation
 - Inputs that take both pre-computed values and input spikes will not lay correctly.
 - ~~Nodes only accept input from the first output of an input node.~~
 - `_create_ds_injection` only works on vector-shaped input
