@@ -1,6 +1,7 @@
 import networkx as nx
 import numpy as np
 from abc import ABC, abstractmethod
+
 default_brick_dimensionality = {
     'input_shape' : [()],
     'output_shape' : [()],
@@ -23,14 +24,35 @@ input_coding_types = ['current',
                      'Undefined']
 
 class Scaffold:
+    """Class to handle a scaffold of bricks"""
+    
     supported_backends = ['ds']
+    
     def __init__(self):
         self.circuit = nx.DiGraph()
         self.pos = {}
         self.count = {}
         self.graph = None
         self.is_built = False
+        
     def add_brick(self, brick_function, input_nodes=[-1], dimensionality = None, name=None, output=False):
+        """
+        Add a brick to the scaffold.
+        
+        Arguments:
+            brick_function - object of type brick
+            input_nodes - list of node numbers (Default: [-1])
+            dimesionality -  dictionary of shapes and parameters of the brick (Default: None)
+            name - string of the brick's name (Default: none)
+            output - bool flag to indicate if a brick is an output brick (Default: False)
+            
+        Returns:
+            None
+        
+        Exceptions:
+            Raises ValueError if node name is already used.
+            """
+        
         if name is None and brick_function.name is not None:
             name = brick_function.name
         elif name is None:
@@ -54,7 +76,7 @@ class Scaffold:
             input_nodes = [input_nodes]
 
         #Make sure our inputs are integer formatted
-        input_nodes = [-2 if node is 'input' else node for node in input_nodes]
+        input_nodes = [-2 if node == 'input' else node for node in input_nodes]
 
         #Replace -1 with last node
         input_nodes = [node_number-1 if node==-1 else node for node in input_nodes]
@@ -64,7 +86,7 @@ class Scaffold:
 
         #Process inputs
         for node in [node[0] for node in input_nodes]:
-            if node <-1:
+            if node < -1:
                 self.circuit.node[node_number]['layer'] = 'input'
             else:
                 self.circuit.add_edge(node, node_number)
@@ -156,7 +178,7 @@ class Scaffold:
             print("Laying Input Bricks.")
         for node in [node for node in self.circuit.nodes
          if 'layer' in self.circuit.nodes[node]
-         and self.circuit.nodes[node]['layer'] is 'input']:
+         and self.circuit.nodes[node]['layer'] == 'input']:
             (built_graph,
              dimensionality,
              complete_node,
@@ -213,7 +235,7 @@ class Scaffold:
         #find input nodes
         import torch
         input_nodes = [node  for node in self.circuit.nodes if ('layer' in self.circuit.nodes[node] )
-                       and (self.circuit.nodes[node]['layer'] is 'input')]
+                       and (self.circuit.nodes[node]['layer'] == 'input')]
         injection_tensors = {}
         for input_node in input_nodes:
             input_spikes = self.circuit.nodes[input_node]['brick'].get_input_value()
@@ -228,11 +250,11 @@ class Scaffold:
     def evaluate(self, max_runtime=10, backend='ds', record_all=False):
         if backend not in Scaffold.supported_backends:
             raise ValueError("Backend " + str(backend) + " not supported.")
-        if backend is 'ds':
+        if backend == 'ds':
             from ds import run_simulation
             injection_values = self._create_ds_injection()
             for node in self.circuit.nodes:
-                if 'layer' in self.circuit.nodes[node] and self.circuit.nodes[node]['layer'] is 'output':
+                if 'layer' in self.circuit.nodes[node] and self.circuit.nodes[node]['layer'] == 'output':
                     for o_list in self.circuit.nodes[node]['output_lists']:
                         for neuron in o_list:
                             self.graph.nodes[neuron]['record'] = ['spikes']
