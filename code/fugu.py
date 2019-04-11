@@ -40,17 +40,17 @@ class Scaffold:
         Add a brick to the scaffold.
         
         Arguments:
-            brick_function - object of type brick
-            input_nodes - list of node numbers (Default: [-1])
-            dimesionality -  dictionary of shapes and parameters of the brick (Default: None)
-            name - string of the brick's name (Default: none)
-            output - bool flag to indicate if a brick is an output brick (Default: False)
+            + brick_function - object of type brick
+            + input_nodes - list of node numbers (Default: [-1])
+            + dimesionality -  dictionary of shapes and parameters of the brick (Default: None)
+            + name - string of the brick's name (Default: none)
+            + output - bool flag to indicate if a brick is an output brick (Default: False)
             
         Returns:
-            None
+            + None
         
         Exceptions:
-            Raises ValueError if node name is already used.
+            + Raises ValueError if node name is already used.
             """
         
         if name is None and brick_function.name is not None:
@@ -161,6 +161,15 @@ class Scaffold:
         return total_len
 
     def all_nodes_built(self, verbose=0):
+        """
+        Check if all nodes are built.
+        
+        Arguments:
+            + verbose - int to indicate level of verbosity (Default: 0 to indicate no messages)
+        Returns:
+            + bool with True if all nodes are built, Fase otherwise
+            """
+            
         b = True
         for node in self.circuit.nodes:
             b = b and self.circuit.nodes[node]['brick'].is_built
@@ -171,6 +180,16 @@ class Scaffold:
         return b
 
     def all_in_neighbors_built(self, node):
+        """
+        Check if all neighbors of a node are built.
+        
+        Arguments:
+            + node - node whose neighbors are checked
+            
+        Returns:
+            + bool - indicates if all neighbors are built.
+            """
+            
         in_neighbors = [edge[0] for edge in self.circuit.in_edges(nbunch=node)]
         b = True
         for neighbor in in_neighbors:
@@ -178,9 +197,18 @@ class Scaffold:
         return b
 
     def lay_bricks(self, verbose=0):
+        """
+        Builds a computational graph that can be used by the backend.
+        
+        Arguments:
+            + verbose - int value to specify level of verbosity (Default: 0 to indicate None)
+            
+        Returns:
+            networkX diGraph
+        """
         built_graph = nx.DiGraph()
         # Handle Input Nodes
-        if verbose>0:
+        if verbose > 0:
             print("Laying Input Bricks.")
         for node in [node for node in self.circuit.nodes
          if 'layer' in self.circuit.nodes[node]
@@ -198,7 +226,7 @@ class Scaffold:
             self.circuit.nodes[node]['output_codings'] = output_codings
             self.circuit.nodes[node]['dimensionality'] = dimensionality
             self.circuit.nodes[node]['complete_node'] = complete_node
-            if verbose>0:
+            if verbose > 0:
                 print("Completed: " + str(node))
         while not self.all_nodes_built(verbose=verbose):
             #Over unbuilt, ready edges
@@ -206,10 +234,10 @@ class Scaffold:
                          if (not self.circuit.nodes[node]['brick'].is_built)
                          and self.all_in_neighbors_built(node)]:
                 inputs = {}
-                if verbose>0:
+                if verbose > 0:
                     print('Laying Brick: ' + str(node))
                 for input_number in range(0,len(self.circuit.nodes[node]['input_nodes'])):
-                    if verbose>0:
+                    if verbose > 0:
                         print("Processing input: " + str(input_number))
                     inputs[input_number] = {'input_node':self.circuit.nodes[node]['input_nodes'][input_number][0],
                                            'input_channel':self.circuit.nodes[node]['input_nodes'][input_number][1]}
@@ -231,7 +259,7 @@ class Scaffold:
                 self.circuit.nodes[node]['output_codings'] = output_codings
                 self.circuit.nodes[node]['output_lists'] = output_lists
                 self.circuit.nodes[node]['complete_node'] = complete_node
-                if verbose>0:
+                if verbose > 0:
                     print("Complete.")
         self.is_built=True
         self.graph = built_graph
@@ -254,6 +282,22 @@ class Scaffold:
         return injection_tensors
 
     def evaluate(self, max_runtime=10, backend='ds', record_all=False):
+        """
+        Runs the computaational graph through the backend.
+        
+        Arguments:
+            + max_runtime - int value to specify number of time steps (Default: 10)
+            + backend - string value of the backend simulator or device name (Default: 'ds')
+            + record_all - bool value to indicate if all neurons spikesa re to be recorded (Default: False)
+            
+        Returns:
+            + dictionary of time step and spiking neurons. (if record_all is True, all spiking neurons are shown
+            else only the output neurons)
+            
+        Exceptions:
+            + ValueError if backend is not in list of supported backends
+        """
+        
         if backend not in Scaffold.supported_backends:
             raise ValueError("Backend " + str(backend) + " not supported.")
         if backend == 'ds':
