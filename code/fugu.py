@@ -330,9 +330,7 @@ class Scaffold:
         return spike_result
     
     def summary(self):
-        """
-        Display a summary of the scaffold.
-        """
+        """Display a summary of the scaffold."""
         
         print("Scaffold is built: " + str(self.is_built))
         print("-------------------------------------------------------")
@@ -383,7 +381,16 @@ class Brick(ABC):
                    complete_node,
                    input_lists,
                    input_codings):
-        """Build the computational graph of the brick"""
+        """
+        Build the computational graph of the brick. Method must be defined in any class inheriting from Brick.
+        
+        Arguments:
+            + graph - networkx graph
+            + dimensionality - A dictionary of shapes and parameters
+            + complete_node - list of nodes that indicate the end of computation
+            + input_lists - list of lists of nodes for input neurons
+            + input_codings - list of input coding types (as strings)
+        """
         pass
     
 class InputBrick(Brick):
@@ -391,9 +398,17 @@ class InputBrick(Brick):
 
     @abstractmethod
     def get_input_value(self, t=None):
+        """
+        Abstract method to get input values. InputBriacks must implement this method
+        
+        Arguments:
+            + t - type of input (Default: None)
+        """
         pass
 
 class Spike_Input(InputBrick):
+    """Class to handle Spike Input. Inherits from InputBrick"""
+    
     def __init__(self, spikes, time_dimension = False,
                  coding='Undefined', name=None):
         self.vector = spikes
@@ -420,8 +435,8 @@ class Spike_Input(InputBrick):
         Build spike input brick.
         
         Arguments:
-            + graph - networkx graph to define connections of hte computational graph
-            + dimensionality - dictionary to define the dimensionality of the brick
+            + graph - networkx graph to define connections of the computational graph
+            + dimensionality - dictionary to define the shapes and parameters of the brick
             + complete_node - list of networkx nodes to indicate completion of the computation
             + input_lists - list of nodes that will contain input
             + input_coding - list of input coding formats
@@ -469,6 +484,8 @@ class Spike_Input(InputBrick):
                output_codings)
 
 class Threshold(Brick):
+    """Class to handle Threshold Brick. Inherits from Brick"""
+    
     def __init__(self, threshold, decay=0.0, p=1.0, name=None, output_coding=None):
         super(Brick, self).__init__()
         self.is_built=False
@@ -479,12 +496,31 @@ class Threshold(Brick):
         self.threshold = threshold
         self.output_coding=output_coding
         self.supported_codings = ['current', 'Undefined', 'temporal-L']
+        
     def build(self,
              graph,
              dimensionality,
              complete_node,
              input_lists,
              input_codings):
+        """
+        Build Threshold brick.
+        
+        Arguments:
+            + graph - networkx graph to define connections of the computational graph
+            + dimensionality - dictionary to define the shapes and parameters of the brick
+            + complete_node - list of networkx nodes to indicate completion of the computation
+            + input_lists - list of nodes that will contain input
+            + input_coding - list of input coding formats
+            
+        Returns:
+            + graph of a computational elements and connections
+            + dictionary of output parameters (shape, coding, layers, depth, etc)
+            + list of complete nodes
+            + list of output
+            + list of coding formats of output
+        """
+        
         if len(input_codings)!=1:
             raise ValueError("Only one input is permitted.")
         if input_codings[0] not in self.supported_codings:
@@ -554,6 +590,8 @@ class Threshold(Brick):
                )
 
 class Dot(Brick):
+    """Class to handle the Dot brick. Inherits from Brick"""
+    
     def __init__(self, weights, name=None):
         super(Brick, self).__init__()
         self.is_built = False
@@ -561,12 +599,31 @@ class Dot(Brick):
         self.name = name
         self.weights = weights
         self.supported_codings = ['Raster', 'Undefined']
+        
     def build(self,
              graph,
              dimensionality,
              complete_node,
              input_lists,
              input_codings):
+        """
+        Build Dot brick.
+        
+        Arguments:
+            + graph - networkx graph to define connections of the computational graph
+            + dimensionality - dictionary to define the shapes and parameters of the brick
+            + complete_node - list of networkx nodes to indicate completion of the computation
+            + input_lists - list of nodes that will contain input
+            + input_coding - list of input coding formats
+            
+        Returns:
+            + graph of a computational elements and connections
+            + dictionary of output parameters (shape, coding, layers, depth, etc)
+            + list of complete nodes
+            + list of output
+            + list of coding formats of output
+        """
+        
         output_list = []
         output_codings = ['current']
         if len(input_codings)>1:
@@ -607,6 +664,8 @@ class Dot(Brick):
                 output_codings)
 
 class Copy(Brick):
+    """Class to handle Copy Brick. Inherits from Brick"""
+    
     def __init__(self, name=None):
         super(Brick, self).__init__()
         self.is_built=False
@@ -625,6 +684,23 @@ class Copy(Brick):
              complete_node,
              input_lists,
              input_codings):
+        """
+        Build Copy brick.
+        
+        Arguments:
+            + graph - networkx graph to define connections of the computational graph
+            + dimensionality - dictionary to define the shapes and parameters of the brick
+            + complete_node - list of networkx nodes to indicate completion of the computation
+            + input_lists - list of nodes that will contain input
+            + input_coding - list of input coding formats
+            
+        Returns:
+            + graph of a computational elements and connections
+            + dictionary of output parameters (shape, coding, layers, depth, etc)
+            + list of complete nodes
+            + list of output
+            + list of coding formats of output
+        """
         num_copies = 2
         if type(dimensionality) is list:
             self.dimensionality = dimensionality[0]
@@ -686,6 +762,23 @@ class ParityCheck(Brick):
               complete_node,
               input_lists,
               input_codings):
+        """
+        Build Parity brick.
+        
+        Arguments:
+            + graph - networkx graph to define connections of the computational graph
+            + dimensionality - dictionary to define the shapes and parameters of the brick
+            + complete_node - list of networkx nodes to indicate completion of the computation
+            + input_lists - list of nodes that will contain input
+            + input_coding - list of input coding formats
+            
+        Returns:
+            + graph of a computational elements and connections
+            + dictionary of output parameters (shape, coding, layers, depth, etc)
+            + list of complete nodes
+            + list of output
+            + list of coding formats of output
+        """
         
         if len(input_codings) != 1:
             raise ValueError('Parity check takes in 1 input')
