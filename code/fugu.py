@@ -288,7 +288,7 @@ class Scaffold:
         Arguments:
             + max_runtime - int value to specify number of time steps (Default: 10)
             + backend - string value of the backend simulator or device name (Default: 'ds')
-            + record_all - bool value to indicate if all neurons spikesa re to be recorded (Default: False)
+            + record_all - bool value to indicate if all neurons spikes are to be recorded (Default: False)
             
         Returns:
             + dictionary of time step and spiking neurons. (if record_all is True, all spiking neurons are shown
