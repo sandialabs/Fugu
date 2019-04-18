@@ -25,34 +25,34 @@ input_coding_types = ['current',
 
 class Scaffold:
     """Class to handle a scaffold of bricks"""
-    
+
     supported_backends = ['ds']
-    
+
     def __init__(self):
         self.circuit = nx.DiGraph()
         self.pos = {}
         self.count = {}
         self.graph = None
         self.is_built = False
-        
+
     def add_brick(self, brick_function, input_nodes=[-1], dimensionality = None, name=None, output=False):
         """
         Add a brick to the scaffold.
-        
+
         Arguments:
             + brick_function - object of type brick
             + input_nodes - list of node numbers (Default: [-1])
             + dimesionality -  dictionary of shapes and parameters of the brick (Default: None)
             + name - string of the brick's name (Default: none)
             + output - bool flag to indicate if a brick is an output brick (Default: False)
-            
+
         Returns:
             + None
-        
+
         Exceptions:
             + Raises ValueError if node name is already used.
             """
-        
+
         if name is None and brick_function.name is not None:
             name = brick_function.name
         elif name is None:
@@ -81,8 +81,8 @@ class Scaffold:
         input_nodes = [-2 if node == 'input' else node for node in input_nodes]
         node_names = {self.circuit.nodes[node]['name']:node for node in self.circuit.nodes}
         input_nodes = [node_names[node] if type(node) is str else node for node in input_nodes]
-        input_nodes = [(node_names[node[0]], node[1]) if type(node) is tuple and type(node[0]) is str else node for node in input_nodes] 
-        
+        input_nodes = [(node_names[node[0]], node[1]) if type(node) is tuple and type(node[0]) is str else node for node in input_nodes]
+
 
         #Replace -1 with last node
         input_nodes = [node_number-1 if node==-1 else node for node in input_nodes]
@@ -163,13 +163,13 @@ class Scaffold:
     def all_nodes_built(self, verbose=0):
         """
         Check if all nodes are built.
-        
+
         Arguments:
             + verbose - int to indicate level of verbosity (Default: 0 to indicate no messages)
         Returns:
             + bool with True if all nodes are built, Fase otherwise
             """
-            
+
         b = True
         for node in self.circuit.nodes:
             b = b and self.circuit.nodes[node]['brick'].is_built
@@ -182,14 +182,14 @@ class Scaffold:
     def all_in_neighbors_built(self, node):
         """
         Check if all neighbors of a node are built.
-        
+
         Arguments:
             + node - node whose neighbors are checked
-            
+
         Returns:
             + bool - indicates if all neighbors are built.
             """
-            
+
         in_neighbors = [edge[0] for edge in self.circuit.in_edges(nbunch=node)]
         b = True
         for neighbor in in_neighbors:
@@ -199,10 +199,10 @@ class Scaffold:
     def lay_bricks(self, verbose=0):
         """
         Build a computational graph that can be used by the backend.
-        
+
         Arguments:
             + verbose - int value to specify level of verbosity (Default: 0 to indicate None)
-            
+
         Returns:
             networkX diGraph
         """
@@ -215,7 +215,7 @@ class Scaffold:
          and self.circuit.nodes[node]['layer'] == 'input']:
             (built_graph,
              dimensionality,
-             complete_node,
+             control_nodes,
              output_lists,
              output_codings) = self.circuit.nodes[node]['brick'].build(built_graph,
                               None,
@@ -225,7 +225,7 @@ class Scaffold:
             self.circuit.nodes[node]['output_lists'] = output_lists
             self.circuit.nodes[node]['output_codings'] = output_codings
             self.circuit.nodes[node]['dimensionality'] = dimensionality
-            self.circuit.nodes[node]['complete_node'] = complete_node
+            self.circuit.nodes[node]['control_nodes'] = control_nodes
             if verbose > 0:
                 print("Completed: " + str(node))
         while not self.all_nodes_built(verbose=verbose):
@@ -243,22 +243,22 @@ class Scaffold:
                                            'input_channel':self.circuit.nodes[node]['input_nodes'][input_number][1]}
                 dimensionality = [self.circuit.nodes[inputs[key]['input_node']]['dimensionality']
                                   for key in inputs]
-                complete_node = [self.circuit.nodes[inputs[key]['input_node']]['complete_node'][inputs[key]['input_channel']] for key in inputs]
+                control_nodes = [self.circuit.nodes[inputs[key]['input_node']]['control_nodes'][inputs[key]['input_channel']] for key in inputs]
                 input_lists = [self.circuit.nodes[inputs[key]['input_node']]['output_lists'][inputs[key]['input_channel']] for key in inputs]
                 input_codings = [self.circuit.nodes[inputs[key]['input_node']]['output_codings'][inputs[key]['input_channel']] for key in inputs]
                 (built_graph,
                  dimensionality,
-                 complete_node,
+                 control_nodes,
                  output_lists,
                  output_codings) = self.circuit.nodes[node]['brick'].build(built_graph,
                                                       dimensionality,
-                                                      complete_node,
+                                                      control_nodes,
                                                       input_lists,
                                                       input_codings)
                 self.circuit.nodes[node]['dimensionality'] = dimensionality
                 self.circuit.nodes[node]['output_codings'] = output_codings
                 self.circuit.nodes[node]['output_lists'] = output_lists
-                self.circuit.nodes[node]['complete_node'] = complete_node
+                self.circuit.nodes[node]['control_nodes'] = control_nodes
                 if verbose > 0:
                     print("Complete.")
         self.is_built=True
@@ -284,20 +284,20 @@ class Scaffold:
     def evaluate(self, max_runtime=10, backend='ds', record_all=False):
         """
         Run the computational graph through the backend.
-        
+
         Arguments:
             + max_runtime - int value to specify number of time steps (Default: 10)
             + backend - string value of the backend simulator or device name (Default: 'ds')
             + record_all - bool value to indicate if all neurons spikes are to be recorded (Default: False)
-            
+
         Returns:
             + dictionary of time step and spiking neurons. (if record_all is True, all spiking neurons are shown
             else only the output neurons)
-            
+
         Exceptions:
             + ValueError if backend is not in list of supported backends
         """
-        
+
         if backend not in Scaffold.supported_backends:
             raise ValueError("Backend " + str(backend) + " not supported.")
         if backend == 'ds':
@@ -328,10 +328,10 @@ class Scaffold:
                             spike_result[entry[0]] = []
                         spike_result[entry[0]].extend(entry[1].tolist())
         return spike_result
-    
+
     def summary(self):
         """Display a summary of the scaffold."""
-        
+
         print("Scaffold is built: " + str(self.is_built))
         print("-------------------------------------------------------")
         print("List of Bricks:")
@@ -369,7 +369,7 @@ class Scaffold:
 
 class Brick(ABC):
     """Abstract Base Class definition of a Brick class"""
-    
+
     def __init__(self):
         self.name = "Empty Brick"
         self.is_built = False
@@ -378,21 +378,21 @@ class Brick(ABC):
     @abstractmethod
     def build(self, graph,
                    dimensionality,
-                   complete_node,
+                   control_nodes,
                    input_lists,
                    input_codings):
         """
         Build the computational graph of the brick. Method must be defined in any class inheriting from Brick.
-        
+
         Arguments:
             + graph - networkx graph
             + dimensionality - A dictionary of shapes and parameters
-            + complete_node - list of nodes that indicate the end of computation
+            + control_nodes - list of dictionary of auxillary nodes.  Acceptable keys include: 'complete' - A list of neurons that fire when the brick is done, 'begin' - A list of neurons that fire when the brick begins computation (used for temporal processing)
             + input_lists - list of lists of nodes for input neurons
             + input_codings - list of input coding types (as strings)
         """
         pass
-    
+
 class InputBrick(Brick):
     """Abstract Base class for handling inputs inherited from Brick"""
 
@@ -400,7 +400,7 @@ class InputBrick(Brick):
     def get_input_value(self, t=None):
         """
         Abstract method to get input values. InputBriacks must implement this method
-        
+
         Arguments:
             + t - type of input (Default: None)
         """
@@ -408,7 +408,7 @@ class InputBrick(Brick):
 
 class Spike_Input(InputBrick):
     """Class to handle Spike Input. Inherits from InputBrick"""
-    
+
     def __init__(self, spikes, time_dimension = False,
                  coding='Undefined', name=None):
         self.vector = spikes
@@ -428,27 +428,27 @@ class Spike_Input(InputBrick):
 
     def build(self, graph,
              dimensionality,
-             complete_node,
+             control_nodes,
              input_lists,
              input_codings):
         """
         Build spike input brick.
-        
+
         Arguments:
             + graph - networkx graph to define connections of the computational graph
             + dimensionality - dictionary to define the shapes and parameters of the brick
-            + complete_node - list of networkx nodes to indicate completion of the computation
+            + control_nodes - list of dictionary of auxillary nodes.  Excpected keys: 'complete' - A list of neurons that fire when the brick is done
             + input_lists - list of nodes that will contain input
             + input_coding - list of input coding formats
-            
+
         Returns:
             + graph of a computational elements and connections
             + dictionary of output parameters (shape, coding, layers, depth, etc)
-            + list of complete nodes
+            + list of dictionary of control nodes ('complete')
             + list of output
             + list of coding formats of output
         """
-        
+
         if not self.time_dimension:
             self.vector = np.expand_dims(self.vector,
                                          len(self.vector.shape))
@@ -479,13 +479,13 @@ class Spike_Input(InputBrick):
                         'output_coding':self.coding,
                         'layer' : input,
                         'D':0},
-               [complete_node],
+               [{'complete':complete_node}],
                output_lists,
                output_codings)
 
 class Threshold(Brick):
     """Class to handle Threshold Brick. Inherits from Brick"""
-    
+
     def __init__(self, threshold, decay=0.0, p=1.0, name=None, output_coding=None):
         super(Brick, self).__init__()
         self.is_built=False
@@ -496,31 +496,33 @@ class Threshold(Brick):
         self.threshold = threshold
         self.output_coding=output_coding
         self.supported_codings = ['current', 'Undefined', 'temporal-L']
-        
+
     def build(self,
              graph,
              dimensionality,
-             complete_node,
+             control_nodes,
              input_lists,
              input_codings):
         """
         Build Threshold brick.
-        
+
         Arguments:
             + graph - networkx graph to define connections of the computational graph
             + dimensionality - dictionary to define the shapes and parameters of the brick
-            + complete_node - list of networkx nodes to indicate completion of the computation
+            + control_nodes - list of dictionary of auxillary nodes.
+              Expected keys: 'complete' - A neurons that fire when the brick is done
+                             'begin' - A neurons that first when the brick begins processing (for temporal coded inputs)
             + input_lists - list of nodes that will contain input
             + input_coding - list of input coding formats
-            
+
         Returns:
             + graph of a computational elements and connections
             + dictionary of output parameters (shape, coding, layers, depth, etc)
-            + list of complete nodes
+            + list dictionary of control nodes ('complete')
             + list of output
             + list of coding formats of output
         """
-        
+
         if len(input_codings)!=1:
             raise ValueError("Only one input is permitted.")
         if input_codings[0] not in self.supported_codings:
@@ -538,22 +540,24 @@ class Threshold(Brick):
                                self.name,
                                weight=edge['weight'],
                                delay=edge['delay'])
-            new_complete_node = complete_node
+            new_complete_node = control_nodes[0]['complete']
             self.dimensionality['D'] = 0
             output_lists = [[self.name]]
         elif input_codings[0] == 'temporal-L':
             self.dimensionality['D'] = None
-            graph.add_node(self.name+'_complete',
+            new_complete_node = self.name+'_complete'
+            graph.add_node(new_complete_node,
                            index = -1,
-                           threshold = len(input_lists[0])-1.0001,
-                           decay = 1.0,
+                           threshold = len(input_lists[0])-.00001,
+                           decay = 0.0,
                            p=1.0)
-            new_complete_node = [self.name+'_complete']
             output_neurons = []
             #Find 'begin' neuron -- We need to fix this
-            for input_neuron in [input_n for input_n in input_lists[0] if graph.nodes[input_n]['index']==-2]:
-                begin_neuron = input_neuron
-                
+            #Tentatively is fixed!
+            begin_neuron = control_nodes[0]['begin']
+            #for input_neuron in [input_n for input_n in input_lists[0] if graph.nodes[input_n]['index']==-2]:
+            #    begin_neuron = input_neuron
+
             for input_neuron in [input_n for input_n in input_lists[0] if graph.nodes[input_n]['index'] is not -2]:
                 threshold_neuron_name = self.name+'_'+str(graph.nodes[input_neuron]['index'])
                 graph.add_node(threshold_neuron_name,
@@ -562,7 +566,8 @@ class Threshold(Brick):
                            decay = 0.0,
                            p=self.p)
                 output_neurons.append(threshold_neuron_name)
-                graph.add_edge(begin_neuron, 
+                assert(type(self.threshold) is int)
+                graph.add_edge(begin_neuron,
                            threshold_neuron_name,
                            weight=2.0,
                            delay=self.threshold)
@@ -571,10 +576,18 @@ class Threshold(Brick):
                                weight = -3.0,
                                delay = 1)
                 graph.add_edge(input_neuron,
-                               self.name+'_complete',
+                               new_complete_node,
                                weight=1.0,
                                delay=1)
                 output_lists = [output_neurons]
+            graph.add_edge(begin_neuron,
+                            new_complete_node,
+                            weight = len(input_lists[0]),
+                            delay = self.threshold)
+            graph.add_edge(new_complete_node,
+                            new_complete_node,
+                            weight = -10,
+                            delay = 1)
         else:
             raise ValueError("Invalid coding")
         if self.output_coding is None:
@@ -584,14 +597,14 @@ class Threshold(Brick):
         self.is_built = True
         return (graph,
                self.dimensionality,
-                new_complete_node,
+                [{'complete':new_complete_node}],
                 output_lists,
                 output_codings
                )
 
 class Dot(Brick):
     """Class to handle the Dot brick. Inherits from Brick"""
-    
+
     def __init__(self, weights, name=None):
         super(Brick, self).__init__()
         self.is_built = False
@@ -599,31 +612,31 @@ class Dot(Brick):
         self.name = name
         self.weights = weights
         self.supported_codings = ['Raster', 'Undefined']
-        
+
     def build(self,
              graph,
              dimensionality,
-             complete_node,
+             control_nodes,
              input_lists,
              input_codings):
         """
         Build Dot brick.
-        
+
         Arguments:
             + graph - networkx graph to define connections of the computational graph
             + dimensionality - dictionary to define the shapes and parameters of the brick
-            + complete_node - list of networkx nodes to indicate completion of the computation
+            + control_nodes - list of dictionary of auxillary nodes.  Excpected keys: 'complete' - A list of neurons that fire when the brick is done
             + input_lists - list of nodes that will contain input
             + input_coding - list of input coding formats
-            
+
         Returns:
             + graph of a computational elements and connections
             + dictionary of output parameters (shape, coding, layers, depth, etc)
-            + list of complete nodes
-            + list of output
+            + list dictionary of control nodes ('complete')
+            + list of output edges
             + list of coding formats of output
         """
-        
+
         output_list = []
         output_codings = ['current']
         if len(input_codings)>1:
@@ -652,20 +665,20 @@ class Dot(Brick):
                       decay = 0.0,
                       index = -1,
                       p=1.0)
-        graph.add_edge(complete_node[0],
+        graph.add_edge(control_nodes[0]['complete'],
                        self.name+"_complete",
                        weight=1.0,
                        delay=1)
         self.is_built = True
         return (graph,
                 dimensionality,
-                self.name+"_complete",
+                [{'complete':self.name+"_complete"}],
                 [output_list],
                 output_codings)
 
 class Copy(Brick):
     """Class to handle Copy Brick. Inherits from Brick"""
-    
+
     def __init__(self, name=None):
         super(Brick, self).__init__()
         self.is_built=False
@@ -681,23 +694,23 @@ class Copy(Brick):
                      'Undefined']
     def build(self, graph,
               dimensionality,
-             complete_node,
+             control_nodes,
              input_lists,
              input_codings):
         """
         Build Copy brick.
-        
+
         Arguments:
             + graph - networkx graph to define connections of the computational graph
             + dimensionality - dictionary to define the shapes and parameters of the brick
-            + complete_node - list of networkx nodes to indicate completion of the computation
+            + control_nodes - list of dictionaries of auxillary nodes.  Excpected keys: 'complete' - A list of neurons that fire when the brick is done
             + input_lists - list of nodes that will contain input
             + input_coding - list of input coding formats
-            
+
         Returns:
             + graph of a computational elements and connections
             + dictionary of output parameters (shape, coding, layers, depth, etc)
-            + list of complete nodes
+            + list of dictionaries of control nodes ('complete')
             + list of output
             + list of coding formats of output
         """
@@ -734,28 +747,28 @@ class Copy(Brick):
                        p=1.0,
                        index=-1
                       )
-        graph.add_edge(complete_node[0],
+        graph.add_edge(control_nodes[0]['complete'],
                        self.name+"_complete",
                        weight=1.0,
                        delay=1)
         self.is_built = True
-        return (graph, self.dimensionality, [self.name+"_complete"]*num_copies , output_lists, output_codings)
-    
+        return (graph, self.dimensionality, [{'complete':self.name+"_complete"}]*num_copies , output_lists, output_codings)
+
 class ParityCheck(Brick):
-    '''Brick to compute the parity of a 4 bit input. 
+    '''Brick to compute the parity of a 4 bit input.
     The output spikes after 2 time steps if the input has odd parity
-    
+
     author: Srideep Musuvathy
     email: smusuva@sandia.gov
     last updated: April 8, 2019'''
-    
+
     def __init__(self, name=None):
         super().__init__()
         self.is_built = False
         self.dimensionality = {'D': 1}
         self.name = name
         self.supported_codings = ['binary-B', 'binary-L', 'Raster']
-    
+
     def build(self,
               graph,
               dimensionality,
@@ -764,42 +777,42 @@ class ParityCheck(Brick):
               input_codings):
         """
         Build Parity brick.
-        
+
         Arguments:
             + graph - networkx graph to define connections of the computational graph
             + dimensionality - dictionary to define the shapes and parameters of the brick
-            + complete_node - list of networkx nodes to indicate completion of the computation
+            + control_nodes - dictionary of lists of auxillary networkx nodes.  Excpected keys: 'complete' - A list of neurons that fire when the brick is done
             + input_lists - list of nodes that will contain input
             + input_coding - list of input coding formats
-            
+
         Returns:
             + graph of a computational elements and connections
             + dictionary of output parameters (shape, coding, layers, depth, etc)
-            + list of complete nodes
+            + dictionary of control nodes ('complete')
             + list of output
             + list of coding formats of output
         """
-        
+
         if len(input_codings) != 1:
             raise ValueError('Parity check takes in 1 input')
-            
+
         output_codings = [input_codings[0]]
-        
+
         new_complete_node_name = self.name + '_complete'
-        
+
         graph.add_node(new_complete_node_name,
                       index = -1,
                       threshold = 0.0,
                       decay =0.0,
                       p=1.0,
                       potential=0.0)
-        graph.add_edge(complete_node[0], new_complete_node_name, weight=1.0, delay=2)
-        complete_node = [new_complete_node_name]
-        
-        #add 4 hidden nodes with thresholds <=1, >=1, <=3, >=3. 
-        #since the thresholds only compute >=, the <=1, <=3 computations are performed by negating 
+        graph.add_edge(control_nodes[0]['complete'], new_complete_node_name, weight=1.0, delay=2)
+        complete_node = new_complete_node_name
+
+        #add 4 hidden nodes with thresholds <=1, >=1, <=3, >=3.
+        #since the thresholds only compute >=, the <=1, <=3 computations are performed by negating
         #the threshold weights and the inputs (via the weights on incomming edges)
-        
+
         #first hidden node and connect edges from input layer
         graph.add_node('h_00',
                       index=0,
@@ -823,7 +836,7 @@ class ParityCheck(Brick):
                       'h_00',
                       weight=-1.0,
                       delay=1)
-        
+
         #second hidden node and edges from input layer
         graph.add_node('h_01',
                       index=1,
@@ -847,7 +860,7 @@ class ParityCheck(Brick):
                       'h_01',
                       weight=1.0,
                       delay=1)
-        
+
         #third hidden node and edges from input layer
         graph.add_node('h_02',
                       index=2,
@@ -871,7 +884,7 @@ class ParityCheck(Brick):
                       'h_02',
                       weight=-1.0,
                       delay=1)
-        
+
         #fourth hidden node and edges from input layer
         graph.add_node('h_03',
                       index=3,
@@ -895,7 +908,7 @@ class ParityCheck(Brick):
                       'h_03',
                       weight=1.0,
                       delay=1)
-        
+
         #output_node and edges from hidden nodes
         graph.add_node('parity',
                       index=4,
@@ -919,10 +932,10 @@ class ParityCheck(Brick):
                       'parity',
                       weight=1.0,
                       delay=1)
-        
+
         self.is_built=True
-        
+
         output_lists = [['parity']]
-        
-        return (graph, self.dimensionality, complete_node, output_lists, 
+
+        return (graph, self.dimensionality, [{'complete':complete_node}], output_lists,
                 output_codings)
