@@ -11,26 +11,26 @@ The Fugu neuron model is based upon a standard leaky-integrate-and-fire neuron. 
 
 Variable Key | Definition/Description | Variable Name | Type | 
 | ----- | ----- | ----- | ---- |
-| potential | Internal state of the neuron, analagous to the biological membrane potential | x_i | float |
-| threshold | Neuron spike threshold | T_i | float |
-| decay | Decay constant | m_i | float $\in [0,1]$|
-| p | Probability of spike (given that $x_i > T_i$) | p_i | float $\in [0,1]$| |
+| potential | Internal state of the neuron, analagous to the biological membrane potential | $`x_i`$ | float |
+| threshold | Neuron spike threshold | $`T_i`$ | float |
+| decay | Decay constant | $`m_i`$ | float $`\in [0,1]`$|
+| p | Probability of spike (given that $`x_i > T_i`$) | $`p_i`$ | float $`\in [0,1]`$| |
 | record | List of values to record | N/A | list of strings |
-| N/A | Random Draw | a | float $\in [0,1]$ |
+| N/A | Random Draw | a | float $`\in [0,1]`$ |
 
 
-For each simulation step $t$, $x_i$ is computed as follows: 
+For each simulation step $`t`$, $`x_i`$ is computed as follows: 
 
-1. $x_i = x_{t-1,i} + I_i + W_{i}*S_{t-1}$,  
-where $I_i$ is the external current injection to neuron $i$, $W_{i}$ is a vector containing the weights of the edges between every other neuron in the network and neuron $i$, and $S_{t-1}$ is a vector containing the spike history of the network for the previous stimulation step.   
+1. $`x_i = x_{t-1,i} + I_i + W_{i}*S_{t-1}`$,  
+where $`I_i`$ is the external current injection to neuron $`i`$, $`W_{i}`$ is a vector containing the weights of the edges between every other neuron in the network and neuron $`i`$, and $`S_{t-1}`$ is a vector containing the spike history of the network for the previous stimulation step.   
 
-2. If $x_i > T_i$, then if $a < p_i$, then $S[i]$  
-If the internal state of neuron $i$ is greater than its spike threshold, spike with probability $p_i$.  Currently the internal state is reset to $0$ following a spike.  
+2. If $`x_i > T_i`$, then if $`a < p_i`$, then $`S[i]`$  
+If the internal state of neuron $i$ is greater than its spike threshold, spike with probability $`p_i`$.  Currently the internal state is reset to $`0`$ following a spike.  
 
-3. If $x_i <= T_i$, then $x_i = x_i * (1-m_i)$ 
-If neuron $i$ does not spike, the internal state decays to $0$ as described above.  Note: if $m_i = 0$ there is no decay and in the absence of any additional input the neuron will remain at its current state. 
+3. If $`x_i <= T_i`$, then $`x_i = x_i * (1-m_i)`$ 
+If neuron $`i`$ does not spike, the internal state decays to $`0`$ as described above.  Note: if $`m_i = 0`$ there is no decay and in the absence of any additional input the neuron will remain at its current state. 
 
-Other notes: If $T_i < 0$, the neuron will spike with probability $p_i$ on each simulation step, assuming that the input is not sufficiently negative to pull the neuron's internal state below threshold.  If $p_i = 1.0$, then the neuron model is deterministic.
+Other notes: If $`T_i < 0`$, the neuron will spike with probability $`p_i`$ on each simulation step, assuming that the input is not sufficiently negative to pull the neuron's internal state below threshold.  If $`p_i = 1.0`$, then the neuron model is deterministic.
 
 #### Input Neurons
 Thus far in Fugu development, we have used two types of neurons to provide input to the network.  In the first case, spike times of the input neurons are pre-determined prior to run-time, as in `Example_Brick_Building.ipynb.`   
@@ -47,7 +47,7 @@ In addition to being characterized by a weight (see below), each synapse is also
 | Record Key | Definition | Type |
 | ----- | ----- | ----- |
 | 'weight' | Synaptic Weight | float | 
-| 'delay' | Synaptic Delay | int [1, inf) |
+| 'delay' | Synaptic Delay | int $`[1, \inf)`$ |
 
 
 Currently Fugu only supports discrete-time simulation.  Therefore delays must take integer values of at least 1 simulation step.  Synaptic weights may take any floating point value, including negative (inhibitory) values.
