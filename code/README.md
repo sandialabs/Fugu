@@ -24,7 +24,7 @@ This function forms the section of the graph corresponding to the brick.
 Input parameters:
 - graph: graph that is being built
 - dimensionality: dictionary containing relevant dimensionality information
-- complete_node: A list of neurons that transmits a 'done' signal (Generally one from each input)
+- control_nodes: A list of dictionaries of neurons that transmit control signals. A 'done' signal (Generally one from each input) is included in `control_nodes[i]['complete']`.
 - input_lists: A list of lists of input neurons.  Each neuron is marked with a local index used for encodings.
 - input_codings: A list of types of input codings.  See input_coding_types
 
@@ -35,6 +35,19 @@ A tuple (graph, dimensionality, complete_node, output_lists, output_codings)
 - complete_node: A list of neurons that transmists a 'done' signal (Generally one for each output)
 - output_lists: A list of lists of output neurons.  Each neuron is marked with a local index used for encodings.
 - output_codings: A list of types of codings.  See input_coding_types
+
+### Details on `control_nodes`
+We've seen through experience that it can be extremely helpful to have neurons relay control 
+information between bricks.  These neurons should be included in the `control_nodes`.  Regular 
+rules apply to these neurons (e.g. naming must be globally unique and indices are locally unique).
+
+`control_nodes` is a *list* of *dictionaries*.  Each entry in the list corresponds with 
+an input (if calling `Brick.build`) or an output (if returning from `Brick.build`). 
+
+| Key | Required | Description |
+| ------ | ------ | ------ |
+| 'complete' | All Inputs/Outputs | A neuron that fires when a brick is done processing. |
+| 'begin' | Temporally-coded Inputs/Outputs | A neuron that fires when a brick begins providing output. |
 
 ## Documentation
 Documentation is currently spread across several files.  We are working on including docstrings on all the classes and methods.
@@ -47,6 +60,8 @@ For now, you can check:
 
 To build the documentation, use pydocmd https://pypi.org/project/pydoc-markdown/ with a command similar to 
 `pydocmd simple fugu++ > docs.md`
+
+
 
 
 ## Known Bugs and todos
