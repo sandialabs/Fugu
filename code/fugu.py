@@ -772,7 +772,7 @@ class ParityCheck(Brick):
     def build(self,
               graph,
               dimensionality,
-              complete_node,
+              control_nodes,
               input_lists,
               input_codings):
         """
