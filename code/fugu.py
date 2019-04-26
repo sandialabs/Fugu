@@ -587,7 +587,7 @@ class Threshold(Brick):
                 graph.add_edge(begin_neuron,
                            threshold_neuron_name,
                            weight=2.0,
-                           delay=self.threshold)
+                           delay=self.threshold+1)
                 graph.add_edge(input_neuron,
                                threshold_neuron_name,
                                weight = -3.0,
@@ -600,7 +600,7 @@ class Threshold(Brick):
             graph.add_edge(begin_neuron,
                             new_complete_node,
                             weight = len(input_lists[0]),
-                            delay = self.threshold)
+                            delay = self.threshold+1)
             graph.add_edge(new_complete_node,
                             new_complete_node,
                             weight = -10,
@@ -782,9 +782,90 @@ class Copy(Brick):
                        delay=1)
         self.is_built = True
         return (graph, self.metadata, [{'complete':self.name+"_complete"}]*num_copies , output_lists, output_codings)
+    
+class Concatenate(Brick):
+    ''' Brick that concatenates multiple inputs into a single vector.  All codings are supported except 'current'; first coding is used if not specified.
+    Arguments:
+		+ name - Name of the brick.  If not specified, a default will be used.  Name should be unique.
+    '''
+    def __init__(self, name=None, coding=None):   
+        super(Brick, self).__init__()
+        self.is_built = False
+        self.metadata = {'D':0}
+        self.name = name
+        self.supported_codings = input_coding_types
+        if coding is not None:
+            self.coding = coding
+        else:
+            self.coding = None
+    def build(self,
+             graph,
+             metadata,
+             control_nodes,
+             input_lists,
+             input_codings):
+        """
+        Build concatenate brick.
+
+        Arguments:
+            + graph - networkx graph to define connections of the computational graph
+            + metadata - dictionary to define the shapes and parameters of the brick
+            + control_nodes - dictionary of lists of auxillary networkx nodes.  Excpected keys: 'complete' - A list of neurons that fire when the brick is done
+            + input_lists - list of nodes that will contain input
+            + input_coding - list of input coding formats.  All codings are allowed except 'current'.
+
+        Returns:
+            + graph of a computational elements and connections
+            + dictionary of output parameters (shape, coding, layers, depth, etc)
+            + dictionary of control nodes ('complete')
+            + list of output (1 output)
+            + list of coding formats of output (Coding matches input coding)
+        """
+        #Keep the same coding as input 0 for the output
+        #This is an arbitrary decision at this point.
+        #Generally, your brick will impart some coding, but that isn't the case here.
+        if self.coding is None:
+            output_codings = [input_codings[0]]
+        else:
+            output_codings = [self.coding]
+
+        
+        new_complete_node_name = self.name + '_complete'
+        graph.add_node(new_complete_node_name,
+                      index = -1,
+                      threshold = 1.0,
+                      decay =0.0,
+                      p=1.0,
+                      potential=0.0)
+        for idx in range(len(input_lists)):
+            graph.add_edge(control_nodes[idx]['complete'], new_complete_node_name,weight=(1/len(input_lists))+0.000001,delay=1)
+
+
+        output_lists = [[]]
+        for input_brick in input_lists:
+            for input_neuron in input_brick:
+                relay_neuron_name = self.name+'_relay_' + str(input_neuron)
+                graph.add_node(relay_neuron_name,
+                               index = (len(output_lists[0]),),
+                               threshold = 0.0,
+                               decay = 0.0,
+                               p=1.0,
+                               potential=0.0)
+                graph.add_edge(input_neuron, relay_neuron_name, weight=1.0, delay=1)
+                output_lists[0].append(relay_neuron_name)
+        
+        self.is_built=True
+
+
+        return (graph,
+               self.metadata,
+                [{'complete':new_complete_node_name}],
+                output_lists,
+                output_codings
+               )
 
 class AND_OR(Brick):
-    ''' Brick for perform a logical AND/OR.  Operation is performed entry-wise, matching based on index.  All codings are supported.
+    ''' Brick for performing a logical AND/OR.  Operation is performed entry-wise, matching based on index.  All codings are supported.
     Arguments:
         + mode - Either 'And' or 'Or'; determines the operation
 		+ name - Name of the brick.  If not specified, a default will be used.  Name should be unique.
@@ -798,7 +879,7 @@ class AND_OR(Brick):
         #We just store the name passed at construction.
         self.name = name
         #For this example, we'll let any input coding work even though the answer might not make sense.
-        self.supported_codings = fugu.input_coding_types
+        self.supported_codings = input_coding_types
         self.mode = mode  #A change here
     def build(self,
              graph,
@@ -889,7 +970,7 @@ class AND_OR(Brick):
                )
 
 class Shortest_Path_Length(Brick):
-    '''This brick provides a single-source shortest path length determination.
+    '''This brick provides a single-source shortest path length determination. Expects a single input where the index corresponds to the node number on the graph.
 
     '''
     def __init__(self, target_graph, target_node, name=None, output_coding = 'temporal-L'):
@@ -907,14 +988,14 @@ class Shortest_Path_Length(Brick):
         #We just store the name passed at construction.
         self.name = name
         #For this example, we'll let any input coding work even though the answer might not make sense.
-        self.supported_codings = fugu.input_coding_types
+        self.supported_codings = input_coding_types
         #Right now, we'll convert node labels to integers in the order of
         #graph.nodes() However, in the fugure, this should be improved to be
         #more flexible.
         for i,node in enumerate(target_graph.nodes()):
             if node is target_node:
                 self.target_node = i
-        self.target_graph = nx.relabel.convert_node_labels_to_integers(target_graph)
+        self.target_graph = target_graph
         self.output_codings = [output_coding]
         self.metadata = {'D':None}
     def build(self,
@@ -973,7 +1054,6 @@ class Shortest_Path_Length(Brick):
                       self.name+'_begin',
                       weight = 1.0,
                       delay = 1)
-
 
         for node in self.target_graph.nodes:
             graph.add_node(self.name+str(node),
