@@ -80,11 +80,11 @@ To build the documentation, use pydocmd https://pypi.org/project/pydoc-markdown/
 - Inputs/Outputs should be bundled as a list of dictionaries rather than parallel lists
 - Plotting functions likely do not and wll need to be re-tested
 - Bricks in brick_1.py are likely broken and will need to be fixed.
-- Srideep: document fugu.py code bricks
-- Frances: documention around neural model Fugu is running (e.g. reference manual describing what is actually running)
-- Brad: focus on Fugu story (ICONS paper and Random Walk example)
-- Not Sam: Serious issues regarding how backend handles inputs
+- ~~Srideep: document fugu.py code bricks~~
+- ~~Frances: documention around neural model Fugu is running (e.g. reference manual describing what is actually running)~~
+- ~~Brad: focus on Fugu story (ICONS paper and Random Walk example)~~
+- ~~Not Sam: Serious issues regarding how backend handles inputs~~
 - Not Sam: Need scaffolds to be bricks
-- Not Sam: Redo how handle control nodes (Perphaps use dictionaries)
+- ~~Not Sam: Redo how handle control nodes (Perphaps use dictionaries)~~
 - Expand outputs 
 - Create backend class to handle backend simulators
