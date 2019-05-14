@@ -1,2 +1,6 @@
 .DS_Store
 /code/.DS_Store
+*.swp
+*.pyc
+/code/__pycache__
+*.tags
