@@ -1042,14 +1042,6 @@ class Shortest_Path_Length(Brick):
         #position of the node.  This can be used by downstream bricks.  A simple example might be
         #a 3-bit binary representation will add 3 nodes to the graph with indices 0,1,2
         #We do have to do some work to establish best practices here.
-        #new_complete_node_name = self.name + '_complete'
-        #graph.add_node(new_complete_node_name,
-        #              index = -1,
-        #              threshold = 0.0,
-        #              decay =0.0,
-        #              p=1.0,
-        #              potential=0.0)
-        #complete_node = [new_complete_node_name]
         new_begin_node_name = self.name+'_begin'
         graph.add_node(new_begin_node_name,
                       threshold = 0.5,
@@ -1070,17 +1062,15 @@ class Shortest_Path_Length(Brick):
             graph.add_edge(self.name+node_string, self.name+node_string, weight=-1000, delay=1)
             if node==self.target_node:
                 complete_node_list = [self.name+node_string]
-                #graph.add_edge(self.name+node_string,
-                #       new_complete_node_name,
-                #       weight=1.0,delay=1)
 
         for node in self.target_graph.nodes:
             neighbors = list(self.target_graph.neighbors(node))
             for neighbor in neighbors:
-                delay = self.target_graph.edges[node,neighbor]['weight']
-                graph.add_edge(self.name+str(node), self.name+str(neighbor), weight=1.5, delay=delay)
-                #graph.add_edge(neighbor, node, weight=1.5, delay=delay)
-
+                if node == self.target_node:
+                    graph.add_edge(self.name+str(node), self.name+str(neighbor), weight=-1000, delay=delay)
+                else:
+                    delay = self.target_graph.edges[node,neighbor]['weight']
+                    graph.add_edge(self.name+str(node), self.name+str(neighbor), weight=1.5, delay=delay)
 
         for input_neuron in input_lists[0]:
             index = graph.nodes[input_neuron]['index']
@@ -1106,7 +1096,7 @@ class Shortest_Path_Length(Brick):
                )
 
 class Shortest_Path(Brick):
-    '''This brick provides a single-source shortest path length determination. Expects a single input where the index corresponds to the node number on the graph.
+    '''This brick provides a single-source shortest path determination. Expects a single input where the index corresponds to the node number on the graph.
 
     '''
     def __init__(self, target_graph, target_node, name=None, output_coding = 'temporal-L'):
@@ -1206,19 +1196,28 @@ class Shortest_Path(Brick):
                 #       new_complete_node_name,
                 #       weight=1.0,delay=1)
 
+        edge_reference_names = []
         for node in self.target_graph.nodes:
             neighbors = list(self.target_graph.neighbors(node))
             for neighbor in neighbors:
-                delay = self.target_graph.edges[node,neighbor]['weight']
-                reference_name = "{}-{}-{}".format(self.name, node, neighbor)
+                if node == self.target_node:
+                    reference_name = "{}-{}-{}".format(self.name, node, neighbor)
+                    edge_reference_names.append(reference_name)
 
-                graph.add_node(reference_name, threshold=1.0, decay=0.0,potential=0.0)
-                graph.add_edge(self.name+str(node), reference_name, weight=1.5, delay=delay)
-                graph.add_edge(reference_name, self.name+str(neighbor), weight=1.5, delay=0.0)
+                    graph.add_node(reference_name, threshold=1.0, decay=0.0,potential=0.0)
+                    graph.add_edge(self.name+str(node), reference_name, weight=-1000, delay=delay - 1.0)
+                    graph.add_edge(reference_name, self.name+str(neighbor), weight=-1000, delay=1.0)
+                    graph.add_edge(self.name+str(neighbor), reference_name, weight=-1000, delay=1.0) 
+                else:
+                    delay = self.target_graph.edges[node,neighbor]['weight']
+                    reference_name = "{}-{}-{}".format(self.name, node, neighbor)
+                    edge_reference_names.append(reference_name)
 
-                graph.add_edge(self.name+str(neighbor), reference_name, weight=-1000, delay=0.0) 
-                #graph.add_edge(neighbor, node, weight=1.5, delay=delay)
-
+                    graph.add_node(reference_name, threshold=1.0, decay=0.0,potential=0.0)
+                    graph.add_edge(self.name+str(node), reference_name, weight=1.1, delay=delay - 1.0)
+                    graph.add_edge(reference_name, self.name+str(neighbor), weight=1.1, delay=1.0)
+                    
+                    graph.add_edge(self.name+str(neighbor), reference_name, weight=-1000, delay=1.0) 
 
         for input_neuron in input_lists[0]:
             index = graph.nodes[input_neuron]['index']
@@ -1234,7 +1233,7 @@ class Shortest_Path(Brick):
         self.is_built=True
 
         #Remember, bricks can have more than one output, so we need a list of list of output neurons
-        output_lists = [[self.name+str(self.target_node)]]
+        output_lists = [[self.name+str(self.target_node)], edge_reference_names]
 
         return (graph,
                self.metadata,
