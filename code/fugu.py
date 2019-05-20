@@ -376,7 +376,6 @@ class Scaffold:
                 print("Synapse Between | Synapse Properties")
                 print("{} | {}".format(synapse, self.graph.edges[synapse]))
 
-
 class Brick(ABC):
     """Abstract Base Class definition of a Brick class"""
 
@@ -973,133 +972,11 @@ class AND_OR(Brick):
                 output_codings
                )
 
-class Shortest_Path_Length(Brick):
-    '''This brick provides a single-source shortest path length determination. Expects a single input where the index corresponds to the node number on the graph.
-
-    '''
-    def __init__(self, target_graph, target_node, name=None, output_coding = 'temporal-L'):
-        '''
-        Construtor for this brick.
-        Arguments:
-            + target_graph - NetworkX.Digraph object representing the graph to be searched
-			+ target_node - Node in the graph that is the target of the paths
-		    + name - Name of the brick.  If not specified, a default will be used.  Name should be unique.
-			+ output_coding - Output coding type, default is 'temporal-L'
-        '''
-        super(Brick, self).__init__()
-        #The brick hasn't been built yet.
-        self.is_built = False
-        #We just store the name passed at construction.
-        self.name = name
-        #For this example, we'll let any input coding work even though the answer might not make sense.
-        self.supported_codings = input_coding_types
-        #Right now, we'll convert node labels to integers in the order of
-        #graph.nodes() However, in the fugure, this should be improved to be
-        #more flexible.
-        for i,node in enumerate(target_graph.nodes()):
-            if node is target_node:
-                self.target_node = i
-        self.target_graph = target_graph
-        self.output_codings = [output_coding]
-        self.metadata = {'D':None}
-    def build(self,
-             graph,
-             metadata,
-             control_nodes,
-             input_lists,
-             input_codings):
-        """
-        Build Parity brick.
-
-        Arguments:
-            + graph - networkx graph to define connections of the computational graph
-            + metadata - dictionary to define the shapes and parameters of the brick
-            + control_nodes - dictionary of lists of auxillary networkx nodes.  Excpected keys: 'complete' - A list of neurons that fire when the brick is done
-            + input_lists - list of nodes that will contain input
-            + input_coding - list of input coding formats.  All coding types supported
-
-        Returns:
-            + graph of a computational elements and connections
-            + dictionary of output parameters (shape, coding, layers, depth, etc)
-            + dictionary of control nodes ('complete')
-            + list of output
-            + list of coding formats of output
-        """
-
-        if len(input_lists) is not 1:
-            raise ValueError('Incorrect Number of Inputs.')
-        for input_coding in input_codings:
-            if input_coding not in self.supported_codings:
-                raise ValueError("Unsupported Input Coding. Found: {}. Allowed: {}".format(input_coding,
-                                                                                           self.supported_codings))
-
-        #All bricks should provide a neuron that spikes when the brick has completed processing.
-        #We just put in a basic relay neuron that will spike when it recieves any spike from its
-        #single input, which is the complete_node from the first input.
-        #All nodes we add to the graph should have basic neuron parameters (threshold, decay)
-        #Reasonable defaults will be filled-in, but these defaults may depend on the execution platform.
-        #Additionally, nodes should have a field called 'index' which is a local index used to reference the
-        #position of the node.  This can be used by downstream bricks.  A simple example might be
-        #a 3-bit binary representation will add 3 nodes to the graph with indices 0,1,2
-        #We do have to do some work to establish best practices here.
-        new_begin_node_name = self.name+'_begin'
-        graph.add_node(new_begin_node_name,
-                      threshold = 0.5,
-                      decay = 0.0,
-                      potential=0.0)
-        graph.add_edge(control_nodes[0]['complete'],
-                      self.name+'_begin',
-                      weight = 1.0,
-                      delay = 1)
-
-        for node in self.target_graph.nodes:
-            node_string = str(node)
-            graph.add_node(self.name+node_string,
-                           index = (node,),
-                           threshold=1.0,
-                           decay=0.0,
-                           potential=0.0)
-            graph.add_edge(self.name+node_string, self.name+node_string, weight=-1000, delay=1)
-            if node==self.target_node:
-                complete_node_list = [self.name+node_string]
-
-        for node in self.target_graph.nodes:
-            neighbors = list(self.target_graph.neighbors(node))
-            for neighbor in neighbors:
-                if node == self.target_node:
-                    graph.add_edge(self.name+str(node), self.name+str(neighbor), weight=-1000, delay=delay)
-                else:
-                    delay = self.target_graph.edges[node,neighbor]['weight']
-                    graph.add_edge(self.name+str(node), self.name+str(neighbor), weight=1.5, delay=delay)
-
-        for input_neuron in input_lists[0]:
-            index = graph.nodes[input_neuron]['index']
-            if type(index) is tuple:
-                index = index[0]
-            if type(index) is not int:
-                raise TypeError("Neuron index should be Tuple or Int.")
-            graph.add_edge(input_neuron,
-                          self.name+str(index),
-                         weight = 2.0,
-                         delay = 1)
-
-        self.is_built=True
-
-        #Remember, bricks can have more than one output, so we need a list of list of output neurons
-        output_lists = [[self.name+str(self.target_node)]]
-
-        return (graph,
-               self.metadata,
-                [{'complete':complete_node_list[0], 'begin':new_begin_node_name}],
-                output_lists,
-                self.output_codings
-               )
-
 class Shortest_Path(Brick):
     '''This brick provides a single-source shortest path determination. Expects a single input where the index corresponds to the node number on the graph.
 
     '''
-    def __init__(self, target_graph, target_node, name=None, output_coding = 'temporal-L'):
+    def __init__(self, target_graph, target_node=None, name=None, return_path=False, output_coding = 'temporal-L'):
         '''
         Construtor for this brick.
         Arguments:
@@ -1124,6 +1001,8 @@ class Shortest_Path(Brick):
         self.target_graph = target_graph
         self.output_codings = [output_coding]
         self.metadata = {'D':None}
+        self.return_path = return_path
+
     def build(self,
              graph,
              metadata,
@@ -1183,41 +1062,46 @@ class Shortest_Path(Brick):
                       delay = 1)
 
         for node in self.target_graph.nodes:
-            node_string = str(node)
-            graph.add_node(self.name+node_string,
+            node_name = self.name + str(node)
+            graph.add_node(node_name,
                            index = (node,),
                            threshold=1.0,
                            decay=0.0,
                            potential=0.0)
-            graph.add_edge(self.name+node_string, self.name+node_string, weight=-1000, delay=1)
+            graph.add_edge(node_name, node_name, weight=-1000, delay=1)
             if node==self.target_node:
-                complete_node_list = [self.name+node_string]
-                #graph.add_edge(self.name+node_string,
-                #       new_complete_node_name,
-                #       weight=1.0,delay=1)
+                complete_node_list = [node_name]
 
         edge_reference_names = []
         for node in self.target_graph.nodes:
-            neighbors = list(self.target_graph.neighbors(node))
-            for neighbor in neighbors:
-                if node == self.target_node:
-                    reference_name = "{}-{}-{}".format(self.name, node, neighbor)
-                    edge_reference_names.append(reference_name)
+            node_name = self.name + str(node)
+            for neighbor in self.target_graph.neighbors(node):
+                delay = self.target_graph.edges[node,neighbor]['weight']
+                neighbor_name = self.name + str(neighbor)
+                if self.return_path:
+                    if node == self.target_node:
+                        reference_name = "{}-{}-{}".format(self.name, node, neighbor)
+                        edge_reference_names.append(reference_name)
 
-                    graph.add_node(reference_name, threshold=1.0, decay=0.0,potential=0.0)
-                    graph.add_edge(self.name+str(node), reference_name, weight=-1000, delay=delay - 1.0)
-                    graph.add_edge(reference_name, self.name+str(neighbor), weight=-1000, delay=1.0)
-                    graph.add_edge(self.name+str(neighbor), reference_name, weight=-1000, delay=1.0) 
+                        graph.add_node(reference_name, threshold=1.0, decay=0.0,potential=0.0)
+                        graph.add_edge(node_name, reference_name, weight=-1000, delay=delay - 1.0)
+                        graph.add_edge(reference_name, neighbor_name, weight=-1000, delay=1.0)
+                        graph.add_edge(neighbor_name, reference_name, weight=-1000, delay=1.0) 
+                    else:
+                        reference_name = "{}-{}-{}".format(self.name, node, neighbor)
+                        edge_reference_names.append(reference_name)
+
+                        graph.add_node(reference_name, threshold=1.0, decay=0.0,potential=0.0)
+                        graph.add_edge(node_name, reference_name, weight=1.1, delay=delay - 1.0)
+                        graph.add_edge(reference_name, neighbor_name, weight=1.1, delay=1.0)
+                        
+                        graph.add_edge(neighbor_name, reference_name, weight=-1000, delay=1.0) 
                 else:
-                    delay = self.target_graph.edges[node,neighbor]['weight']
-                    reference_name = "{}-{}-{}".format(self.name, node, neighbor)
-                    edge_reference_names.append(reference_name)
-
-                    graph.add_node(reference_name, threshold=1.0, decay=0.0,potential=0.0)
-                    graph.add_edge(self.name+str(node), reference_name, weight=1.1, delay=delay - 1.0)
-                    graph.add_edge(reference_name, self.name+str(neighbor), weight=1.1, delay=1.0)
-                    
-                    graph.add_edge(self.name+str(neighbor), reference_name, weight=-1000, delay=1.0) 
+                    if node == self.target_node:
+                        graph.add_edge(node_name, neighbor_name, weight=-1000, delay=delay)
+                    else:
+                        delay = self.target_graph.edges[node,neighbor]['weight']
+                        graph.add_edge(node_name, neighbor_name, weight=1.5, delay=delay)
 
         for input_neuron in input_lists[0]:
             index = graph.nodes[input_neuron]['index']
@@ -1234,6 +1118,160 @@ class Shortest_Path(Brick):
 
         #Remember, bricks can have more than one output, so we need a list of list of output neurons
         output_lists = [[self.name+str(self.target_node)], edge_reference_names]
+
+        return (graph,
+               self.metadata,
+                [{'complete':complete_node_list[0], 'begin':new_begin_node_name}],
+                output_lists,
+                self.output_codings
+               )
+
+class Breadth_First_Search(Brick):
+    '''This brick provides a single-source shortest path determination. Expects a single input where the index corresponds to the node number on the graph.
+
+    '''
+    def __init__(self, target_graph, target_node=None, name=None, output_coding = 'temporal-L'):
+        '''
+        Construtor for this brick.
+        Arguments:
+            + target_graph - NetworkX.Digraph object representing the graph to be searched
+			+ target_node - Node in the graph that is the target of the paths
+		    + name - Name of the brick.  If not specified, a default will be used.  Name should be unique.
+			+ output_coding - Output coding type, default is 'temporal-L'
+        '''
+        super(Brick, self).__init__()
+        #The brick hasn't been built yet.
+        self.is_built = False
+        #We just store the name passed at construction.
+        self.name = name
+        #For this example, we'll let any input coding work even though the answer might not make sense.
+        self.supported_codings = input_coding_types
+        #Right now, we'll convert node labels to integers in the order of
+        #graph.nodes() However, in the fugure, this should be improved to be
+        #more flexible.
+        self.target_node = None
+        for i,node in enumerate(target_graph.nodes()):
+            if node is target_node:
+                self.target_node = i
+        self.target_graph = target_graph
+        self.output_codings = [output_coding]
+        self.metadata = {'D':None}
+
+        # mappings of the graph to the neuromorphic graph and vice-versa
+        self.neuron_vertex_map = {}
+        self.vertex_neuron_map = {}
+        self.edge_synapse_map = {}
+        self.synapse_edge_map = {}
+
+    def build(self,
+             graph,
+             metadata,
+             control_nodes,
+             input_lists,
+             input_codings):
+        """
+        Build Parity brick.
+
+        Arguments:
+            + graph - networkx graph to define connections of the computational graph
+            + metadata - dictionary to define the shapes and parameters of the brick
+            + control_nodes - dictionary of lists of auxillary networkx nodes.  Excpected keys: 'complete' - A list of neurons that fire when the brick is done
+            + input_lists - list of nodes that will contain input
+            + input_coding - list of input coding formats.  All coding types supported
+
+        Returns:
+            + graph of a computational elements and connections
+            + dictionary of output parameters (shape, coding, layers, depth, etc)
+            + dictionary of control nodes ('complete')
+            + list of output
+            + list of coding formats of output
+        """
+
+        if len(input_lists) is not 1:
+            raise ValueError('Incorrect Number of Inputs.')
+        for input_coding in input_codings:
+            if input_coding not in self.supported_codings:
+                raise ValueError("Unsupported Input Coding. Found: {}. Allowed: {}".format(input_coding,
+                                                                                           self.supported_codings))
+
+        #All bricks should provide a neuron that spikes when the brick has completed processing.
+        #We just put in a basic relay neuron that will spike when it recieves any spike from its
+        #single input, which is the complete_node from the first input.
+        #All nodes we add to the graph should have basic neuron parameters (threshold, decay)
+        #Reasonable defaults will be filled-in, but these defaults may depend on the execution platform.
+        #Additionally, nodes should have a field called 'index' which is a local index used to reference the
+        #position of the node.  This can be used by downstream bricks.  A simple example might be
+        #a 3-bit binary representation will add 3 nodes to the graph with indices 0,1,2
+        #We do have to do some work to establish best practices here.
+        new_begin_node_name = self.name+'_begin'
+        graph.add_node(new_begin_node_name,
+                      threshold = 0.5,
+                      decay = 0.0,
+                      potential=0.0)
+        graph.add_edge(control_nodes[0]['complete'],
+                      self.name+'_begin',
+                      weight = 1.0,
+                      delay = 1)
+
+        complete_name = self.name + '_complete'
+        graph.add_node(complete_name,
+                index = len(self.target_graph.nodes) + 1,
+                threshold = 1.0 if self.target_node else 1.0 * len(self.target_graph.nodes),
+                decay = 0.0,
+                potential = 0.0)
+        complete_node_list = [complete_name]
+
+        for node in self.target_graph.nodes:
+            node_name = self.name + str(node)
+            graph.add_node(node_name,
+                           index = (node,),
+                           threshold=1.0,
+                           decay=0.0,
+                           potential=0.0)
+            graph.add_edge(node_name, node_name, weight=-1000, delay=1)
+            if self.target_node:
+                if node==self.target_node:
+                    graph.add_edge(node_name, complete_name, weight=1.0, delay=1.0)
+            else:
+                graph.add_edge(node_name, complete_name, weight=1.0, delay=1.0)
+
+        edge_reference_names = []
+        for node in self.target_graph.nodes:
+            node_name = self.name + str(node)
+            neighbors = list(self.target_graph.neighbors(node))
+            for neighbor in neighbors:
+                neighbor_name = self.name + str(neighbor)
+
+                reference_name = "{}-{}-{}".format(self.name, node, neighbor)
+                edge_reference_names.append(reference_name)
+
+                graph.add_node(reference_name, threshold=1.0, decay=0.0,potential=0.0, from_vertex=node, to_vertex=neighbor )
+                graph.add_edge(neighbor_name, reference_name, weight=-1000, delay=1.0) 
+
+                if self.target_node and node == self.target_node:
+                    weight = -1000
+                else:
+                    weight = 1.1
+                graph.add_edge(node_name, reference_name, weight=weight, delay=1.0)
+                graph.add_edge(reference_name, neighbor_name, weight=weight, delay=1.0)
+
+        for input_neuron in input_lists[0]:
+            index = graph.nodes[input_neuron]['index']
+            if type(index) is tuple:
+                index = index[0]
+            if type(index) is not int:
+                raise TypeError("Neuron index should be Tuple or Int.")
+            graph.add_edge(input_neuron,
+                          self.name+str(index),
+                         weight = 2.0,
+                         delay = 1)
+
+        self.is_built=True
+
+        #Remember, bricks can have more than one output, so we need a list of list of output neurons
+        output_lists = [complete_node_list, edge_reference_names]
+        if self.target_node:
+            output_lists.append(self.name + str(self.target_node))
 
         return (graph,
                self.metadata,
