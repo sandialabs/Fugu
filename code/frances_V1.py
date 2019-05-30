@@ -370,10 +370,7 @@ if numframes >= 30:
         stim_index+=1
         if stim_index>=numcols:
             stim_index=0
-        
-    
-        
-        
+            
 scaffold = Scaffold()
 scaffold.add_brick(Spike_Input(Spiking_Input, time_dimension='True', coding='Raster', name='InputSequence'), 'input' )
 scaffold.add_brick(hR_DS(name='hRds1',dir_step=1,max_cols=numcols), (0,0), output=True)
@@ -404,7 +401,7 @@ print('\n\n-------------------------------------------------------\nInputs:')
 print('\n\n-------------------------------------------------------\nResults:')
 print(result) 
 
-## image raster
+# image raster
 tdata=[]
 pdata=[]
 for i in range(0,numframes):

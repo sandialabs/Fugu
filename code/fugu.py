@@ -26,7 +26,7 @@ input_coding_types = ['current',
 class Scaffold:
     """Class to handle a scaffold of bricks"""
 
-    supported_backends = ['ds']
+    supported_backends = ['ds', 'snn']
 
     def __init__(self):
         self.circuit = nx.DiGraph()
@@ -327,8 +327,14 @@ class Scaffold:
                         if entry[0] not in spike_result:
                             spike_result[entry[0]] = []
                         spike_result[entry[0]].extend(entry[1].tolist())
+                        
+        if backend == 'snn':
+            from backends.interface import digest_fugu
+            spike_result = digest_fugu(self.circuit, self.graph, n_steps=max_runtime, record_all=record_all)
+        
         return spike_result
-
+        
+            
     def summary(self):
         """Display a summary of the scaffold."""
 
