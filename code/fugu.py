@@ -329,8 +329,8 @@ class Scaffold:
                         spike_result[entry[0]].extend(entry[1].tolist())
                         
         if backend == 'snn':
-            from backends.interface import digest_fugu
-            spike_result = digest_fugu(self.circuit, self.graph, n_steps=max_runtime, record_all=record_all)
+            from backends.sushi_chef import serve_fugu_to_snn
+            spike_result = serve_fugu_to_snn(self.circuit, self.graph, n_steps=max_runtime, record_all=record_all, ds_format=True)
         
         return spike_result
         
