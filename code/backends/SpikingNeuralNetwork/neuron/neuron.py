@@ -5,7 +5,7 @@ Created on Tue Dec 18 10:13:24 2018
 
 @author: smusuva
 """
-import abc
+import abc, numbers
 
 class Neuron(abc.ABC):
     @abc.abstractmethod
@@ -125,8 +125,8 @@ class InputNeuron(Neuron):
     def update_state(self):
         try:
             n = next(self._it)
-#            if not isinstance(n, int) and not isinstance(n, float):
-#                raise TypeError('Inputs must be int or float')
+            if not isinstance(n, numbers.Real):
+                raise TypeError('Inputs must be int or float')
             
             self.v = n
             
