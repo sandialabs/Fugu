@@ -23,7 +23,7 @@ class Synapse:
         self._pre = pre_neuron
         self._post = post_neuron
         self._hist = deque(np.zeros(self._d))
-        self.name = 's_' + str(self._pre) + '_' + str(self._post)
+        self.name = 's_' + self._pre.name + '_' + self._post.name
     
     @property    
     def pre_neuron(self):

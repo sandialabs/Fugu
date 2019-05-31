@@ -36,18 +36,21 @@ class LIFNeuron(Neuron):
         input_v = 0.0
         if self.presyn:
             for s in self.presyn:
+#                print(s)
                 input_v += s._hist[0]
         
-        self.v = (self._m * self.v) + input_v
+#        self.v = (self._m * self.v) + input_v
+        self.v = self.v + input_v
         
-        if self.v >= self._T:
+        if self.v > self._T:
             self.spike = True
             self.v = self._R
         else:
             self.spike = False
-        
+            self.v = self._m * self.v
+            
         self.spike_hist.append(self.spike)
-        
+#
     def show_state(self):
         print("Neuron {0}: {1} volts, spike = {2}".format(self.name, self.v, self.spike))
         
@@ -122,18 +125,21 @@ class InputNeuron(Neuron):
     def update_state(self):
         try:
             n = next(self._it)
-            if not isinstance(n, int) and not isinstance(n, float):
-                raise TypeError('Inputs must be int or float')
+#            if not isinstance(n, int) and not isinstance(n, float):
+#                raise TypeError('Inputs must be int or float')
             
             self.v = n
             
             if self.v > self._T:
                 self.spike = True
+                self.v = 0
             else:
                 self.spike = False
+                self.v = 0
         except StopIteration:
             self.spike = False
-        
+            self.v = 0
+       
     @property
     def threshold(self):
         return self._T

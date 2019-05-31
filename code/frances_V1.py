@@ -383,14 +383,14 @@ scaffold.add_brick(hR_DS(name='hRds3',dir_step=1,max_cols=numcols), (5,0), outpu
 
 
 
-print('\n\n-------------------------------------------------------\nNodes:')
-for node in scaffold.circuit.nodes:
-    print("node",node,": ",[scaffold.circuit.nodes[node]['brick'].name],)
-print("\n")   
+#print('\n\n-------------------------------------------------------\nNodes:')
+#for node in scaffold.circuit.nodes:
+#    print("node",node,": ",[scaffold.circuit.nodes[node]['brick'].name],)
+#print("\n")   
  
 scaffold.lay_bricks()
  
-result = scaffold.evaluate(max_runtime=100,backend='ds')
+result = scaffold.evaluate(max_runtime=100,backend='snn', record_all=False)
 
 scaffold.summary()
 
@@ -401,45 +401,45 @@ print('\n\n-------------------------------------------------------\nInputs:')
 print('\n\n-------------------------------------------------------\nResults:')
 print(result) 
 
-# image raster
-tdata=[]
-pdata=[]
-for i in range(0,numframes):
-    ii = np.where(Spiking_Input[range(0,numcols),i]==1)[0]
-    if len(ii) > 0:
-        for j in range(0,len(ii)):
-            tdata.append(i)
-            pdata.append(ii[j])
-get_ipython().run_line_magic('matplotlib', 'qt')   
-plt.figure(1)
-plt.plot(tdata,pdata,'bs')
-plt.xlabel('time step')
-plt.xlim([-0.5,numframes])
-plt.xticks(np.arange(0,numframes+1,1))
-plt.ylabel('stimulus')
-plt.ylim([-0.5,numcols-0.5])
-
-
-## neuron raster
-tndata=[]
-ndata=[]
-for idx, item in enumerate(result):
-    if len(result[idx]) > 0:
-        for i in range(0,len(result[idx])):
-            tndata.append(idx)
-            ndata.append(result[idx][i])  
-plt.figure(2)        
-plt.plot(tndata,ndata,'r|')
-plt.xlabel('time step')
-plt.xlim([0,numframes])
-plt.xticks(np.arange(0,numframes+1,1))
-plt.ylabel('neuron index')
-plt.ylim([10,94])
-
-plt.figure(3)        
-plt.plot(tndata,ndata,'r|')
-plt.xlabel('time step')
-plt.xlim([0,numframes])
-plt.xticks(np.arange(0,numframes+1,1))
-plt.ylabel('neuron index')
-plt.ylim([95,len(scaffold.graph.nodes)])
+## image raster
+#tdata=[]
+#pdata=[]
+#for i in range(0,numframes):
+#    ii = np.where(Spiking_Input[range(0,numcols),i]==1)[0]
+#    if len(ii) > 0:
+#        for j in range(0,len(ii)):
+#            tdata.append(i)
+#            pdata.append(ii[j])
+#get_ipython().run_line_magic('matplotlib', 'qt')   
+#plt.figure(1)
+#plt.plot(tdata,pdata,'bs')
+#plt.xlabel('time step')
+#plt.xlim([-0.5,numframes])
+#plt.xticks(np.arange(0,numframes+1,1))
+#plt.ylabel('stimulus')
+#plt.ylim([-0.5,numcols-0.5])
+#
+#
+### neuron raster
+#tndata=[]
+#ndata=[]
+#for idx, item in enumerate(result):
+#    if len(result[idx]) > 0:
+#        for i in range(0,len(result[idx])):
+#            tndata.append(idx)
+#            ndata.append(result[idx][i])  
+#plt.figure(2)        
+#plt.plot(tndata,ndata,'r|')
+#plt.xlabel('time step')
+#plt.xlim([0,numframes])
+#plt.xticks(np.arange(0,numframes+1,1))
+#plt.ylabel('neuron index')
+#plt.ylim([10,94])
+#
+#plt.figure(3)        
+#plt.plot(tndata,ndata,'r|')
+#plt.xlabel('time step')
+#plt.xlim([0,numframes])
+#plt.xticks(np.arange(0,numframes+1,1))
+#plt.ylabel('neuron index')
+#plt.ylim([95,len(scaffold.graph.nodes)])
