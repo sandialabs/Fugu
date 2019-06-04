@@ -36,7 +36,6 @@ class LIFNeuron(Neuron):
         input_v = 0.0
         if self.presyn:
             for s in self.presyn:
-#                print(s)
                 input_v += s._hist[0]
         
 #        self.v = (self._m * self.v) + input_v
@@ -50,7 +49,7 @@ class LIFNeuron(Neuron):
             self.v = self._m * self.v
             
         self.spike_hist.append(self.spike)
-#
+
     def show_state(self):
         print("Neuron {0}: {1} volts, spike = {2}".format(self.name, self.v, self.spike))
         

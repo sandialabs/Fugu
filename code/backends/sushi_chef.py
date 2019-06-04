@@ -34,7 +34,11 @@ def serve_fugu_to_snn(fugu_circuit, fugu_graph, n_steps=1, record_all=False, ds_
                     rc = True if record_all else vals.get('record', False)
                     neuron_dict[neuron] = snn.InputNeuron(neuron, record=rc)
                     idx = list(fugu_circuit.nodes[node]['output_lists'][0]).index(neuron)
-                    neuron_dict[neuron].connect_to_input(input_values[idx])
+                    if not input_values[idx]:
+                        input_stream = []
+                    else:
+                        input_stream = input_values[idx]
+                    neuron_dict[neuron].connect_to_input(input_stream)
                     nn.add_neuron(neuron_dict[neuron])
             if vals['layer'] == 'output':
                 for olist in fugu_circuit.nodes[node]['output_lists']:
