@@ -197,6 +197,12 @@ class Scaffold:
         for neighbor in in_neighbors:
             b = b and self.circuit.nodes[neighbor]['brick'].is_built
         return b
+    
+    def _assign_brick_names(self,built_graph, name, field_to_check='brick'):
+        new_nodes = [new_node for new_node, node_value in built_graph.nodes(data=True) if field_to_check not in node_value]
+        for new_node in new_nodes:
+            built_graph.nodes[new_node]['brick'] = name
+        return built_graph
 
     def lay_bricks(self, verbose=0):
         """
@@ -224,6 +230,7 @@ class Scaffold:
                               None,
                               None,
                               None)
+            self._assign_brick_names(built_graph,  self.circuit.nodes[node]['name'])
             self.circuit.nodes[node]['output_lists'] = output_lists
             self.circuit.nodes[node]['output_codings'] = output_codings
             self.circuit.nodes[node]['metadata'] = metadata
@@ -257,6 +264,7 @@ class Scaffold:
                                                       control_nodes,
                                                       input_lists,
                                                       input_codings)
+                self._assign_brick_names(built_graph,  self.circuit.nodes[node]['name'])
                 self.circuit.nodes[node]['metadata'] = metadata
                 self.circuit.nodes[node]['output_codings'] = output_codings
                 self.circuit.nodes[node]['output_lists'] = output_lists

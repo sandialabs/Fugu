@@ -16,7 +16,8 @@ def results_df_from_dict(results_dictionary, key, value):
 
 def fill_results_from_graph(results_df, scaffold, fields = ['time', 'neuron_number', 'name', 'brick'], unmatched_fields=['time']):
     field_values = {'name':deque()}
-    fields.remove('name')
+    if 'name' in fields:
+        fields.remove('name')
     for node in scaffold.graph.nodes:
         field_values['name'].append(node)
         for field in [field for field in fields if field not in unmatched_fields ]:
