@@ -1,6 +1,8 @@
 import networkx as nx
 import numpy as np
 from abc import ABC, abstractmethod
+from collections import deque
+from utils import results_df_from_dict
 
 default_brick_metadata = {
     'input_shape' : [()],
@@ -332,7 +334,7 @@ class Scaffold:
             from backends.sushi_chef import serve_fugu_to_snn
             spike_result = serve_fugu_to_snn(self.circuit, self.graph, n_steps=max_runtime, record_all=record_all, ds_format=True)
         
-        return spike_result
+        return results_df_from_dict(spike_result,'time','neuron_number')
         
             
     def summary(self):
@@ -372,6 +374,41 @@ class Scaffold:
                 print("Synapse Between | Synapse Properties")
                 print(str(synapse) + " | " + str(self.graph.edges[synapse]))
 
+'''
+Under Construction Still!
+class Backend(ABC):
+    """Abstract Base Class definition of a Backend"""
+    def __init__(self):
+        self.features = {'supports_stepping':False,
+                         'supports_streaming_input':False,
+                         'supports_additive_leak':False,
+                         'supports_hebbian_learning':False}
+        
+    def serve(self,
+            scaffold,
+            n_steps=None,
+            max_steps=None,
+            record='output',
+            record_all=False,
+            summary_steps=None,
+            backend_args={}):
+        if max_steps is not None:
+            raise ValueError("Self-Halt is not yet implemented")
+        if max_steps is not None and n_steps is not None:
+            raise ValueError("Cannot specify both n_steps and max_steps")
+        if record_all:
+            record = 'all'
+        result = self.step(scaffold, n_steps, record, backend_args)
+    
+    @abstractmethod
+    def step(self,
+             scaffold,
+             n_steps,
+             record,
+             backend_args):
+        pass
+'''
+
 
 class Brick(ABC):
     """Abstract Base Class definition of a Brick class"""
@@ -405,7 +442,7 @@ class InputBrick(Brick):
     @abstractmethod
     def get_input_value(self, t=None):
         """
-        Abstract method to get input values. InputBriacks must implement this method
+        Abstract method to get input values. InputBricks must implement this method
 
         Arguments:
             + t - type of input (Default: None)
