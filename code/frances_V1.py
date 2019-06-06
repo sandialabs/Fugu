@@ -390,7 +390,7 @@ scaffold.add_brick(hR_DS(name='hRds3',dir_step=1,max_cols=numcols), (5,0), outpu
  
 scaffold.lay_bricks()
  
-result = scaffold.evaluate(max_runtime=100,backend='ds', record_all=False)
+result = scaffold.evaluate(max_runtime=100,backend='snn', record_all=False)
 
 scaffold.summary()
 
