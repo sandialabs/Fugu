@@ -61,7 +61,12 @@ For now, you can check:
 To build the documentation, use pydocmd https://pypi.org/project/pydoc-markdown/ with a command similar to 
 `pydocmd simple fugu++ > docs.md`
 
+## Dependencies
 
+- Numpy
+- NetworkX
+- Pandas
+- Pytorch (for DS)
 
 
 ## Known Bugs and todos
