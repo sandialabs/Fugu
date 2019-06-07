@@ -7,7 +7,7 @@ Created on Tue May 28 14:20:09 2019
 """
 
 import backends.SpikingNeuralNetwork as snn
-
+import numpy as np
 
 def serve_fugu_to_snn(fugu_circuit, fugu_graph, n_steps=1, record_all=False, ds_format=False):
     '''Reads in a built fugu graph and converts it to a spiking neural network 
@@ -16,10 +16,6 @@ def serve_fugu_to_snn(fugu_circuit, fugu_graph, n_steps=1, record_all=False, ds_
     nn = snn.NeuralNetwork()
     neuron_dict = {}
     
-    #if compatibility with ds simulator is needed, add neuron numbers
-    if ds_format:
-        for i, n in enumerate(fugu_graph.nodes):
-           fugu_graph.nodes[n]['neuron_number'] = i
     
     ''' Add Neurons '''
     #Add in input and output neurons. Use the fugu_circuit information to identify input and output layers
@@ -29,7 +25,7 @@ def serve_fugu_to_snn(fugu_circuit, fugu_graph, n_steps=1, record_all=False, ds_
     for node, vals in fugu_circuit.nodes.data():
         if 'layer' in vals: 
             if vals['layer'] == 'input':
-                input_values = fugu_circuit.nodes[node]['brick'].get_input_value()
+                input_values = fugu_circuit.nodes[node]['brick'].get_input_value()    
                 for neuron in fugu_circuit.nodes[node]['output_lists'][0]:
                     rc = True if record_all else vals.get('record', False)
                     neuron_dict[neuron] = snn.InputNeuron(neuron, record=rc)

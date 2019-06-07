@@ -9,7 +9,7 @@ Created on Thu May 30 13:02:07 2019
 import networkx as nx
 import numpy as np
 import fugu
-from fugu import Scaffold, Brick, Spike_Input
+from fugu import Scaffold, Brick, Spike_Input, PRN
 
 
 class basic_AND(Brick):
@@ -88,10 +88,11 @@ scaffold = Scaffold()
 scaffold.add_brick(Spike_Input(np.array([1]), coding='Raster', name='Input0'), 'input' )
 scaffold.add_brick(Spike_Input(np.array([1]), coding='Raster', name='Input1'), 'input' )
 scaffold.add_brick(basic_AND(name='AND'), [(0,0), (1,0)], output=True)
+scaffold.add_brick(PRN(probability=0.75,shape=(10,2),steps=5), output=True)
 scaffold.lay_bricks()
 scaffold.summary()
 print()
 print('----------------------')
 print('Results:', end='\n\n')
-result = scaffold.evaluate(backend='snn', max_runtime=4, record_all=False)
+result = scaffold.evaluate(backend='snn_legacy', max_runtime=100, record_all=True)
 print(result)

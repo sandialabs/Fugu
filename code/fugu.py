@@ -3,6 +3,8 @@ import numpy as np
 from abc import ABC, abstractmethod
 from collections import deque
 from utils import results_df_from_dict
+import pandas as pd
+from warnings import warn
 
 default_brick_metadata = {
     'input_shape' : [()],
@@ -28,7 +30,7 @@ input_coding_types = ['current',
 class Scaffold:
     """Class to handle a scaffold of bricks"""
 
-    supported_backends = ['ds', 'snn']
+    supported_backends = ['ds', 'snn', 'ds_legacy', 'snn_legacy']
 
     def __init__(self):
         self.circuit = nx.DiGraph()
@@ -271,11 +273,13 @@ class Scaffold:
                 self.circuit.nodes[node]['control_nodes'] = control_nodes
                 if verbose > 0:
                     print("Complete.")
+        for i, n in enumerate(built_graph.nodes):
+           built_graph.nodes[n]['neuron_number'] = i
         self.is_built=True
         self.graph = built_graph
         return built_graph
-
     def _create_ds_injection(self):
+        warn("This function should only be called with 'ds_legacy' backend.  'ds_legacy' is deprecated and will be removed.  This method will be removed with it.")
         #find input nodes
         import torch
         input_nodes = [node  for node in self.circuit.nodes if ('layer' in self.circuit.nodes[node] )
@@ -291,7 +295,9 @@ class Scaffold:
                     injection_tensors[t][tensor_idx] += input_spikes[local_idx,t]
         return injection_tensors
 
-    def evaluate(self, max_runtime=10, backend='ds', record_all=False):
+
+
+    def evaluate(self, max_runtime=10, backend='ds', record='output', record_all=False, backend_args={}):
         """
         Run the computational graph through the backend.
 
@@ -307,45 +313,60 @@ class Scaffold:
         Exceptions:
             + ValueError if backend is not in list of supported backends
         """
-
-        if backend not in Scaffold.supported_backends:
-            raise ValueError("Backend " + str(backend) + " not supported.")
-        if backend == 'ds':
-            from ds import run_simulation
-            injection_values = self._create_ds_injection()
-            for node in self.circuit.nodes:
-                if 'layer' in self.circuit.nodes[node] and self.circuit.nodes[node]['layer'] == 'output':
-                    for o_list in self.circuit.nodes[node]['output_lists']:
-                        for neuron in o_list:
-                            self.graph.nodes[neuron]['record'] = ['spikes']
-            ds_graph = nx.convert_node_labels_to_integers(self.graph)
-            ds_graph.graph['has_delay']=True
-            if record_all:
+        if type(backend) is str:
+            if backend not in Scaffold.supported_backends:
+                raise ValueError("Backend " + str(backend) + " not supported.")
+            if backend == 'ds_legacy':
+                warn("'ds_legacy' option uses old instantiation of backend object.  Use 'ds' in the future.")
+                from ds import run_simulation
+                injection_values = self._create_ds_injection()
+                for node in self.circuit.nodes:
+                    if 'layer' in self.circuit.nodes[node] and self.circuit.nodes[node]['layer'] == 'output':
+                        for o_list in self.circuit.nodes[node]['output_lists']:
+                            for neuron in o_list:
+                                self.graph.nodes[neuron]['record'] = ['spikes']
+                ds_graph = nx.convert_node_labels_to_integers(self.graph)
+                ds_graph.graph['has_delay']=True
+                if record_all:
+                    for neuron in ds_graph.nodes:
+                        ds_graph.nodes[neuron]['record'] = ['spikes']
                 for neuron in ds_graph.nodes:
-                    ds_graph.nodes[neuron]['record'] = ['spikes']
-            for neuron in ds_graph.nodes:
-                if 'potential' not in ds_graph.nodes[neuron]:
-                    ds_graph.nodes[neuron]['potential'] = 0.0
-            results = run_simulation(ds_graph,
-                                     max_runtime,
-                                     injection_values)
-            spike_result = {}
-            for group in results:
-                if 'spike_history' in results[group]:
-                    spike_history = results[group]['spike_history']
-                    for entry in spike_history:
-                        if entry[0] not in spike_result:
-                            spike_result[entry[0]] = []
-                        spike_result[entry[0]].extend(entry[1].tolist())
-                        
-        if backend == 'snn':
-            from backends.sushi_chef import serve_fugu_to_snn
-            spike_result = serve_fugu_to_snn(self.circuit, self.graph, n_steps=max_runtime, record_all=record_all, ds_format=True)
-        
-        return results_df_from_dict(spike_result,'time','neuron_number')
+                    if 'potential' not in ds_graph.nodes[neuron]:
+                        ds_graph.nodes[neuron]['potential'] = 0.0
+                results = run_simulation(ds_graph,
+                                         max_runtime,
+                                         injection_values)
+                spike_result = {}
+                for group in results:
+                    if 'spike_history' in results[group]:
+                        spike_history = results[group]['spike_history']
+                        for entry in spike_history:
+                            if entry[0] not in spike_result:
+                                spike_result[entry[0]] = []
+                            spike_result[entry[0]].extend(entry[1].tolist())
+                return results_df_from_dict(spike_result,'time','neuron_number')
+            if backend == 'snn_legacy':
+                warn("'snn_legacy' option uses old instantiation of backend object.  Use 'snn' in the future.")
+                from backends.sushi_chef import serve_fugu_to_snn
+                spike_result = serve_fugu_to_snn(self.circuit, self.graph, n_steps=max_runtime, record_all=record_all, ds_format=True)
+                return results_df_from_dict(spike_result,'time','neuron_number')
+            if backend == 'ds':
+                backend = ds_Backend()
+            if backend == 'snn':
+                backend = snn_Backend()
+        if not issubclass(type(backend),Backend):
+            raise ValueError("Invalid backend option.")
+        results = backend.serve(self, 
+                      n_steps=max_runtime, 
+                      record=record, 
+                      batch=True,
+                      summary_steps=None,
+                      record_all=record_all,
+                      backend_args=backend_args)
+        return results
         
             
-    def summary(self):
+    def summary(self, verbose=0):
         """Display a summary of the scaffold."""
 
         print("Scaffold is built: " + str(self.is_built))
@@ -366,24 +387,23 @@ class Scaffold:
         for i, edge in enumerate(self.circuit.edges):
             print("Edge: " + str(edge))
             print(self.circuit.edges[edge])
-        print("-------------------------------------------------------")
-        print("\r\n")
-        if self.graph is not None:
-            print("List of Neurons:")
-            print("\r\n")
-            for i, neuron in enumerate(self.graph.nodes):
-                print("Neuron Number | Neuron Name | Neuron Properties")
-                print(str(i) + " | " + str(neuron) + " | " + str(self.graph.nodes[neuron]))
-            print("\r\n")
+        if verbose > 0:
             print("-------------------------------------------------------")
-            print("List of Synapses:")
             print("\r\n")
-            for i, synapse in enumerate(self.graph.edges):
-                print("Synapse Between | Synapse Properties")
-                print(str(synapse) + " | " + str(self.graph.edges[synapse]))
+            if self.graph is not None:
+                print("List of Neurons:")
+                print("\r\n")
+                for i, neuron in enumerate(self.graph.nodes):
+                    print("Neuron Number | Neuron Name | Neuron Properties")
+                    print(str(i) + " | " + str(neuron) + " | " + str(self.graph.nodes[neuron]))
+                print("\r\n")
+                print("-------------------------------------------------------")
+                print("List of Synapses:")
+                print("\r\n")
+                for i, synapse in enumerate(self.graph.edges):
+                    print("Synapse Between | Synapse Properties" if verbose > 1 else "Syanpse Between")
+                    print(str(synapse) + " | " + str(self.graph.edges[synapse]) if verbose > 1 else str(synapse))
 
-'''
-Under Construction Still!
 class Backend(ABC):
     """Abstract Base Class definition of a Backend"""
     def __init__(self):
@@ -399,6 +419,7 @@ class Backend(ABC):
             record='output',
             record_all=False,
             summary_steps=None,
+            batch=True,
             backend_args={}):
         if max_steps is not None:
             raise ValueError("Self-Halt is not yet implemented")
@@ -406,17 +427,231 @@ class Backend(ABC):
             raise ValueError("Cannot specify both n_steps and max_steps")
         if record_all:
             record = 'all'
-        result = self.step(scaffold, n_steps, record, backend_args)
+           
+        input_nodes = [node  for node in scaffold.circuit.nodes if ('layer' in scaffold.circuit.nodes[node] )
+                       and (scaffold.circuit.nodes[node]['layer'] == 'input')]
+        if batch:
+            input_values = {}
+            for timestep in range(0,n_steps):
+                input_values[timestep]=deque()
+            for input_node in input_nodes:
+                for timestep, spike_list in enumerate(scaffold.circuit.nodes[input_node]['brick']):
+                    input_values[timestep].extend(spike_list)
+            results = self.batch(scaffold, input_values, n_steps, record, backend_args)
+        else:
+            if not self.features['supports_stepping']:
+                raise ValueError("Backend does not support stepping. Use a batch mode.")
+            results = pd.DataFrame()
+            halt = False
+            step_number = 0
+            while step_number < n_steps and not halt:
+                input_values = deque()
+                for input_node in input_nodes:
+                    input_values.extend(next(scaffold.circuit.nodes[input_node]['brick'],[]))
+                result, halt = self.stream(scaffold, input_values,  record, backend_args)
+                results = results.append(result)
+        return results
     
     @abstractmethod
-    def step(self,
+    def stream(self,
+               scaffold,
+               input_values,
+               stepping,
+               record,
+               backend_args):
+        pass
+    
+    @abstractmethod
+    def batch(self,
              scaffold,
+             input_values,
              n_steps,
              record,
              backend_args):
         pass
-'''
 
+class snn_Backend(Backend):
+    """Backend for Srideep's Noteworthy Network (SNN)"""
+    def __init__(self):
+        super(Backend, self).__init__()
+
+    def _serve_fugu_to_snn(self, fugu_circuit, fugu_graph, n_steps=1, record_all=False, ds_format=False):
+        '''Reads in a built fugu graph and converts it to a spiking neural network 
+        and runs it for n steps'''
+        import backends.SpikingNeuralNetwork as snn
+        nn = snn.NeuralNetwork()
+        neuron_dict = {}
+        
+        
+        ''' Add Neurons '''
+        #Add in input and output neurons. Use the fugu_circuit information to identify input and output layers
+        #For input nodes, create input neurons and identity and associate the appropriate inputs to it
+        #for output neurons, obtain neuron parameters from fugu_graph and create LIFNeurons
+        #Add neurons to spiking neural network
+        for node, vals in fugu_circuit.nodes.data():
+            if 'layer' in vals: 
+                if vals['layer'] == 'input':
+                    
+                    input_spike_lists = [input_spikes for input_spikes in fugu_circuit.nodes[node]['brick']]
+                    input_values = {}
+                    for neuron in fugu_circuit.nodes[node]['output_lists'][0]:
+                        input_values[neuron] = []
+                    for timestep, spike_list in enumerate(input_spike_lists):
+                        for neuron in spike_list:
+                            input_values[neuron].append(1)
+                        for neuron in input_values:
+                            if(len(input_values[neuron]) < timestep+1):
+                                input_values[neuron].append(0)
+                            
+                    
+                    for neuron in fugu_circuit.nodes[node]['output_lists'][0]:
+                        rc = True if record_all else vals.get('record', False)
+                        neuron_dict[neuron] = snn.InputNeuron(neuron, record=rc)
+                        neuron_dict[neuron].connect_to_input(input_values[neuron])
+                        nn.add_neuron(neuron_dict[neuron])
+                if vals['layer'] == 'output':
+                    for olist in fugu_circuit.nodes[node]['output_lists']:
+                        for neuron in olist:
+                            params = fugu_graph.nodes[neuron]
+                            th = params.get('threshold', 0.0)
+                            rv = params.get('reset_voltage', 0.0)
+                            lk = params.get('leakage_constant', 1.0)
+                            vol =params.get('voltage', 0.0)
+                            if 'potential' in params:
+                                vol = params['potential']
+                            if 'decay' in params:
+                                lk = 1.0 - params['decay']
+                            neuron_dict[neuron] = snn.LIFNeuron(neuron, threshold=th, reset_voltage=rv, leakage_constant=lk, voltage=vol, record=True)
+                            nn.add_neuron(neuron_dict[neuron])
+        #add other neurons from fugu_graph to spiking neural network
+        #parse through the fugu_graph and if a neuron is not present in spiking neural network, add to it.                    
+        for neuron, params in fugu_graph.nodes.data():
+            if neuron not in neuron_dict.keys():
+                th = params.get('threshold', 0.0)
+                rv = params.get('reset_voltage', 0.0)
+                lk = params.get('leakage_constant', 1.0)
+                vol = params.get('voltage', 0.0)
+                if 'potential' in params:
+                    vol = params['potential']
+                if 'decay' in params:
+                    lk = 1.0 - params['decay']
+                rc = True if record_all else params.get('record', False)
+                neuron_dict[neuron] = snn.LIFNeuron(neuron, threshold=th, reset_voltage=rv, leakage_constant=lk, voltage=vol, record=rc)
+                nn.add_neuron(neuron_dict[neuron])
+        
+        ''' Add Synapses '''
+        #add synapses from fugu_graph edge information        
+        for n1, n2, params in fugu_graph.edges.data():
+            delay = int(params.get('delay', 1))
+            wt = params.get('weight', 1.0)
+            syn = snn.Synapse(neuron_dict[n1], neuron_dict[n2], delay=delay, weight=wt)
+            nn.add_synapse(syn)
+        
+        del neuron_dict
+        
+        ''' Run the Simulator '''
+        df = nn.run(n_steps=n_steps, debug_mode=False)
+        res = {}
+        #if ds format is required, convert neuron names to numbers and return dictionary
+        #else return dataframe
+        if ds_format:
+            numerical_cols = {}
+            for c in df.columns:
+                numerical_cols[c] = fugu_graph.nodes[c]['neuron_number']
+            df = df.rename(index=int, columns=numerical_cols) 
+            
+            for r in df.index:
+                l = []
+                for c in df.columns:
+                    if df.loc[r][c] == 1:
+                        l.append(c)
+                    res[r] = l
+    
+            return res
+        else:
+            return df
+    
+    def stream(self,
+               scaffold,
+               input_values,
+               stepping,
+               record,
+               backend_args):
+        warn("Stepping not supported yet.  Use a batching mode.")
+        return None
+    
+    def batch(self,
+             scaffold,
+             input_values,
+             n_steps,
+             record,
+             backend_args):
+        spike_result = self._serve_fugu_to_snn(scaffold.circuit, scaffold.graph, n_steps=n_steps, record_all=True if record=='all' else False, ds_format=True)
+        return results_df_from_dict(spike_result,'time','neuron_number')
+    
+class ds_Backend(Backend):
+    """Backend for the ds simulator"""
+    def __init__(self):
+        super(Backend,self).__init__()
+        
+    def _create_ds_injection(self,scaffold,input_values):
+        #find input nodes
+        import torch
+
+        injection_tensors = {}
+        for t in range(len(input_values)):
+            injection_tensors[t] = torch.zeros((scaffold.graph.number_of_nodes(),)).float()
+            spiking_neurons = [scaffold.graph.nodes[neuron]['neuron_number'] for neuron in input_values[t]]
+            injection_tensors[t][spiking_neurons] = 1
+        return injection_tensors    
+    
+    def stream(self,
+               scaffold,
+               input_values,
+               stepping,
+               record,
+               backend_args):
+        warn("Stepping not supported yet.  Use a batching mode.")
+        return None
+
+    
+    def batch(self,
+              scaffold,
+              input_values,
+              n_steps,
+              record,
+              backend_args):
+        from ds import run_simulation
+        injection_values = self._create_ds_injection(scaffold,input_values)
+        if record =='output':
+            for node in scaffold.circuit.nodes:
+                if 'layer' in scaffold.circuit.nodes[node] and scaffold.circuit.nodes[node]['layer'] == 'output':
+                    for o_list in scaffold.circuit.nodes[node]['output_lists']:
+                        for neuron in o_list:
+                            scaffold.graph.nodes[neuron]['record'] = ['spikes']
+        ds_graph = nx.convert_node_labels_to_integers(scaffold.graph)
+        ds_graph.graph['has_delay']=True
+        if record == 'all':
+            for neuron in ds_graph.nodes:
+                ds_graph.nodes[neuron]['record'] = ['spikes']
+        for neuron in ds_graph.nodes:
+            if 'potential' not in ds_graph.nodes[neuron]:
+                ds_graph.nodes[neuron]['potential'] = 0.0
+        results = run_simulation(ds_graph,
+                                 n_steps,
+                                 injection_values)
+        spike_result = pd.DataFrame({'time':[],'neuron_number':[]})
+        for group in results:
+            if 'spike_history' in results[group]:
+                spike_history = results[group]['spike_history']
+                for entry in spike_history:
+                    mini_df = pd.DataFrame()
+                    neurons = entry[1].tolist()
+                    times = [entry[0]]*len(neurons)
+                    mini_df['time'] = times
+                    mini_df['neuron_number'] = neurons
+                    spike_result = spike_result.append(mini_df)
+        return spike_result
 
 class Brick(ABC):
     """Abstract Base Class definition of a Brick class"""
@@ -446,6 +681,17 @@ class Brick(ABC):
 
 class InputBrick(Brick):
     """Abstract Base class for handling inputs inherited from Brick"""
+    
+    def __init__(self):
+        self.streaming = False
+    
+    @abstractmethod
+    def __iter__(self):
+        pass
+    
+    @abstractmethod
+    def __next__(self):
+        pass
 
     @abstractmethod
     def get_input_value(self, t=None):
@@ -456,29 +702,57 @@ class InputBrick(Brick):
             + t - type of input (Default: None)
         """
         pass
-
+    
 class Spike_Input(InputBrick):
     """Class to handle Spike Input. Inherits from InputBrick"""
 
     def __init__(self, spikes, time_dimension = False,
-                 coding='Undefined', name=None):
+                 coding='Undefined', batchable = True, name=None):
         '''
         Construtor for this brick.
         Arguments:
 		    + spikes - A numpy array of which neurons should spike at which times
-			+ time_dimension - Dimension along which time should be represented (Default: 0)
+			+ time_dimension - Time dimesion is included as dimension -1
 			+ coding - Coding type to be represented.
+            + batchable - True if input should represent static data; currently True is the only supported mode.
 		    + name - Name of the brick.  If not specified, a default will be used.  Name should be unique.
         '''
-        self.vector = spikes
+        super(InputBrick, self).__init__()
+        self.vector = np.array(spikes)
         self.coding = coding
         self.time_dimension = time_dimension
         self.is_built = False
+        self.batchable = batchable
         self.name = name
+        self.index_map = None
         self.supported_codings = []
         self.metadata = {'D' : 0}
+        self.current_time=0
+        
+    def __iter__(self):
+        self.current_time=0
+        return self
+    
+    def __next__(self):
+        if self.vector.shape[-1] > self.current_time:
+            self.current_time += 1
+            this_time_vector = self.vector[...,self.current_time-1]
+            local_idxs = np.array(np.where(this_time_vector))
+            num_spikes = len(local_idxs[0])
+            global_idxs = deque()
+            for spike in range(num_spikes):
+                idx_to_build = deque()
+                for dimension in range(len(local_idxs)):
+                    idx_to_build.append(local_idxs[dimension][spike])
+                global_idxs.append(tuple(idx_to_build))
+            spiking_neurons = [self.name+"_"+str(idx) for idx in global_idxs]
+            return spiking_neurons
+        else:
+            raise StopIteration
+
 
     def get_input_value(self, t=None):
+        warn("get_input_value is deprecated and will be removed from later versions.  Please ensure that your backend is up-to-date.")
         if t is None:
             return self.vector
         else:
@@ -513,8 +787,10 @@ class Spike_Input(InputBrick):
                                          len(self.vector.shape))
 
         output_lists = [[]]
-        for i, index in enumerate(np.ndindex(self.vector.shape[:-1])):
-            neuron_name = self.name+"_" + str(i)
+        self.index_map = np.ndindex(self.vector.shape[:-1])
+        for i, index in enumerate(self.index_map):
+            #neuron_name = self.name+"_" + str(i)
+            neuron_name = self.name+"_"+str(index)
             graph.add_node(neuron_name,
                            index=index,
                            threshold=0.0,
@@ -541,6 +817,62 @@ class Spike_Input(InputBrick):
                [{'complete':complete_node}],
                output_lists,
                output_codings)
+
+class PRN(Brick):
+    """Psuedo-random neuron brick.  Generates spikes randomly (a uniform random [0,1] draw is compared against a threshold).  Implemented in-backend"""
+    
+    def __init__(self, probability=0.5, steps = None, shape=(1,), name=None, output_coding='Undefined'):
+        '''
+        Constructor for this brick.
+        Arguments:
+            + probability - Probability of a spike at any timestep
+            + steps - Number of timesteps to produce spikes. None provides un-ending output.
+            + shape - shape of the neurons in the brick
+            + output_coding - Desired output coding for the brick
+        '''
+        super(Brick, self).__init__()
+        self.is_built = False
+        self.metadata = {}
+        self.probability = probability
+        self.name = name
+        self.shape = shape
+        self.steps = steps
+        self.output_coding = output_coding
+        self.supported_codings = input_coding_types
+        
+    def build(self,
+              graph,
+              metadata,
+              control_nodes,
+              input_lists,
+              input_codings):
+        if len(input_lists) == 0:
+            raise ValueError("PRN brick requires at least 1 input.")
+        #Driver Neuron
+        driver_neuron = self.name+'_driver'
+        graph.add_node(driver_neuron, threshold=0.7, decay=1.0)
+        graph.add_edge(driver_neuron, driver_neuron, weight=1.0, delay=1)
+        #PRNs
+        output_list = []
+        for neuron_index in np.ndindex(self.shape):
+            output_neuron = self.name+'_' + str(neuron_index)
+            graph.add_node(output_neuron, threshold=0.7, decay=1.0, p=self.probability)
+            output_list.append(output_neuron)
+            graph.add_edge(driver_neuron, output_neuron, weight=1.0, delay=1)
+        complete_neuron = self.name+'_complete'
+        complete_threshold = self.steps - 1.1 if self.steps  is not None else 1.0
+        graph.add_node(complete_neuron, threshold=complete_threshold, decay = 0.0)
+        if self.steps is not None:
+            graph.add_edge(driver_neuron, complete_neuron, weight=1.0, delay = 1)
+            graph.add_edge(complete_neuron, driver_neuron, weight=-10.0, delay=1)
+        for input_control_nodes in control_nodes:
+            graph.add_edge(input_control_nodes['complete'], driver_neuron, weight=1.0, delay=1)
+        self.is_built = True
+        return (graph,
+                self.metadata,
+                [{'complete':complete_neuron}],
+                [output_list],
+                [self.output_coding])
 
 class Threshold(Brick):
     """Class to handle Threshold Brick. Inherits from Brick"""
@@ -959,7 +1291,7 @@ class AND_OR(Brick):
         if len(input_codings)!=2:
             raise ValueError('Only two inputs supported.')
         #Only two supported modes, AND and OR
-        if self.mode is not 'AND' and self.mode is not 'OR':
+        if self.mode != 'AND' and self.mode != 'OR':
             raise ValueError('Unsupported mode.')
         #Keep the same coding as input 0 for the output
         #This is an arbitrary decision at this point.
@@ -986,7 +1318,7 @@ class AND_OR(Brick):
 
 
         output_lists = [[]]
-        threshold_value = 1.0 if self.mode is 'AND' else 0.5
+        threshold_value = 1.0 if self.mode == 'AND' else 0.5
         #We also, obviously, need to build the computational portion of our graph
         for operand0 in input_lists[0]:
             for idx_num, operand1 in enumerate(input_lists[1]):
@@ -1073,7 +1405,7 @@ class Shortest_Path_Length(Brick):
             + list of coding formats of output
         """
 
-        if len(input_lists) is not 1:
+        if len(input_lists) != 1:
             raise ValueError('Incorrect Number of Inputs.')
         for input_coding in input_codings:
             if input_coding not in self.supported_codings:
