@@ -703,8 +703,8 @@ class InputBrick(Brick):
         """
         pass
     
-class Spike_Input(InputBrick):
-    """Class to handle Spike Input. Inherits from InputBrick"""
+class Vector_Input(InputBrick):
+    """Class to handle a vector of spiking input. Inherits from InputBrick"""
 
     def __init__(self, spikes, time_dimension = False,
                  coding='Undefined', batchable = True, name=None):
@@ -817,6 +817,11 @@ class Spike_Input(InputBrick):
                [{'complete':complete_node}],
                output_lists,
                output_codings)
+        
+class Spike_Input(Vector_Input):
+    def __init__(self,input_spikes,*args,**kwargs):
+        super().__init__(input_spikes, *args, **kwargs)
+        warn("Spike_Input is deprecated.  Use Vector_Input instead.")
 
 class PRN(Brick):
     """Psuedo-random neuron brick.  Generates spikes randomly (a uniform random [0,1] draw is compared against a threshold).  Implemented in-backend"""
