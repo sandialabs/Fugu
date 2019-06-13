@@ -8,7 +8,7 @@ Created on Tue Jun 11 15:31:37 2019
 
 import numpy as np
 from utils import fill_results_from_graph
-
+import time
 # Plotting imports
 import dash
 import dash_html_components as html
@@ -17,7 +17,7 @@ import dash_cytoscape as cyto
 from dash.dependencies import Input, Output
 import plotly.graph_objs as go
 import matplotlib.pyplot as plt
-
+from collections import deque
 
 ###############################################################################
 #
@@ -34,67 +34,8 @@ def graph_vis(graph, result, scaffold, view_scaffold=False):
     spiked = get_spiked_info(graph, result, scaffold)
     pos = set_position(graph, result)
     
-    nodes = []
-    edges = []
-    for edge in graph.edges():
-        source_dict = {}
-        source_data = {}
-        source_position = {}
-        
-        target_dict = {}
-        target_data = {}
-        target_position = {}
-        
-        e = {}
-        e_data = {}
-        
-        source = edge[0]
-        target = edge[1]
-        
-        source_position = {'x': pos[source][0], 'y':pos[source][1]}
-        source_data['id'] = graph.nodes[source]['neuron_number']
-        source_data['label'] = source
-        source_data['threshold'] = graph.nodes[source]['threshold']
-        source_dict = {'data': source_data, 'position': source_position}
-        
-        target_position = {'x': pos[target][0], 'y': pos[target][1]}
-        target_data['id'] = graph.nodes[target]['neuron_number']
-        target_data['label'] = target
-        target_data['threshold'] = graph.nodes[target]['threshold']
-        target_dict = {'data': target_data, 'position': target_position}
-        
-        if str(source) in spiked and str(target) in spiked:
-            source_dict['classes'] = 'pink'
-            target_dict['classes'] = 'pink'
-        elif str(source) in spiked and str(target) not in spiked:
-            source_dict['classes'] = 'pink'
-            target_dict['classes'] = 'cadetblue'
-        elif str(source) not in spiked and str(target) in spiked:
-            source_dict['classes'] = 'cadetblue'
-            target_dict['classes'] = 'pink'
-        else:
-            source_dict['classes'] = 'cadetblue'
-            target_dict['classes'] = 'cadetblue'
-        
-        prev_source = False
-        prev_target = False
-        for other_dict in nodes:
-            if source_dict == other_dict:
-                prev_source = True
-            if target_dict == other_dict:
-                prev_target = True
-        if prev_source == False:
-            nodes.append(source_dict)
-        if prev_target == False:
-            nodes.append(target_dict)
-        
-        e_data = {'source': graph.nodes[source]['neuron_number'],
-                  'target': graph.nodes[target]['neuron_number'],
-                  'label': str(source) + ' to ' + str(target),
-                  'weight': graph.edges[edge]['weight'],
-                  'delay': graph.edges[edge]['delay']}
-        e['data'] = e_data
-        edges.append(e)
+    nodes, edges = _build_node_and_edge_lists(graph, pos, spiked, spiked_color='pink', not_spiked_color='cadetblue')
+
         
     elements_ls = nodes + edges
     
@@ -389,7 +330,100 @@ def graph_vis(graph, result, scaffold, view_scaffold=False):
         app.run_server(debug=True)
         return
 
+def _build_node_and_edge_lists(graph, pos, spiked, spiked_color='pink', not_spiked_color='cadetblue'):
+    nodes = []
+    edges =[]
+    for edge in graph.edges():
+        source_dict = {}
+        source_data = {}
+        source_position = {}
+        
+        target_dict = {}
+        target_data = {}
+        target_position = {}
+        
+        e = {}
+        e_data = {}
+        
+        source = edge[0]
+        target = edge[1]
+        
+        source_position = {'x': pos[source][0], 'y':pos[source][1]}
+        source_data['id'] = graph.nodes[source]['neuron_number']
+        source_data['label'] = source
+        source_data['threshold'] = graph.nodes[source]['threshold']
+        source_dict = {'data': source_data, 'position': source_position}
+        
+        target_position = {'x': pos[target][0], 'y': pos[target][1]}
+        target_data['id'] = graph.nodes[target]['neuron_number']
+        target_data['label'] = target
+        target_data['threshold'] = graph.nodes[target]['threshold']
+        target_dict = {'data': target_data, 'position': target_position}
+        
+        if str(source) in spiked and str(target) in spiked:
+            source_dict['classes'] = 'pink'
+            target_dict['classes'] = 'pink'
+        elif str(source) in spiked and str(target) not in spiked:
+            source_dict['classes'] = 'pink'
+            target_dict['classes'] = 'cadetblue'
+        elif str(source) not in spiked and str(target) in spiked:
+            source_dict['classes'] = 'cadetblue'
+            target_dict['classes'] = 'pink'
+        else:
+            source_dict['classes'] = 'cadetblue'
+            target_dict['classes'] = 'cadetblue'
+        
+        prev_source = source_dict in nodes
+        prev_target = target_dict in nodes
+        
+        #for other_dict in nodes:
+        #    if source_dict == other_dict:
+        #        prev_source = True
+        #    if target_dict == other_dict:
+        #        prev_target = True
+        if not prev_source:
+            nodes.append(source_dict)
+        if not prev_target:
+            nodes.append(target_dict)
+        
+        e_data = {'source': graph.nodes[source]['neuron_number'],
+                  'target': graph.nodes[target]['neuron_number'],
+                  'label': str(source) + ' to ' + str(target),
+                  'weight': graph.edges[edge]['weight'],
+                  'delay': graph.edges[edge]['delay']}
+        e['data'] = e_data
+        edges.append(e)  
+    return nodes, edges
+
+
+def _build_node_and_edge_lists_test(graph, pos, spiked, spiked_color='pink', not_spiked_color='cadetblue'):
+    nodes = deque()
+    edges = deque()
     
+    for node in graph.nodes:
+        node_data = {}
+        node_position = {'x': pos[node][0], 'y':pos[node][1]}
+        node_data['id'] = graph.nodes[node]['neuron_number']
+        node_data['label'] = node
+        node_data['threshold'] = graph.nodes[node]['threshold']
+        node_dict = {'data': node_data, 
+                     'position': node_position, 
+                     'classes': 'pink' if str(node) in spiked else 'cadetblue'}
+        nodes.append(node_dict)
+    
+    for edge in graph.edges: 
+    
+        source = edge[0]
+        target = edge[1]
+           
+        edges.append({'data': 
+            {'source': graph.nodes[source]['neuron_number'],
+                  'target': graph.nodes[target]['neuron_number'],
+                  'label': str(source) + ' to ' + str(target),
+                  'weight': graph.edges[edge]['weight'],
+                  'delay': graph.edges[edge]['delay']}  
+    })
+    return list(nodes), list(edges)
     
 ###############################################################################
 #
@@ -424,36 +458,14 @@ def raster_plot(graph, result, scaffold):
 
 
 def get_spiked_info(graph, result, scaffold):
-    spiked = []
     result = fill_results_from_graph(result, scaffold, fields=['time', 'neuron_number', 'name'])
-    s = result['name']
-    for i in range(0,len(s)):
-        spiked.append(s[i])
-    return spiked
+    return list(result['name'])
 
 def set_position(graph, result):
     
-    degree = {}
-    for edge in graph.edges():
-        d = 0
-        for e in graph.edges():
-            if edge[0] == e[0]:
-                d = d + 1
-        degree[edge[0]] = d
-    for n in graph.nodes():
-        if n not in degree.keys():
-            degree[n] = 0
+    
+    degree = dict(graph.out_degree()) #{}
 
-    incoming = {}
-    for edge in graph.edges():
-        i = 0
-        for e in graph.edges():
-            if edge[1] == e[1]:
-                i = i + 1
-        incoming[edge[1]] = i
-    for n in graph.nodes():
-        if n not in incoming.keys():
-            incoming[n] = 0
     
     pos = {}
     input_layer = []
@@ -487,22 +499,7 @@ def set_position(graph, result):
     j_val = {}
     for edge in graph.edges():
         if edge[0] in pos.keys() and edge[1] not in pos.keys():
-#            if incoming[edge[1]] > 1:
-#                previous = {}
-#                #store previous edges and y values that connect to this
-#                for e in graph.edges():
-#                    if e[1] == edge[1]:
-#                        previous[edge[0]] = pos[edge[0]][1]
-#                x = pos[edge[0]][0]
-#                avg = 0
-#                k = 0
-#                for key, height in previous.items():
-#                    avg = avg + height
-#                    k = k + 1
-#                 
-#                pos[edge[1]] = x + 250, avg/k
-                
-#            else:
+
             x = pos[edge[0]][0]
             y = pos[edge[0]][1]
             edge0_d = degree[edge[0]]
@@ -521,4 +518,59 @@ def set_position(graph, result):
                 print(n)
     return pos
 
-    
+if __name__ == "__main__":
+    from fugu import Scaffold, Spike_Input, Shortest_Path_Length
+    import networkx as nx
+    trials = 10
+    skip_baseline = False
+    scaffold = Scaffold()
+    scaffold.add_brick(Spike_Input(np.array([1]), coding='Raster', name='Input0'), 'input' )
+    print("Building Graph")
+    target_graph = nx.generators.path_graph(5000)
+    for edge in target_graph.edges:
+        target_graph.edges[edge]['weight'] = 1.0
+    scaffold.add_brick(Shortest_Path_Length(target_graph,0))
+    print("Laying Bricks")
+    scaffold.lay_bricks()
+    scaffold.summary()
+    print()
+    print('----------------------')
+    print('Results:', end='\n\n')
+    print("Evaluating")
+    result = scaffold.evaluate(backend='ds', max_runtime=10, record_all=True)
+    print("Done evaluating.")
+    print(scaffold.graph.number_of_edges())
+    print(scaffold.graph.number_of_nodes())
+    print("Building Layout")
+    pos= nx.layout.circular_layout(scaffold.graph)
+    spiked = get_spiked_info(scaffold.graph, result, scaffold)
+    pos = set_position(scaffold.graph, result)
+    print("Running Tests")
+    if not skip_baseline:
+        start_time = time.time()
+        for i in range(trials):
+            print("+",end="")
+            nodes, edges = _build_node_and_edge_lists(scaffold.graph, pos, spiked, spiked_color='pink', not_spiked_color='cadetblue')
+        end_time = time.time()
+        print("")
+        print("Original Elapsed Time Average:")
+        print((end_time-start_time)/trials)
+    print("New Elapsed Time Average:")
+    start_time = time.time()
+    for i in range(trials):
+        print("+",end="")
+        new_nodes, new_edges = _build_node_and_edge_lists_test(scaffold.graph, pos, spiked, spiked_color='pink', not_spiked_color='cadetblue')
+    end_time = time.time()
+    print("")
+    print((end_time - start_time)/trials)
+    print("Outputs Match:")
+    all_equal = True
+    all_equal = all_equal and (len(nodes) == len(new_nodes))
+    all_equal = all_equal and (len(edges) == len(new_edges))
+    for line_number in range(len(nodes)):
+        line = nodes[line_number]
+        all_equal = all_equal and line in new_nodes
+    for line_number in range(len(edges)):
+        line = edges[line_number]
+        all_equal = all_equal and line in new_edges
+    print(all_equal)
