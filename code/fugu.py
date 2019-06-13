@@ -1578,7 +1578,7 @@ class LongestIncreasingSubsequence(Brick):
             column_a = []
             column_b = []
             x_name = f"x_{i}"
-            L0_A_name = f"L_0-x_{i}-A"
+            L0_A_name = f"L_1-x_{i}-A"
 
             # create x_i neuron
             graph.add_node(x_name,
@@ -1598,8 +1598,8 @@ class LongestIncreasingSubsequence(Brick):
             levels[0].append(L0_A_name)
 
             for j in range(i):
-                L_B_name = f"L_{j}-x_{i}-B"
-                L_A_name = f"L_{j + 1}-x_{i}-A"
+                L_B_name = f"L_{j + 1}-x_{i}-B"
+                L_A_name = f"L_{j + 2}-x_{i}-A"
                 graph.add_node(L_B_name,
                                threshold = 0.9,
                                decay = 0.0,
@@ -1609,10 +1609,12 @@ class LongestIncreasingSubsequence(Brick):
                                decay = 0.0,
                                potential = 0.0)
 
+                # Alarms
+                graph.add_edge(x_name, L_B_name, weight = -1.0, delay = j + 1.01)
                 graph.add_edge(x_name, L_A_name, weight = 1.0, delay = 0.0)
-                graph.add_edge(x_name, L_B_name, weight = -1.0, delay = 0.0)
-                graph.add_edge(L_A_name, L_A_name, weight = -2.0, delay = 0.0)
+
                 graph.add_edge(L_B_name, L_A_name, weight = 1.0, delay = 0.0)
+                graph.add_edge(L_A_name, L_A_name, weight = -2.0, delay = 0.0)
                 
                 levels[j].append(L_B_name)
                 levels[j+1].append(L_A_name)
