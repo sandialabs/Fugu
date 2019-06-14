@@ -322,7 +322,7 @@ class Scaffold:
         Exceptions:
             + ValueError if backend is not in list of supported backends
         """
-<<<<<<< HEAD
+
         if type(backend) is str:
             if backend not in Scaffold.supported_backends:
                 raise ValueError("Backend " + str(backend) + " not supported.")
@@ -377,42 +377,7 @@ class Scaffold:
         
             
     def summary(self, verbose=0):
-=======
 
-        if backend not in Scaffold.supported_backends:
-            raise ValueError("Backend {} not supported".format(backend))
-        if backend == 'ds':
-            from ds import run_simulation
-            injection_values = self._create_ds_injection()
-            for node in self.circuit.nodes:
-                if 'layer' in self.circuit.nodes[node] and self.circuit.nodes[node]['layer'] == 'output':
-                    for o_list in self.circuit.nodes[node]['output_lists']:
-                        for neuron in o_list:
-                            self.graph.nodes[neuron]['record'] = ['spikes']
-            ds_graph = nx.convert_node_labels_to_integers(self.graph)
-            ds_graph.graph['has_delay']=True
-            if record_all:
-                for neuron in ds_graph.nodes:
-                    ds_graph.nodes[neuron]['record'] = ['spikes']
-
-            for neuron in ds_graph.nodes:
-                if 'potential' not in ds_graph.nodes[neuron]:
-                    ds_graph.nodes[neuron]['potential'] = 0.0
-            results = run_simulation(ds_graph,
-                                     max_runtime,
-                                     injection_values)
-            spike_result = {}
-            for group in results:
-                if 'spike_history' in results[group]:
-                    spike_history = results[group]['spike_history']
-                    for entry in spike_history:
-                        if entry[0] not in spike_result:
-                            spike_result[entry[0]] = []
-                        spike_result[entry[0]].extend(entry[1].tolist())
-        return spike_result
-
-    def summary(self):
->>>>>>> shortest-path-tree
         """Display a summary of the scaffold."""
 
         print("Scaffold is built: {}".format(self.is_built))
@@ -433,22 +398,11 @@ class Scaffold:
         for i, edge in enumerate(self.circuit.edges):
             print("Edge: {}".format(edge))
             print(self.circuit.edges[edge])
-<<<<<<< HEAD
+
         if verbose > 0:
-=======
-        print("-------------------------------------------------------")
-        print("\r\n")
-        if self.graph is not None:
-            print("List of Neurons:")
-            print("\r\n")
-            print("Neuron Number | Neuron Name | Neuron Properties")
-            for i, neuron in enumerate(self.graph.nodes):
-                print("{} | {} | {}".format(i, neuron, self.graph.nodes[neuron]))
-            print("\r\n")
->>>>>>> shortest-path-tree
             print("-------------------------------------------------------")
             print("\r\n")
-<<<<<<< HEAD
+
             if self.graph is not None:
                 print("List of Neurons:")
                 print("\r\n")
@@ -711,11 +665,7 @@ class ds_Backend(Backend):
                     mini_df['neuron_number'] = neurons
                     spike_result = spike_result.append(mini_df)
         return spike_result
-=======
-            print("Synapse Between | Synapse Properties")
-            for i, synapse in enumerate(self.graph.edges):
-                print("{} | {}".format(synapse, self.graph.edges[synapse]))
->>>>>>> shortest-path-tree
+
 
 class Brick(ABC):
     """Abstract Base Class definition of a Brick class"""
@@ -851,15 +801,12 @@ class Vector_Input(InputBrick):
                                          len(self.vector.shape))
 
         output_lists = [[]]
-<<<<<<< HEAD
+
         self.index_map = np.ndindex(self.vector.shape[:-1])
         for i, index in enumerate(self.index_map):
             #neuron_name = self.name+"_" + str(i)
             neuron_name = self.name+"_"+str(index)
-=======
-        for i, index in enumerate(np.ndindex(self.vector.shape[:-1])):
-            neuron_name = "{}_{}".format(self.name, i)
->>>>>>> shortest-path-tree
+
             graph.add_node(neuron_name,
                            index=index,
                            threshold=0.0,
@@ -1645,7 +1592,7 @@ class Breadth_First_Search(Brick):
             + list of coding formats of output
         """
 
-        if len(input_lists) is not 1:
+        if len(input_lists) != 1:
             raise ValueError('Incorrect Number of Inputs.')
         for input_coding in input_codings:
             if input_coding not in self.supported_codings:
@@ -1996,7 +1943,7 @@ class LongestIncreasingSubsequence(Brick):
             + list of coding formats of output
         """
 
-        if len(input_lists) is not 1:
+        if len(input_lists) != 1:
             raise ValueError('Incorrect Number of Inputs.')
         for input_coding in input_codings:
             if input_coding not in self.supported_codings:
