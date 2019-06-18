@@ -71,19 +71,19 @@ To build the documentation, use pydocmd https://pypi.org/project/pydoc-markdown/
 
 ## Known Bugs and todos
 - Combine and organize documentation
-- Inputs that take both pre-computed values and input spikes will not lay correctly.
+- ~~Inputs that take both pre-computed values and input spikes will not lay correctly.~~
 - ~~Nodes only accept input from the first output of an input node.~~
-- `_create_ds_injection` only works on vector-shaped input
-- `_create_ds_injection` only works on input layers with 1 input (this may be okay)
-- Input handling needs to be re-written.  Currently relies on fragile order of nodes.  Additionally, we should support streaming data.
+- ~~`_create_ds_injection` only works on vector-shaped input~~
+- ~~`_create_ds_injection` only works on input layers with 1 input (this may be okay)~~
+- ~~Input handling needs to be re-written.  Currently relies on fragile order of nodes.  Additionally, we should support streaming data.~~
 - Many checks are missing
 - Mismatch between input and output layer namings.  Bricks should be able to be input and/or hidden and/or output layers.
 - Maximum runtime should be determined by the depth of the graph.
 - Delay brick needs to be updated as well as conversion bricks
 - `Scaffold.resolve_timing` needs to be re-tested with new Delay brick
-- Dimensionliaty dictionary should be removed
-- Inputs/Outputs should be bundled as a list of dictionaries rather than parallel lists
-- Plotting functions likely do not and wll need to be re-tested
+- ~~Dimensionliaty dictionary should be removed~~
+- ~~Inputs/Outputs should be bundled as a list of dictionaries rather than parallel lists~~
+- ~~Plotting functions likely do not and wll need to be re-tested~~ Vis is being re-written completely.
 - Bricks in brick_1.py are likely broken and will need to be fixed.
 - ~~Srideep: document fugu.py code bricks~~
 - ~~Frances: documention around neural model Fugu is running (e.g. reference manual describing what is actually running)~~
@@ -92,4 +92,4 @@ To build the documentation, use pydocmd https://pypi.org/project/pydoc-markdown/
 - Not Sam: Need scaffolds to be bricks
 - ~~Not Sam: Redo how handle control nodes (Perphaps use dictionaries)~~
 - Expand outputs 
-- Create backend class to handle backend simulators
+- ~~Create backend class to handle backend simulators~~
