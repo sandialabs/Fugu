@@ -7,7 +7,7 @@ Created on Tue Jun 11 15:31:37 2019
 """
 
 import numpy as np
-from utils import fill_results_from_graph
+from utils import fill_results_from_graph, set_position, get_spiked_info, results_dict
 # Plotting imports
 import dash
 import dash_html_components as html
@@ -230,6 +230,7 @@ def raster_plot(result, scaffold):
     plt.show()
     return
 
+
 def _build_node_and_edge_lists(graph, pos, spiked_at_time, spiked_color='pink', not_spiked_color='cadetblue'):
     nodes = deque()
     edges = deque()
@@ -260,75 +261,9 @@ def _build_node_and_edge_lists(graph, pos, spiked_at_time, spiked_color='pink', 
     return list(nodes), list(edges)
 
 
-def get_spiked_info(result, scaffold):
-    result = fill_results_from_graph(result, scaffold, fields=['time', 'neuron_number', 'name'])
-    return list(result['name'])
 
-def results_dict(result, scaffold):
-    result = fill_results_from_graph(result, scaffold, fields=['time', 'neuron_number', 'name'])
-    i = 0
-    t_dict = {}
-    for t in result['time']:
-        if int(t) not in t_dict.keys():
-            t_dict[int(t)] = [result['name'][i]]
-        else:
-            t_dict[int(t)].append(result['name'][i])
-        i = i + 1
-    return(t_dict)
 
-def set_position(graph):
-    degree = dict(graph.out_degree())
 
-    pos = {}
-    input_layer = []
-    output_layer = []
-    middle_layer = []
-    for node in graph.nodes():
-        input_layer.append(node)
-        output_layer.append(node)
-        middle_layer.append(node)
-    for edge in graph.edges():
-        if edge[1] in input_layer:
-            input_layer.remove(edge[1])
-        if edge[0] in output_layer:
-            output_layer.remove(edge[0])
-    for node in input_layer:
-        if node in middle_layer:
-            middle_layer.remove(node)
-    for node in output_layer:
-        if node in middle_layer:
-            middle_layer.remove(node)
-    
-    max_degree = 0
-    for n in input_layer:
-        if degree[n] > max_degree:
-            max_degree = degree[n]
-    
-    i = 70*max_degree*len(input_layer)
-    for node in input_layer:
-        pos[node] = (0, i)
-        i = i - 70*max_degree
-    j_val = {}
-    for edge in graph.edges():
-        if edge[0] in pos.keys() and edge[1] not in pos.keys():
-
-            x = pos[edge[0]][0]
-            y = pos[edge[0]][1]
-            edge0_d = degree[edge[0]]
-            if edge0_d%2 == 1 and edge[0] not in j_val.keys():
-                j_val[edge[0]] = y + 70*np.floor(edge0_d/2)
-            elif edge0_d%2 == 0 and edge[0] not in j_val.keys():
-                j_val[edge[0]] = y + 35 + 70*(edge0_d/2 - 1)
-            pos[edge[1]] = x + 250, j_val[edge[0]]
-            j_val[edge[0]] = j_val[edge[0]] - 70
-                
-            
-    if len(graph.nodes()) < len(pos):
-        print("Error! Not all nodes assigned positions. Unassigned nodes:")
-        for n in graph.nodes():
-            if n not in pos.keys():
-                print(n)
-    return pos
 
 if __name__ == "__main__":
     from fugu import Scaffold, Vector_Input, Shortest_Path_Length
