@@ -9,7 +9,7 @@ import networkx as nx
 import numpy as np
 from ..utils import results_df_from_dict
 from warnings import warn
-from ..backend import snn_Backend, ds_Backend
+from ..backend import Backend, snn_Backend, ds_Backend
 
 
 class Scaffold:
@@ -349,7 +349,7 @@ class Scaffold:
                 backend = ds_Backend()
             if backend == 'snn':
                 backend = snn_Backend()
-        if not issubclass(type(backend),bk.Backend):
+        if not issubclass(type(backend), Backend):
             raise ValueError("Invalid backend option.")
         results = backend.serve(self, 
                       n_steps=max_runtime, 

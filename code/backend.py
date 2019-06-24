@@ -86,7 +86,7 @@ class snn_Backend(Backend):
     def _serve_fugu_to_snn(self, fugu_circuit, fugu_graph, n_steps=1, record_all=False, ds_format=False):
         '''Reads in a built fugu graph and converts it to a spiking neural network 
         and runs it for n steps'''
-        import backends.SpikingNeuralNetwork as snn
+        import Fugu.code.backends.SpikingNeuralNetwork as snn
         nn = snn.NeuralNetwork()
         neuron_dict = {}
         
