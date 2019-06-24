@@ -6,7 +6,7 @@ Created on Tue May 28 14:20:09 2019
 @author: smusuva
 """
 
-import backends.SpikingNeuralNetwork as snn
+import Fugu.code.backends.SpikingNeuralNetwork as snn
 import numpy as np
 
 def serve_fugu_to_snn(fugu_circuit, fugu_graph, n_steps=1, record_all=False, ds_format=False):

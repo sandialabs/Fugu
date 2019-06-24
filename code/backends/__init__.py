@@ -6,5 +6,5 @@ Created on Wed Dec 12 09:18:44 2018
 @author: smusuva
 """
 
-from backends import SpikingNeuralNetwork
+from Fugu.code.backends import SpikingNeuralNetwork
 

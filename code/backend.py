@@ -9,7 +9,7 @@ from abc import ABC, abstractmethod
 from collections import deque
 import pandas as pd
 from warnings import warn
-from utils import results_df_from_dict
+from .utils import results_df_from_dict
 import networkx as nx
 
 class Backend(ABC):

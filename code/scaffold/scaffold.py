@@ -7,9 +7,10 @@ Created on Wed Jun 19 11:37:44 2019
 """
 import networkx as nx
 import numpy as np
-from utils import results_df_from_dict
+from ..utils import results_df_from_dict
 from warnings import warn
-from ..backends import backend as bk
+from ..backend import snn_Backend, ds_Backend
+
 
 class Scaffold:
     """Class to handle a scaffold of bricks"""
@@ -341,13 +342,13 @@ class Scaffold:
                 return results_df_from_dict(spike_result,'time','neuron_number')
             if backend == 'snn_legacy':
                 warn("'snn_legacy' option uses old instantiation of backend object.  Use 'snn' in the future.")
-                from backends.sushi_chef import serve_fugu_to_snn
+                from Fugu.code.backends.sushi_chef import serve_fugu_to_snn
                 spike_result = serve_fugu_to_snn(self.circuit, self.graph, n_steps=max_runtime, record_all=record_all, ds_format=True)
                 return results_df_from_dict(spike_result,'time','neuron_number')
             if backend == 'ds':
-                backend = bk.ds_Backend()
+                backend = ds_Backend()
             if backend == 'snn':
-                backend = bk.snn_Backend()
+                backend = snn_Backend()
         if not issubclass(type(backend),bk.Backend):
             raise ValueError("Invalid backend option.")
         results = backend.serve(self, 

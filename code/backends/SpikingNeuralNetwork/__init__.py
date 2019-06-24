@@ -6,7 +6,7 @@ Created on Wed Dec 12 09:18:44 2018
 @author: smusuva
 """
 
-from backends.SpikingNeuralNetwork.neuron.neuron import Neuron, LIFNeuron, InputNeuron
-from backends.SpikingNeuralNetwork.synapse.synapse import Synapse
-from backends.SpikingNeuralNetwork.neuralnetwork.neuralnetwork import NeuralNetwork
+from Fugu.code.backends.SpikingNeuralNetwork.neuron.neuron import Neuron, LIFNeuron, InputNeuron
+from Fugu.code.backends.SpikingNeuralNetwork.synapse.synapse import Synapse
+from Fugu.code.backends.SpikingNeuralNetwork.neuralnetwork.neuralnetwork import NeuralNetwork
 
