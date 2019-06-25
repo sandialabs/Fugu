@@ -7,7 +7,7 @@ Created on Tue Jun 11 15:31:37 2019
 """
 
 import numpy as np
-from utils import fill_results_from_graph, set_position, get_spiked_info, results_dict
+from utils import fill_results_from_graph, set_position, results_dict
 # Plotting imports
 import dash
 import dash_html_components as html
@@ -34,9 +34,12 @@ from collections import deque
 def graph_vis(graph, pos, result, scaffold, view_scaffold=False):
     result = fill_results_from_graph(result,scaffold)
     result_dict = results_dict(result, scaffold)
-    spiked_at_time = result_dict[0]
+    if 0 in result_dict.keys():
+        spiked_at_time = result_dict[0]
+    else:
+        spiked_at_time = []
     
-    nodes, edges = _build_node_and_edge_lists(graph, pos, spiked_at_time, spiked_color='pink', not_spiked_color='cadetblue')
+    nodes, edges = _build_node_and_edge_lists(graph, pos, spiked_at_time)
 
         
     elements_ls = nodes + edges
@@ -44,7 +47,7 @@ def graph_vis(graph, pos, result, scaffold, view_scaffold=False):
     stylesheet_list = []
     stylesheet_list.append({'selector': 'node',
                             'style': {
-                                    'content': 'data(id)',
+                                    #'content': 'data(id)',
                                     'width': '50',
                                     'height': '50'}})
     stylesheet_list.append({'selector': 'edge',
@@ -52,151 +55,240 @@ def graph_vis(graph, pos, result, scaffold, view_scaffold=False):
                                     'curve-style': 'bezier',
                                     'target-arrow-shape': 'triangle',
                                     'label': 'data(weight)',
-                                    'width': '7'}})
+                                    'width': '7',
+                                    'line-color': '#888'}})
     stylesheet_list.append({'selector': '.pink',
                             'style': {
-                                    'background-color': 'pink',
-                                    'line-color': 'pink'}})
+                                    'background-color': '#DE5F76',
+                                    'line-color': '#DE5F76'}})
     stylesheet_list.append({'selector': '.cadetblue',
                             'style': {
-                                    'background-color': 'cadetblue',
-                                    'line-color': 'cadetblue'}})
-    
-    app = dash.Dash(__name__)
-    
+                                    'background-color': '#4B8F8C',
+                                    'line-color': '#4B8F8C'}})
     max_t = 0  
     for t in result['time']:
         if t > max_t:
             max_t = int(t)
     time_step = {}
     for i in range(0,max_t+1):
-        time_step[i] = i
-
-    if not view_scaffold:
-        app.layout = html.Div([
-                cyto.Cytoscape(
-                        id = 'graph',
-                        elements=elements_ls,
-                        layout={'name':'preset'},
-                        autoRefreshLayout = False,
-                        stylesheet=stylesheet_list),
-                dcc.Textarea(
-                        id = 'text-area',
-                        draggable = True,
-                        placeholder = 'Hover over a node to view its attributes',
-                        readOnly = True,
-                        value = '',
-                        style={'width': '40%'}),
-                html.P([
-                        html.Label("Timestep"),
-                        dcc.Slider(id='slider',
-                                   marks = time_step,
-                                   min = 0,
-                                   max = max_t,
-                                   value = 0,
-                                   step = 1,
-                                   updatemode='drag',
-                                   )
-                        ])
-                ])
-    else:
-        scaffold_pos = set_position(scaffold.circuit, result)
-        edge_trace = go.Scatter(x = [], y = [],
-                                line = dict(width=12, color='#888'),
-                                hoverinfo = 'none',
-                                mode='lines')
-        for edge in scaffold.circuit.edges():
-            x0, y0 = scaffold_pos[edge[0]]
-            x1, y1 = scaffold_pos[edge[1]]
-            edge_trace['x'] += tuple([x0, x1, None])
-            edge_trace['y'] += tuple([y0, y1, None])
-        
-        node_trace = go.Scatter(x = [], y = [], text = [],
-                                mode = 'markers', hoverinfo = 'text',
-                                marker = dict(color = [],
-                                              size = 75,
-                                              line = dict(width=2),
-                                              symbol = 'hexagon'))
-        for node in scaffold.circuit.nodes():
-            x,y = scaffold_pos[node]
-            node_trace['x'] += tuple([x])
-            node_trace['y'] += tuple([y])
-            node_trace['marker']['color'] += tuple(['darkseagreen'])
-            node_info=str(scaffold.circuit.nodes[node]['name'])
-            brick = '<br>Brick: ' + str(scaffold.circuit.nodes[node]['brick'])
-            if 'layer' in scaffold.circuit.nodes[node]:    
-                layer = '<br>Layer: ' + str(scaffold.circuit.nodes[node]['layer'])
-                node_info = node_info + brick + layer
+        time_step[str(i)] = str(i)
+    
+    scaffold_pos = set_position(scaffold.circuit)
+    edge_trace = go.Scatter(x = [], y = [],
+                            line = dict(width=12, color='#888'),
+                            hoverinfo = 'none',
+                            mode = 'lines')
+    for edge in scaffold.circuit.edges():
+        x0, y0 = scaffold_pos[edge[0]]
+        x1, y1 = scaffold_pos[edge[1]]
+        edge_trace['x'] += tuple([x0, x1, None])
+        edge_trace['y'] += tuple([y0, y1, None])
+    
+    node_trace = go.Scatter(x = [], y = [], text = [],
+                            mode = 'markers', hoverinfo = 'text',
+                            marker = dict(color = [],
+                                          size = 75,
+                                          line = dict(width=0),
+                                          symbol = 'hexagon'))
+    for node in scaffold.circuit.nodes():
+        x,y = scaffold_pos[node]
+        node_trace['x'] += tuple([x])
+        node_trace['y'] += tuple([y])
+        node_info=str(scaffold.circuit.nodes[node]['name'])
+        brick = '<br>brick: ' + str(scaffold.circuit.nodes[node]['brick'])
+        if 'layer' in scaffold.circuit.nodes[node]:    
+            layer = '<br>layer: ' + str(scaffold.circuit.nodes[node]['layer'])
+            node_info = node_info + brick + layer
+            if scaffold.circuit.nodes[node]['layer'] == 'input':
+                node_trace['marker']['color'] += tuple(['#DE5F76'])
             else:
-                node_info = node_info + brick
-            node_trace['text'] += tuple([node_info])
-        
-        
-        fig = go.Figure(data = [edge_trace,node_trace],
-                        layout = go.Layout(
-                                showlegend = False,
-                                hovermode = 'closest',
-                                hoverlabel = dict(bgcolor = 'aliceblue',
-                                                bordercolor = 'gainsboro',
-                                                font=dict(color = '#000000')),
-                                xaxis = dict(
-                                        showgrid = False,
-                                        zeroline = False,
-                                        showticklabels = False),
-                                yaxis = dict(
-                                        showgrid = False,
-                                        zeroline = False,
-                                        showticklabels = False)
-                                ))
-        app.layout = html.Div([
-                html.Div(dcc.Graph(id = 'scaffold_graph', figure = fig)),
-                cyto.Cytoscape(
-                        id = 'graph',
-                        elements = elements_ls,
-                        layout = {'name':'preset'},
-                        autoRefreshLayout = False,
-                        stylesheet = stylesheet_list),
-                dcc.Textarea(
-                        id = 'text-area',
-                        draggable = True,
-                        placeholder = 'Hover over a node to view its attributes',
-                        readOnly = True,
-                        value = '',
-                        style={'width': '40%'}),
-                html.P([
-                        html.Label("Timestep"),
-                        dcc.Slider(id = 'slider',
-                                   marks = time_step,
-                                   min = 0,
-                                   max = max_t,
-                                   value = 0,
-                                   step = 1,
-                                   update_mode = 'drag')
-                        ])
-                        
-                ])
-        
+                node_trace['marker']['color'] += tuple(['#4B8F8C'])
+        else:
+            node_info = node_info + brick
+            node_trace['marker']['color'] += tuple(['#2C365E'])
+        node_trace['text'] += tuple([node_info])
+    
+    
+    fig = go.Figure(data = [edge_trace,node_trace],
+                    layout = go.Layout(
+                            font = dict(family="Arial", size=20, color="#444"),
+                            title= dict(text="scaffold.circuit", x=0, y=0.98),
+                            height = 400,
+                            margin= dict(l=50,r=50,t=40,b=50),
+                            paper_bgcolor = '#F5F5F5',
+                            plot_bgcolor = '#F5F5F5',
+                            showlegend = False,
+                            hovermode = 'closest',
+                            hoverlabel = dict(bgcolor = 'aliceblue',
+                                            bordercolor = 'gainsboro',
+                                            font=dict(color = '#000000')),
+                            xaxis = dict(
+                                    showgrid = False,
+                                    zeroline = False,
+                                    showticklabels = False),
+                            yaxis = dict(
+                                    showgrid = False,
+                                    zeroline = False,
+                                    showticklabels = False),
+                            ))
+    spike_trace = go.Scatter(x = [], y = [], text = [],
+                             mode='markers', 
+                             hoverinfo='text',
+                             textposition = 'top center',
+                             marker= dict(color = '#2C365E',
+                                          size = 5,
+                                          line=dict(width=0))
+                            )
+    for time in result_dict:
+        for node in result_dict[time]:
+            x = time
+            y = graph.nodes[node]['neuron_number']
+            spike_trace['x'] += tuple([x])
+            spike_trace['y'] += tuple([y])
+            spike_trace['text'] += tuple([str(graph.nodes[node]['neuron_number']) + ': ' + str(node)])
+            
+    raster_fig = go.Figure(data = [spike_trace],
+                          layout = go.Layout(
+                              font = dict(family="Arial", size=20, color="#444"),
+                              title= dict(text="spike raster", x=0, y=0.98),
+                              height=400,
+                              margin=dict(l=50, r=50, t=40, b=50),
+                              paper_bgcolor = '#F5F5F5',
+                              plot_bgcolor = '#F5F5F5',
+                              showlegend=False,
+                              hovermode='closest',
+                              hoverlabel=dict(bgcolor='aliceblue',
+                                             bordercolor='gainsboro',
+                                             font=dict(color='#000000')),
+                              xaxis = dict(
+                                  title='time',
+                                  fixedrange=True,
+                                  range=[-0.05,max_t + 0.5],
+                              ),
+                              yaxis = dict(
+                                  title='neuron number',
+                                  fixedrange=True,
+                                  range=[-0.5, nx.number_of_nodes(graph) + 1],
+                                  nticks=nx.number_of_nodes(graph),
+                              )
+                            
+                          ))
+    
+    app = dash.Dash(__name__)
+    app.layout = html.Div(className="row",
+                          children = [ 
+                                html.Div(className="twelve columns",
+                                         children=[
+                                                 html.Label('fugu visualizations',
+                                                            style={'font-family': 'Arial', 
+                                                                   'font-size':'3.5rem', 
+                                                                   'margin':'1px'}
+                                                            )
+                                                 ]
+                                         ),
+                                html.Div(className="twelve columns", children=[
+                                    html.Div(className="six columns", 
+                                             children = [dcc.Graph(id = 'scaffold_graph', 
+                                                                   figure = fig),
+                                                         html.Div(className="twelve columns", 
+                                                                  children=[
+                                                                          html.Label('scaffold.graph', 
+                                                                                     style={'font-family': 'Arial', 
+                                                                                            'font-size': '2.8rem', 
+                                                                                            'background': '#F5F5F5', 
+                                                                                            'margin-top':'15pt'}
+                                                                                     )
+                                                                          ]
+                                                                  ),
+                                                         cyto.Cytoscape(
+                                                                id = 'graph',
+                                                                #title='graph',
+                                                                elements = elements_ls,
+                                                                style = {'width': '100%',
+                                                                         'height': '400px',
+                                                                         'background': '#F5F5F5',
+                                                                         'margin-top': '45pt'},
+                                                                layout = {'name':'preset'},
+                                                                autoRefreshLayout = False,
+                                                                stylesheet = stylesheet_list),
+                                                         dcc.Textarea(
+                                                                id = 'text-area',
+                                                                draggable = True,
+                                                                placeholder = 'hover over a node to view its attributes',
+                                                                readOnly = True,
+                                                                value = '',
+                                                                style={'width': '100%',
+                                                                       'background': '#F5F5F5'}),
+                                                        html.P(children=[
+                                                                    html.Div(className="twelve", 
+                                                                             children=[
+                                                                                     html.Label("timestep", 
+                                                                                                style={'font-family': 'Arial', 
+                                                                                                       'font-size': '2.0rem', 
+                                                                                                       'background': '#F5F5F5'}
+                                                                                                )
+                                                                                      ]
+                                                                            ),
+                                                                    html.Div(className="twelve columns", children=[
+                                                                               dcc.Slider(id = 'slider',
+                                                                               marks = time_step,
+                                                                               min = 0,
+                                                                               max = max_t,
+                                                                               value = 0,
+                                                                               step = 1,
+                                                                               updatemode='drag',
+                                                                              )]
+                                                                            ),                                                                    
+                                                                ])
+                                                        ]),
+                                                                             
+                                    html.Div(className="six columns",
+                                             children = [html.Div(className="twelve columns", children = [
+                                                     
+                                                                 html.Label('brick info', style={'font-family': 'Arial', 
+                                                                                                 'font-size': '2.8rem',
+                                                                                                 'background': '#F5F5F5'}),
+                                                                dcc.Textarea(
+                                                                        id = 'summary',
+                                                                        draggable=True,
+                                                                        placeholder = 'spiking node info...' + '\nbrick summary info...',
+                                                                        readOnly = True,
+                                                                        value = '',
+                                                                        style={'width':'100%',
+                                                                               'background':'#F5F5F5',
+                                                                               'margin-bottom': '15pt'}),
+                                                                dcc.Graph(id='raster_plot', figure=raster_fig)]),
+                                                         ]),
+                                ])
+                            ])
+    
     @app.callback([Output('text-area', 'value'),
                    Output('graph','elements')],
                   [Input('graph', 'mouseoverNodeData'),
                    Input('slider', 'value')])     
-        
+    
     def update_elements(node_data, X):
         elements_ls = []
         result_dict = results_dict(result,scaffold)
-        spiked_at_time = result_dict[X]
-        
+        if X in result_dict.keys():
+            spiked_at_time = result_dict[X]
+        else:
+            spiked_at_time = []
         nodes, edges = _build_node_and_edge_lists(graph, pos, spiked_at_time)
         elements_ls = nodes + edges
         
         if node_data is not None:
             label = str(node_data['label'])
             num = '\nneuron number:  ' + str(node_data['id'])
-            thresh = '\nthreshold:  ' + str(node_data['threshold'])
+            thresh = '\nthreshold:  ' + str(node_data['threshold']) + '\n'
             value = label + num + thresh
             return value, elements_ls
         else:
             return '', elements_ls
+        
+    app.css.append_css({
+        'external_url': 'https://codepen.io/chriddyp/pen/bWLwgP.css'
+    })
     app.run_server(debug=True)
     return
 
@@ -266,18 +358,15 @@ def _build_node_and_edge_lists(graph, pos, spiked_at_time, spiked_color='pink', 
 
 
 if __name__ == "__main__":
-    from fugu import Scaffold, Vector_Input, Shortest_Path_Length
+    from fugu import Scaffold, Vector_Input, Copy, Dot, Threshold
     import networkx as nx
-
-    skip_baseline = False
     scaffold = Scaffold()
-    scaffold.add_brick(Vector_Input(np.array([1]), coding='Raster', name='Input0'), 'input' )
-    print("Building Graph")
-    target_graph = nx.generators.path_graph(5000)
-    for edge in target_graph.edges:
-        target_graph.edges[edge]['weight'] = 1.0
-    scaffold.add_brick(Shortest_Path_Length(target_graph,0))
-    
+    scaffold.add_brick(Vector_Input(np.array([1,0,1]), coding='Raster'), input_nodes='input')
+    scaffold.add_brick(Copy())
+    scaffold.add_brick(Dot([1,0,1], name='ADotOperator'), (1,0))
+    scaffold.add_brick(Dot([0,0,1], name='AnotherDotOperator'), (1,1))
+    scaffold.add_brick(Threshold(1.75, name='Neuron13'), (2,0), output=True)
+    scaffold.add_brick(Threshold(1.25, name='Neuron14'), (3,0), output=True)
     print("Laying Bricks")
     scaffold.lay_bricks()
     scaffold.summary()
@@ -300,10 +389,10 @@ if __name__ == "__main__":
     #for edge in scaffold.graph.edges:
     #    if edge[1] in input_layer:
     #        input_layer.remove(edge[1])
-    #pos = nx.layout.spring_layout(scaffold.graph, scale=scale, pos=pos, fixed=input_layer)
+    #pos = nx.layout.spring_layout(scaffold.graph, pos=pos, fixed=input_layer)
     
     #Large graphs:
-    pos = nx.layout.spring_layout(scaffold.graph, scale=scale, pos=pos)
+    #pos = nx.layout.spring_layout(scaffold.graph, scale=scale, pos=pos)
     
     print("Rendering graph")
     graph_vis(scaffold.graph, pos, result, scaffold)
