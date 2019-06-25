@@ -8,6 +8,10 @@ Created on Thu May 30 13:02:07 2019
 
 import networkx as nx
 import numpy as np
+import os, sys
+fugu_path = os.path.realpath('../')
+if fugu_path not in sys.path:
+    sys.path.insert(0, fugu_path)
 
 import fugu
 from fugu import Scaffold 
