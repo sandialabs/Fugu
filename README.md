@@ -1,6 +1,13 @@
 # Fugu
 A python library for computational neural graphs.
 
+# Install
+```
+git clone https://gitlab.sandia.gov/nerl/Fugu.git 
+cd Fugu
+pip install --upgrade .
+```
+
 # Fugu Notes
 
 Please see the provided example(s). 
@@ -94,5 +101,6 @@ To build the documentation, use pydocmd https://pypi.org/project/pydoc-markdown/
 - ~~Not Sam: Serious issues regarding how backend handles inputs~~
 - Not Sam: Need scaffolds to be bricks
 - ~~Not Sam: Redo how handle control nodes (Perphaps use dictionaries)~~
-- Expand outputs 
+- ~~Expand outputs~~ 
 - ~~Create backend class to handle backend simulators~~
+- ~~Create installer for fugu~~
