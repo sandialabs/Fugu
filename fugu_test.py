@@ -8,8 +8,8 @@ Created on Thu May 30 13:02:07 2019
 
 import networkx as nx
 import numpy as np
-import fugu
 
+import fugu
 from fugu import Scaffold 
 #from fugu import Brick, Spike_Input, PRN
 from fugu import bricks
