@@ -6,7 +6,6 @@ Created on Thu May 30 13:02:07 2019
 @author: smusuva
 """
 
-import networkx as nx
 import numpy as np
 import os, sys
 fugu_path = os.path.realpath('../')

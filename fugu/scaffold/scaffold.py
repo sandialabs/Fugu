@@ -7,9 +7,9 @@ Created on Wed Jun 19 11:37:44 2019
 """
 import networkx as nx
 import numpy as np
-from ..utils import results_df_from_dict
+from ..utils.export_utils import results_df_from_dict
 from warnings import warn
-from ..backend import Backend, snn_Backend, ds_Backend
+from ..backends.backend import Backend, snn_Backend, ds_Backend
 
 
 class Scaffold:
@@ -313,7 +313,7 @@ class Scaffold:
                 raise ValueError("Backend " + str(backend) + " not supported.")
             if backend == 'ds_legacy':
                 warn("'ds_legacy' option uses old instantiation of backend object.  Use 'ds' in the future.")
-                from ds import run_simulation
+                from fugu.backends.ds import run_simulation
                 injection_values = self._create_ds_injection()
                 for node in self.circuit.nodes:
                     if 'layer' in self.circuit.nodes[node] and self.circuit.nodes[node]['layer'] == 'output':
@@ -342,7 +342,7 @@ class Scaffold:
                 return results_df_from_dict(spike_result,'time','neuron_number')
             if backend == 'snn_legacy':
                 warn("'snn_legacy' option uses old instantiation of backend object.  Use 'snn' in the future.")
-                from Fugu.code.backends.sushi_chef import serve_fugu_to_snn
+                from fugu.backends.sushi_chef import serve_fugu_to_snn
                 spike_result = serve_fugu_to_snn(self.circuit, self.graph, n_steps=max_runtime, record_all=record_all, ds_format=True)
                 return results_df_from_dict(spike_result,'time','neuron_number')
             if backend == 'ds':

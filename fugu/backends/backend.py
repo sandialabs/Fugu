@@ -9,7 +9,7 @@ from abc import ABC, abstractmethod
 from collections import deque
 import pandas as pd
 from warnings import warn
-from .utils import results_df_from_dict
+from ..utils.export_utils import results_df_from_dict
 import networkx as nx
 
 class Backend(ABC):
@@ -229,7 +229,7 @@ class ds_Backend(Backend):
               n_steps,
               record,
               backend_args):
-        from ds import run_simulation
+        from fugu.backends.ds import run_simulation
         injection_values = self._create_ds_injection(scaffold,input_values)
         if record =='output':
             for node in scaffold.circuit.nodes:
