@@ -6,8 +6,10 @@ Created on Tue May 28 14:20:09 2019
 @author: smusuva
 """
 
-import Fugu.code.backends.SpikingNeuralNetwork as snn
+#import fugu.code.backends.SpikingNeuralNetwork as snn
 import numpy as np
+from fugu.code.backends import SpikingNeuralNetwork as snn
+
 
 def serve_fugu_to_snn(fugu_circuit, fugu_graph, n_steps=1, record_all=False, ds_format=False):
     '''Reads in a built fugu graph and converts it to a spiking neural network 

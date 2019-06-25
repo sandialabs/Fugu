@@ -12,6 +12,7 @@ def results_df_from_dict(results_dictionary, key, value):
         df2[key] = extended_keys
         df2[value] = store
         df = df.append(df2, ignore_index=True, sort=False)
+#        df = df.astype({value: int})
     return df
 
 def fill_results_from_graph(results_df, scaffold, fields = ['time', 'neuron_number', 'name', 'brick'], unmatched_fields=['time']):
