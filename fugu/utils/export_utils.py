@@ -125,7 +125,7 @@ def generate_gexf(graph, result, scaffold, filename='fugu.gexf'):
                        name=n, x=pos[n][0], y=int(pos[n][1]))
     
     for t in range(0, max_t+1):
-    	if t in t_dict.keys():
+        if t in t_dict.keys():
             	spiked_at_t = t_dict[t]
         else:
             	spiked_at_t = []
