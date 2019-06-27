@@ -1,13 +1,5 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Created on Tue Jun 11 15:31:37 2019
-
-@author: lreeder
-"""
-
 import numpy as np
-from utils import fill_results_from_graph, set_position, results_dict
+from export_utils import fill_results_from_graph, set_position, results_dict
 # Plotting imports
 import dash
 import dash_html_components as html
@@ -31,7 +23,7 @@ from collections import deque
 # when running, it will output html link where vis can be accessed
 # 
 ###############################################################################
-def graph_vis(graph, pos, result, scaffold, view_scaffold=False):
+def graph_vis(graph, pos, result, scaffold):
     result = fill_results_from_graph(result,scaffold)
     result_dict = results_dict(result, scaffold)
     if 0 in result_dict.keys():
@@ -146,13 +138,18 @@ def graph_vis(graph, pos, result, scaffold, view_scaffold=False):
             spike_trace['x'] += tuple([x])
             spike_trace['y'] += tuple([y])
             spike_trace['text'] += tuple([str(graph.nodes[node]['neuron_number']) + ': ' + str(node)])
-            
+    
+    sub_amt = '0.'
+    for i in range(0, len(str(nx.number_of_nodes(graph)))-1):
+        sub_amt = sub_amt + '0'
+    sub_amt = sub_amt + '2'
+    sub_amt = float(sub_amt)
     raster_fig = go.Figure(data = [spike_trace],
                           layout = go.Layout(
                               font = dict(family="Arial", size=20, color="#444"),
-                              title= dict(text="spike raster", x=0, y=0.98),
-                              height=400,
-                              margin=dict(l=50, r=50, t=40, b=50),
+                              title= dict(text="spike raster", x=0, y=1-sub_amt),
+                              height=400 + 10*nx.number_of_nodes(graph),
+                              margin=dict(l=25*len(str(nx.number_of_nodes(graph))), r=50, t=40, b=50),
                               paper_bgcolor = '#F5F5F5',
                               plot_bgcolor = '#F5F5F5',
                               showlegend=False,
@@ -173,8 +170,10 @@ def graph_vis(graph, pos, result, scaffold, view_scaffold=False):
                               )
                             
                           ))
-    
-    app = dash.Dash(__name__)
+    external_stylesheets =['https://codepen.io/chriddyp/pen/bWLwgP.css']
+    app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
+    app.css.config.serve_locally = True
+    app.scripts.config.serve_locally = True
     app.layout = html.Div(className="row",
                           children = [ 
                                 html.Div(className="twelve columns",
@@ -205,7 +204,7 @@ def graph_vis(graph, pos, result, scaffold, view_scaffold=False):
                                                                 #title='graph',
                                                                 elements = elements_ls,
                                                                 style = {'width': '100%',
-                                                                         'height': '400px',
+                                                                         'height': '500px',
                                                                          'background': '#F5F5F5',
                                                                          'margin-top': '45pt'},
                                                                 layout = {'name':'preset'},
@@ -286,9 +285,9 @@ def graph_vis(graph, pos, result, scaffold, view_scaffold=False):
         else:
             return '', elements_ls
         
-    app.css.append_css({
-        'external_url': 'https://codepen.io/chriddyp/pen/bWLwgP.css'
-    })
+#    app.css.append_css({
+#        'external_url': 'https://codepen.io/chriddyp/pen/bWLwgP.css'
+#    })
     app.run_server(debug=True)
     return
 
@@ -358,15 +357,24 @@ def _build_node_and_edge_lists(graph, pos, spiked_at_time, spiked_color='pink', 
 
 
 if __name__ == "__main__":
-    from fugu import Scaffold, Vector_Input, Copy, Dot, Threshold
+    from fugu.scaffold import Scaffold
+    from fugu.bricks import Vector_Input, Copy, Dot, Threshold, Shortest_Path
     import networkx as nx
     scaffold = Scaffold()
+    print("Building Graph")
+    #Small graph:
     scaffold.add_brick(Vector_Input(np.array([1,0,1]), coding='Raster'), input_nodes='input')
     scaffold.add_brick(Copy())
     scaffold.add_brick(Dot([1,0,1], name='ADotOperator'), (1,0))
     scaffold.add_brick(Dot([0,0,1], name='AnotherDotOperator'), (1,1))
     scaffold.add_brick(Threshold(1.75, name='Neuron13'), (2,0), output=True)
     scaffold.add_brick(Threshold(1.25, name='Neuron14'), (3,0), output=True)
+    #Large graph:
+    #scaffold.add_brick(Vector_Input(np.array([1]), coding='Raster', name='Input0'), 'input' )
+    #target_graph = nx.generators.path_graph(5000)
+    #for edge in target_graph.edges:
+    #    target_graph.edges[edge]['weight'] = 1.0
+    #scaffold.add_brick(Shortest_Path(target_graph,0))
     print("Laying Bricks")
     scaffold.lay_bricks()
     scaffold.summary()
@@ -380,7 +388,7 @@ if __name__ == "__main__":
     pos = set_position(scaffold.graph)
     
     #use a scale for Networkx's layouts:
-    scale = 10*nx.number_of_nodes(scaffold.graph)
+    #scale = 10*nx.number_of_nodes(scaffold.graph)
     
     #following works best for small graphs:
     #input_layer = []
@@ -392,6 +400,7 @@ if __name__ == "__main__":
     #pos = nx.layout.spring_layout(scaffold.graph, pos=pos, fixed=input_layer)
     
     #Large graphs:
+    #
     #pos = nx.layout.spring_layout(scaffold.graph, scale=scale, pos=pos)
     
     print("Rendering graph")
