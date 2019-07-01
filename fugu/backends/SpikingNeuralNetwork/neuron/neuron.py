@@ -11,6 +11,7 @@ if sys.version_info >= (3, 4):
     ABC = abc.ABC
 else:
     ABC = abc.ABCMeta('ABC', (), {'__slots__': ()})
+import numpy as np
 
 class Neuron(ABC):
     @abc.abstractmethod
@@ -26,7 +27,7 @@ class Neuron(ABC):
 
 class LIFNeuron(Neuron):
     def __init__(self, name=None, threshold=0.0, reset_voltage=0.0, leakage_constant=1.0, 
-                 voltage=0.0, record=False):
+                 voltage=0.0, p=1.0, record=False):
         super().__init__()
         self.name = name
         self._T = threshold
@@ -35,6 +36,7 @@ class LIFNeuron(Neuron):
         self.v = voltage
         self.presyn = set()
         self.record = record
+        self.prob = p
         
     def update_state(self):
         '''Update the states for one time step'''
@@ -47,8 +49,12 @@ class LIFNeuron(Neuron):
         self.v = self.v + input_v
         
         if self.v > self._T:
-            self.spike = True
-            self.v = self._R
+            if np.random.random(1) <= self.prob:
+                self.spike = True
+                self.v = self._R
+            else:
+                self.spike = False
+                self.v = self._m * self.v
         else:
             self.spike = False
             self.v = self._m * self.v
