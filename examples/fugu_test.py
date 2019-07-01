@@ -62,7 +62,7 @@ class basic_AND(fugu.Brick):
                        index=0,
                        threshold=1.0,
                        decay=1.0,
-                       p=0.5,
+                       p=1.0,
                        potential=0.0
                       )
         graph.add_edge(input_lists[0][0],

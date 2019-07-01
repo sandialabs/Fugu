@@ -16,7 +16,7 @@ class Scaffold:
     """Class to handle a scaffold of bricks"""
 
     supported_backends = ['ds', 'snn', 'ds_legacy', 'snn_legacy']
-
+    
     def __init__(self):
         self.circuit = nx.DiGraph()
         self.pos = {}
