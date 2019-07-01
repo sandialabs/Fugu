@@ -5,7 +5,13 @@ Created on Wed Jun 19 12:09:35 2019
 
 @author: smusuva
 """
-from abc import ABC, abstractmethod
+import abc
+import sys
+if sys.version_info >= (3, 4):
+    ABC = abc.ABC
+else:
+    ABC = abc.ABCMeta('ABC', (), {'__slots__': ()})
+from abc import abstractmethod
 from collections import deque
 import pandas as pd
 from warnings import warn

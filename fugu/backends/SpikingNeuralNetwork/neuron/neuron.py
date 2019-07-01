@@ -6,8 +6,13 @@ Created on Tue Dec 18 10:13:24 2018
 @author: smusuva
 """
 import abc, numbers
+import sys
+if sys.version_info >= (3, 4):
+    ABC = abc.ABC
+else:
+    ABC = abc.ABCMeta('ABC', (), {'__slots__': ()})
 
-class Neuron(abc.ABC):
+class Neuron(ABC):
     @abc.abstractmethod
     def __init__(self, name=None, spike=False):
         self.name = name
@@ -117,7 +122,7 @@ class InputNeuron(Neuron):
         
     def connect_to_input(self, in_stream):
         if not hasattr(in_stream, '__iter__'):
-            raise TypeError(f'{in_stream} must be iterable')
+            raise TypeError('{in_stream} must be iterable'.format(**locals()))
         else:
             self._it = iter(in_stream)
         
@@ -153,7 +158,7 @@ class InputNeuron(Neuron):
     
         
     def __str__(self):
-        return f'InputNeuron {self.name}'
+        return 'InputNeuron {self.name}'.format(**locals())
     
     def __repr__(self):
-        return f'InputNeuron {self.name}'
+        return 'InputNeuron {self.name}'.format(**locals())

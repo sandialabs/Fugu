@@ -5,7 +5,14 @@ Created on Wed Jun 19 14:46:55 2019
 
 @author: smusuva
 """
-from abc import ABC, abstractmethod
+import abc
+import sys
+if sys.version_info >= (3, 4):
+    ABC = abc.ABC
+else:
+    ABC = abc.ABCMeta('ABC', (), {'__slots__': ()})
+from abc import abstractmethod
+
 import numpy as np
 from collections import deque
 from warnings import warn
@@ -1262,17 +1269,19 @@ class ParityCheck(Brick):
                 output_codings)
 
 class LongestIncreasingSubsequence(Brick):
-    '''This brick performs a BFS traversal. Expects a single input where the index corresponds to the node number on the graph.
+    '''
+    This brick calculates the length of the longest common subsequence for a given sequence of numbers
 
     '''
-    def __init__(self, sequence, name=None, output_coding = 'temporal-L'):
+    def __init__(self, sequence, delay_alarms=False, name=None, output_coding = 'temporal-L'):
         '''
         Construtor for this brick.
         Arguments:
-            + target_graph - NetworkX.Digraph object representing the graph to be searched
-			+ target_node - Node in the graph that is the target of the paths
-		    + name - Name of the brick.  If not specified, a default will be used.  Name should be unique.
-			+ output_coding - Output coding type, default is 'temporal-L'
+            + sequence - list containing the sequence of numbers 
+            + delay_alarms - Boolean flag that determines to either add a delay to the -1 alarms or a delay from start
+                to the x_i neurons
+            + name - Name of the brick.  If not specified, a default will be used.  Name should be unique.
+            + output_coding - Output coding type, default is 'temporal-L'
         '''
         super(Brick, self).__init__()
         self.is_built = False
@@ -1283,6 +1292,8 @@ class LongestIncreasingSubsequence(Brick):
         self.metadata = {'D':None}
 
         self.sequence = sequence 
+        # whether or not to add delay to -1 alarms or double the delay from start to x_i
+        self.delay_alarms = delay_alarms
 
     def build(self,
              graph,
@@ -1337,8 +1348,8 @@ class LongestIncreasingSubsequence(Brick):
         for i, x_i in enumerate(self.sequence):
             column_a = []
             column_b = []
-            x_name = f"x_{i}"
-            L0_A_name = f"L_1-x_{i}-A"
+            x_name = "x_{}".format(i)
+            L0_A_name = "L_1-x_{}-A".format(i)
 
             # create x_i neuron
             graph.add_node(x_name,
@@ -1358,8 +1369,8 @@ class LongestIncreasingSubsequence(Brick):
             levels[0].append(L0_A_name)
 
             for j in range(i):
-                L_B_name = f"L_{j + 1}-x_{i}-B"
-                L_A_name = f"L_{j + 2}-x_{i}-A"
+                L_B_name = "L_{j + 1}-x_{i}-B".format(j+1, i)
+                L_A_name = "L_{j + 2}-x_{i}-A".format(j+2, i)
                 graph.add_node(L_B_name,
                                threshold = 0.9,
                                decay = 0.0,
@@ -1394,10 +1405,7 @@ class LongestIncreasingSubsequence(Brick):
             if type(index) is not int:
                 raise TypeError("Neuron index should be Tuple or Int.")
             for i, value in enumerate(self.sequence):
-                graph.add_edge(input_neuron,
-                              f"x_{i}",
-                              weight = 1.0,
-                              delay = value)
+                graph.add_edge(input_neuron, "x_{i}".format(i), weight = 1.0, delay = value)
 
         self.is_built=True
 

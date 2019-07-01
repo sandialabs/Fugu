@@ -380,7 +380,7 @@ if __name__ == "__main__":
     scaffold.summary()
     print()
     print('----------------------')
-    print('Results:', end='\n\n')
+    print ('Results:', end='\n\n')
     print("Evaluating")
     result = scaffold.evaluate(backend='ds', max_runtime=10, record_all=True)
     print("Done evaluating.")

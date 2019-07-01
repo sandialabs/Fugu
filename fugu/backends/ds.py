@@ -257,7 +257,7 @@ def run_simulation(graph, timesteps, injection_dictionary, start_time=0,batch_si
         print("Starting Simualation for " + str(timesteps) + ' timesteps.')
     for t in range(start_time, start_time+timesteps):
         if verbose > 0:
-            print("{0:.2f}".format(100*t/timesteps) + '% complete.', end='\r')
+            print ("{0:.2f}".format(100*t/timesteps) + '% complete.', end='\r')
         if t in injection_dictionary:
             injection = injection_dictionary[t]
             if injection.numel() < graph.number_of_nodes():
