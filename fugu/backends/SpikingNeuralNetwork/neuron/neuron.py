@@ -44,7 +44,7 @@ class LIFNeuron(Neuron):
         self.v = self.v + input_v
         
         if self.v > self._T:
-            if np.random.random(1) > (1-self.prob):
+            if np.random.random(1) <= self.prob:
                 self.spike = True
                 self.v = self._R
             else:
