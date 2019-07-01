@@ -118,6 +118,7 @@ class snn_Backend(Backend):
                         neuron_dict[neuron].connect_to_input(input_values[neuron])
                         nn.add_neuron(neuron_dict[neuron])
                 if vals['layer'] == 'output':
+                    print("Here!")
                     for olist in fugu_circuit.nodes[node]['output_lists']:
                         for neuron in olist:
                             params = fugu_graph.nodes[neuron]
@@ -125,26 +126,33 @@ class snn_Backend(Backend):
                             rv = params.get('reset_voltage', 0.0)
                             lk = params.get('leakage_constant', 1.0)
                             vol =params.get('voltage', 0.0)
+                            prob = params.get('p', 1.0)
+                            print("**"*10)
+                            print(prob)
                             if 'potential' in params:
                                 vol = params['potential']
                             if 'decay' in params:
                                 lk = 1.0 - params['decay']
-                            neuron_dict[neuron] = snn.LIFNeuron(neuron, threshold=th, reset_voltage=rv, leakage_constant=lk, voltage=vol, record=True)
+                            neuron_dict[neuron] = snn.LIFNeuron(neuron, threshold=th, reset_voltage=rv, leakage_constant=lk, voltage=vol, p=prob, record=True)
                             nn.add_neuron(neuron_dict[neuron])
         #add other neurons from fugu_graph to spiking neural network
         #parse through the fugu_graph and if a neuron is not present in spiking neural network, add to it.                    
         for neuron, params in fugu_graph.nodes.data():
+            print("now here")
             if neuron not in neuron_dict.keys():
                 th = params.get('threshold', 0.0)
                 rv = params.get('reset_voltage', 0.0)
                 lk = params.get('leakage_constant', 1.0)
                 vol = params.get('voltage', 0.0)
+                prob = params.get('p', 1.0)
+                print("**"*10)
+                print(prob)
                 if 'potential' in params:
                     vol = params['potential']
                 if 'decay' in params:
                     lk = 1.0 - params['decay']
                 rc = True if record_all else params.get('record', False)
-                neuron_dict[neuron] = snn.LIFNeuron(neuron, threshold=th, reset_voltage=rv, leakage_constant=lk, voltage=vol, record=rc)
+                neuron_dict[neuron] = snn.LIFNeuron(neuron, threshold=th, reset_voltage=rv, leakage_constant=lk, voltage=vol, p=prob, record=rc)
                 nn.add_neuron(neuron_dict[neuron])
         
         ''' Add Synapses '''

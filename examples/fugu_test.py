@@ -62,7 +62,7 @@ class basic_AND(fugu.Brick):
                        index=0,
                        threshold=1.0,
                        decay=1.0,
-                       p=1.0,
+                       p=0.5,
                        potential=0.0
                       )
         graph.add_edge(input_lists[0][0],
@@ -89,11 +89,11 @@ scaffold = Scaffold()
 scaffold.add_brick(bricks.Vector_Input(np.array([1]), coding='Raster', name='Input0'), 'input' )
 scaffold.add_brick(bricks.Vector_Input(np.array([1]), coding='Raster', name='Input1'), 'input' )
 scaffold.add_brick(basic_AND(name='AND'), [(0,0), (1,0)], output=True)
-scaffold.add_brick(bricks.PRN(probability=0.75,shape=(10,2),steps=5), output=True)
+#scaffold.add_brick(bricks.PRN(probability=0.75,shape=(10,2),steps=5), output=True)
 scaffold.lay_bricks()
-scaffold.summary()
+#scaffold.summary()
 print()
 print('----------------------')
 print('Results:', end='\n\n')
-result = scaffold.evaluate(backend='snn', max_runtime=100, record_all=True)
+result = scaffold.evaluate(backend='snn', max_runtime=2, record_all=True)
 print(result)

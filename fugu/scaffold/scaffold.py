@@ -23,7 +23,7 @@ class Scaffold:
         self.count = {}
         self.graph = None
         self.is_built = False
-
+        
     def add_brick(self, brick_function, input_nodes=[-1], metadata = None, name=None, output=False):
         """
         Add a brick to the scaffold.
@@ -307,7 +307,7 @@ class Scaffold:
         Exceptions:
             + ValueError if backend is not in list of supported backends
         """
-
+        
         if type(backend) is str:
             if backend not in Scaffold.supported_backends:
                 raise ValueError("Backend " + str(backend) + " not supported.")
