@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import fugu
 from fugu import Scaffold, Brick
-from fugu.bricks import LongestIncreasingSubsequence, Vector_Input
+from fugu.bricks import LIS, Vector_Input
 
 def check_for_spikes(neuron_name, scaffold):
     #Get the names for all the neurons
@@ -17,32 +17,44 @@ def check_for_spikes(neuron_name, scaffold):
             when = timestep
     return found_a_spike, when
 
-#sequence = [1,4,8,6,2,7,9,3,2]
-#sequence = [4,6,2,7,9]
-#sequence = [1,3,2,4]
-sequence = [1,4,6,2,3,7,9]
-#sequence = [1,4,3,8,9]
-#sequence = [1,7,4,10,8]
-#sequence = [1,2,3,4,5]
-#sequence = [1,3,1,2]
-#sequence = [1,7,8]
-LIS_brick = LongestIncreasingSubsequence(sequence, delay_alarms=False, name="LIS")
+test_sequences = []
 
-scaffold = Scaffold()
-scaffold.add_brick(Vector_Input(np.array([1]), coding='Raster', name='Input0'), 'input' )
-scaffold.add_brick(LIS_brick, output=True)
-scaffold.lay_bricks(verbose=1)
+#test_sequences.append(([1,4,8,6,2,7,9,3,2],5))
+#test_sequences.append(([1,4,8,6,2,7,19,13,14],6))
+#test_sequences.append(([4,6,2,7,9],4))
+#test_sequences.append(([1,4,6,2,3,7,9],5))
+test_sequences.append(([1,7,4,5,8],4))
+#test_sequences.append(([1,2,3,4],4))
+#test_sequences.append(([1,3,1,2],2))
+test_sequences.append(([1,2],2))
+#test_sequences.append(([1],1))
 
-print("Summary: ")
-#print(scaffold.summary(verbose=0))
-print("<<<")
-result = scaffold.evaluate(backend='ds',max_runtime=50, record_all=True)
+for sequence, answer in test_sequences:
+    LIS_brick = LIS(sequence, name="LIS")
 
-graph_names = list(scaffold.graph.nodes.data('name'))
-print("time, neuron number, neuron name")
-for row in result.itertuples():
-    print(row.time, row.neuron_number, graph_names[int(row.neuron_number)][0])
-    #print(step)
-    #print(result[step])
-    #names = [graph_names[i][0] for i in result[step]]
-    #print("Step: {}, Spikes: {}, Spikes (named): {}".format(step, result[step], names))
+    scaffold = Scaffold()
+    scaffold.add_brick(Vector_Input(np.array([1]), coding='Raster', name='Input0'), 'input' )
+    scaffold.add_brick(LIS_brick, output=True)
+    scaffold.lay_bricks()
+
+    #print("Summary: ")
+    #print(scaffold.summary(verbose=2))
+    #print("<<<")
+    result = scaffold.evaluate(backend='pynn',max_runtime=50, record_all=True)
+
+    graph_names = list(scaffold.graph.nodes.data('name'))
+    print("---Finished evaluation:---")
+    #print("Spikes table:")
+    #print("time, neuron number, neuron name")
+    lis = 0
+    for row in result.itertuples():
+        neuron_name = graph_names[int(row.neuron_number)][0]
+        #print(row.time, row.neuron_number, neuron_name)
+        if "L_" in neuron_name:
+            level = int(neuron_name.split("-")[0][2:])
+            if level > lis:
+                lis = level
+    #print("---")
+
+    print("Expected answer: {}".format(answer))
+    print("Actual answer: {}".format(lis))

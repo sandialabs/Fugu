@@ -10,12 +10,13 @@ import numpy as np
 from ..utils.export_utils import results_df_from_dict
 from warnings import warn
 from ..backends.backend import Backend, snn_Backend, ds_Backend
+from ..backends.pynn_backend import pynn_Backend
 
 
 class Scaffold:
     """Class to handle a scaffold of bricks"""
 
-    supported_backends = ['ds', 'snn', 'ds_legacy', 'snn_legacy']
+    supported_backends = ['ds', 'snn', 'ds_legacy', 'snn_legacy', 'pynn']
     
     def __init__(self):
         self.circuit = nx.DiGraph()
@@ -272,6 +273,7 @@ class Scaffold:
         self.is_built=True
         self.graph = built_graph
         return built_graph
+
     def _create_ds_injection(self):
         warn("This function should only be called with 'ds_legacy' backend.  'ds_legacy' is deprecated and will be removed.  This method will be removed with it.")
         #find input nodes
@@ -349,6 +351,8 @@ class Scaffold:
                 backend = ds_Backend()
             if backend == 'snn':
                 backend = snn_Backend()
+            if backend == 'pynn':
+                backend = pynn_Backend(runtime=max_runtime)
         if not issubclass(type(backend), Backend):
             raise ValueError("Invalid backend option.")
         results = backend.serve(self, 
@@ -391,13 +395,13 @@ class Scaffold:
             if self.graph is not None:
                 print("List of Neurons:")
                 print("\r\n")
+                print("Neuron Number | Neuron Name | Neuron Properties")
                 for i, neuron in enumerate(self.graph.nodes):
-                    print("Neuron Number | Neuron Name | Neuron Properties")
                     print(str(i) + " | " + str(neuron) + " | " + str(self.graph.nodes[neuron]))
                 print("\r\n")
                 print("-------------------------------------------------------")
                 print("List of Synapses:")
                 print("\r\n")
+                print("Synapse Between | Synapse Properties" if verbose > 1 else "Syanpse Between")
                 for i, synapse in enumerate(self.graph.edges):
-                    print("Synapse Between | Synapse Properties" if verbose > 1 else "Syanpse Between")
                     print(str(synapse) + " | " + str(self.graph.edges[synapse]) if verbose > 1 else str(synapse))

@@ -5,6 +5,7 @@ Created on Thu May 30 13:02:07 2019
 
 @author: smusuva
 """
+from __future__ import print_function
 
 import numpy as np
 
@@ -88,12 +89,13 @@ class basic_AND(fugu.Brick):
 scaffold = Scaffold()
 scaffold.add_brick(bricks.Vector_Input(np.array([1]), coding='Raster', name='Input0'), 'input' )
 scaffold.add_brick(bricks.Vector_Input(np.array([1]), coding='Raster', name='Input1'), 'input' )
-scaffold.add_brick(basic_AND(name='AND'), [(0,0), (1,0)], output=True)
+scaffold.add_brick(basic_AND(name='AND'), [(1,0), (0,0)], output=True)
 #scaffold.add_brick(bricks.PRN(probability=0.75,shape=(10,2),steps=5), output=True)
 scaffold.lay_bricks()
 #scaffold.summary()
 print()
-print('----------------------')
-print('Results:', end='\n\n')
-result = scaffold.evaluate(backend='snn', max_runtime=2, record_all=True)
+#print('----------------------')
+#print('Results:', end='\n\n')
+result = scaffold.evaluate(backend='pynn', max_runtime=2, record_all=True)
 print(result)
+#scaffold.summary(verbose=1)

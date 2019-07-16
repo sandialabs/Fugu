@@ -5,12 +5,13 @@ Created on Wed Dec 12 09:18:44 2018
 
 @author: smusuva
 """
+from __future__ import print_function
+            
 from collections import Iterable, defaultdict
 import pandas as pd
 from ..neuron.neuron import Neuron, LIFNeuron
 from ..synapse.synapse import Synapse
 
-            
 class NeuralNetwork:
     def __init__(self):
         self.nrns = set()

@@ -136,6 +136,8 @@ class Vector_Input(InputBrick):
         else:
             raise StopIteration
 
+    next = __next__
+
 
     def get_input_value(self, t=None):
         warn("get_input_value is deprecated and will be removed from later versions.  Please ensure that your backend is up-to-date.")
@@ -1268,18 +1270,16 @@ class ParityCheck(Brick):
         return (graph, self.metadata, [{'complete':complete_node}], output_lists,
                 output_codings)
 
-class LongestIncreasingSubsequence(Brick):
+class LIS(Brick):
     '''
     This brick calculates the length of the longest common subsequence for a given sequence of numbers
 
     '''
-    def __init__(self, sequence, delay_alarms=False, name=None, output_coding = 'temporal-L'):
+    def __init__(self, sequence, name=None, output_coding = 'temporal-L'):
         '''
         Construtor for this brick.
         Arguments:
             + sequence - list containing the sequence of numbers 
-            + delay_alarms - Boolean flag that determines to either add a delay to the -1 alarms or a delay from start
-                to the x_i neurons
             + name - Name of the brick.  If not specified, a default will be used.  Name should be unique.
             + output_coding - Output coding type, default is 'temporal-L'
         '''
@@ -1292,8 +1292,7 @@ class LongestIncreasingSubsequence(Brick):
         self.metadata = {'D':None}
 
         self.sequence = sequence 
-        # whether or not to add delay to -1 alarms or double the delay from start to x_i
-        self.delay_alarms = delay_alarms
+        self.min_runtime = 0.0
 
     def build(self,
              graph,
@@ -1334,7 +1333,7 @@ class LongestIncreasingSubsequence(Brick):
         graph.add_edge(control_nodes[0]['complete'],
                       self.name+'_begin',
                       weight = 1.0,
-                      delay = 0.01)
+                      delay = 0.0)
 
         complete_name = self.name + '_complete'
         graph.add_node(complete_name,
@@ -1344,8 +1343,13 @@ class LongestIncreasingSubsequence(Brick):
                 potential = 0.0)
         complete_node_list = [complete_name]
 
+        min_runtime = len(self.sequence)
+        max_x = 0.0
+
         levels = [[] for i in range(len(self.sequence))]
         for i, x_i in enumerate(self.sequence):
+            if x_i > max_x:
+                max_x = x_i
             column_a = []
             column_b = []
             x_name = "x_{}".format(i)
@@ -1359,7 +1363,7 @@ class LongestIncreasingSubsequence(Brick):
 
             # create column
             graph.add_node(L0_A_name,
-                            threshold = 0.9,
+                            threshold = 0.99,
                             decay = 0.0,
                             potential = 0.0)
 
@@ -1369,14 +1373,14 @@ class LongestIncreasingSubsequence(Brick):
             levels[0].append(L0_A_name)
 
             for j in range(i):
-                L_B_name = "L_{j + 1}-x_{i}-B".format(j+1, i)
-                L_A_name = "L_{j + 2}-x_{i}-A".format(j+2, i)
+                L_B_name = "L_{}-x_{}-B".format(j+1, i)
+                L_A_name = "L_{}-x_{}-A".format(j+2, i)
                 graph.add_node(L_B_name,
-                               threshold = 0.9,
+                               threshold = 0.99,
                                decay = 0.0,
                                potential = 0.0)
                 graph.add_node(L_A_name,
-                               threshold = 1.9,
+                               threshold = 1.99,
                                decay = 0.0,
                                potential = 0.0)
 
@@ -1398,6 +1402,8 @@ class LongestIncreasingSubsequence(Brick):
                     graph.add_edge(level[i], level[i + 2], weight = 1.0, delay = 0.0)
                     graph.add_edge(level[i], level[i + 3], weight = 1.0, delay = 0.0)
 
+        self.min_runtime += max_x
+
         for input_neuron in input_lists[0]:
             index = graph.nodes[input_neuron]['index']
             if type(index) is tuple:
@@ -1405,7 +1411,7 @@ class LongestIncreasingSubsequence(Brick):
             if type(index) is not int:
                 raise TypeError("Neuron index should be Tuple or Int.")
             for i, value in enumerate(self.sequence):
-                graph.add_edge(input_neuron, "x_{i}".format(i), weight = 1.0, delay = value)
+                graph.add_edge(input_neuron, "x_{}".format(i), weight = 1.0, delay = value)
 
         self.is_built=True
 
