@@ -4,3 +4,5 @@
 *.pyc
 /code/__pycache__
 *.tags
+.direnv/
+.envrc

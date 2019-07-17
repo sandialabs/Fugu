@@ -20,15 +20,16 @@ class pynn_Backend(Backend):
         super(Backend, self).__init__()
         self.brick_population_map = {}
         self.node_neuron_map = {}
-        self.simulator = 'brian'
-        self.spike_value = 1.00
-        self.no_decay = 1000000000
-        self.min_delay = 10.00
-        self.runtime = runtime * self.min_delay
-        #self.runtime = 300
 
-    def _generate_pynn_model(self, fugu_scaffold, per_brick_population=False):
-        if self.simulator == 'brian':
+        # these parameters will have to be set based on the simulator
+        self.spike_value = 1.00
+        self.no_decay = 1000000000 
+        self.min_delay = 10.00
+
+        self.runtime = runtime * self.min_delay
+
+    def _run_pynn_sim(self, fugu_scaffold, simulator='brian', per_brick_population=False, verbose=False):
+        if simulator == 'brian':
             # PyNN only has support for brian1 (i.e. brian) which is only python 2.x compatible
             assert sys.version_info <= (3,0)
             import pyNN.brian as pynn_sim
@@ -40,19 +41,10 @@ class pynn_Backend(Backend):
 
         if per_brick_population:
             warn("Fugu currently only supports generating a single PyNN population for the entire Fugu circuit")
-
-            brick_to_population = {}
-
-            for node, vals in fugu_circuit.nodes.data():
-                # generate PyNN population for fugu brick
-                brick_to_population[node] = population
-                if 'layer' in vals:
-                    if val['layer'] == 'input':
-                        pass
-                    if val['layer'] == 'output':
-                        pass
         else:
             pynn_sim.setup(timestep=0.01)
+
+            # Setup neuron populations
             input_population_size = 0
             main_population_size = 0
 
@@ -62,12 +54,10 @@ class pynn_Backend(Backend):
                 if 'layer' in vals: 
                     if vals['layer'] == 'input':
                         output_list = fugu_circuit.nodes[node]['output_lists'][0]
-                        #for output_list in fugu_circuit.nodes[node]['output_lists']:
                         for neuron in output_list:
                             self.node_neuron_map[neuron] = input_population_size
                             input_nodes.add(neuron)
 
-                            #if 'p': # probabiity of firing
                             input_population_size += 1
 
             total_neurons = len(fugu_graph.nodes)
@@ -75,7 +65,8 @@ class pynn_Backend(Backend):
                                                 pynn_sim.SpikeSourceArray(spike_times=[self.min_delay]),
                                                 label='input')
 
-            initial_values = [] # this is really dumb
+            # Set intial conditions and parameter values for neurons
+            initial_values = []
 
             parameters = []
             parameters.append('v_thresh')
@@ -111,28 +102,26 @@ class pynn_Backend(Backend):
                                                pynn_sim.IF_curr_alpha(**parameter_values),
                                                initial_values={'v':initial_values},
                                                label='main')
-            """
-            print("Neurons:")
-            print("name,\ttype,\tid,\tv_rest,\tv_reset,\tv_thresh")
-            for node in self.node_neuron_map:
-                if node in input_nodes:
-                    node_type = 'input'
-                else:
-                    node_type = 'main'
-                node_id = self.node_neuron_map[node]
-                neuron = main_neurons[node_id]
-                print("{},\t{},\t{},\t{},\t{},\t{}".format(node,
-                                                           node_type, 
-                                                           node_id, 
-                                                           neuron.v_rest, 
-                                                           neuron.v_reset, 
-                                                           neuron.v_thresh))
-            print("<<<")
-            """
+            if verbose:
+                print("Neurons:")
+                print("name,\ttype,\tid,\tv_rest,\tv_reset,\tv_thresh")
+                for node in self.node_neuron_map:
+                    if node in input_nodes:
+                        node_type = 'input'
+                    else:
+                        node_type = 'main'
+                    node_id = self.node_neuron_map[node]
+                    neuron = main_neurons[node_id]
+                    print("{},\t{},\t{},\t{},\t{},\t{}".format(node, node_type, node_id, 
+                                                               neuron.v_rest, neuron.v_reset, neuron.v_thresh))
+                print("<<<")
 
+            # Setup Synapses
+
+            # generate connection lists
             input_input = []
-            input_to_main = []
-            main_connections = []
+            input_main = []
+            main_main = []
             for u, v, values in fugu_graph.edges.data():
                 weight = 0.0
                 delay = self.min_delay
@@ -145,37 +134,38 @@ class pynn_Backend(Backend):
                     if v in input_nodes:
                         input_input.append((self.node_neuron_map[u], self.node_neuron_map[v], weight, delay))
                     else:
-                        input_to_main.append((self.node_neuron_map[u], self.node_neuron_map[v], weight, delay))
+                        input_main.append((self.node_neuron_map[u], self.node_neuron_map[v], weight, delay))
                 else:
-                    main_connections.append((self.node_neuron_map[u], self.node_neuron_map[v], weight, delay))
+                    main_main.append((self.node_neuron_map[u], self.node_neuron_map[v], weight, delay))
 
             synapse = pynn_sim.StaticSynapse()
 
+            # create projections
             if len(input_input) > 0:
                 input_self  = FromListConnector(input_input)
                 input_self_synapses = pynn_sim.Projection(input_neurons, input_neurons, input_self, synapse, label='input-input')
 
-            if len(input_to_main) > 0:
-                input_connector = FromListConnector(input_to_main)
+            if len(input_main) > 0:
+                input_connector = FromListConnector(input_main)
                 input_synapses = pynn_sim.Projection(input_neurons, main_neurons, input_connector, synapse, label='input-main')
 
-            if len(main_connections) > 0:
-                main_connector = FromListConnector(main_connections)
+            if len(main_main) > 0:
+                main_connector = FromListConnector(main_main)
                 main_synapses = pynn_sim.Projection(main_neurons, main_neurons, main_connector, synapse, label='main-main')
 
-            """
-            print("<<<")
-            print("Synapses:")
-            print("input to main---")
-            print("From,\tTo,\tWeight\tDelay")
-            for synapse in input_synapses.get(["weight", "delay"], format="list"):
-                print(synapse)
-            print("main to main---")
-            print("From,\tTo,\tWeight\tDelay")
-            for synapse in main_synapses.get(["weight", "delay"], format="list"):
-                print(synapse)
-            """
+            if verbose:
+                print("<<<")
+                print("Synapses:")
+                print("input to main---")
+                print("From,\tTo,\tWeight\tDelay")
+                for synapse in input_synapses.get(["weight", "delay"], format="list"):
+                    print(synapse)
+                print("main to main---")
+                print("From,\tTo,\tWeight\tDelay")
+                for synapse in main_synapses.get(["weight", "delay"], format="list"):
+                    print(synapse)
 
+            # run simulation and collect results
             main_neurons.record(['spikes','v'])
             input_neurons.record(['spikes'])
 
@@ -186,14 +176,13 @@ class pynn_Backend(Backend):
 
             pynn_sim.end()
 
+            # process results
             spike_result = pd.DataFrame({'time':[],'neuron_number':[]})
 
             signals = main_data.segments[0].filter(name='v')[0]
             main_spiketrains = main_data.segments[0].spiketrains
             input_spiketrains = input_data.segments[0].spiketrains
 
-            #print("Internal spike train results")
-            # sort spike trains
             spikes = {}
             for node in self.node_neuron_map:
                 pynn_index = self.node_neuron_map[node]
@@ -202,7 +191,6 @@ class pynn_Backend(Backend):
                 else:
                     spiketrain = input_spiketrains[pynn_index]
                 if spiketrain.any():
-                    #print("Spike train: {}\tNeuron: {}".format(spiketrain, node))
                     for time in np.array(spiketrain):
                         if time not in spikes:
                             spikes[time] = set()
@@ -215,21 +203,6 @@ class pynn_Backend(Backend):
                 mini_df['neuron_number'] = list(spikes[time])
                 spike_result = spike_result.append(mini_df, sort=False)
 
-            #print(input_data.segments[0].spiketrains)
-            #print(main_data.segments[0].spiketrains)
-            #print(signals.annotations)
-            #print(len(signals))
-            #print(dir(signals))
-            #print(signals.array_annotations)
-            #plt.plot(signals[2])
-            Figure(Panel(signals, ylabel="Membrane potential (mV)", yticks=True))
-            plt.show()
-
-            #print(vs)
-            #print(len(main_data.segments))
-            #print(main_data.segments[0].all_data)
-            #print(vs)
-            #Figure( Panel(signals, ylabel="Membrane potential (mV)", yticks=True, xticks=True))
             return spike_result
 
     def stream(self,
@@ -247,12 +220,15 @@ class pynn_Backend(Backend):
              n_steps,
              record,
              backend_args):
-        # generate neurons
         per_brick_population = False
+        verbose = False
+        simulator = 'brian'
         if 'pynn_backend' in backend_args:
-            self.simulator = backend_args['pynn_backend']
+            simulator = backend_args['pynn_backend']
         if 'per_brick_population' in backend_args:
             per_brick_population = backend_args['per_brick_population']
-        spike_result = self._generate_pynn_model(scaffold, per_brick_population)
+        if 'verbose' in backend_args:
+            verbose = backend_args['verbose'] 
+        spike_result = self._run_pynn_sim(scaffold, simulator, per_brick_population, verbose)
         spike_result = spike_result.sort_values('time')
         return spike_result 
