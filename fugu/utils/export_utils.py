@@ -36,44 +36,25 @@ def get_spiked_info(result, scaffold):
     return list(result['name'])
 
 def results_dict(result, scaffold):
-    result = fill_results_from_graph(result, scaffold, fields=['time', 'neuron_number', 'name'])
-    i = 0
-    t_dict = {}
-    for t in result['time']:
-        if int(t) not in t_dict.keys():
-            t_dict[int(t)] = [result['name'][i]]
-        else:
-            t_dict[int(t)].append(result['name'][i])
-        i = i + 1
-    return(t_dict)
+    times = np.array(result['time'])
+    max_time = int(np.max(times))
+    return {t: list(result[result['time'] == t]['name']) for t in range(0, max_time+1)}
 
-def set_position(graph):
+def set_position(graph, scaffold):
     degree = dict(graph.out_degree())
-
     pos = {}
     input_layer = []
-    output_layer = []
-    middle_layer = []
     for node in graph.nodes():
-        input_layer.append(node)
-        output_layer.append(node)
-        middle_layer.append(node)
-    for edge in graph.edges():
-        if edge[1] in input_layer:
-            input_layer.remove(edge[1])
-        if edge[0] in output_layer:
-            output_layer.remove(edge[0])
-    for node in input_layer:
-        if node in middle_layer:
-            middle_layer.remove(node)
-    for node in output_layer:
-        if node in middle_layer:
-            middle_layer.remove(node)
-    
-    max_degree = 0
-    for n in input_layer:
-        if degree[n] > max_degree:
-            max_degree = degree[n]
+        if graph == scaffold.graph:
+            brick = graph.nodes[node]['brick']
+        else:
+            brick = graph.nodes[node]['name']
+        for bricks in scaffold.circuit.nodes():
+            if brick == scaffold.circuit.nodes[bricks]['name']:
+                if 'layer' in scaffold.circuit.nodes[bricks]:
+                    if scaffold.circuit.nodes[bricks]['layer'] == 'input':
+                        input_layer.append(node)
+    max_degree = max([degree[n] for n in graph.nodes()])
     
     i = 70*max_degree*len(input_layer)
     for node in input_layer:
@@ -103,14 +84,10 @@ def set_position(graph):
 
 def generate_gexf(graph, result, scaffold, filename='fugu.gexf'):
     result = fill_results_from_graph(result, scaffold, fields=['time', 'neuron_number', 'name'])
+    t_dict = results_dict(result,scaffold)
     pos = set_position(graph)
     
-    max_t = 0
-    for t in result['time']:
-        if t > max_t:
-            max_t = int(t)
-    
-    t_dict = results_dict(result, scaffold)
+    max_t = np.max(np.array(result['time']))
     G = nx.DiGraph(mode='dynamic')
     for n in graph.nodes():
         node = graph.nodes[n]['neuron_number']
@@ -142,6 +119,4 @@ def generate_gexf(graph, result, scaffold, filename='fugu.gexf'):
         G.add_edge(e0, e1, data=e_data)
     
     nx.write_gexf(G, filename)
-    
-    print("Maximum spiked time: ", max_t+1)
     return
