@@ -160,12 +160,20 @@ def graph_vis(result, scaffold, pos=None):
                                   title='time',
                                   fixedrange=True,
                                   range=[-0.05,max_t + 0.5],
+                                  showgrid = True,
+                                  zeroline=True,
+                                  gridcolor='#DCDCDC',
+                                  zerolinecolor='#DCDCDC',
                               ),
                               yaxis = dict(
                                   title='neuron number',
                                   fixedrange=True,
                                   range=[-0.5, nx.number_of_nodes(graph) + 1],
                                   nticks=nx.number_of_nodes(graph),
+                                  showgrid = True,
+                                  zeroline=True,
+                                  gridcolor='#DCDCDC',
+                                  zerolinecolor='#DCDCDC',
                               )
                           ))
     
