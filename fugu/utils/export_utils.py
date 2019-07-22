@@ -40,28 +40,25 @@ def results_dict(result, scaffold):
     max_time = int(np.max(times))
     return {t: list(result[result['time'] == t]['name']) for t in range(0, max_time+1)}
 
-def set_position(graph, scaffold):
-    degree = dict(graph.out_degree())
+def set_circuit_position(scaffold):
+    degree = dict(scaffold.circuit.out_degree())
     pos = {}
     input_layer = []
-    for node in graph.nodes():
-        if graph == scaffold.graph:
-            brick = graph.nodes[node]['brick']
-        else:
-            brick = graph.nodes[node]['name']
+    for node in scaffold.circuit.nodes():
+        brick = scaffold.circuit.nodes[node]['name']
         for bricks in scaffold.circuit.nodes():
             if brick == scaffold.circuit.nodes[bricks]['name']:
                 if 'layer' in scaffold.circuit.nodes[bricks]:
                     if scaffold.circuit.nodes[bricks]['layer'] == 'input':
                         input_layer.append(node)
-    max_degree = max([degree[n] for n in graph.nodes()])
+    max_degree = max([degree[n] for n in scaffold.circuit.nodes()])
     
     i = 70*max_degree*len(input_layer)
     for node in input_layer:
         pos[node] = (0, i)
         i = i - 70*max_degree
     j_val = {}
-    for edge in graph.edges():
+    for edge in scaffold.circuit.edges():
         if edge[0] in pos.keys() and edge[1] not in pos.keys():
 
             x = pos[edge[0]][0]
@@ -75,48 +72,83 @@ def set_position(graph, scaffold):
             j_val[edge[0]] = j_val[edge[0]] - 70
                 
             
-    if len(graph.nodes()) < len(pos):
-        print("Error! Not all nodes assigned positions. Unassigned nodes:")
-        for n in graph.nodes():
+    if len(scaffold.circuit.nodes()) > len(pos):
+        print("Error! Not all nodes in circuit assigned positions. Unassigned nodes:")
+        for n in scaffold.circuit.nodes():
             if n not in pos.keys():
                 print(n)
+    return pos
+
+def set_position(scaffold):
+    MAX_NODES = 20
+    total_length = 40*scaffold.graph.number_of_nodes()
+    total_height = 20*scaffold.graph.number_of_nodes()
+    pos = {}
+    sorted_nodes_by_brick = {}
+        
+    for node in scaffold.graph.nodes():
+        brick = scaffold.graph.nodes[node]['brick']
+        if brick in sorted_nodes_by_brick.keys():
+            sorted_nodes_by_brick[brick].append(node)
+        else:
+            sorted_nodes_by_brick[brick] = [node]
+    
+    num_cols = {}
+    total_cols = 0
+    for brick in sorted_nodes_by_brick:
+        cols = 1
+        total_cols += 1
+        height = len(sorted_nodes_by_brick[brick])
+        while height > MAX_NODES:
+            height = height - MAX_NODES
+            cols += 1
+            total_cols += 1
+        if cols == 1:
+            num_cols[brick] = (cols, height)
+        else:
+            num_cols[brick] = (cols, MAX_NODES)
+    dx = total_length/total_cols
+    x = 0
+    for brick in sorted_nodes_by_brick:
+        current_cols = num_cols[brick][0]
+        max_height = num_cols[brick][1]
+        dy = total_height/max_height
+        k = 0
+        for i in range(0,current_cols):
+            y = total_height
+            for j in range(0,max_height):
+                if k < len(sorted_nodes_by_brick[brick]):
+                    pos[sorted_nodes_by_brick[brick][k]] = (x,y)
+                    k += 1
+                    y -= dy
+            x += dx
+    if scaffold.graph.number_of_nodes() > len(pos):
+        print("Error! Not all nodes assigned positions. Unassigned nodes:")
+        for n in scaffold.graph.nodes():
+            if n not in pos.keys():
+                print(n)       
     return pos
 
 def generate_gexf(graph, result, scaffold, filename='fugu.gexf'):
     result = fill_results_from_graph(result, scaffold, fields=['time', 'neuron_number', 'name'])
     t_dict = results_dict(result,scaffold)
-    pos = set_position(graph)
     
-    max_t = np.max(np.array(result['time']))
+    max_t = int(np.max(np.array(result['time'])))
     G = nx.DiGraph(mode='dynamic')
-    for n in graph.nodes():
-        node = graph.nodes[n]['neuron_number']
-        if 'index' in graph.nodes[n].keys():
-            G.add_node(node, spiked = [], index = str(graph.nodes[n]['index']), 
-                       threshold=graph.nodes[n]['threshold'], decay=graph.nodes[n]['decay'], 
-                       brick=graph.nodes[n]['brick'], name = n, 
-                       x = pos[n][0], y = int(pos[n][1]))
-        else:
-            G.add_node(node, spiked = [], threshold=graph.nodes[n]['threshold'],
-                       decay=graph.nodes[n]['decay'], brick=graph.nodes[n]['brick'], 
-                       name=n, x=pos[n][0], y=int(pos[n][1]))
-    
-    for t in range(0, max_t+1):
-        if t in t_dict.keys():
-            	spiked_at_t = t_dict[t]
-        else:
-            	spiked_at_t = []
-        for node in G.nodes():
-            if G.nodes[node]['name'] in spiked_at_t:
-                G.nodes[node]['spiked'].append(('spiked', t, t+1))
+    G.update(graph)
+    for n in G.nodes():
+        G.nodes[n]['spiked'] = []  
+        if 'index' in G.nodes[n]:
+            G.nodes[n]['index'] = str(G.nodes[n]['index'])
+    for node in G.nodes():
+        for t in range(0,max_t+1):
+            if t in t_dict.keys():
+                if node in t_dict[t]:
+                    G.nodes[node]['spiked'].append(('spiked',t,t+1))
+                else:
+                    G.nodes[node]['spiked'].append(('did not spike', t, t+1))
             else:
-                G.nodes[node]['spiked'].append(('', t, t+1))
-    
-    for edge in graph.edges():
-        e0 = graph.nodes[edge[0]]['neuron_number']
-        e1 = graph.nodes[edge[1]]['neuron_number']
-        e_data = graph.edges[edge]
-        G.add_edge(e0, e1, data=e_data)
+                G.nodes[node]['spiked'].append(('did not spike', t, t+1))
     
     nx.write_gexf(G, filename)
     return

@@ -1,5 +1,5 @@
 import numpy as np
-from export_utils import fill_results_from_graph, set_position, results_dict
+from export_utils import fill_results_from_graph, set_position, set_circuit_position, results_dict
 # Plotting imports
 import dash
 import dash_html_components as html
@@ -25,8 +25,7 @@ def graph_vis(result, scaffold, pos=None):
     """
     graph = scaffold.graph
     if pos == None:
-        pos = set_position(graph, scaffold)
-        
+        pos = set_position(scaffold)
     result = fill_results_from_graph(result, scaffold)
     result_dict = results_dict(result, scaffold)
     
@@ -42,14 +41,14 @@ def graph_vis(result, scaffold, pos=None):
     stylesheet_list.append({'selector': 'node',
                             'style': {
                                     #'content': 'data(id)',
-                                    'width': '50',
-                                    'height': '50'}})
+                                    'width': str(16*np.ceil(graph.number_of_nodes()/100)),
+                                    'height': str(16*np.ceil(graph.number_of_nodes()/100))}})
     stylesheet_list.append({'selector': 'edge',
                             'style': {
                                     'curve-style': 'bezier',
                                     'target-arrow-shape': 'triangle',
-                                    'label': 'data(weight)',
-                                    'width': '7',
+                                    #'label': 'data(weight)',
+                                    'width': str(16*np.ceil(graph.number_of_nodes()/100)/6),
                                     'line-color': '#A0A0A0'}})
     stylesheet_list.append({'selector': '.spikes',
                             'style': {
@@ -63,7 +62,7 @@ def graph_vis(result, scaffold, pos=None):
     max_t = int(np.max(np.array(result['time'])))
     time_step = {str(i): str(i) for i in range(0,max_t+1)}
     max_deg = max([scaffold.circuit.out_degree(n) for n in scaffold.circuit.nodes()])
-    scaffold_pos = set_position(scaffold.circuit, scaffold)
+    scaffold_pos = set_circuit_position(scaffold)
     
     edge_trace = go.Scatter(x = [], y = [],
                             line = dict(width=12, color='#A0A0A0'),
@@ -104,8 +103,8 @@ def graph_vis(result, scaffold, pos=None):
                     layout = go.Layout(
                             font = dict(family="sans-serif", size=20, color="#444"),
                             title= dict(text="scaffold.circuit", x=0, y=0.98),
-                            height = 200*max_deg-110,
-                            margin= dict(l=50,r=50,t=40,b=50),
+                            height = 215*max_deg-80,
+                            margin= dict(l=50,r=50,t=40,b=20),
                             paper_bgcolor = '#FFFFFF',
                             plot_bgcolor = '#FFFFFF',
                             showlegend = False,
@@ -127,19 +126,23 @@ def graph_vis(result, scaffold, pos=None):
                              hoverinfo='text',
                              textposition = 'top center',
                              marker= dict(color = '#005376',
-                                          size = 5,
+                                          size = 9,
                                           line=dict(width=0))
                             )
+    x_range = []
+    y_range = []
     for time in result_dict:
         for node in result_dict[time]:
             x = time
+            x_range.append(time)
             y = graph.nodes[node]['neuron_number']
+            y_range.append(graph.nodes[node]['neuron_number'])
             spike_trace['x'] += tuple([x])
             spike_trace['y'] += tuple([y])
             spike_trace['text'] += tuple([str(graph.nodes[node]['neuron_number']) + ': ' + str(node)])
     
     sub_amt = '0.'
-    for i in range(0, len(str(nx.number_of_nodes(graph)))-1):
+    for i in range(0, len(str(graph.number_of_nodes()))-1):
         sub_amt = sub_amt + '0'
     sub_amt = sub_amt + '2'
     sub_amt = float(sub_amt)
@@ -147,8 +150,8 @@ def graph_vis(result, scaffold, pos=None):
                           layout = go.Layout(
                               font = dict(family="sans-serif", size=20, color="#444"),
                               title= dict(text="spike raster", x=0, y=1-sub_amt),
-                              height=400 + 10*nx.number_of_nodes(graph),
-                              margin=dict(l=25*len(str(nx.number_of_nodes(graph))), r=50, t=40, b=50),
+                              height=400 + 10*len(y_range),
+                              margin=dict(l=25*len(str(graph.number_of_nodes())), r=50, t=40, b=50),
                               paper_bgcolor = '#FFFFFF',
                               plot_bgcolor = '#FFFFFF',
                               showlegend=False,
@@ -158,8 +161,10 @@ def graph_vis(result, scaffold, pos=None):
                                              font=dict(color='#000000')),
                               xaxis = dict(
                                   title='time',
-                                  fixedrange=True,
-                                  range=[-0.05,max_t + 0.5],
+                                  type='category',
+                                  tickmode='array',
+                                  tickvals=x_range,
+                                  ticktext=x_range,
                                   showgrid = True,
                                   zeroline=True,
                                   gridcolor='#DCDCDC',
@@ -167,9 +172,10 @@ def graph_vis(result, scaffold, pos=None):
                               ),
                               yaxis = dict(
                                   title='neuron number',
-                                  fixedrange=True,
-                                  range=[-0.5, nx.number_of_nodes(graph) + 1],
-                                  nticks=nx.number_of_nodes(graph),
+                                  type='category',
+                                  tickmode='array',
+                                  tickvals=y_range,
+                                  ticktext=y_range,
                                   showgrid = True,
                                   zeroline=True,
                                   gridcolor='#DCDCDC',
@@ -200,12 +206,13 @@ def graph_vis(result, scaffold, pos=None):
     app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
     app.css.config.serve_locally = True
     app.scripts.config.serve_locally = True
+    app.title = "fugu"
     app.layout = html.Div(className="row",
                           children = [html.Div(className="twelve columns",
                                                children=[
                                                  html.Img(src='data:iamge/png;base64,{}'.format(fugu.decode()), style={'width':'7%', 
                                                                                                                        'display':'inline'}),
-                                                 html.Img(src='data:image/png;base64,{}'.format(snl.decode()), style={'width':'7%', 
+                                                 html.Img(src='data:image/png;base64,{}'.format(snl.decode()), style={'width':'10%', 
                                                                                                                       'display':'inline', 
                                                                                                                       'position':'absolute', 
                                                                                                                       'right':'0'})]),
@@ -291,11 +298,11 @@ def _build_node_and_edge_lists(graph, pos, spiked_at_time):
            
         edges.append({'data': 
             {'source': graph.nodes[source]['neuron_number'],
-                  'target': graph.nodes[target]['neuron_number'],
-                  'label': str(source) + ' to ' + str(target),
-                  'weight': graph.edges[edge]['weight'],
-                  'delay': graph.edges[edge]['delay']}  
-    })
+             'target': graph.nodes[target]['neuron_number'],
+             'label': str(source) + ' to ' + str(target),
+             'weight': graph.edges[edge]['weight'],
+             'delay': graph.edges[edge]['delay']}  
+        })
     return list(nodes), list(edges)
 
 def _build_left_div(fig, elements_ls, stylesheet_list, time_step, max_t):
@@ -391,7 +398,7 @@ def raster_plot(result, scaffold):
         i = i + 1
         
     plt.figure(figsize=(20,10))
-    plt.axis([0,times[-1]+1, 0, len(scaffold.graph.nodes())])
+    plt.axis([0,times[-1]+1, 0, scaffold.graph.number_of_nodes()])
     plt.plot(times,nodes,'.')
     plt.xlabel("Simulation time")
     plt.ylabel("Neuron index")
@@ -401,27 +408,24 @@ def raster_plot(result, scaffold):
     return
 
 if __name__ == "__main__":
-    from fugu.scaffold import Scaffold
-    from fugu.bricks import Vector_Input, Copy, Dot, Threshold, Shortest_Path, Concatenate
     import networkx as nx
-    import scipy as sp
-    import pickle
-    from scipy import ndimage
+    from fugu.scaffold import Scaffold
+    from fugu.bricks import Vector_Input, Copy, Dot, Threshold, Shortest_Path
     scaffold = Scaffold()
     print("Building Graph")
     #Small graph:
-    scaffold.add_brick(Vector_Input(np.array([1,0,1]), coding='Raster'), input_nodes='input')
-    scaffold.add_brick(Copy())
-    scaffold.add_brick(Dot([1,0,1], name='FirstDotOperator'), (1,0))
-    scaffold.add_brick(Dot([0,0,1], name='SecondDotOperator'), (1,1))
-    scaffold.add_brick(Threshold(1.25, name='LargerThanOneA'), (2,0), output=True)
-    scaffold.add_brick(Threshold(1.25, name='LargerThanOneB'), (3,0), output=True)
+#    scaffold.add_brick(Vector_Input(np.array([1,0,1]), coding='Raster'), input_nodes='input')
+#    scaffold.add_brick(Copy())
+#    scaffold.add_brick(Dot([1,0,1], name='FirstDotOperator'), (1,0))
+#    scaffold.add_brick(Dot([0,0,1], name='SecondDotOperator'), (1,1))
+#    scaffold.add_brick(Threshold(1.25, name='LargerThanOneA'), (2,0), output=True)
+#    scaffold.add_brick(Threshold(1.25, name='LargerThanOneB'), (3,0), output=True)
     #Large graph:
-    #scaffold.add_brick(Vector_Input(np.array([1]), coding='Raster', name='Input0'), 'input' )
-    #target_graph = nx.generators.path_graph(5000)
-    #for edge in target_graph.edges:
-    #    target_graph.edges[edge]['weight'] = 1.0
-    #scaffold.add_brick(Shortest_Path(target_graph,0))
+    scaffold.add_brick(Vector_Input(np.array([1]), coding='Raster', name='Input0'), 'input' )
+    target_graph = nx.generators.path_graph(5000)
+    for edge in target_graph.edges:
+        target_graph.edges[edge]['weight'] = 1.0
+    scaffold.add_brick(Shortest_Path(target_graph,0))
         
     print("Laying Bricks")
     scaffold.lay_bricks()
@@ -433,23 +437,9 @@ if __name__ == "__main__":
     result = scaffold.evaluate(backend='ds', max_runtime=100, record_all=True)
     print("Done evaluating.")
     print("Building Layout")
-    pos = set_position(scaffold.graph, scaffold)
-    
-    #use a scale for Networkx's layouts:
-    scale = 10*nx.number_of_nodes(scaffold.graph)
-    
-    #following works best for small graphs:
-    #input_layer = []
-    #for node in scaffold.graph.nodes:
-    #    input_layer.append(node)
-    #for edge in scaffold.graph.edges:
-    #    if edge[1] in input_layer:
-    #        input_layer.remove(edge[1])
-    #pos = nx.layout.spring_layout(scaffold.graph, pos=pos, fixed=input_layer)
-    
-    #Large graphs:
-    #
-    #pos = nx.layout.spring_layout(scaffold.graph, scale=scale, pos=pos)
+    #setting pos is optional: also can set position with networkx layout generators
+    pos = set_position(scaffold)
+
     
     print("Rendering graph")
-    graph_vis(result, scaffold)
+    graph_vis(result, scaffold, pos=pos)
