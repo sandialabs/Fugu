@@ -13,7 +13,7 @@ import base64
 import os
 
 
-def graph_vis(result, scaffold, pos=None):
+def graph_vis(result, scaffold, pos=None, debug=False, check_spikes=None):
     """
     General graph visualization for Fugu. Creates server using Plotly's Dash.
     Will output a link to access html server.
@@ -121,6 +121,7 @@ def graph_vis(result, scaffold, pos=None):
                                     zeroline = False,
                                     showticklabels = False),
                             ))
+                    
     spike_trace = go.Scatter(x = [], y = [], text = [],
                              mode='markers', 
                              hoverinfo='text',
@@ -182,7 +183,77 @@ def graph_vis(result, scaffold, pos=None):
                                   zerolinecolor='#DCDCDC',
                               )
                           ))
-    
+    if check_spikes is not None:
+        z = []
+        text = []
+        end_time = list(result_dict.keys())[-1]
+        for node in check_spikes.keys():
+            y = []
+            t = []
+            for time in range(0, end_time+1):
+                actual_nodes = result_dict[time]
+                actual_nums = [scaffold.graph.nodes[neuron]['neuron_number'] for neuron in actual_nodes]
+                if time in check_spikes[node].keys():
+                    spiked = check_spikes[node][time]
+                    if spiked == 1 and node in actual_nums:
+                        y.append(0)
+                        t.append('expected: spike<br>result: spike')
+                    elif spiked == 1 and node not in actual_nums:
+                        y.append(1)
+                        t.append('expected: spike<br>result: no spike')
+                    elif spiked == 0 and node in actual_nums:
+                        y.append(1)
+                        t.append('expected: no spike<br>result: spike')
+                    elif spiked == 0 and node not in actual_nums:
+                        y.append(0)
+                        t.append('expected: no spike<br>result: no spike')
+                    else:
+                        y.append(1)
+                        t.append('error: incorrect format given')
+                else:
+                    y.append(0.5)
+                    t.append('expected spike results not available')
+            z.append(y)
+            text.append(t)
+        red = False
+        green = False
+        grey = False
+        for y_neurons in z:
+            for x_times in y_neurons:
+                if x_times == 1:
+                    red = True
+                elif x_times == 0:
+                    green = True
+                elif x_times == 0.5:
+                    grey = True
+        if red and green and grey:
+            colorscale = [[0, "rgb(108, 179, 18)"], [0.5, "#DCDCDC"], [1, "rgb(180,20,0)"]]
+        elif red and green and grey == False:
+            colorscale = [[0, "rgb(108, 179, 18)"], [1, "rgb(180,20,0)"]]
+        elif red and green == False and grey == False:
+            colorscale = [[0, "rgb(180,20,0)"], [1, "rgb(180,20,0)"]]
+        elif red and green == False and grey:
+            colorscale = [[0, "#DCDCDC"], [1, "rgb(180,20,0)"]]
+        elif red == False and green and grey:
+            colorscale = [[0, "rgb(108, 179, 18)"], [1, "#DCDCDC"]]
+        elif red == False and green == False and grey:
+            colorscale = [[0, "#DCDCDC"], [1, "#DCDCDC"]]
+        elif red == False and green and grey == False:
+            colorscale = [[0, "rgb(108, 179, 18)"], [1, "rgb(108, 179, 18)"]]
+                    
+        expected_trace = go.Heatmap(z=z, y=list(check_spikes.keys()), x=list(range(0,end_time+1)), text=text,
+                           colorscale=colorscale, showscale=False)
+        expected_data = [expected_trace]
+        expected_layout = go.Layout(
+                font = dict(family="sans-serif", size=20, color="#444"),
+                title= dict(text='expected spike results',x=0,y=0.98),
+                xaxis= dict(type='category', tickmode='array',tickvals=list(range(0,end_time+1)), ticktext=list(range(0,end_time+1)), title='time vals'),
+                yaxis= dict(type='category', tickmode='array',tickvals=list(check_spikes.keys()), ticktext=list(check_spikes.keys()), title='neuron number'),
+                height=300,
+                margin= dict(b=40))
+        expected_fig = go.Figure(data=expected_data, layout=expected_layout)
+
+              
     output_options = []
     for node in graph.nodes:
         for brick in scaffold.circuit.nodes:
@@ -190,7 +261,11 @@ def graph_vis(result, scaffold, pos=None):
                 if 'output' == scaffold.circuit.nodes[brick]['layer']:
                     if graph.nodes[node]['brick'] == scaffold.circuit.nodes[brick]['name']:
                         output_options.append({'label': str(node), 'value': str(node)})
-
+    
+    if check_spikes is None:
+        right_side = _build_right_div_raster(output_options, raster_fig)
+    else:
+        right_side = _build_right_div_raster_expected(output_options, raster_fig, expected_fig)
     external_stylesheets =['//assets/custom.css']
     cwd = str(os.getcwd())
     snl_filename = cwd + '/assets/SNL_Stacked_Black_Blue.png'
@@ -217,7 +292,7 @@ def graph_vis(result, scaffold, pos=None):
                                                                                                                       'position':'absolute', 
                                                                                                                       'right':'0'})]),
                                 html.Div(children = [_build_left_div(fig, elements_ls, stylesheet_list, time_step, max_t),
-                                                     _build_right_div(output_options, raster_fig)]),
+                                                     right_side]),
                                 html.Div(className="twelve columns", 
                                          children = [html.Div(className="footer",
                                                               children = [html.Div([html.Img(src='data:image/png;base64,{}'.format(doe.decode()), 
@@ -230,7 +305,8 @@ def graph_vis(result, scaffold, pos=None):
                                                                                         'font-size': '1.5rem', 
                                                                                         'font-family':'sans-serif', 
                                                                                         'display':'inline-block', 
-                                                                                        'width':'90%'})])])])
+                                                                                        'width':'90%'})])])
+                        ])
 
     @app.callback(Output('text-area', 'value'),
                   [Input('graph', 'mouseoverNodeData')])
@@ -273,7 +349,7 @@ def graph_vis(result, scaffold, pos=None):
                 value = 'Output node ' + str(output_node) + ' did not spike.'
         return value
 
-    app.run_server(debug=True)
+    app.run_server(debug=debug)
     return
 
 def _build_node_and_edge_lists(graph, pos, spiked_at_time):
@@ -315,7 +391,9 @@ def _build_left_div(fig, elements_ls, stylesheet_list, time_step, max_t):
                                                                                         'font-size': '2.8rem', 
                                                                                         'background': '#FFFFFF', 
                                                                                         'margin-top':'15pt',
-                                                                                        'margin-left':'0rem'})]),
+                                                                                        'margin-left':'0rem',
+                                                                                        'display':'block',
+                                                                                        'width':'100%'})]),
                                                    cyto.Cytoscape(id = 'graph',
                                                                   elements = elements_ls,
                                                                   style = {'width': '100%', 
@@ -337,7 +415,9 @@ def _build_left_div(fig, elements_ls, stylesheet_list, time_step, max_t):
                                                                                                   style={'font-family': 'sans-serif', 
                                                                                                          'font-size': '2.0rem', 
                                                                                                          'background': '#FFFFFF',
-                                                                                                         'margin-left': '0rem'})]),
+                                                                                                         'margin-left': '0rem',
+                                                                                                         'display': 'block',
+                                                                                                         'margin-top': '0rem'})]),
                                                                     html.Div(className="twelve columns", 
                                                                              children=[dcc.Slider(id = 'slider',
                                                                                                   marks = time_step,
@@ -349,8 +429,7 @@ def _build_left_div(fig, elements_ls, stylesheet_list, time_step, max_t):
                                                                              style = {'margin-bottom':'5rem'})
                                                     ])
                                         ])
-
-def _build_right_div(output_options, raster_fig):
+def _build_right_div_raster(output_options, raster_fig):
     
     return html.Div(className="six columns",
                     children = [html.Div(className="twelve columns", 
@@ -358,12 +437,14 @@ def _build_right_div(output_options, raster_fig):
                                                                 style={'font-family': 'sans-serif', 
                                                                        'font-size': '2.8rem',
                                                                        'background': '#FFFFFF',
-                                                                       'margin-left': '0rem'}),
+                                                                       'margin-left': '0rem',
+                                                                       'display': 'block'}),
                                 html.Label('output neurons', 
                                            style={'font-family': 'sans-serif',
                                                   'font-size': '2.0rem',
                                                   'background':'#FFFFFF',
-                                                  'margin-left': '0rem'}),
+                                                  'margin-left': '0rem',
+                                                  'display': 'block'}),
                                 dcc.Dropdown(id='output_options', 
                                              options = output_options,
                                              value = ''),
@@ -375,6 +456,36 @@ def _build_right_div(output_options, raster_fig):
                                              style={'width':'100%',
                                                     'background':'#FFFFFF',
                                                     'margin-bottom': '15pt'}),
+                                dcc.Graph(id='raster_plot', figure=raster_fig)]),
+            ])    
+def _build_right_div_raster_expected(output_options, raster_fig, expected_fig):
+    
+    return html.Div(className="six columns",
+                    children = [html.Div(className="twelve columns", 
+                                         children = [html.Label('decode results', 
+                                                                style={'font-family': 'sans-serif', 
+                                                                       'font-size': '2.8rem',
+                                                                       'background': '#FFFFFF',
+                                                                       'margin-left': '0rem',
+                                                                       'display': 'block'}),
+                                html.Label('output neurons', 
+                                           style={'font-family': 'sans-serif',
+                                                  'font-size': '2.0rem',
+                                                  'background':'#FFFFFF',
+                                                  'margin-left': '0rem',
+                                                  'display': 'block'}),
+                                dcc.Dropdown(id='output_options', 
+                                             options = output_options,
+                                             value = ''),
+                                dcc.Textarea(id = 'summary',
+                                             draggable=True,
+                                             placeholder = 'view decoded results here',
+                                             readOnly = True,
+                                             value = '',
+                                             style={'width':'100%',
+                                                    'background':'#FFFFFF',
+                                                    'margin-bottom': '15pt'}),
+                                dcc.Graph(id='expected', figure=expected_fig, style={'margin-bottom':'2rem'}),
                                 dcc.Graph(id='raster_plot', figure=raster_fig)]),
             ])
 
@@ -407,6 +518,7 @@ def raster_plot(result, scaffold):
     plt.show()
     return
 
+
 if __name__ == "__main__":
     import networkx as nx
     from fugu.scaffold import Scaffold
@@ -414,19 +526,19 @@ if __name__ == "__main__":
     scaffold = Scaffold()
     print("Building Graph")
     #Small graph:
-#    scaffold.add_brick(Vector_Input(np.array([1,0,1]), coding='Raster'), input_nodes='input')
-#    scaffold.add_brick(Copy())
-#    scaffold.add_brick(Dot([1,0,1], name='FirstDotOperator'), (1,0))
-#    scaffold.add_brick(Dot([0,0,1], name='SecondDotOperator'), (1,1))
-#    scaffold.add_brick(Threshold(1.25, name='LargerThanOneA'), (2,0), output=True)
-#    scaffold.add_brick(Threshold(1.25, name='LargerThanOneB'), (3,0), output=True)
+    scaffold.add_brick(Vector_Input(np.array([1,0,1]), coding='Raster'), input_nodes='input')
+    scaffold.add_brick(Copy())
+    scaffold.add_brick(Dot([1,0,1], name='FirstDotOperator'), (1,0))
+    scaffold.add_brick(Dot([0,0,1], name='SecondDotOperator'), (1,1))
+    scaffold.add_brick(Threshold(1.25, name='LargerThanOneA'), (2,0), output=True)
+    scaffold.add_brick(Threshold(1.25, name='LargerThanOneB'), (3,0), output=True)
     #Large graph:
-    scaffold.add_brick(Vector_Input(np.array([1]), coding='Raster', name='Input0'), 'input' )
-    target_graph = nx.generators.path_graph(5000)
-    for edge in target_graph.edges:
-        target_graph.edges[edge]['weight'] = 1.0
-    scaffold.add_brick(Shortest_Path(target_graph,0))
-        
+#    scaffold.add_brick(Vector_Input(np.array([1]), coding='Raster', name='Input0'), 'input' )
+#    target_graph = nx.generators.path_graph(5000)
+#    for edge in target_graph.edges:
+#        target_graph.edges[edge]['weight'] = 1.0
+#    scaffold.add_brick(Shortest_Path(target_graph,0))
+#        
     print("Laying Bricks")
     scaffold.lay_bricks()
     #scaffold.summary()
@@ -442,4 +554,10 @@ if __name__ == "__main__":
 
     
     print("Rendering graph")
-    graph_vis(result, scaffold, pos=pos)
+    #TODO: Instead of {neuron_num: [spikes at each timestep]}
+    # try {neuron_num:{timestep: spike}}
+    check_spikes = {0:{0:1, 1:0},
+                    2:{0:1},
+                    13:{0:0, 1:0, 2:1},
+                    14:{0:0, 1:0, 2:1}}
+    graph_vis(result, scaffold, pos=pos, debug=True, check_spikes=check_spikes)
