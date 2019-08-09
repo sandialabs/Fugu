@@ -13,15 +13,26 @@ import base64
 import os
 
 
-def graph_vis(result, scaffold, pos=None, debug=False, check_spikes=None):
+def graph_vis(result, scaffold, pos=None, debug=False, raster=True, check_spikes=None):
     """
     General graph visualization for Fugu. Creates server using Plotly's Dash.
     Will output a link to access html server.
     
     Arguments:
-        + result - Pandas DataFrame storing results of simulation
-        + scaffold - Fugu Scaffold object
-        + pos - dictionary of node positions (optional)
+        + result : - pandas DataFrame 
+            + stores result of fugu simulation
+        + scaffold : - fugu Scaffold
+            + stores scaffold object
+        + pos : - dict, optional
+            + dictionary of node positions (default is None)
+        + debug : - bool, optional
+            + toggle if dash server is on debugging mode (default is False)
+        + raster : - bool, optional
+            + toggle if raster plot is showed (default is True)
+        + check_spikes : - dict, optional
+            + dictionary specifying what spikes to check (default is None)
+            + has format {neuron_number: {time_step: spike}} where spikes are denoted by 1 and no spike is 0
+            + for example, to check if neuron 3 spiked at time 0 and didn't spike at time 2, {3: {0: 1, 2: 0}}
     """
     graph = scaffold.graph
     if pos == None:
@@ -122,67 +133,68 @@ def graph_vis(result, scaffold, pos=None, debug=False, check_spikes=None):
                                     showticklabels = False),
                             ))
                     
-    spike_trace = go.Scatter(x = [], y = [], text = [],
-                             mode='markers', 
-                             hoverinfo='text',
-                             textposition = 'top center',
-                             marker= dict(color = '#005376',
-                                          size = 9,
-                                          line=dict(width=0))
-                            )
-    x_range = []
-    y_range = []
-    for time in result_dict:
-        for node in result_dict[time]:
-            x = time
-            x_range.append(time)
-            y = graph.nodes[node]['neuron_number']
-            y_range.append(graph.nodes[node]['neuron_number'])
-            spike_trace['x'] += tuple([x])
-            spike_trace['y'] += tuple([y])
-            spike_trace['text'] += tuple([str(graph.nodes[node]['neuron_number']) + ': ' + str(node)])
-    
-    sub_amt = '0.'
-    for i in range(0, len(str(graph.number_of_nodes()))-1):
-        sub_amt = sub_amt + '0'
-    sub_amt = sub_amt + '2'
-    sub_amt = float(sub_amt)
-    raster_fig = go.Figure(data = [spike_trace],
-                          layout = go.Layout(
-                              font = dict(family="sans-serif", size=20, color="#444"),
-                              title= dict(text="spike raster", x=0, y=1-sub_amt),
-                              height=400 + 10*len(y_range),
-                              margin=dict(l=25*len(str(graph.number_of_nodes())), r=50, t=40, b=50),
-                              paper_bgcolor = '#FFFFFF',
-                              plot_bgcolor = '#FFFFFF',
-                              showlegend=False,
-                              hovermode='closest',
-                              hoverlabel=dict(bgcolor='aliceblue',
-                                             bordercolor='gainsboro',
-                                             font=dict(color='#000000')),
-                              xaxis = dict(
-                                  title='time',
-                                  type='category',
-                                  tickmode='array',
-                                  tickvals=x_range,
-                                  ticktext=x_range,
-                                  showgrid = True,
-                                  zeroline=True,
-                                  gridcolor='#DCDCDC',
-                                  zerolinecolor='#DCDCDC',
-                              ),
-                              yaxis = dict(
-                                  title='neuron number',
-                                  type='category',
-                                  tickmode='array',
-                                  tickvals=y_range,
-                                  ticktext=y_range,
-                                  showgrid = True,
-                                  zeroline=True,
-                                  gridcolor='#DCDCDC',
-                                  zerolinecolor='#DCDCDC',
-                              )
-                          ))
+    if raster:
+        spike_trace = go.Scatter(x = [], y = [], text = [],
+                                 mode='markers', 
+                                 hoverinfo='text',
+                                 textposition = 'top center',
+                                 marker= dict(color = '#005376',
+                                              size = 9,
+                                              line=dict(width=0))
+                                )
+        x_range = []
+        y_range = []
+        for time in result_dict:
+            for node in result_dict[time]:
+                x = time
+                x_range.append(time)
+                y = graph.nodes[node]['neuron_number']
+                y_range.append(graph.nodes[node]['neuron_number'])
+                spike_trace['x'] += tuple([x])
+                spike_trace['y'] += tuple([y])
+                spike_trace['text'] += tuple([str(graph.nodes[node]['neuron_number']) + ': ' + str(node)])
+        
+        sub_amt = '0.'
+        for i in range(0, len(str(graph.number_of_nodes()))-1):
+            sub_amt = sub_amt + '0'
+        sub_amt = sub_amt + '2'
+        sub_amt = float(sub_amt)
+        raster_fig = go.Figure(data = [spike_trace],
+                              layout = go.Layout(
+                                  font = dict(family="sans-serif", size=20, color="#444"),
+                                  title= dict(text="spike raster", x=0, y=1-sub_amt),
+                                  height=400 + 10*len(y_range),
+                                  margin=dict(l=25*len(str(graph.number_of_nodes())), r=50, t=40, b=50),
+                                  paper_bgcolor = '#FFFFFF',
+                                  plot_bgcolor = '#FFFFFF',
+                                  showlegend=False,
+                                  hovermode='closest',
+                                  hoverlabel=dict(bgcolor='aliceblue',
+                                                 bordercolor='gainsboro',
+                                                 font=dict(color='#000000')),
+                                  xaxis = dict(
+                                      title='time',
+                                      type='category',
+                                      tickmode='array',
+                                      tickvals=x_range,
+                                      ticktext=x_range,
+                                      showgrid = True,
+                                      zeroline=True,
+                                      gridcolor='#DCDCDC',
+                                      zerolinecolor='#DCDCDC',
+                                  ),
+                                  yaxis = dict(
+                                      title='neuron number',
+                                      type='category',
+                                      tickmode='array',
+                                      tickvals=y_range,
+                                      ticktext=y_range,
+                                      showgrid = True,
+                                      zeroline=True,
+                                      gridcolor='#DCDCDC',
+                                      zerolinecolor='#DCDCDC',
+                                  )
+                              ))
     if check_spikes is not None:
         z = []
         text = []
@@ -262,10 +274,14 @@ def graph_vis(result, scaffold, pos=None, debug=False, check_spikes=None):
                     if graph.nodes[node]['brick'] == scaffold.circuit.nodes[brick]['name']:
                         output_options.append({'label': str(node), 'value': str(node)})
     
-    if check_spikes is None:
+    if check_spikes is None and raster:
         right_side = _build_right_div_raster(output_options, raster_fig)
-    else:
+    elif check_spikes is None and raster==False:
+        right_side = _build_right_div(output_options)
+    elif check_spikes is not None and raster:
         right_side = _build_right_div_raster_expected(output_options, raster_fig, expected_fig)
+    else:
+        right_side = _build_right_div_expected(output_options, expected_fig)
     external_stylesheets =['//assets/custom.css']
     cwd = str(os.getcwd())
     snl_filename = cwd + '/assets/SNL_Stacked_Black_Blue.png'
@@ -429,8 +445,36 @@ def _build_left_div(fig, elements_ls, stylesheet_list, time_step, max_t):
                                                                              style = {'margin-bottom':'5rem'})
                                                     ])
                                         ])
-def _build_right_div_raster(output_options, raster_fig):
+
+def _build_right_div(output_options):
+    return html.Div(className="six columns",
+                    children = [html.Div(className="twelve columns", 
+                                         children = [html.Label('decode results', 
+                                                                style={'font-family': 'sans-serif', 
+                                                                       'font-size': '2.8rem',
+                                                                       'background': '#FFFFFF',
+                                                                       'margin-left': '0rem',
+                                                                       'display': 'block'}),
+                                html.Label('output neurons', 
+                                           style={'font-family': 'sans-serif',
+                                                  'font-size': '2.0rem',
+                                                  'background':'#FFFFFF',
+                                                  'margin-left': '0rem',
+                                                  'display': 'block'}),
+                                dcc.Dropdown(id='output_options', 
+                                             options = output_options,
+                                             value = ''),
+                                dcc.Textarea(id = 'summary',
+                                             draggable=True,
+                                             placeholder = 'view decoded results here',
+                                             readOnly = True,
+                                             value = '',
+                                             style={'width':'100%',
+                                                    'background':'#FFFFFF',
+                                                    'margin-bottom': '15pt'})]),
+            ])   
     
+def _build_right_div_raster(output_options, raster_fig):
     return html.Div(className="six columns",
                     children = [html.Div(className="twelve columns", 
                                          children = [html.Label('decode results', 
@@ -457,9 +501,38 @@ def _build_right_div_raster(output_options, raster_fig):
                                                     'background':'#FFFFFF',
                                                     'margin-bottom': '15pt'}),
                                 dcc.Graph(id='raster_plot', figure=raster_fig)]),
-            ])    
-def _build_right_div_raster_expected(output_options, raster_fig, expected_fig):
+            ])   
     
+def _build_right_div_expected(output_options, expected_fig):
+    return html.Div(className="six columns",
+                    children = [html.Div(className="twelve columns", 
+                                         children = [html.Label('decode results', 
+                                                                style={'font-family': 'sans-serif', 
+                                                                       'font-size': '2.8rem',
+                                                                       'background': '#FFFFFF',
+                                                                       'margin-left': '0rem',
+                                                                       'display': 'block'}),
+                                html.Label('output neurons', 
+                                           style={'font-family': 'sans-serif',
+                                                  'font-size': '2.0rem',
+                                                  'background':'#FFFFFF',
+                                                  'margin-left': '0rem',
+                                                  'display': 'block'}),
+                                dcc.Dropdown(id='output_options', 
+                                             options = output_options,
+                                             value = ''),
+                                dcc.Textarea(id = 'summary',
+                                             draggable=True,
+                                             placeholder = 'view decoded results here',
+                                             readOnly = True,
+                                             value = '',
+                                             style={'width':'100%',
+                                                    'background':'#FFFFFF',
+                                                    'margin-bottom': '15pt'}),
+                                dcc.Graph(id='expected', figure=expected_fig, style={'margin-bottom':'2rem'})]),
+            ])
+    
+def _build_right_div_raster_expected(output_options, raster_fig, expected_fig):
     return html.Div(className="six columns",
                     children = [html.Div(className="twelve columns", 
                                          children = [html.Label('decode results', 
@@ -554,10 +627,8 @@ if __name__ == "__main__":
 
     
     print("Rendering graph")
-    #TODO: Instead of {neuron_num: [spikes at each timestep]}
-    # try {neuron_num:{timestep: spike}}
     check_spikes = {0:{0:1, 1:0},
                     2:{0:1},
                     13:{0:0, 1:0, 2:1},
                     14:{0:0, 1:0, 2:1}}
-    graph_vis(result, scaffold, pos=pos, debug=True, check_spikes=check_spikes)
+    graph_vis(result, scaffold, pos=pos, debug=False, check_spikes=check_spikes)
