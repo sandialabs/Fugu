@@ -37,15 +37,20 @@ for sequence, answer in test_sequences:
     scaffold.add_brick(LIS_brick, output=True)
     scaffold.lay_bricks()
 
-    result = scaffold.evaluate(backend='pynn',max_runtime=50, record_all=True)
+    pynn_args = {}
+    pynn_args['backend'] = 'spinnaker'
+    pynn_args['verbose'] = False 
+
+    result = scaffold.evaluate(backend='pynn',max_runtime=50, record_all=True, backend_args=pynn_args)
 
     graph_names = list(scaffold.graph.nodes.data('name'))
     print("---Finished evaluation:---")
     lis = 0
     for row in result.itertuples():
         neuron_name = graph_names[int(row.neuron_number)][0]
-        if "L_" in neuron_name:
-            level = int(neuron_name.split("-")[0][2:])
+        #print(neuron_name, row.time)
+        if "Main" in neuron_name:
+            level = int(neuron_name.split("_")[1])
             if level > lis:
                 lis = level
 

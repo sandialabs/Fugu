@@ -7,12 +7,13 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 from pyNN.utility.plotting import Figure, Panel, comparison_plot
-from pyNN.connectors import FromListConnector
 
 from warnings import warn
 
 from .backend import Backend
 
+BRIAN_BACKEND = 0
+SPINNAKER_BACKEND = 1
 
 class pynn_Backend(Backend):
 
@@ -22,17 +23,43 @@ class pynn_Backend(Backend):
         self.node_neuron_map = {}
 
         # these parameters will have to be set based on the simulator
-        self.spike_value = 1.00
         self.no_decay = 1000000000 
+
+        self.spike_value = 1.00
         self.min_delay = 10.00
 
-        self.runtime = runtime * self.min_delay
+        self.steps = runtime
+        self.runtime = self.steps * self.min_delay
+        self.tau_syn_E = 5.0
+        self.backend = BRIAN_BACKEND 
 
     def _run_pynn_sim(self, fugu_scaffold, simulator='brian', per_brick_population=False, verbose=False):
         if simulator == 'brian':
             # PyNN only has support for brian1 (i.e. brian) which is only python 2.x compatible
             assert sys.version_info <= (3,0)
             import pyNN.brian as pynn_sim
+
+            from pyNN.connectors import FromListConnector
+
+            self.backend = BRIAN_BACKEND 
+
+            self.spike_value = 1.00
+            self.min_delay = 10.00
+            self.tau_syn_E = 1.49
+
+            self.runtime = self.steps * self.min_delay
+
+            pynn_sim.setup(timestep=0.01)
+        elif simulator == 'spinnaker' or simulator == 'spynnaker':
+            assert sys.version_info <= (3,0)
+            import pyNN.spiNNaker as pynn_sim
+            from pyNN.spiNNaker import FromListConnector
+
+            self.backend = SPINNAKER_BACKEND 
+
+            self.no_decay = 65535
+
+            pynn_sim.setup()
         else:
             raise ValueError("unsupported pyNN backend")
 
@@ -42,7 +69,6 @@ class pynn_Backend(Backend):
         if per_brick_population:
             warn("Fugu currently only supports generating a single PyNN population for the entire Fugu circuit")
         else:
-            pynn_sim.setup(timestep=0.01)
 
             # Setup neuron populations
             input_population_size = 0
@@ -74,6 +100,7 @@ class pynn_Backend(Backend):
             parameters.append('v_reset')
             parameters.append('tau_m')
             parameters.append('tau_refrac')
+            parameters.append('tau_syn_E')
             parameter_values = {key:[] for key in parameters} 
             pynn_index = 0
 
@@ -93,15 +120,21 @@ class pynn_Backend(Backend):
                     else:
                         parameter_values['tau_m'].append(self.no_decay)
 
+                    parameter_values['tau_syn_E'].append(self.tau_syn_E)
+
+                    #if self.backend == SPINNAKER_BACKEND:
+                        #initial_values.append((node,0.0))
+                    #else:
                     initial_values.append(0.0)
 
                     self.node_neuron_map[node] = pynn_index
                     pynn_index += 1
 
             main_neurons = pynn_sim.Population(total_neurons - input_population_size, 
-                                               pynn_sim.IF_curr_alpha(**parameter_values),
-                                               initial_values={'v':initial_values},
+                                               pynn_sim.IF_curr_exp(**parameter_values),
                                                label='main')
+            main_neurons.initialize(v=initial_values)
+
             if verbose:
                 print("Neurons:")
                 print("name,\ttype,\tid,\tv_rest,\tv_reset,\tv_thresh")
@@ -223,8 +256,8 @@ class pynn_Backend(Backend):
         per_brick_population = False
         verbose = False
         simulator = 'brian'
-        if 'pynn_backend' in backend_args:
-            simulator = backend_args['pynn_backend']
+        if 'backend' in backend_args:
+            simulator = backend_args['backend']
         if 'per_brick_population' in backend_args:
             per_brick_population = backend_args['per_brick_population']
         if 'verbose' in backend_args:
