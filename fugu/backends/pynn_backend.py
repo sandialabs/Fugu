@@ -4,9 +4,6 @@ import sys
 import networkx as nx
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
-
-from pyNN.utility.plotting import Figure, Panel, comparison_plot
 
 from warnings import warn
 
@@ -57,10 +54,14 @@ class pynn_Backend(Backend):
 
             self.backend = SPINNAKER_BACKEND 
 
-            self.no_decay = 65535
-            self.min_delay = 0.01
+            #self.no_decay = 65535
+            self.no_decay = 6 
+            self.min_delay = 0.50
+            self.tau_syn_E = 1.00
 
-            pynn_sim.setup()
+            self.runtime = self.steps * self.min_delay
+
+            pynn_sim.setup(timestep=0.50)
         else:
             raise ValueError("unsupported pyNN backend")
 
@@ -108,7 +109,7 @@ class pynn_Backend(Backend):
             for node, vals in fugu_graph.nodes.data():
                 if node not in input_nodes:
                     threshold = vals['threshold']
-                    parameter_values['v_thresh'].append(self.spike_value * threshold if threshold > 0.0 else 0.05)
+                    parameter_values['v_thresh'].append(self.spike_value * threshold if threshold > 0.0 else 0.10)
                     parameter_values['tau_refrac'].append(self.min_delay)
                     rest = 0.0
                     if 'potential' in vals:
@@ -138,17 +139,21 @@ class pynn_Backend(Backend):
 
             if verbose:
                 print("Neurons:")
-                print("name,\ttype,\tid,\tv_rest,\tv_reset,\tv_thresh")
-                for node in self.node_neuron_map:
-                    if node in input_nodes:
-                        node_type = 'input'
-                    else:
-                        node_type = 'main'
-                    node_id = self.node_neuron_map[node]
-                    neuron = main_neurons[node_id]
-                    print("{},\t{},\t{},\t{},\t{},\t{}".format(node, node_type, node_id, 
-                                                               neuron.v_rest, neuron.v_reset, neuron.v_thresh))
-                print("<<<")
+                if self.backend == SPINNAKER_BACKEND:
+                    for param in parameters:
+                        print("{}: {}".format(param, main_neurons.get(param)))
+                else:
+                    print("name,\ttype,\tid,\tv_rest,\tv_reset,\tv_thresh")
+                    for node in self.node_neuron_map:
+                        if node in input_nodes:
+                            node_type = 'input'
+                        else:
+                            node_type = 'main'
+                        node_id = self.node_neuron_map[node]
+                        neuron = main_neurons[node_id]
+                        print("{},\t{},\t{},\t{},\t{},\t{}".format(node, node_type, node_id, 
+                                                                   neuron.v_rest, neuron.v_reset, neuron.v_thresh))
+                    print("<<<")
 
             # Setup Synapses
 
@@ -187,22 +192,12 @@ class pynn_Backend(Backend):
                 main_connector = FromListConnector(main_main)
                 main_synapses = pynn_sim.Projection(main_neurons, main_neurons, main_connector, synapse, label='main-main')
 
-            if verbose:
-                print("<<<")
-                print("Synapses:")
-                print("input to main---")
-                print("From,\tTo,\tWeight\tDelay")
-                for synapse in input_synapses.get(["weight", "delay"], format="list"):
-                    print(synapse)
-                print("main to main---")
-                print("From,\tTo,\tWeight\tDelay")
-                for synapse in main_synapses.get(["weight", "delay"], format="list"):
-                    print(synapse)
-
             # run simulation and collect results
-            main_neurons.record(['spikes'])
-            input_neurons.record(['spikes'])
+            main_neurons.record(['spikes','v'])
+            input_neurons.record('spikes')
 
+            if verbose:
+                print("Runtime: {}".format(self.runtime))
             pynn_sim.run(self.runtime)
 
             main_data = main_neurons.get_data()
@@ -210,24 +205,48 @@ class pynn_Backend(Backend):
 
             pynn_sim.end()
 
+            if verbose:
+                print("<<<")
+                print("Synapses:")
+                if self.backend != SPINNAKER_BACKEND:
+                    print("input to main---")
+                    print("From,\tTo,\tWeight\tDelay")
+                    for synapse in input_synapses.get(["weight", "delay"], format="list"):
+                        print(synapse)
+                    print("main to main---")
+                    print("From,\tTo,\tWeight\tDelay")
+                    for synapse in main_synapses.get(["weight", "delay"], format="list"):
+                        print(synapse)
+
+
             # process results
             spike_result = pd.DataFrame({'time':[],'neuron_number':[]})
 
             main_spiketrains = main_data.segments[0].spiketrains
             input_spiketrains = input_data.segments[0].spiketrains
+            main_voltage = main_data.segments[0].filter(name='v')[0]
 
             spikes = {}
             for node in self.node_neuron_map:
+                if verbose:
+                    print("---results for: {}".format(node))
                 pynn_index = self.node_neuron_map[node]
                 if node not in input_nodes:
                     spiketrain = main_spiketrains[pynn_index]
+                    if verbose:
+                        print("voltage  {}".format(main_voltage[pynn_index]))
                 else:
+                    if verbose:
+                        print("this is an input node")
                     spiketrain = input_spiketrains[pynn_index]
+                if verbose:
+                    print("spiketimes  {}".format(spiketrain))
                 if spiketrain.any():
                     for time in np.array(spiketrain):
                         if time not in spikes:
                             spikes[time] = set()
                         spikes[time].add(fugu_graph.nodes[node]['neuron_number'])
+
 
             for time in spikes:
                 mini_df = pd.DataFrame()
