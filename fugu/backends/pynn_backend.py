@@ -58,6 +58,7 @@ class pynn_Backend(Backend):
             self.backend = SPINNAKER_BACKEND 
 
             self.no_decay = 65535
+            self.min_delay = 0.01
 
             pynn_sim.setup()
         else:
@@ -199,7 +200,7 @@ class pynn_Backend(Backend):
                     print(synapse)
 
             # run simulation and collect results
-            main_neurons.record(['spikes','v'])
+            main_neurons.record(['spikes'])
             input_neurons.record(['spikes'])
 
             pynn_sim.run(self.runtime)
@@ -212,7 +213,6 @@ class pynn_Backend(Backend):
             # process results
             spike_result = pd.DataFrame({'time':[],'neuron_number':[]})
 
-            signals = main_data.segments[0].filter(name='v')[0]
             main_spiketrains = main_data.segments[0].spiketrains
             input_spiketrains = input_data.segments[0].spiketrains
 
