@@ -42,7 +42,7 @@ for sequence, answer in test_sequences:
 
     print("---Running evaluation---")
 
-    result = scaffold.evaluate(backend='pynn',max_runtime=50, record_all=True, backend_args=pynn_args)
+    result = scaffold.evaluate(backend='pynn',max_runtime=100, record_all=True, backend_args=pynn_args)
 
     graph_names = list(scaffold.graph.nodes.data('name'))
     print("---Finished evaluation:---")

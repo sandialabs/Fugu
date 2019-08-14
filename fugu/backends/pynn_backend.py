@@ -55,9 +55,10 @@ class pynn_Backend(Backend):
             self.backend = SPINNAKER_BACKEND 
 
             #self.no_decay = 65535
-            self.no_decay = 6 
+            self.no_decay = 7.71762
             self.min_delay = 0.50
             self.tau_syn_E = 1.00
+            self.spike_value = 1.0
 
             self.runtime = self.steps * self.min_delay
 

@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
 Created on Thu May 30 13:02:07 2019
@@ -96,6 +96,6 @@ scaffold.lay_bricks()
 print()
 #print('----------------------')
 #print('Results:', end='\n\n')
-result = scaffold.evaluate(backend='pynn', max_runtime=2, record_all=True)
+result = scaffold.evaluate(backend='ds', max_runtime=2, record_all=True)
 print(result)
 #scaffold.summary(verbose=1)
