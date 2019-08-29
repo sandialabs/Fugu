@@ -20,14 +20,10 @@ class pynn_Backend(Backend):
         self.node_neuron_map = {}
 
         # these parameters will have to be set based on the simulator
-        self.no_decay = 1000000000 
-
-        self.spike_value = 1.00
-        self.min_delay = 10.00
-
+        self.base_neuron_params = {}
         self.steps = runtime
         self.runtime = self.steps * self.min_delay
-        self.tau_syn_E = 5.0
+
         self.backend = BRIAN_BACKEND 
 
     def _run_pynn_sim(self, fugu_scaffold, simulator='brian', per_brick_population=False, verbose=False):
@@ -40,13 +36,15 @@ class pynn_Backend(Backend):
 
             self.backend = BRIAN_BACKEND 
 
-            self.spike_value = 1.00
-            self.min_delay = 10.00
-            self.tau_syn_E = 1.49
+            self.base_neuron_params['spike_value'] = 1.00
+            self.base_neuron_params['min_delay'] = 10.00
+            self.base_neuron_params['tau-syn_E'] = 1.49
+            self.base_neuron_params['i_offset'] = 0.00
 
             self.runtime = self.steps * self.min_delay
 
             pynn_sim.setup(timestep=0.01)
+
         elif simulator == 'spinnaker' or simulator == 'spynnaker':
             assert sys.version_info <= (3,0)
             import pyNN.spiNNaker as pynn_sim
@@ -54,15 +52,16 @@ class pynn_Backend(Backend):
 
             self.backend = SPINNAKER_BACKEND 
 
-            #self.no_decay = 65535
-            self.no_decay = 7.71762
-            self.min_delay = 0.50
-            self.tau_syn_E = 1.00
-            self.spike_value = 1.0
+            self.base_neuron_params['spike_value'] = 1.00
+            self.base_neuron_params['min_delay'] = 1.00
+            self.base_neuron_params['cm'] = 1.00
+            self.base_neuron_params['tau_m'] = 1.00
+            self.base_neuron_params['i_offset'] = 0.00
 
             self.runtime = self.steps * self.min_delay
+            #self.no_decay = self.runtime 
 
-            pynn_sim.setup(timestep=0.50)
+            pynn_sim.setup(timestep=self.min_delay)
         else:
             raise ValueError("unsupported pyNN backend")
 
@@ -166,7 +165,7 @@ class pynn_Backend(Backend):
                 weight = 0.0
                 delay = self.min_delay
                 if 'weight' in values:
-                    weight = values['weight'] * 1.0
+                    weight = values['weight'] * self.spike_value
                 if 'delay' in values:
                     delay = values['delay'] + 1.0
                     delay = delay * self.min_delay
