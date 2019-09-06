@@ -1442,3 +1442,131 @@ class LIS(Brick):
                 output_lists,
                 self.output_codings
                )
+
+class TemporalAdder(Brick):
+    '''
+    Brick that "adds" spike times together:
+
+    More specifically, consider you have three neurons u, v, and w that first spike at times t_u, t_v, and t_w.
+    Assuming v spikes before w (so t_v < t_w), we want t_u = t_w + t_v, i.e. u fires t_v timesteps after w fires.
+    '''
+    def __init__(self, number_of_elements, design = 'default', name = None, output_coding = 'temporal-L'):
+        '''
+        Construtor for this brick.
+        Arguments:
+            + number_of_elements - number of signals you want to add together
+            + name - Name of the brick.  If not specified, a default will be used.  Name should be unique.
+            + output_coding - Output coding type, default is 'temporal-L'
+        '''
+        super(Brick, self).__init__()
+        self.is_built = False
+        self.name = name
+        self.supported_codings = input_coding_types
+
+        self.output_codings = [output_coding]
+        self.metadata = {'D':None}
+
+        self.num_elements = number_of_elements
+        self.design = design
+
+    def build(self,
+             graph,
+             metadata,
+             control_nodes,
+             input_lists,
+             input_codings):
+        """
+        Build LIS brick.
+
+        Arguments:
+            + graph - networkx graph to define connections of the computational graph
+            + metadata - dictionary to define the shapes and parameters of the brick
+            + control_nodes - dictionary of lists of auxillary networkx nodes.  Excpected keys: 'complete' - A list of neurons that fire when the brick is done
+            + input_lists - list of nodes that will contain input
+            + input_coding - list of input coding formats.  All coding types supported
+
+        Returns:
+            + graph of a computational elements and connections
+            + dictionary of output parameters (shape, coding, layers, depth, etc)
+            + dictionary of control nodes ('complete')
+            + list of output
+            + list of coding formats of output
+        """
+
+        if len(input_lists) < 2:
+            if len(input_lists) > 0:
+                if len(input_lists[0]) < 2:
+                    pass
+                    #raise ValueError('Incorrect Number of Inputs.')
+            else:
+                raise ValueError('Incorrect Number of Inputs.')
+        for input_coding in input_codings:
+            if input_coding not in self.supported_codings:
+                raise ValueError("Unsupported Input Coding. Found: {}. Allowed: {}".format(input_coding,
+                                                                                           self.supported_codings))
+
+        begin_node_name = self.name+'_begin'
+        graph.add_node(begin_node_name,
+                       threshold = 0.1,
+                       decay = 0.0,
+                       potential=0.0)
+
+        complete_name = self.name + '_complete'
+        graph.add_node(complete_name,
+                threshold = 0.1,
+                decay = 0.0,
+                potential = 0.0)
+        complete_node_list = [complete_name]
+
+        output_name = "output"
+        graph.add_node(output_name,
+                       threshold = 0.1,
+                       decay = 0.0,
+                       potential = 0.0)
+
+        graph.add_edge(output_name,
+                       complete_name,
+                       weight = 1.0,
+                       delay = 0.0)
+        graph.add_edge(output_name, output_name, weight = -5.0, delay = 0.0)
+
+        for input_signal in input_lists[0]:
+            graph.add_edge(input_signal,
+                           begin_node_name,
+                           weight = 1.0,
+                           delay = 0.0)
+        
+        increment_timer_name = "T_I"
+        decrement_timer_name = "T_D"
+        graph.add_node(increment_timer_name,
+                        threshold = self.num_elements - 0.01,
+                        decay = 0.0,
+                        potential = 0.0)
+        graph.add_edge(increment_timer_name, increment_timer_name, weight = self.num_elements, delay = 0.0)
+        graph.add_edge(increment_timer_name, output_name, weight = 1.0, delay = 0.0)
+        graph.add_node(decrement_timer_name,
+                        threshold = 0.99,
+                        decay = 0.0,
+                        potential = 1.0)
+        graph.add_edge(decrement_timer_name, decrement_timer_name, weight = 1.0, delay = 0.0)
+        graph.add_edge(decrement_timer_name, output_name, weight = -1.0, delay = 0.0)
+
+        graph.add_edge(output_name, increment_timer_name, weight = -1 * self.num_elements, delay = 0.0)
+        graph.add_edge(output_name, decrement_timer_name, weight = -1 * self.num_elements, delay = 0.0)
+
+        for input_list in input_lists:
+            for input_signal in input_list:
+                graph.add_edge(input_signal, increment_timer_name, weight = 1.0, delay = 0.0)
+                graph.add_edge(input_signal, decrement_timer_name, weight = -2.0, delay = 0.0)
+
+        self.is_built=True
+
+        #Remember, bricks can have more than one output, so we need a list of list of output neurons
+        output_lists = [[output_name]]
+
+        return (graph,
+               self.metadata,
+                [{'complete':complete_node_list[0], 'begin':begin_node_name}],
+                output_lists,
+                self.output_codings
+               )

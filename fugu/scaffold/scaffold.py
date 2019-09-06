@@ -216,8 +216,8 @@ class Scaffold:
         if verbose > 0:
             print("Laying Input Bricks.")
         for node in [node for node in self.circuit.nodes
-         if 'layer' in self.circuit.nodes[node]
-         and self.circuit.nodes[node]['layer'] == 'input']:
+                     if 'layer' in self.circuit.nodes[node]
+                        and self.circuit.nodes[node]['layer'] == 'input']:
             (built_graph,
              metadata,
              control_nodes,

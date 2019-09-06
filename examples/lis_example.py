@@ -36,13 +36,17 @@ for sequence, answer in test_sequences:
     scaffold.add_brick(LIS_brick, output=True)
     scaffold.lay_bricks()
 
+    #scaffold.summary(verbose=2)
+    #print(scaffold.circuit.nodes[1])
+
     pynn_args = {}
-    pynn_args['backend'] = 'spinnaker'
+    pynn_args['backend'] = 'brian'
     pynn_args['verbose'] = False 
 
     print("---Running evaluation---")
 
-    result = scaffold.evaluate(backend='pynn',max_runtime=100, record_all=True, backend_args=pynn_args)
+    result = scaffold.evaluate(backend='pynn',max_runtime=20, record_all=True, backend_args=pynn_args)
+    #result = scaffold.evaluate(backend='ds',max_runtime=100, record_all=True)
 
     graph_names = list(scaffold.graph.nodes.data('name'))
     print("---Finished evaluation:---")
