@@ -40,9 +40,9 @@ class pynn_Backend(Backend):
 
             self.backend = BRIAN_BACKEND 
 
-            self.defaults['spike_value'] = 1.00
-            self.defaults['min_delay'] = 5.00
-            self.defaults['tau_syn_E'] = 1.00
+            self.defaults['min_delay'] = 10.00
+            self.defaults['tau_syn_E'] = 1.49
+            #self.defaults['tau_syn_E'] = 5.00
             self.defaults['i_offset'] = 0.00
             self.defaults['tau_m'] = 10000000
             self.defaults['v_rest'] = 0.0 
@@ -50,7 +50,7 @@ class pynn_Backend(Backend):
             self.runtime = self.steps * self.defaults['min_delay'] 
 
             #pynn_sim.setup(timestep=self.defaults['min_delay'])
-            pynn_sim.setup(timestep=0.01)
+            pynn_sim.setup(timestep=0.50)
 
         elif simulator == 'spinnaker' or simulator == 'spynnaker':
             assert sys.version_info <= (3,0)
@@ -60,7 +60,6 @@ class pynn_Backend(Backend):
 
             self.backend = SPINNAKER_BACKEND 
 
-            self.defaults['spike_value'] = 1.00
             self.defaults['min_delay'] = 1.00
             self.defaults['cm'] = 1.00
             self.defaults['tau_m'] = 1.00
@@ -111,7 +110,7 @@ class pynn_Backend(Backend):
         def add_neuron_params(neuron):
             # neuron = properties
             thresh = neuron['threshold']
-            parameter_values['v_thresh'].append(thresh * self.defaults['spike_value'] if thresh > 0.0 else 0.01)
+            parameter_values['v_thresh'].append(thresh if thresh > 0.0 else 0.01)
 
             parameter_values['v_rest'].append(self.defaults['v_rest'])
 
@@ -181,36 +180,71 @@ class pynn_Backend(Backend):
         #   Main-to-main
 
         # create edge lists
-        input_to_main = {} # Map of input neuron to projection
-        main_to_main = []
+        input_to_main_exite = {} # Map of input neuron to projection
+        main_to_main_exite = []
+        input_to_main_inhib = {} # Map of input neuron to projection
+        main_to_main_inhib = []
         for u, v, values in fugu_graph.edges.data():
             weight = 0.0
             delay = self.defaults['min_delay']
+            is_inhib = False
             if 'weight' in values:
-                weight = values['weight'] * self.defaults['spike_value']
+                weight = values['weight']
+                if self.backend == SPINNAKER_BACKEND:
+                    weight = abs(weight)
+                if values['weight'] < 0:
+                    is_inhib = True
             if 'delay' in values:
-                delay = values['delay'] + 1
+                delay = values['delay'] + 1.0
                 delay = delay * self.defaults['min_delay']
             if u in input_populations:
-                if u not in input_to_main:
-                    input_to_main[u] = []
-                input_to_main[u].append((0, neuron_to_pynn[v], weight, delay))
+                if is_inhib:
+                    if u not in input_to_main_inhib:
+                        input_to_main_inhib[u] = []
+                    input_to_main_inhib[u].append((0, neuron_to_pynn[v], weight, delay))
+                else:
+                    if u not in input_to_main_exite:
+                        input_to_main_exite[u] = []
+                    input_to_main_exite[u].append((0, neuron_to_pynn[v], weight, delay))
             else:
-                main_to_main.append((neuron_to_pynn[u], neuron_to_pynn[v], weight, delay))
+                if is_inhib:
+                    main_to_main_inhib.append((neuron_to_pynn[u], neuron_to_pynn[v], weight, delay))
+                else:
+                    main_to_main_exite.append((neuron_to_pynn[u], neuron_to_pynn[v], weight, delay))
 
         # create projections
         synapse = pynn_sim.StaticSynapse()
+
         input_main_synapses = {}
-        for input_pop in input_to_main:
-            connector = FromListConnector(input_to_main[input_pop])
-            input_main_synapses[input_pop] = pynn_sim.Projection(input_populations[input_pop], 
+
+        for input_pop in input_to_main_exite:
+            connector = FromListConnector(input_to_main_exite[input_pop])
+            if input_pop not in input_main_synapses:
+                input_main_synapses[input_pop] = []
+            input_main_synapses[input_pop].append(pynn_sim.Projection(input_populations[input_pop], 
                                                                  main_population, 
                                                                  connector, 
                                                                  synapse, 
-                                                                 label='{}-to-Main'.format(input_pop))
+                                                                 label='{}-to-Main'.format(input_pop)))
+        for input_pop in input_to_main_inhib:
+            connector = FromListConnector(input_to_main_exite[input_pop])
+            if input_pop not in input_main_synapses:
+                input_main_synapses[input_pop] = []
+            input_main_synapses[input_pop].append(pynn_sim.Projection(input_populations[input_pop], 
+                                                                 main_population, 
+                                                                 connector, 
+                                                                 synapse, 
+                                                                 label='{}-to-Main'.format(input_pop),
+                                                                 receptor_type='inhibitory'))
 
-        connector = FromListConnector(main_to_main)
-        main_synapses = pynn_sim.Projection(main_population, main_population, connector, synapse, label="Main-to-Main")
+    #input_proj_inhib0 = sim.Projection(pop_spk_src, pop_0, sim.FromListConnector(conn_list=conn_lst_inhib), receptor_type='inhibitory')
+
+        main_synapses = []
+
+        connector = FromListConnector(main_to_main_exite)
+        main_synapses.append(pynn_sim.Projection(main_population, main_population, connector, synapse, label="Main-to-Main"))
+        connector = FromListConnector(main_to_main_inhib)
+        main_synapses.append(pynn_sim.Projection(main_population, main_population, connector, synapse, label="Main-to-Main", receptor_type='inhibitory'))
 
         if verbose:
             print("---Neuron to pynn index---")
@@ -218,12 +252,21 @@ class pynn_Backend(Backend):
                 print("{}, {}".format(neuron, neuron_to_pynn[neuron]))
 
             print("---Input to main connections---")
-            for neuron in input_to_main:
-                for edge in input_to_main[neuron]:
+            print("----Excite----")
+            for neuron in input_to_main_exite:
+                for edge in input_to_main_exite[neuron]:
+                    print(edge)
+            print("----Inhib----")
+            for neuron in input_to_main_inhib:
+                for edge in input_to_main_inhib[neuron]:
                     print(edge)
 
             print("---Main to main connections---")
-            for edge in main_to_main:
+            print("----Excite----")
+            for edge in main_to_main_exite:
+                print(edge)
+            print("----Inhib----")
+            for edge in main_to_main_inhib:
                 print(edge)
 
         # Run sim
@@ -256,11 +299,27 @@ class pynn_Backend(Backend):
                 print("---results for: {}".format(neuron))
                 print("voltage  {}".format(main_voltage[pynn_index]))
                 print("spiketimes  {}".format(spiketrain))
+
             if spiketrain.any():
                 for time in np.array(spiketrain):
                     if time not in spikes:
                         spikes[time] = set()
                     spikes[time].add(fugu_graph.node[neuron]['neuron_number'])
+
+        labels = []
+        for neuron in neuron_to_pynn:
+            labels.append(neuron)
+        if verbose:
+            from pyNN.utility.plotting import Figure, Panel
+            import matplotlib.pyplot as plt
+            Figure(
+                Panel(main_voltage,
+                      ylabel="Membrane potential (mV)",
+                      yticks=True, linewidth=2.0),
+                #title="Neuron: {}".format(neuron), 
+                annotations=""
+            )
+            plt.show()
 
         for neuron in input_populations:
             spiketrain = input_spiketrains[neuron][0]
@@ -279,6 +338,7 @@ class pynn_Backend(Backend):
             mini_df['time'] = times
             mini_df['neuron_number'] = list(spikes[time])
             spike_result = spike_result.append(mini_df, sort=False)
+
 
         return spike_result
 

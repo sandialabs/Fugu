@@ -1395,7 +1395,7 @@ class LIS(Brick):
                                potential = 0.0)
 
                 # Alarms
-                graph.add_edge(x_name, L_B_name, weight = -1.0, delay = j + 1.01)
+                graph.add_edge(x_name, L_B_name, weight = -1.0, delay = j + 1.00)
                 graph.add_edge(x_name, L_A_name, weight = 1.0, delay = 0.0)
 
                 graph.add_edge(L_B_name, L_A_name, weight = 1.0, delay = 0.0)
