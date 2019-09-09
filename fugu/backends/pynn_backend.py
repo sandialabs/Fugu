@@ -94,10 +94,10 @@ class pynn_Backend(Backend):
         params = []
         params.append('v_thresh')
         params.append('v_rest')
-        params.append('v_reset')
         params.append('tau_m')
         params.append('i_offset')
         if self.backend == BRIAN_BACKEND:
+            params.append('v_reset')
             params.append('tau_refrac')
             params.append('tau_syn_E')
         else:
@@ -114,13 +114,13 @@ class pynn_Backend(Backend):
             parameter_values['v_thresh'].append(thresh * self.defaults['spike_value'] if thresh > 0.0 else 0.01)
 
             parameter_values['v_rest'].append(self.defaults['v_rest'])
-            parameter_values['v_reset'].append(self.defaults['v_rest'])
 
             initial_potential.append(neuron['potential'] if 'potential' in neuron else self.defaults['v_rest'])
 
             parameter_values['i_offset'].append(self.defaults['i_offset'])
 
             if self.backend == BRIAN_BACKEND:
+                parameter_values['v_reset'].append(self.defaults['v_rest'])
                 parameter_values['tau_refrac'].append(self.defaults['min_delay'])
                 parameter_values['tau_syn_E'].append(self.defaults['tau_syn_E'])
                 if 'decay' in neuron:
@@ -189,7 +189,7 @@ class pynn_Backend(Backend):
             if 'weight' in values:
                 weight = values['weight'] * self.defaults['spike_value']
             if 'delay' in values:
-                delay = values['delay']
+                delay = values['delay'] + 1
                 delay = delay * self.defaults['min_delay']
             if u in input_populations:
                 if u not in input_to_main:

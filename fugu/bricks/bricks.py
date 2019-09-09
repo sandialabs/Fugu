@@ -1350,7 +1350,7 @@ class LIS(Brick):
         for i in range(len(self.sequence)):
             L_name = "L_{}_Main".format(i + 1)
             graph.add_node(L_name,
-                           threshold = 0.99,
+                           threshold = 1.00,
                            decay = 0.0,
                            potential = 0.0)
             graph.add_edge(L_name, L_name, weight = -10000.0, delay = 0.0)
@@ -1371,12 +1371,12 @@ class LIS(Brick):
 
             # create column
             graph.add_node(L0_A_name,
-                            threshold = 0.99,
+                            threshold = 1.00,
                             decay = 0.0,
                             potential = 0.0)
 
             graph.add_edge(x_name, L0_A_name, weight = 1.0, delay = 0.0)
-            graph.add_edge(L0_A_name, L0_A_name, weight = -2.0, delay = 0.0)
+            graph.add_edge(L0_A_name, L0_A_name, weight = -10.0, delay = 0.0)
 
             graph.add_edge(L0_A_name, "L_1_Main", weight = 1.0, delay = 0.0)
 
@@ -1386,11 +1386,11 @@ class LIS(Brick):
                 L_B_name = "L_{}-x_{}-B".format(j+1, i)
                 L_A_name = "L_{}-x_{}-A".format(j+2, i)
                 graph.add_node(L_B_name,
-                               threshold = 0.99,
+                               threshold = 1.00,
                                decay = 0.0,
                                potential = 0.0)
                 graph.add_node(L_A_name,
-                               threshold = 1.99,
+                               threshold = 2.00,
                                decay = 0.0,
                                potential = 0.0)
 
@@ -1399,7 +1399,7 @@ class LIS(Brick):
                 graph.add_edge(x_name, L_A_name, weight = 1.0, delay = 0.0)
 
                 graph.add_edge(L_B_name, L_A_name, weight = 1.0, delay = 0.0)
-                graph.add_edge(L_A_name, L_A_name, weight = -2.0, delay = 0.0)
+                graph.add_edge(L_A_name, L_A_name, weight = -10.0, delay = 0.0)
 
                 graph.add_edge(L_A_name, "L_{}_Main".format(j+2), weight = 1.0, delay = 0.0)
                 
