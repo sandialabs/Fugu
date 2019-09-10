@@ -22,7 +22,7 @@ test_sequences.append(([1,7,4,5,8],4))
 test_sequences.append(([1,2,3,4],4))
 test_sequences.append(([1,3,1,2],2))
 test_sequences.append(([1,2],2))
-test_sequences.append(([1],1))
+test_sequences.append(([2,1],1))
 
 results = []
 
@@ -30,22 +30,34 @@ for sequence, answer in test_sequences:
 
     print("---Building Scaffold---")
 
-    LIS_brick = LIS(sequence, name="LIS")
+    LIS_brick = LIS(len(sequence), name="LIS")
+
     scaffold = Scaffold()
-    scaffold.add_brick(Vector_Input(np.array([1]), coding='Raster', name='Input0'), 'input' )
+    spike_times = []
+    for time in sequence:
+        spike_times.append([0] * time)
+        spike_times[-1].append(1)
+
+    #print(spike_times)
+    #for i, spike_array in enumerate(spike_times):
+        #print("i, spike_array {} {}".format(i, spike_array))
+        #scaffold.add_brick(Vector_Input(spike_array, coding='Raster', name='Input{}'.format(i)), 'input')
+
+    scaffold.add_brick(Vector_Input(spike_times, coding='Raster', name='Input0'), 'input')
+
     scaffold.add_brick(LIS_brick, output=True)
     scaffold.lay_bricks()
 
     #scaffold.summary(verbose=2)
-    #print(scaffold.circuit.nodes[1])
 
     pynn_args = {}
     pynn_args['backend'] = 'brian'
-    pynn_args['verbose'] = False 
+    pynn_args['verbose'] = False
+    pynn_args['show_plots'] = False
 
     print("---Running evaluation---")
 
-    result = scaffold.evaluate(backend='pynn',max_runtime=20, record_all=True, backend_args=pynn_args)
+    result = scaffold.evaluate(backend='pynn',max_runtime=100, record_all=True, backend_args=pynn_args)
     #result = scaffold.evaluate(backend='ds',max_runtime=100, record_all=True)
 
     graph_names = list(scaffold.graph.nodes.data('name'))
@@ -59,6 +71,7 @@ for sequence, answer in test_sequences:
             if level > lis:
                 lis = level
     results.append(lis)
+
 print("---Final results---")
 print("sequence,expected,actual")
 for (sequence, answer), result in zip(test_sequences, results):

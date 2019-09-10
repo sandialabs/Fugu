@@ -1275,11 +1275,11 @@ class LIS(Brick):
     This brick calculates the length of the longest common subsequence for a given sequence of numbers
 
     '''
-    def __init__(self, sequence, name=None, output_coding = 'temporal-L'):
+    def __init__(self, sequence_length, name=None, output_coding = 'temporal-L'):
         '''
         Construtor for this brick.
         Arguments:
-            + sequence - list containing the sequence of numbers 
+            + sequence_length - size of the sequence
             + name - Name of the brick.  If not specified, a default will be used.  Name should be unique.
             + output_coding - Output coding type, default is 'temporal-L'
         '''
@@ -1291,8 +1291,9 @@ class LIS(Brick):
         self.output_codings = [output_coding]
         self.metadata = {'D':None}
 
-        self.sequence = sequence 
-        self.min_runtime = 0.0
+        if sequence_length < 2:
+            raise ValueError("Cannot have a sequence of only 1 element")
+        self.sequence_length = sequence_length 
 
     def build(self,
              graph,
@@ -1337,17 +1338,16 @@ class LIS(Brick):
 
         complete_name = self.name + '_complete'
         graph.add_node(complete_name,
-                index = len(self.sequence),
+                index = self.sequence_length,
                 threshold = 0.1,
                 decay = 0.0,
                 potential = 0.0)
         complete_node_list = [complete_name]
 
-        min_runtime = len(self.sequence)
-        max_x = 0.0
+        min_runtime = self.sequence_length
 
-        levels = [[] for i in range(len(self.sequence))]
-        for i in range(len(self.sequence)):
+        levels = [[] for i in range(self.sequence_length)]
+        for i in range(self.sequence_length):
             L_name = "L_{}_Main".format(i + 1)
             graph.add_node(L_name,
                            threshold = 1.00,
@@ -1355,9 +1355,7 @@ class LIS(Brick):
                            potential = 0.0)
             graph.add_edge(L_name, L_name, weight = -10000.0, delay = 0.0)
 
-        for i, x_i in enumerate(self.sequence):
-            if x_i > max_x:
-                max_x = x_i
+        for i in range(self.sequence_length):
             column_a = []
             column_b = []
             x_name = "x_{}".format(i)
@@ -1414,16 +1412,13 @@ class LIS(Brick):
                     graph.add_edge(level[i], level[i + 2], weight = 1.0, delay = 0.0)
                     graph.add_edge(level[i], level[i + 3], weight = 1.0, delay = 0.0)
 
-        self.min_runtime += max_x
-
-        for input_neuron in input_lists[0]:
-            index = graph.nodes[input_neuron]['index']
-            if type(index) is tuple:
-                index = index[0]
-            if type(index) is not int:
-                raise TypeError("Neuron index should be Tuple or Int.")
-            for i, value in enumerate(self.sequence):
-                graph.add_edge(input_neuron, "x_{}".format(i), weight = 1.0, delay = value)
+        x_index = 0
+        for input_list in input_lists:
+            for input_neuron in input_list:
+                graph.add_edge(input_neuron, "x_{}".format(x_index), weight = 1.0, delay = 0.0)
+                x_index += 1
+                if x_index > self.sequence_length:
+                    raise TypeError("Too many inputs to brick: {}".format(self.name))
 
         self.is_built=True
 

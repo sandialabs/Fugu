@@ -26,7 +26,7 @@ class pynn_Backend(Backend):
 
         self.backend = BRIAN_BACKEND 
 
-    def _run_pynn_sim(self, fugu_scaffold, simulator='brian', verbose=False):
+    def _run_pynn_sim(self, fugu_scaffold, simulator='brian', verbose=False, show_plots=False):
         fugu_circuit = fugu_scaffold.circuit
         fugu_graph = fugu_scaffold.graph
 
@@ -141,14 +141,18 @@ class pynn_Backend(Backend):
             brick = fugu_circuit.nodes[brick]
             if brick['layer'] == 'input':
                 spike_arrays = brick['brick'].vector
+                if verbose:
+                    print("Brick's spike arrays: {}".format(spike_arrays))
 
                 for neuron in brick_neurons[brick['name']]:
                     index = fugu_graph.nodes[neuron]['index']
                     if index != -1:
                         spike_array = []
-                        for i, spike in enumerate(spike_arrays[index]):
+                        for i, spike in enumerate(spike_arrays[index][0]):
+                            if verbose:
+                                print("i, spike: {} {}".format(i, spike))
                             if spike == 1:
-                                spike_array.append(i)
+                                spike_array.append(i * self.defaults['min_delay'])
                         if verbose:
                             print("Spike array for {}: {}".format(neuron, spike_array))
                         input_populations[neuron] = pynn_sim.Population(1, 
@@ -309,7 +313,7 @@ class pynn_Backend(Backend):
         labels = []
         for neuron in neuron_to_pynn:
             labels.append(neuron)
-        if verbose:
+        if show_plots:
             from pyNN.utility.plotting import Figure, Panel
             import matplotlib.pyplot as plt
             Figure(
@@ -357,12 +361,9 @@ class pynn_Backend(Backend):
              n_steps,
              record,
              backend_args):
-        verbose = False
-        simulator = 'brian'
-        if 'backend' in backend_args:
-            simulator = backend_args['backend']
-        if 'verbose' in backend_args:
-            verbose = backend_args['verbose'] 
+        simulator = backend_args['backend'] if 'backend' in backend_args else 'brian'
+        verbose = backend_args['verbose'] if 'verbose' in backend_args else False
+        show_plots = backend_args['show_plots'] if 'show_plots' in backend_args else False
         spike_result = self._run_pynn_sim(scaffold, simulator, verbose)
         spike_result = spike_result.sort_values('time')
         return spike_result 
