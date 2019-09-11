@@ -148,7 +148,7 @@ class pynn_Backend(Backend):
                     index = fugu_graph.nodes[neuron]['index']
                     if index != -1:
                         spike_array = []
-                        for i, spike in enumerate(spike_arrays[index][0]):
+                        for i, spike in enumerate(spike_arrays[index]):
                             if verbose:
                                 print("i, spike: {} {}".format(i, spike))
                             if spike == 1:
