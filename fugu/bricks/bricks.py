@@ -764,6 +764,7 @@ class Shortest_Path(Brick):
         #Right now, we'll convert node labels to integers in the order of
         #graph.nodes() However, in the fugure, this should be improved to be
         #more flexible.
+        self.target_node = None
         for i,node in enumerate(target_graph.nodes()):
             if node is target_node:
                 self.target_node = i
@@ -830,37 +831,44 @@ class Shortest_Path(Brick):
                       weight = 1.0,
                       delay = 1)
 
+        complete_node_list = []
         for node in self.target_graph.nodes:
             node_name = self.name + str(node)
             graph.add_node(node_name,
                            index = (node,),
                            threshold=1.0,
                            decay=0.0,
-                           potential=0.0)
+                           potential=0.0,
+                           is_vertex=True)
             graph.add_edge(node_name, node_name, weight=-1000, delay=1)
-            if node==self.target_node:
-                complete_node_list = [node_name]
+            if self.target_node:
+                if node == self.target_node:
+                    complete_node_list = [node_name]
+            else:
+                complete_node_list.append(node_name)
 
         edge_reference_names = []
         for node in self.target_graph.nodes:
             node_name = self.name + str(node)
             for neighbor in self.target_graph.neighbors(node):
-                delay = self.target_graph.edges[node,neighbor]['weight']
+                delay = self.target_graph.edges[node,neighbor]['weight'] + 1
                 neighbor_name = self.name + str(neighbor)
                 if self.return_path:
                     if node == self.target_node:
                         reference_name = "{}-{}-{}".format(self.name, node, neighbor)
                         edge_reference_names.append(reference_name)
 
-                        graph.add_node(reference_name, threshold=1.0, decay=0.0,potential=0.0)
-                        graph.add_edge(node_name, reference_name, weight=-1000, delay=delay - 1.0)
-                        graph.add_edge(reference_name, neighbor_name, weight=-1000, delay=1.0)
-                        graph.add_edge(neighbor_name, reference_name, weight=-1000, delay=1.0) 
+                        graph.add_node(reference_name, threshold=1.0, decay=0.0,potential=0.0, 
+                                        from_vertex = node, to_vertex = neighbor, is_edge_reference=True )
+                        graph.add_edge(node_name, reference_name, weight=-1000, delay=delay - 1)
+                        graph.add_edge(reference_name, neighbor_name, weight=-1000, delay=1)
+                        graph.add_edge(neighbor_name, reference_name, weight=-1000, delay=1) 
                     else:
                         reference_name = "{}-{}-{}".format(self.name, node, neighbor)
                         edge_reference_names.append(reference_name)
 
-                        graph.add_node(reference_name, threshold=1.0, decay=0.0,potential=0.0)
+                        graph.add_node(reference_name, threshold=1.0, decay=0.0,potential=0.0,
+                                        from_vertex = node, to_vertex = neighbor, is_edge_reference=True )
                         graph.add_edge(node_name, reference_name, weight=1.1, delay=delay - 1.0)
                         graph.add_edge(reference_name, neighbor_name, weight=1.1, delay=1.0)
                         
@@ -869,7 +877,6 @@ class Shortest_Path(Brick):
                     if node == self.target_node:
                         graph.add_edge(node_name, neighbor_name, weight=-1000, delay=delay)
                     else:
-                        delay = self.target_graph.edges[node,neighbor]['weight']
                         graph.add_edge(node_name, neighbor_name, weight=1.5, delay=delay)
 
         for input_neuron in input_lists[0]:
@@ -881,7 +888,7 @@ class Shortest_Path(Brick):
             graph.add_edge(input_neuron,
                           self.name+str(index),
                          weight = 2.0,
-                         delay = 1)
+                         delay = 0)
 
         self.is_built=True
 
@@ -890,7 +897,7 @@ class Shortest_Path(Brick):
 
         return (graph,
                self.metadata,
-                [{'complete':complete_node_list[0], 'begin':new_begin_node_name}],
+                [{'complete':complete_node_list, 'begin':new_begin_node_name}],
                 output_lists,
                 self.output_codings
                )
@@ -1011,7 +1018,8 @@ class Breadth_First_Search(Brick):
                            index = (node,),
                            threshold=1.0,
                            decay=0.0,
-                           potential=0.0)
+                           potential=0.0,
+                           is_vertex=True)
             graph.add_edge(node_name, node_name, weight=-1000, delay=1)
             if self.target_node:
                 if node==self.target_node:
@@ -1034,7 +1042,7 @@ class Breadth_First_Search(Brick):
 
                 edge_reference_names.append(reference_name)
 
-                graph.add_node(reference_name, index=reference_index, threshold=1.0, decay=0.0,potential=0.0, from_vertex=node, to_vertex=neighbor )
+                graph.add_node(reference_name, index=reference_index, threshold=1.0, decay=0.0,potential=0.0, from_vertex=node, to_vertex=neighbor, is_edge_reference=True )
                 graph.add_edge(neighbor_name, reference_name, weight=-1000, delay=1.0) 
 
                 if self.target_node and node == self.target_node:
@@ -1334,7 +1342,7 @@ class LIS(Brick):
         graph.add_edge(control_nodes[0]['complete'],
                       self.name+'_begin',
                       weight = 1.0,
-                      delay = 0.0)
+                      delay = 1.0)
 
         complete_name = self.name + '_complete'
         graph.add_node(complete_name,
@@ -1354,7 +1362,7 @@ class LIS(Brick):
                            threshold = 0.90,
                            decay = 0.0,
                            potential = 0.0)
-            graph.add_edge(L_name, L_name, weight = -10000.0, delay = 0.0)
+            graph.add_edge(L_name, L_name, weight = -10000.0, delay = 1.0)
 
         for i in range(self.sequence_length):
             column_a = []
@@ -1375,10 +1383,10 @@ class LIS(Brick):
                             decay = 0.0,
                             potential = 0.0)
 
-            graph.add_edge(x_name, L0_A_name, weight = 1.0, delay = 0.0)
-            graph.add_edge(L0_A_name, L0_A_name, weight = -2.0, delay = 0.0)
+            graph.add_edge(x_name, L0_A_name, weight = 1.0, delay = 1.0)
+            graph.add_edge(L0_A_name, L0_A_name, weight = -2.0, delay = 1.0)
 
-            graph.add_edge(L0_A_name, "L_1_Main", weight = 1.0, delay = 0.0)
+            graph.add_edge(L0_A_name, "L_1_Main", weight = 1.0, delay = 1.0)
 
             levels[0].append(L0_A_name)
 
@@ -1397,29 +1405,29 @@ class LIS(Brick):
                                potential = 0.0)
 
                 # Alarms
-                graph.add_edge(x_name, L_B_name, weight = -1.0, delay = j + 1.01) # Why is this 2.00 for ds????
-                graph.add_edge(x_name, L_A_name, weight = 1.0, delay = 0.0)
+                graph.add_edge(x_name, L_B_name, weight = -1.0, delay = j + 2.0) # Why is this 2.00 for ds????
+                graph.add_edge(x_name, L_A_name, weight = 1.0, delay = 1.0)
 
-                graph.add_edge(L_B_name, L_A_name, weight = 1.0, delay = 0.0)
-                graph.add_edge(L_A_name, L_A_name, weight = -1.9, delay = 0.0)
+                graph.add_edge(L_B_name, L_A_name, weight = 1.0, delay = 1.0)
+                graph.add_edge(L_A_name, L_A_name, weight = -1.9, delay = 1.0)
 
-                graph.add_edge(L_A_name, "L_{}_Main".format(j+2), weight = 1.0, delay = 0.0)
+                graph.add_edge(L_A_name, "L_{}_Main".format(j+2), weight = 1.0, delay = 1.0)
                 
                 levels[j].append(L_B_name)
                 levels[j+1].append(L_A_name)
 
         for level in levels:
             if len(level) > 1:
-                graph.add_edge(level[0], level[1], weight = 1.0, delay = 0.0)
-                graph.add_edge(level[0], level[2], weight = 1.0, delay = 0.0)
+                graph.add_edge(level[0], level[1], weight = 1.0, delay = 1.0)
+                graph.add_edge(level[0], level[2], weight = 1.0, delay = 1.0)
                 for i in range(1, len(level) - 2,2):
-                    graph.add_edge(level[i], level[i + 2], weight = 1.0, delay = 0.0)
-                    graph.add_edge(level[i], level[i + 3], weight = 1.0, delay = 0.0)
+                    graph.add_edge(level[i], level[i + 2], weight = 1.0, delay = 1.0)
+                    graph.add_edge(level[i], level[i + 3], weight = 1.0, delay = 1.0)
 
         x_index = 0
         for input_list in input_lists:
             for input_neuron in input_list:
-                graph.add_edge(input_neuron, "x_{}".format(x_index), weight = 1.0, delay = 0.0)
+                graph.add_edge(input_neuron, "x_{}".format(x_index), weight = 1.0, delay = 1.0)
                 x_index += 1
                 if x_index > self.sequence_length:
                     raise TypeError("Too many inputs to brick: {}".format(self.name))
@@ -1526,14 +1534,14 @@ class TemporalAdder(Brick):
         graph.add_edge(output_name,
                        complete_name,
                        weight = 1.0,
-                       delay = 0.0)
-        graph.add_edge(output_name, output_name, weight = -5.0, delay = 0.0)
+                       delay = 1.0)
+        graph.add_edge(output_name, output_name, weight = -5.0, delay = 1.0)
 
         for input_signal in input_lists[0]:
             graph.add_edge(input_signal,
                            begin_node_name,
                            weight = 1.0,
-                           delay = 0.0)
+                           delay = 1.0)
         
         increment_timer_name = "T_I"
         decrement_timer_name = "T_D"
@@ -1541,22 +1549,22 @@ class TemporalAdder(Brick):
                         threshold = self.num_elements - 0.01,
                         decay = 0.0,
                         potential = 0.0)
-        graph.add_edge(increment_timer_name, increment_timer_name, weight = self.num_elements, delay = 0.0)
-        graph.add_edge(increment_timer_name, output_name, weight = 1.0, delay = 0.0)
+        graph.add_edge(increment_timer_name, increment_timer_name, weight = self.num_elements, delay = 1.0)
+        graph.add_edge(increment_timer_name, output_name, weight = 1.0, delay = 1.0)
         graph.add_node(decrement_timer_name,
                         threshold = 0.99,
                         decay = 0.0,
                         potential = 1.0)
-        graph.add_edge(decrement_timer_name, decrement_timer_name, weight = 1.0, delay = 0.0)
-        graph.add_edge(decrement_timer_name, output_name, weight = -1.0, delay = 0.0)
+        graph.add_edge(decrement_timer_name, decrement_timer_name, weight = 1.0, delay = 1.0)
+        graph.add_edge(decrement_timer_name, output_name, weight = -1.0, delay = 1.0)
 
-        graph.add_edge(output_name, increment_timer_name, weight = -1 * self.num_elements, delay = 0.0)
-        graph.add_edge(output_name, decrement_timer_name, weight = -1 * self.num_elements, delay = 0.0)
+        graph.add_edge(output_name, increment_timer_name, weight = -1 * self.num_elements, delay = 1.0)
+        graph.add_edge(output_name, decrement_timer_name, weight = -1 * self.num_elements, delay = 1.0)
 
         for input_list in input_lists:
             for input_signal in input_list:
-                graph.add_edge(input_signal, increment_timer_name, weight = 1.0, delay = 0.0)
-                graph.add_edge(input_signal, decrement_timer_name, weight = -2.0, delay = 0.0)
+                graph.add_edge(input_signal, increment_timer_name, weight = 1.0, delay = 1.0)
+                graph.add_edge(input_signal, decrement_timer_name, weight = -2.0, delay = 1.0)
 
         self.is_built=True
 

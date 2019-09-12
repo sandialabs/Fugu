@@ -42,7 +42,6 @@ class pynn_Backend(Backend):
 
             self.defaults['min_delay'] = 10.00
             self.defaults['tau_syn_E'] = 1.49
-            #self.defaults['tau_syn_E'] = 5.00
             self.defaults['i_offset'] = 0.00
             self.defaults['tau_m'] = 10000000
             self.defaults['v_rest'] = 0.0 
@@ -199,7 +198,7 @@ class pynn_Backend(Backend):
                 if values['weight'] < 0:
                     is_inhib = True
             if 'delay' in values:
-                delay = values['delay'] + 1.0
+                delay = values['delay']
                 delay = delay * self.defaults['min_delay']
             if u in input_populations:
                 if is_inhib:
