@@ -829,7 +829,7 @@ class Shortest_Path(Brick):
         graph.add_edge(control_nodes[0]['complete'],
                       self.name+'_begin',
                       weight = 1.0,
-                      delay = 2)
+                      delay = 1)
 
         complete_node_list = []
         for node in self.target_graph.nodes:
@@ -852,7 +852,8 @@ class Shortest_Path(Brick):
             node_name = self.name + str(node)
             for neighbor in self.target_graph.neighbors(node):
                 #delay = self.target_graph.edges[node,neighbor]['weight'] + 1 # works for ds
-                delay = 2 * self.target_graph.edges[node,neighbor]['weight'] - 1 # works for pynn-brian
+                #delay = 2 * self.target_graph.edges[node,neighbor]['weight'] - 1 # works for pynn-brian
+                delay = 2 * self.target_graph.edges[node,neighbor]['weight'] # works for pynn-spinnaker
                 neighbor_name = self.name + str(neighbor)
                 if self.return_path:
                     if node == self.target_node:

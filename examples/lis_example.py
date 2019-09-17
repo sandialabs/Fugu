@@ -11,19 +11,19 @@ MAX_RUNTIME = 500
 print("---Building test test cases---")
 test_cases = []
 
-#test_cases.append(([1,4,8,6,2,7,9,3,2],5))
-#test_cases.append(([1,4,8,6,2,7,19,13,14],6))
-#test_cases.append(([1,5,6,7,5,3,4,13,14],6))
-#test_cases.append(([4,6,2,7,9],4))
-#test_cases.append(([1,4,6,2,3,7,9],5))
-#test_cases.append(([1,7,4,5,8],4))
-#test_cases.append(([1,2,3,4],4))
-#test_cases.append(([5,9,5,7],2))
-#test_cases.append(([1,3,1,2],2))
-#test_cases.append(([1,2],2))
+test_cases.append(([1,4,8,6,2,7,9,3,2],5))
+test_cases.append(([1,4,8,6,2,7,19,13,14],6))
+test_cases.append(([1,5,6,7,5,3,4,13,14],6))
+test_cases.append(([4,6,2,7,9],4))
+test_cases.append(([1,4,6,2,3,7,9],5))
+test_cases.append(([1,7,4,5,8],4))
+test_cases.append(([1,2,3,4],4))
+test_cases.append(([5,9,5,7],2))
+test_cases.append(([1,3,1,2],2))
+test_cases.append(([1,2],2))
 test_cases.append(([2,1],1))
-#test_cases.append(([20,21],2))
-#test_cases.append(([20,20, 20, 1,1],1))
+test_cases.append(([20,21],2))
+test_cases.append(([20,20, 20, 1,1],1))
 
 results = []
 
@@ -36,9 +36,9 @@ for sequence, answer in test_cases:
     scaffold = Scaffold()
     num_in_sequence = len(sequence)
     max_time = max(sequence)
-    spike_times = [[0] * (2 * max_time + 1) for i in range(num_in_sequence)]
+    spike_times = [[0] * (max_time + 1) for i in range(num_in_sequence)]
     for i, time in enumerate(sequence):
-        spike_times[i][2 * time] = 1
+        spike_times[i][time] = 1
     print(spike_times)
     #for time in sequence:
         #spike_times.append([0] * time)
@@ -57,7 +57,7 @@ for sequence, answer in test_cases:
     #scaffold.summary(verbose=2)
 
     pynn_args = {}
-    pynn_args['backend'] = 'brian'
+    pynn_args['backend'] = 'spinnaker'
     pynn_args['verbose'] = False 
     pynn_args['show_plots'] = False
 

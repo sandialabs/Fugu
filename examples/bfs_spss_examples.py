@@ -86,7 +86,7 @@ for test_case in test_cases:
     #scaffold.summary(verbose=2)
 
     pynn_args = {}
-    pynn_args['backend'] = 'brian'
+    pynn_args['backend'] = 'spinnaker'
     pynn_args['verbose'] = False 
     pynn_args['show_plots'] = False
 
