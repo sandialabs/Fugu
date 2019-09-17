@@ -155,9 +155,8 @@ class pynn_Backend(Backend):
                                 spike_array.append(i * self.defaults['min_delay'])
                         if verbose:
                             print("Spike array for {}: {}".format(neuron, spike_array))
-                        input_populations[neuron] = pynn_sim.Population(1, 
-                                                                        pynn_sim.SpikeSourceArray(spike_times=spike_array),
-                                                                        label=neuron)
+                        if len(spike_array) > 0:
+                            input_populations[neuron] = pynn_sim.Population(1, pynn_sim.SpikeSourceArray(spike_times=spike_array), label=neuron)
                     else:
                         neuron_to_pynn[neuron] = pynn_index
                         add_neuron_params(fugu_graph.nodes[neuron])
@@ -210,7 +209,7 @@ class pynn_Backend(Backend):
                     if u not in input_to_main_exite:
                         input_to_main_exite[u] = []
                     input_to_main_exite[u].append((0, neuron_to_pynn[v], weight, delay))
-            else:
+            elif u in neuron_to_pynn and v in neuron_to_pynn:
                 if is_inhib:
                     main_to_main_inhib.append((neuron_to_pynn[u], neuron_to_pynn[v], weight, delay))
                 else:

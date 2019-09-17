@@ -58,34 +58,38 @@ bfs_preds = []
 sssp_tables = []
 for test_case in test_cases:
     print("---Building Scaffold---")
-    scaffold = Scaffold()
+    bfs_scaffold = Scaffold()
+    sssp_scaffold = Scaffold()
 
     spikes = [0] * test_case[1]
     spikes.append(1)
 
     bfs_brick = Breadth_First_Search(test_case[0], name="BFS")
     bfs_input = Vector_Input(spikes, coding='Raster', name='BFSInput')
-    scaffold.add_brick(bfs_input, 'input')
-    scaffold.add_brick(bfs_brick, output=True)
+    bfs_scaffold.add_brick(bfs_input, 'input')
+    bfs_scaffold.add_brick(bfs_brick, output=True)
+
+    bfs_scaffold.lay_bricks()
+    #bfs_scaffold.summary(verbose=2)
 
     sssp_input = Vector_Input(spikes, coding='Raster', name='SSSPInput')
     sssp_brick = Shortest_Path(test_case[0], name="SSSP", return_path=True)
-    scaffold.add_brick(sssp_input, 'input')
-    scaffold.add_brick(sssp_brick, output=True)
+    sssp_scaffold.add_brick(sssp_input, 'input')
+    sssp_scaffold.add_brick(sssp_brick, output=True)
 
-    scaffold.lay_bricks()
-
-    #scaffold.summary(verbose=2)
+    sssp_scaffold.lay_bricks()
+    #sssp_scaffold.summary(verbose=2)
 
     pynn_args = {}
     pynn_args['backend'] = 'spinnaker'
-    pynn_args['verbose'] = False 
+    pynn_args['verbose'] = False
     pynn_args['show_plots'] = False
 
     print("---Running evaluation---")
 
-    #result = scaffold.evaluate(backend='pynn',max_runtime=MAX_RUNTIME, record_all=True, backend_args=pynn_args)
-    result = scaffold.evaluate(backend='ds',max_runtime=MAX_RUNTIME, record_all=True)
+    bfs_result = bfs_scaffold.evaluate(backend='pynn',max_runtime=MAX_RUNTIME, record_all=True, backend_args=pynn_args)
+    sssp_result = sssp_scaffold.evaluate(backend='pynn',max_runtime=MAX_RUNTIME, record_all=True, backend_args=pynn_args)
+    #result = scaffold.evaluate(backend='ds',max_runtime=MAX_RUNTIME, record_all=True)
 
     print("---Finished evaluation: Processing Results---")
     bfs_pred = {v:-1 for v in test_case[0].nodes}
@@ -93,27 +97,32 @@ for test_case in test_cases:
     sssp_table = {v:-1 for v in test_case[0].nodes}
     sssp_start_time = 0.0
 
-    graph_names = list(scaffold.graph.nodes.data('name'))
-    for row in result.itertuples():
-        neuron_name = graph_names[int(row.neuron_number)][0]
+    bfs_names = list(bfs_scaffold.graph.nodes.data('name'))
+    for row in bfs_result.itertuples():
+        neuron_name = bfs_names[int(row.neuron_number)][0]
+        print(neuron_name, row.time)
+
+        neuron_props = bfs_scaffold.graph.nodes[neuron_name]
+        if 'is_edge_reference' in neuron_props:
+            u = neuron_props['from_vertex']
+            v = neuron_props['to_vertex']
+            bfs_pred[v] = u if u < bfs_pred[v] or bfs_pred[v] < 0 else bfs_pred[v]
+
+    sssp_names = list(sssp_scaffold.graph.nodes.data('name'))
+    for row in sssp_result.itertuples():
+        neuron_name = sssp_names[int(row.neuron_number)][0]
         #print(neuron_name, row.time)
 
-        neuron_props = scaffold.graph.nodes[neuron_name]
-        if 'BFS' == neuron_props['brick']:
-            if 'is_edge_reference' in neuron_props:
-                u = neuron_props['from_vertex']
-                v = neuron_props['to_vertex']
-                bfs_pred[v] = u if u < bfs_pred[v] or bfs_pred[v] < 0 else bfs_pred[v]
-        elif 'SSSP' == neuron_props['brick']:
-            if 'begin' in neuron_name:
-                sssp_start_time = row.time
-            if 'is_vertex' in neuron_props:
-                v = neuron_props['index'][0]
-                sssp_table[v] = row.time
-            if 'is_edge_reference' in neuron_props:
-                u = neuron_props['from_vertex']
-                v = neuron_props['to_vertex']
-                sssp_pred[v] = u if u < sssp_pred[v] or sssp_pred[v] < 0 else sssp_pred[v]
+        neuron_props = sssp_scaffold.graph.nodes[neuron_name]
+        if 'begin' in neuron_name:
+            sssp_start_time = row.time
+        if 'is_vertex' in neuron_props:
+            v = neuron_props['index'][0]
+            sssp_table[v] = row.time
+        if 'is_edge_reference' in neuron_props:
+            u = neuron_props['from_vertex']
+            v = neuron_props['to_vertex']
+            sssp_pred[v] = u if u < sssp_pred[v] or sssp_pred[v] < 0 else sssp_pred[v]
 
     for v in sssp_table:
         if sssp_table[v] > -1:
@@ -138,6 +147,10 @@ print("Case ID, BFS, SSSP-Pred, SSSP-Dist")
 for test_case, bfs_pred, sssp_table in zip(test_cases, bfs_preds, sssp_tables):
     bfs_pred_pass = True
     expected_bfs_preds = list(nx.bfs_predecessors(test_case[0],source=test_case[1]))
+    #print("expected bfs:")
+    #print(expected_bfs_preds)
+    #print("actual:")
+    #print(bfs_pred)
     if len(expected_bfs_preds) != len(bfs_pred):
         bfs_pred_pass = False
     else:
@@ -150,6 +163,11 @@ for test_case, bfs_pred, sssp_table in zip(test_cases, bfs_preds, sssp_tables):
     sssp_dist_pass = True
     expected_tables = nx.dijkstra_predecessor_and_distance(test_case[0], test_case[1])
 
+    #print("expected sssp (pred):")
+    #print(expected_tables[0])
+    #print("actual:")
+    #print(sssp_table[0])
+
     if len(expected_tables[0].keys()) - 1 != len(sssp_table[0]):
         sssp_pass = False
     else:
@@ -161,8 +179,9 @@ for test_case, bfs_pred, sssp_table in zip(test_cases, bfs_preds, sssp_tables):
                     break
 
     keys = sssp_table[1].keys()
-    #print(test_case[0].edges(data=True))
+    #print("expected sssp (dist):")
     #print(expected_tables[1])
+    #print("actual:")
     #print(sssp_table[1])
     for v in expected_tables[1]:
         expected_value = expected_tables[1][v]
