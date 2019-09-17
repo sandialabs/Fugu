@@ -610,7 +610,7 @@ class Concatenate(Brick):
                       p=1.0,
                       potential=0.0)
         for idx in range(len(input_lists)):
-            graph.add_edge(control_nodes[idx]['complete'], new_complete_node_name,weight=(1/len(input_lists))+0.000001,delay=1)
+            graph.add_edge(control_nodes[idx]['complete'], new_complete_node_name,weight=(1/len(input_lists))+0.000001, delay=1)
 
 
         output_lists = [[]]
@@ -829,7 +829,7 @@ class Shortest_Path(Brick):
         graph.add_edge(control_nodes[0]['complete'],
                       self.name+'_begin',
                       weight = 1.0,
-                      delay = 1)
+                      delay = 2)
 
         complete_node_list = []
         for node in self.target_graph.nodes:
@@ -840,7 +840,7 @@ class Shortest_Path(Brick):
                            decay=0.0,
                            potential=0.0,
                            is_vertex=True)
-            graph.add_edge(node_name, node_name, weight=-1000, delay=1)
+            graph.add_edge(node_name, node_name, weight=-1000, delay = 1)
             if self.target_node:
                 if node == self.target_node:
                     complete_node_list = [node_name]
@@ -851,7 +851,8 @@ class Shortest_Path(Brick):
         for node in self.target_graph.nodes:
             node_name = self.name + str(node)
             for neighbor in self.target_graph.neighbors(node):
-                delay = self.target_graph.edges[node,neighbor]['weight'] + 1
+                #delay = self.target_graph.edges[node,neighbor]['weight'] + 1 # works for ds
+                delay = 2 * self.target_graph.edges[node,neighbor]['weight'] - 1 # works for pynn-brian
                 neighbor_name = self.name + str(neighbor)
                 if self.return_path:
                     if node == self.target_node:
@@ -877,7 +878,7 @@ class Shortest_Path(Brick):
                     if node == self.target_node:
                         graph.add_edge(node_name, neighbor_name, weight=-1000, delay=delay)
                     else:
-                        graph.add_edge(node_name, neighbor_name, weight=1.5, delay=delay)
+                        graph.add_edge(node_name, neighbor_name, weight=1.1, delay=delay)
 
         for input_neuron in input_lists[0]:
             index = graph.nodes[input_neuron]['index']
@@ -888,7 +889,7 @@ class Shortest_Path(Brick):
             graph.add_edge(input_neuron,
                           self.name+str(index),
                          weight = 2.0,
-                         delay = 0)
+                         delay = 1)
 
         self.is_built=True
 
@@ -1405,7 +1406,7 @@ class LIS(Brick):
                                potential = 0.0)
 
                 # Alarms
-                graph.add_edge(x_name, L_B_name, weight = -1.0, delay = j + 2.0) # Why is this 2.00 for ds????
+                graph.add_edge(x_name, L_B_name, weight = -1.0, delay = (j + 2.0)) # Why is this 2.00 for ds????
                 graph.add_edge(x_name, L_A_name, weight = 1.0, delay = 1.0)
 
                 graph.add_edge(L_B_name, L_A_name, weight = 1.0, delay = 1.0)

@@ -40,7 +40,8 @@ class pynn_Backend(Backend):
 
             self.backend = BRIAN_BACKEND 
 
-            self.defaults['min_delay'] = 10.00
+            #self.defaults['min_delay'] = 1.00 # for SSSP
+            self.defaults['min_delay'] = 10.00 # for LIS
             self.defaults['tau_syn_E'] = 1.49
             self.defaults['i_offset'] = 0.00
             self.defaults['tau_m'] = 10000000
@@ -48,8 +49,8 @@ class pynn_Backend(Backend):
 
             self.runtime = self.steps * self.defaults['min_delay'] 
 
-            #pynn_sim.setup(timestep=self.defaults['min_delay'])
-            pynn_sim.setup(timestep=0.50)
+            #pynn_sim.setup(timestep=self.defaults['min_delay']) #SSSP
+            pynn_sim.setup(timestep=0.50) #LIS
 
         elif simulator == 'spinnaker' or simulator == 'spynnaker':
             assert sys.version_info <= (3,0)
@@ -363,6 +364,6 @@ class pynn_Backend(Backend):
         simulator = backend_args['backend'] if 'backend' in backend_args else 'brian'
         verbose = backend_args['verbose'] if 'verbose' in backend_args else False
         show_plots = backend_args['show_plots'] if 'show_plots' in backend_args else False
-        spike_result = self._run_pynn_sim(scaffold, simulator, verbose)
+        spike_result = self._run_pynn_sim(scaffold, simulator, verbose, show_plots)
         spike_result = spike_result.sort_values('time')
         return spike_result 
