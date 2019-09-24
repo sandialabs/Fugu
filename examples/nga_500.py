@@ -22,24 +22,27 @@ from fugu.bricks import Breadth_First_Search, Shortest_Path, Vector_Input
 #       - verify tree
 
 MAX_RUNTIME = 2000
-DEBUG = True
+DEBUG = False
+MAX_DELAY = 71
 
 def create_graph(size, p, seed):
     G = fast_gnp_random_graph(size, p, seed=seed)
     random.seed(seed)
     for (u,v) in G.edges():
-        weight = random.randint(1,10)
+        weight = random.randint(1,MAX_DELAY)
         G.edges[u,v]['weight'] = weight
     return G
 
-graph = create_graph(64, 0.3, 3)
+GRAPH_SIZE = 2 ** 8
+
+graph = create_graph(GRAPH_SIZE, 0.3, 3)
 
 results = []
 
 # Generate graph
 for case_index in range(1):
     print("---Building Scaffold---")
-    search_key = random.randint(1,64)
+    search_key = random.randint(1,GRAPH_SIZE)
     bfs_scaffold = Scaffold()
     sssp_scaffold = Scaffold()
 
@@ -54,8 +57,8 @@ for case_index in range(1):
     bfs_scaffold.lay_bricks()
     #bfs_scaffold.summary(verbose=2)
 
-    sssp_input = Vector_Input(spikes, coding='Raster', name='SSSPInput')
     sssp_brick = Shortest_Path(graph, name="SSSP", return_path=True)
+    sssp_input = Vector_Input(spikes, coding='Raster', name='SSSPInput')
     sssp_scaffold.add_brick(sssp_input, 'input')
     sssp_scaffold.add_brick(sssp_brick, output=True)
 
@@ -68,9 +71,9 @@ for case_index in range(1):
     pynn_args['show_plots'] = False
 
     print("---Running BFS---")
-    MAX_RUNTIME = 2 * 64 * 10
+    MAX_RUNTIME = 2 * len(graph.nodes()) * MAX_DELAY 
 
-    bfs_result = bfs_scaffold.evaluate(backend='pynn',max_runtime=MAX_RUNTIME, record_all=True, backend_args=pynn_args)
+    bfs_result = bfs_scaffold.evaluate(backend='pynn', max_runtime=MAX_RUNTIME, record_all=True, backend_args=pynn_args)
     #bfs_result = bfs_scaffold.evaluate(backend='ds',max_runtime=MAX_RUNTIME, record_all=True, backend_args=pynn_args)
 
     print("---Interpreting Spikes for BFS---")
@@ -111,8 +114,8 @@ for case_index in range(1):
                 break
 
     print("---Running SSSP---")
-    #sssp_result = sssp_scaffold.evaluate(backend='pynn',max_runtime=MAX_RUNTIME, record_all=True, backend_args=pynn_args)
-    sssp_result = sssp_scaffold.evaluate(backend='ds',max_runtime=MAX_RUNTIME, record_all=True, backend_args=pynn_args)
+    sssp_result = sssp_scaffold.evaluate(backend='pynn',max_runtime=MAX_RUNTIME, record_all=True, backend_args=pynn_args)
+    #sssp_result = sssp_scaffold.evaluate(backend='ds',max_runtime=MAX_RUNTIME, record_all=True, backend_args=pynn_args)
 
     print("---Interpreting Spikes for SSSP---")
     sssp_pred = {v:-1 for v in graph.nodes}
