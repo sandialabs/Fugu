@@ -908,7 +908,7 @@ class Breadth_First_Search(Brick):
     '''This brick performs a BFS traversal. Expects a single input where the index corresponds to the node number on the graph.
 
     '''
-    def __init__(self, target_graph, target_node=None, name=None, output_coding = 'temporal-L'):
+    def __init__(self, target_graph, target_node=None, store_edge_references=False, name=None, output_coding = 'temporal-L'):
         '''
         Construtor for this brick.
         Arguments:
@@ -938,6 +938,8 @@ class Breadth_First_Search(Brick):
         self.vertex_neuron_map = {}
         self.edge_synapse_map = {}
         self.synapse_edge_map = {}
+
+        self.store_edge_references = store_edge_references
 
     def get_neuron_vertex_map(self):
         return self.neuron_vertex_map
@@ -1037,23 +1039,27 @@ class Breadth_First_Search(Brick):
             neighbors = list(self.target_graph.neighbors(node))
             for neighbor in neighbors:
                 neighbor_name = self.name + str(neighbor)
-                reference_name = "{}-{}-{}".format(self.name, node, neighbor)
+                if self.store_edge_references:
+                    reference_name = "{}-{}-{}".format(self.name, node, neighbor)
 
-                self.synapse_edge_map[reference_index] = (node, neighbor)
-                self.edge_synapse_map[(node,neighbor)] = reference_index
+                    self.synapse_edge_map[reference_index] = (node, neighbor)
+                    self.edge_synapse_map[(node,neighbor)] = reference_index
 
-                edge_reference_names.append(reference_name)
+                    edge_reference_names.append(reference_name)
 
-                graph.add_node(reference_name, index=reference_index, threshold=1.0, decay=0.0,potential=0.0, from_vertex=node, to_vertex=neighbor, is_edge_reference=True )
-                graph.add_edge(neighbor_name, reference_name, weight=-1000, delay=1.0) 
+                    graph.add_node(reference_name, index=reference_index, threshold=1.0, decay=0.0,potential=0.0, from_vertex=node, to_vertex=neighbor, is_edge_reference=True )
+                    graph.add_edge(neighbor_name, reference_name, weight=-1000, delay=1.0) 
 
-                if self.target_node and node == self.target_node:
-                    weight = -1000
+                    if self.target_node and node == self.target_node:
+                        weight = -1000
+                    else:
+                        weight = 1.1
+                    graph.add_edge(node_name, reference_name, weight=weight, delay=1.0)
+                    graph.add_edge(reference_name, neighbor_name, weight=weight, delay=1.0)
+                    reference_index += 1
                 else:
-                    weight = 1.1
-                graph.add_edge(node_name, reference_name, weight=weight, delay=1.0)
-                graph.add_edge(reference_name, neighbor_name, weight=weight, delay=1.0)
-                reference_index += 1
+                    graph.add_edge(node_name, neighbor_name, weight=1.1, delay = 1.0)
+
 
         for input_neuron in input_lists[0]:
             index = graph.nodes[input_neuron]['index']

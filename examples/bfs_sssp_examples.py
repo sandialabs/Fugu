@@ -64,7 +64,7 @@ for test_case in test_cases:
     spikes = [0] * test_case[1]
     spikes.append(1)
 
-    bfs_brick = Breadth_First_Search(test_case[0], name="BFS")
+    bfs_brick = Breadth_First_Search(test_case[0], name="BFS", store_edge_references=True)
     bfs_input = Vector_Input(spikes, coding='Raster', name='BFSInput')
     bfs_scaffold.add_brick(bfs_input, 'input')
     bfs_scaffold.add_brick(bfs_brick, output=True)
@@ -81,22 +81,17 @@ for test_case in test_cases:
     #sssp_scaffold.summary(verbose=2)
 
     pynn_args = {}
-    pynn_args['backend'] = 'spinnaker'
+    pynn_args['backend'] = 'brian'
     pynn_args['verbose'] = False
     pynn_args['show_plots'] = False
 
-    print("---Running evaluation---")
+    print("---Running BFS---")
 
     bfs_result = bfs_scaffold.evaluate(backend='pynn',max_runtime=MAX_RUNTIME, record_all=True, backend_args=pynn_args)
-    sssp_result = sssp_scaffold.evaluate(backend='pynn',max_runtime=MAX_RUNTIME, record_all=True, backend_args=pynn_args)
-    #result = scaffold.evaluate(backend='ds',max_runtime=MAX_RUNTIME, record_all=True)
+    #bfs_result = bfs_scaffold.evaluate(backend='ds',max_runtime=MAX_RUNTIME, record_all=True)
 
-    print("---Finished evaluation: Processing Results---")
+    print("---Interpreting Spikes for BFS---")
     bfs_pred = {v:-1 for v in test_case[0].nodes}
-    sssp_pred = {v:-1 for v in test_case[0].nodes}
-    sssp_table = {v:-1 for v in test_case[0].nodes}
-    sssp_start_time = 0.0
-
     bfs_names = list(bfs_scaffold.graph.nodes.data('name'))
     for row in bfs_result.itertuples():
         neuron_name = bfs_names[int(row.neuron_number)][0]
@@ -107,6 +102,21 @@ for test_case in test_cases:
             u = neuron_props['from_vertex']
             v = neuron_props['to_vertex']
             bfs_pred[v] = u if u < bfs_pred[v] or bfs_pred[v] < 0 else bfs_pred[v]
+
+    final_bfs = set()
+    for v in bfs_pred:
+        if bfs_pred[v] > -1:
+            final_bfs.add((v, bfs_pred[v]))
+    bfs_preds.append(final_bfs)
+
+    print("---Running SSSP---")
+    #sssp_result = sssp_scaffold.evaluate(backend='pynn',max_runtime=MAX_RUNTIME, record_all=True, backend_args=pynn_args)
+    sssp_result = sssp_scaffold.evaluate(backend='ds',max_runtime=MAX_RUNTIME, record_all=True)
+
+    print("---Interpreting Spikes for SSSP---")
+    sssp_pred = {v:-1 for v in test_case[0].nodes}
+    sssp_table = {v:-1 for v in test_case[0].nodes}
+    sssp_start_time = 0.0
 
     sssp_names = list(sssp_scaffold.graph.nodes.data('name'))
     for row in sssp_result.itertuples():
@@ -129,19 +139,13 @@ for test_case in test_cases:
             sssp_table[v] -= sssp_start_time
             sssp_table[v] /= 2.0
 
-    final_bfs = set()
-    for v in bfs_pred:
-        if bfs_pred[v] > -1:
-            final_bfs.add((v, bfs_pred[v]))
-    bfs_preds.append(final_bfs)
-
     final_sssp = set()
     for v in sssp_pred:
         if sssp_pred[v] > -1:
             final_sssp.add((v, sssp_pred[v]))
     sssp_tables.append((final_sssp, sssp_table))
 
-print("---Final results---")
+print("---Verifying results---")
 case_index = 0
 print("Case ID, BFS, SSSP-Pred, SSSP-Dist")
 for test_case, bfs_pred, sssp_table in zip(test_cases, bfs_preds, sssp_tables):

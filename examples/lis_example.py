@@ -39,7 +39,7 @@ for sequence, answer in test_cases:
     spike_times = [[0] * (max_time + 1) for i in range(num_in_sequence)]
     for i, time in enumerate(sequence):
         spike_times[i][time] = 1
-    print(spike_times)
+    #print(spike_times)
     #for time in sequence:
         #spike_times.append([0] * time)
         #spike_times[-1].append(1)
@@ -57,7 +57,7 @@ for sequence, answer in test_cases:
     #scaffold.summary(verbose=2)
 
     pynn_args = {}
-    pynn_args['backend'] = 'spinnaker'
+    pynn_args['backend'] = 'brian'
     pynn_args['verbose'] = False 
     pynn_args['show_plots'] = False
 
