@@ -23,7 +23,7 @@ from fugu.bricks import Breadth_First_Search, Shortest_Path, Vector_Input
 
 MAX_RUNTIME = 2000
 BACKEND = "pynn"
-DEBUG = True
+DEBUG = False 
 GRAPH_SIZE = 2 ** 6
 
 def create_graph(size, p, seed):
@@ -40,7 +40,7 @@ graph = create_graph(GRAPH_SIZE, 0.3, 3)
 results = []
 
 # Generate graph
-for case_index in range(1):
+for case_index in range(16):
     print("---Building Scaffold---")
     search_key = random.randint(1,GRAPH_SIZE)
     bfs_scaffold = Scaffold()
@@ -84,7 +84,7 @@ for case_index in range(1):
 
     curr_level = 0
     curr_time = 0.0
-    for row in bfs_result.itertuples():
+    for row in bfs_result.sort_values("time").itertuples():
         neuron_name = bfs_names[int(row.neuron_number)][0]
 
         neuron_props = bfs_scaffold.graph.nodes[neuron_name]
@@ -105,6 +105,8 @@ for case_index in range(1):
             u = neuron_props['from_vertex']
             v = neuron_props['to_vertex']
             bfs_pred[v] = u if u < bfs_pred[v] or bfs_pred[v] < 0 else bfs_pred[v]
+        if DEBUG:
+            print(neuron_name, row.time)
 
     if DEBUG:
         print("preds>>>")
