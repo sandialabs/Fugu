@@ -5,6 +5,8 @@ import networkx as nx
 import numpy as np
 import pandas as pd
 
+from timeit import default_timer as timer
+
 from warnings import warn
 
 from .backend import Backend
@@ -25,6 +27,11 @@ class pynn_Backend(Backend):
         self.runtime = self.steps * 0.01
 
         self.backend = BRIAN_BACKEND 
+        self.collect_metrics = False
+        self.metrics = {}
+
+    def GetMetrics(self):
+        return self.metrics
 
     def _run_pynn_sim(self, fugu_scaffold, simulator='brian', verbose=False, show_plots=False):
         fugu_circuit = fugu_scaffold.circuit
@@ -141,6 +148,9 @@ class pynn_Backend(Backend):
         input_populations = {} # Map of neuron to population
         neuron_to_pynn = {} # Map of neuron to pynn_index
 
+        if self.collect_metrics:
+            start = timer()
+
         # Create neurons
         for brick in fugu_circuit.nodes:
             brick = fugu_circuit.nodes[brick]
@@ -249,7 +259,7 @@ class pynn_Backend(Backend):
                                                                  synapse, 
                                                                  label='{}-to-Main'.format(input_pop)))
         for input_pop in input_to_main_inhib:
-            connector = FromListConnector(input_to_main_exite[input_pop])
+            connector = FromListConnector(input_to_main_inhib[input_pop])
             if input_pop not in input_main_synapses:
                 input_main_synapses[input_pop] = []
             input_main_synapses[input_pop].append(pynn_sim.Projection(input_populations[input_pop], 
@@ -287,6 +297,9 @@ class pynn_Backend(Backend):
             for edge in main_to_main_inhib:
                 print(edge)
 
+        if self.collect_metrics:
+            self.metrics['embed_time'] = timer() - start
+
         # Run sim
         main_population.record(['spikes','v'])
         for neuron in input_populations:
@@ -295,7 +308,11 @@ class pynn_Backend(Backend):
         if verbose:
             print("Runtime: {}".format(self.runtime))
 
+        if self.collect_metrics:
+            start = timer()
         pynn_sim.run(self.runtime)
+        if self.collect_metrics:
+            self.metrics['runtime'] = timer() - start 
 
         main_data = main_population.get_data()
         input_data = {neuron:input_populations[neuron].get_data() for neuron in input_populations}
@@ -378,6 +395,7 @@ class pynn_Backend(Backend):
         simulator = backend_args['backend'] if 'backend' in backend_args else 'brian'
         verbose = backend_args['verbose'] if 'verbose' in backend_args else False
         show_plots = backend_args['show_plots'] if 'show_plots' in backend_args else False
+        self.collect_metrics = backend_args['collect_metrics'] if 'collect_metrics' in backend_args else False
         spike_result = self._run_pynn_sim(scaffold, simulator, verbose, show_plots)
         spike_result = spike_result.sort_values('time')
         return spike_result 

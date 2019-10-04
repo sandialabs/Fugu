@@ -24,6 +24,7 @@ class Scaffold:
         self.count = {}
         self.graph = None
         self.is_built = False
+        self.metrics = None
         
     def add_brick(self, brick_function, input_nodes=[-1], metadata = None, name=None, output=False):
         """
@@ -362,6 +363,7 @@ class Scaffold:
                       summary_steps=None,
                       record_all=record_all,
                       backend_args=backend_args)
+        self.metrics = backend.GetMetrics()
         return results
         
             

@@ -3,7 +3,6 @@ print("Importing modules")
 import networkx as nx
 from networkx.generators.random_graphs import fast_gnp_random_graph
 import random
-from timeit import default_timer as timer
 
 print("Importing fugu")
 import fugu
@@ -24,8 +23,9 @@ from fugu.bricks import Breadth_First_Search, Shortest_Path, Vector_Input
 
 MAX_RUNTIME = 2000
 BACKEND = "pynn"
-DEBUG = False 
-GRAPH_SIZE = 2 ** 4
+DEBUG = True 
+#GRAPH_SIZE = 2 ** 4 + 8
+GRAPH_SIZE = 2 ** 5
 
 def create_graph(size, p, seed):
     # @TODO: Need to replace this with a Kronecker/R-Mat generator
@@ -44,9 +44,10 @@ metrics = {}
 
 pynn_args = {}
 pynn_args['backend'] = 'spinnaker'
+pynn_args['collect_metrics'] = True
 
 # Generate graph
-for case_index in range(10):
+for case_index in range(1):
     search_key = random.randint(1,GRAPH_SIZE)
     print("---Building BFS Scaffold---")
     bfs_scaffold = Scaffold()
@@ -59,9 +60,7 @@ for case_index in range(10):
     bfs_scaffold.add_brick(bfs_input, 'input')
     bfs_scaffold.add_brick(bfs_brick, output=True)
 
-    start = timer()
     bfs_scaffold.lay_bricks()
-    bfs_embedding_time = timer() - start
     if DEBUG:
         bfs_scaffold.summary(verbose=2)
 
@@ -74,9 +73,9 @@ for case_index in range(10):
     print("---Running BFS---")
     MAX_RUNTIME = 2 * 64 * 10
 
-    start = timer()
     bfs_result = bfs_scaffold.evaluate(backend=BACKEND,max_runtime=MAX_RUNTIME, record_all=True, backend_args=pynn_args)
-    bfs_runtime = timer() - start
+    bfs_runtime = bfs_scaffold.metrics['runtime']
+    bfs_embedding_time =  bfs_scaffold.metrics['embed_time']
 
     print("---Interpreting Spikes for BFS---")
     bfs_pass = True
@@ -142,7 +141,7 @@ for case_index in range(10):
         v_level = bfs_levels[v]
         if abs(u_level - v_level) > 1:
             bfs_pass = False
-            print("Levels between edge != 1: {} {}".format(*edge))
+            print("Levels between edge > 1: {} {}".format(*edge))
             break
 
     DEBUG = False
@@ -154,9 +153,7 @@ for case_index in range(10):
     sssp_scaffold.add_brick(sssp_input, 'input')
     sssp_scaffold.add_brick(sssp_brick, output=True)
 
-    start = timer()
     sssp_scaffold.lay_bricks()
-    sssp_embedding_time = timer() - start
     if DEBUG:
         sssp_scaffold.summary(verbose=2)
     if DEBUG:
@@ -165,9 +162,9 @@ for case_index in range(10):
         pynn_args['verbose'] = False 
 
     print("---Running SSSP---")
-    start = timer()
     sssp_result = sssp_scaffold.evaluate(backend=BACKEND,max_runtime=MAX_RUNTIME, record_all=True, backend_args=pynn_args)
-    sssp_runtime = timer() - start
+    sssp_runtime = sssp_scaffold.metrics['runtime']
+    sssp_embedding_time = sssp_scaffold.metrics['embed_time']
 
     print("---Interpreting Spikes for SSSP---")
     sssp_pass = True
