@@ -94,6 +94,7 @@ class LISTest(BrickTest):
         sequence = [1,4,8,6,2,7,19,13,14]
         self.evaluate_sequence(sequence,6)
 
+@unittest.skipIf(BACKEND == "pynn","pynn backend does not support probabilistic firings")
 class ThresholdTest(BrickTest):
     def setUp(self):
         super(ThresholdTest, self).setUp()
@@ -124,7 +125,7 @@ class ThresholdTest(BrickTest):
     def build_scaffold(self, output_coding, input_value, threshold, p_value, decay_value):
         self.scaffold.add_brick(BRICKS.Vector_Input(np.array([1]), coding='Raster', name='input1'), 'input' )
         self.scaffold.add_brick(BRICKS.Vector_Input(np.array([0]), coding='Raster', name='input2'), 'input' )
-        self.scaffold.add_brick(BRICKS.Dot([input_value], name='ADotOperator'), (0,0)) #don't know why i need two vector inputs
+        self.scaffold.add_brick(BRICKS.Dot([input_value], name='ADotOperator')) #don't know why i need two vector inputs
         self.scaffold.add_brick(BRICKS.Threshold(threshold, 
                                                  p=p_value, 
                                                  decay=decay_value,

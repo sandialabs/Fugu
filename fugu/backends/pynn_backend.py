@@ -109,17 +109,17 @@ class pynn_Backend(Backend):
 
         # Sets a neuron's properties and initial values
         def add_neuron_params(neuron):
-            # neuron = properties
-            if 'threshold' in neuron:
-                thresh = neuron['threshold']
+            neuron_props = fugu_graph.nodes[neuron]
+            if 'threshold' in neuron_props:
+                thresh = neuron_props['threshold']
             else:
                 thresh = 1.0
-                print("Error, threshold not found in neuron: {}".format(neuron))
+                print("Error, threshold not found in neuron_props: {}".format(neuron_props))
             parameter_values['v_thresh'].append(thresh if thresh > 0.0 else 0.01)
 
             parameter_values['v_rest'].append(self.defaults['v_rest'])
 
-            initial_potential.append(neuron['potential'] if 'potential' in neuron else self.defaults['v_rest'])
+            initial_potential.append(neuron_props['potential'] if 'potential' in neuron_props else self.defaults['v_rest'])
 
             parameter_values['i_offset'].append(self.defaults['i_offset'])
 
@@ -127,13 +127,13 @@ class pynn_Backend(Backend):
                 parameter_values['v_reset'].append(self.defaults['v_rest'])
                 parameter_values['tau_refrac'].append(self.defaults['min_delay'])
                 parameter_values['tau_syn_E'].append(self.defaults['tau_syn_E'])
-                if 'decay' in neuron:
-                    parameter_values['tau_m'].append(neuron['decay'] if neuron['decay'] > 0.0 else self.defaults['tau_m'])
+                if 'decay' in neuron_props:
+                    parameter_values['tau_m'].append(neuron_props['decay'] if neuron_props['decay'] > 0.0 else self.defaults['tau_m'])
                 else:
                     parameter_values['tau_m'].append(self.defaults['tau_m'])
             else:
                 parameter_values['cm'].append(self.defaults['cm'])
-                if 'decay' in neuron and neuron['decay'] != 0.0:
+                if 'decay' in neuron_props and neuron_props['decay'] != 0.0:
                     raise ValueError("sPyNNaker backend currently only supports no decay")
                 parameter_values['tau_m'].append(self.defaults['tau_m'])
 
@@ -144,7 +144,7 @@ class pynn_Backend(Backend):
         # Create neurons
         for brick in fugu_circuit.nodes:
             brick = fugu_circuit.nodes[brick]
-            if brick['layer'] == 'input':
+            if 'layer' in brick and brick['layer'] == 'input':
                 spike_arrays = brick['brick'].vector
                 if verbose:
                     print("Brick's spike arrays: {}".format(spike_arrays))
@@ -164,12 +164,12 @@ class pynn_Backend(Backend):
                             input_populations[neuron] = pynn_sim.Population(1, pynn_sim.SpikeSourceArray(spike_times=spike_array), label=neuron)
                     else:
                         neuron_to_pynn[neuron] = pynn_index
-                        add_neuron_params(fugu_graph.nodes[neuron])
+                        add_neuron_params(neuron)
                         pynn_index += 1
             else:
                 for neuron in brick_neurons[brick['name']]:
                     neuron_to_pynn[neuron] = pynn_index
-                    add_neuron_params(fugu_graph.nodes[neuron])
+                    add_neuron_params(neuron)
                     pynn_index += 1
         if verbose:
             print("---Neuron to pynn index---")
