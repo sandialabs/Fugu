@@ -832,6 +832,7 @@ class Shortest_Path(Brick):
                       delay = 1)
 
         complete_node_list = []
+        output_node_list = []
         for node in self.target_graph.nodes:
             node_name = self.name + str(node)
             graph.add_node(node_name,
@@ -844,8 +845,10 @@ class Shortest_Path(Brick):
             if self.target_node:
                 if node == self.target_node:
                     complete_node_list = [node_name]
+                    output_node_list.append(node_name)
             else:
                 complete_node_list.append(node_name)
+                output_node_list.append(node_name)
 
         edge_reference_names = []
         for node in self.target_graph.nodes:
@@ -895,7 +898,7 @@ class Shortest_Path(Brick):
         self.is_built=True
 
         #Remember, bricks can have more than one output, so we need a list of list of output neurons
-        output_lists = [[self.name+str(self.target_node)], edge_reference_names]
+        output_lists = [output_node_list, edge_reference_names]
 
         return (graph,
                self.metadata,
@@ -1030,6 +1033,7 @@ class Breadth_First_Search(Brick):
                     target_node_list.append(node_name)
                     graph.add_edge(node_name, complete_name, weight=1.0, delay=1.0)
             else:
+                target_node_list.append(node_name)
                 graph.add_edge(node_name, complete_name, weight=1.0, delay=1.0)
 
         edge_reference_names = []
@@ -1067,10 +1071,12 @@ class Breadth_First_Search(Brick):
                 index = index[0]
             if type(index) is not int:
                 raise TypeError("Neuron index should be Tuple or Int.")
-            graph.add_edge(input_neuron,
-                          self.name+str(index),
-                         weight = 2.0,
-                         delay = 1)
+            
+            if self.name+str(index) in graph.nodes():
+                graph.add_edge(input_neuron,
+                               self.name+str(index),
+                               weight = 2.0,
+                               delay = 1)
 
         self.is_built=True
 
