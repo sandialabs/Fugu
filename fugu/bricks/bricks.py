@@ -1362,6 +1362,7 @@ class LIS(Brick):
 
         min_runtime = self.sequence_length
 
+        output_Ls = []
         levels = [[] for i in range(self.sequence_length)]
         for i in range(self.sequence_length):
             L_name = "L_{}_Main".format(i + 1)
@@ -1371,6 +1372,7 @@ class LIS(Brick):
                            decay = 0.0,
                            potential = 0.0)
             graph.add_edge(L_name, L_name, weight = -10000.0, delay = 1.0)
+            output_Ls.append(L_name)
 
         for i in range(self.sequence_length):
             column_a = []
@@ -1442,14 +1444,10 @@ class LIS(Brick):
 
         self.is_built=True
 
-        output_Ls = []
-        for l in levels[-1]:
-            if 'A' in l:
-                output_Ls.append(l)
 
         #Remember, bricks can have more than one output, so we need a list of list of output neurons
-        #output_lists = [complete_node_list, output_Ls]
-        output_lists = [complete_node_list]
+        output_lists = [complete_node_list, output_Ls]
+        #output_lists = [complete_node_list]
 
         return (graph,
                self.metadata,

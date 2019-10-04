@@ -46,12 +46,8 @@ pynn_args = {}
 pynn_args['backend'] = 'spinnaker'
 
 # Generate graph
-skip = -1
 for case_index in range(10):
     search_key = random.randint(1,GRAPH_SIZE)
-    if skip > 0:
-        skip -= 1
-        continue
     print("---Building BFS Scaffold---")
     bfs_scaffold = Scaffold()
 

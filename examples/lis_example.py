@@ -63,8 +63,8 @@ for sequence, answer in test_cases:
 
     print("---Running evaluation---")
 
-    result = scaffold.evaluate(backend='pynn',max_runtime=MAX_RUNTIME, record_all=True, backend_args=pynn_args)
-    #result = scaffold.evaluate(backend='ds',max_runtime=MAX_RUNTIME, record_all=True)
+    #result = scaffold.evaluate(backend='pynn',max_runtime=MAX_RUNTIME, record_all=True, backend_args=pynn_args)
+    result = scaffold.evaluate(backend='ds',max_runtime=MAX_RUNTIME, record_all=True)
 
     graph_names = list(scaffold.graph.nodes.data('name'))
     print("---Finished evaluation:---")
