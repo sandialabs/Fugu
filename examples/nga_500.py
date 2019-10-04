@@ -43,7 +43,7 @@ timing_results = {}
 metrics = {}
 
 pynn_args = {}
-pynn_args['backend'] = 'spinnaker'
+pynn_args['backend'] = 'brian'
 
 # Generate graph
 for case_index in range(10):
@@ -52,7 +52,7 @@ for case_index in range(10):
     bfs_scaffold = Scaffold()
 
     spikes = [0] * search_key
-    spikes.append(1)
+    spikes[-1] = 1
 
     bfs_brick = Breadth_First_Search(graph, name="BFS", store_edge_references=True)
     bfs_input = Vector_Input(spikes, coding='Raster', name='BFSInput')
@@ -102,11 +102,10 @@ for case_index in range(10):
             vertex = neuron_props['index'][0]
             if vertex in bfs_levels:
                 bfs_pass = False
-                if DEBUG:
-                    print("Detected cycle: {}".format(vertex))
+                print("Detected cycle: {}".format(vertex))
                 break
             else:
-                bfs_levels[neuron_props['index'][0]] = curr_level
+                bfs_levels[vertex] = curr_level
 
         if 'is_edge_reference' in neuron_props:
             u = neuron_props['from_vertex']
@@ -142,7 +141,7 @@ for case_index in range(10):
         v_level = bfs_levels[v]
         if abs(u_level - v_level) > 1:
             bfs_pass = False
-            print("Levels between edge != 1: {} {}".format(*edge))
+            print("Levels between edge > 1: {} {}".format(*edge))
             break
 
     DEBUG = False
@@ -224,14 +223,13 @@ for case_index in range(10):
                     break
 
     for u,v in graph.edges():
-        if sssp_pred[u] == v or sssp_pred[v] == u:
-            u_dist = sssp_table[u]
-            v_dist = sssp_table[v]
-            edge_weight = graph.get_edge_data(u,v)['weight']
-            if abs(u_dist - v_dist) > edge_weight:
-                sssp_pass = False
-                print("Distance larger than edge weight ({},{}): {} {} {}".format(u,v,u_dist,v_dist, edge_weight))
-                break
+        u_dist = sssp_table[u]
+        v_dist = sssp_table[v]
+        edge_weight = graph.get_edge_data(u,v)['weight']
+        if abs(u_dist - v_dist) > edge_weight:
+            sssp_pass = False
+            print("Distance larger than edge weight ({},{}): {} {} {}".format(u,v,u_dist,v_dist, edge_weight))
+            break
 
 
     results[search_key] = (bfs_pass, sssp_pass, bfs_embedding_time, sssp_embedding_time, bfs_runtime, sssp_runtime, bfs_spikes, sssp_spikes, len(bfs_scaffold.graph.nodes()), len(sssp_scaffold.graph.nodes()))
