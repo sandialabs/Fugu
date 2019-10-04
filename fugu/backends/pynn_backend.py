@@ -110,7 +110,11 @@ class pynn_Backend(Backend):
         # Sets a neuron's properties and initial values
         def add_neuron_params(neuron):
             # neuron = properties
-            thresh = neuron['threshold']
+            if 'threshold' in neuron:
+                thresh = neuron['threshold']
+            else:
+                thresh = 1.0
+                print("Error, threshold not found in neuron: {}".format(neuron))
             parameter_values['v_thresh'].append(thresh if thresh > 0.0 else 0.01)
 
             parameter_values['v_rest'].append(self.defaults['v_rest'])
@@ -168,10 +172,21 @@ class pynn_Backend(Backend):
                     add_neuron_params(fugu_graph.nodes[neuron])
                     pynn_index += 1
         if verbose:
+            print("---Neuron to pynn index---")
+            for neuron in neuron_to_pynn:
+                print("{}, {}".format(neuron, neuron_to_pynn[neuron]))
+
+        if verbose:
             print("___Parameter values___:")
-            print(parameter_values)
+            #print(parameter_values)
+            for param in parameter_values:
+                print("Parameter: {}".format(param))
+                for neuron in neuron_to_pynn:
+                    print("{}, {}".format(neuron, parameter_values[param][neuron_to_pynn[neuron]]))
+
             print("___Initial potentials___:")
-            print(initial_potential)
+            for neuron in neuron_to_pynn:
+                print("{}, {}".format(neuron, initial_potential[neuron_to_pynn[neuron]]))
 
         if self.backend == BRIAN_BACKEND:
             main_population = pynn_sim.Population(pynn_index, pynn_sim.IF_curr_exp(**parameter_values), label='Main Population')
@@ -244,7 +259,7 @@ class pynn_Backend(Backend):
                                                                  label='{}-to-Main'.format(input_pop),
                                                                  receptor_type='inhibitory'))
 
-    #input_proj_inhib0 = sim.Projection(pop_spk_src, pop_0, sim.FromListConnector(conn_list=conn_lst_inhib), receptor_type='inhibitory')
+        #input_proj_inhib0 = sim.Projection(pop_spk_src, pop_0, sim.FromListConnector(conn_list=conn_lst_inhib), receptor_type='inhibitory')
 
         main_synapses = []
 
@@ -254,10 +269,6 @@ class pynn_Backend(Backend):
         main_synapses.append(pynn_sim.Projection(main_population, main_population, connector, synapse, label="Main-to-Main", receptor_type='inhibitory'))
 
         if verbose:
-            print("---Neuron to pynn index---")
-            for neuron in neuron_to_pynn:
-                print("{}, {}".format(neuron, neuron_to_pynn[neuron]))
-
             print("---Input to main connections---")
             print("----Excite----")
             for neuron in input_to_main_exite:
@@ -304,7 +315,7 @@ class pynn_Backend(Backend):
             spiketrain = main_spiketrains[pynn_index]
             if verbose:
                 print("---results for: {}".format(neuron))
-                print("voltage  {}".format(main_voltage[pynn_index]))
+                #print("voltage  {}".format(main_voltage[pynn_index]))
                 print("spiketimes  {}".format(spiketrain))
 
             if spiketrain.any():
