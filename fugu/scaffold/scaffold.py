@@ -354,6 +354,7 @@ class Scaffold:
                 backend = snn_Backend()
             if backend == 'pynn':
                 backend = pynn_Backend(runtime=max_runtime)
+                self.metrics = backend.GetMetrics()
         if not issubclass(type(backend), Backend):
             raise ValueError("Invalid backend option.")
         results = backend.serve(self, 
@@ -363,7 +364,6 @@ class Scaffold:
                       summary_steps=None,
                       record_all=record_all,
                       backend_args=backend_args)
-        self.metrics = backend.GetMetrics()
         return results
         
             

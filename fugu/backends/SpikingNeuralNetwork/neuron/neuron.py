@@ -28,7 +28,7 @@ class Neuron(ABC):
 class LIFNeuron(Neuron):
     def __init__(self, name=None, threshold=0.0, reset_voltage=0.0, leakage_constant=1.0, 
                  voltage=0.0, p=1.0, record=False):
-        super().__init__()
+        super(LIFNeuron, self).__init__()
         self.name = name
         self._T = threshold
         self._R = reset_voltage
@@ -114,7 +114,7 @@ class InputNeuron(Neuron):
     '''Input Neuron. Inherits from class Neuron'''
     
     def __init__(self, name=None, threshold=0.1, voltage=0.0, record=False):
-        super().__init__()
+        super(InputNeuron, self).__init__()
         self.name = name
         self._T = threshold
         self.v = voltage

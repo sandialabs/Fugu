@@ -57,6 +57,8 @@ class NeuralNetwork:
             tmpsyn = Synapse(*new_synapse)
         elif type(new_synapse) == Synapse:
             tmpsyn = new_synapse
+        elif isinstance(new_synapse, Synapse):
+            tmpsyn = new_synapse
         else:
             raise TypeError("Must provide Synapse Object")
         
