@@ -6,7 +6,6 @@ import fugu.bricks as BRICKS
 from fugu import Scaffold
 
 class AppBrickTests:
-
     backend = None
     backend_args = {}
 
@@ -18,7 +17,7 @@ class AppBrickTests:
             spike_times[i][time] = 1
         return spike_times
 
-    def evaluate_lis_sequence(self, sequence, expected): 
+    def evaluate_lis_sequence(self, sequence, expected, debug=False): 
         scaffold = Scaffold()
 
         vector_brick = BRICKS.Vector_Input(self.get_lis_input(sequence), coding='Raster', name='Input0', time_dimension=True)
@@ -28,12 +27,17 @@ class AppBrickTests:
 
         scaffold.lay_bricks()
 
+        if debug:
+            scaffold.summary(verbose=2)
+
         results = scaffold.evaluate(backend=self.backend, backend_args=self.backend_args, max_runtime=100)
 
         graph_names = list(scaffold.graph.nodes.data('name'))
         answer = 0
         for row in results.itertuples():
             neuron_name = graph_names[int(row.neuron_number)][0]
+            if debug:
+                print(neuron_name, row.time)
             if "Main" in neuron_name:
                 level = int(neuron_name.split("_")[1])
                 if level > answer:
@@ -72,3 +76,9 @@ class PynnBrianBackendAppTests(unittest.TestCase, AppBrickTests):
     def setUpClass(self):
         self.backend = 'pynn'
         self.backend_args['backend'] = 'brian'
+
+class PynnSpinnakerBackendAppTests(unittest.TestCase, GraphBrickTests):
+    @classmethod
+    def setUpClass(self):
+        self.backend = 'pynn'
+        self.backend_args['backend'] = 'spinnaker'

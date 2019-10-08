@@ -266,5 +266,5 @@ class ds_Backend(Backend):
                     times = [entry[0]]*len(neurons)
                     mini_df['time'] = times
                     mini_df['neuron_number'] = neurons
-                    spike_result = spike_result.append(mini_df)
+                    spike_result = spike_result.append(mini_df, sort=True)
         return spike_result

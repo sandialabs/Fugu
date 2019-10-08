@@ -47,18 +47,16 @@ class pynn_Backend(Backend):
 
             self.backend = BRIAN_BACKEND 
 
-            self.defaults['min_delay'] = 1.00 # for SSSP
+            self.defaults['min_delay'] = 1.00
             self.defaults['tau_syn_E'] = 1.00
-            #self.defaults['min_delay'] = 10.00 # for LIS
-            #self.defaults['tau_syn_E'] = 1.49
+            self.defaults['tau_syn_I'] = 1.00
             self.defaults['i_offset'] = 0.00
-            self.defaults['tau_m'] = 10000000
+            self.defaults['tau_m'] = 100000000
             self.defaults['v_rest'] = 0.0 
 
             self.runtime = self.steps * self.defaults['min_delay'] 
 
-            pynn_sim.setup(timestep=self.defaults['min_delay']) #SSSP
-            #pynn_sim.setup(timestep=0.50) #LIS
+            pynn_sim.setup(timestep=self.defaults['min_delay'])
 
         elif simulator == 'spinnaker' or simulator == 'spynnaker':
             assert sys.version_info <= (3,0)
@@ -107,6 +105,7 @@ class pynn_Backend(Backend):
             params.append('v_reset')
             params.append('tau_refrac')
             params.append('tau_syn_E')
+            params.append('tau_syn_I')
         else:
             params.append('cm')
 
@@ -134,6 +133,7 @@ class pynn_Backend(Backend):
                 parameter_values['v_reset'].append(self.defaults['v_rest'])
                 parameter_values['tau_refrac'].append(self.defaults['min_delay'])
                 parameter_values['tau_syn_E'].append(self.defaults['tau_syn_E'])
+                parameter_values['tau_syn_I'].append(self.defaults['tau_syn_I'])
                 if 'decay' in neuron_props:
                     parameter_values['tau_m'].append(neuron_props['decay'] if neuron_props['decay'] > 0.0 else self.defaults['tau_m'])
                 else:

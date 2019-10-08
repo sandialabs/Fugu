@@ -30,7 +30,7 @@ class GraphBrickTests:
         spikes.append(1)
         return spikes
 
-    def evaluate_bfs_graph(self, graph, search_key):
+    def evaluate_bfs_graph(self, graph, search_key, debug=False):
         scaffold = Scaffold()
 
         bfs_input = BRICKS.Vector_Input(self.get_spike_input(search_key), coding='Raster', name='BFSInput')
@@ -40,6 +40,9 @@ class GraphBrickTests:
         scaffold.add_brick(bfs_brick, output=True)
 
         scaffold.lay_bricks()
+        if debug:
+            scaffold.summary(verbose=2)
+
         results = scaffold.evaluate(backend=self.backend, max_runtime=len(graph.nodes) * 2, backend_args=self.backend_args)
         bfs_levels = {}
         bfs_names = list(scaffold.graph.nodes.data('name'))
@@ -50,6 +53,9 @@ class GraphBrickTests:
             neuron_name = bfs_names[int(row.neuron_number)][0]
 
             neuron_props = scaffold.graph.nodes[neuron_name]
+            if debug:
+                print(neuron_name, row.time)
+
             if 'is_vertex' in neuron_props:
                 if row.time > curr_time:
                     curr_level += 1
@@ -175,3 +181,9 @@ class PynnBrianBackendGraphTests(unittest.TestCase, GraphBrickTests):
     def setUpClass(self):
         self.backend = 'pynn'
         self.backend_args['backend'] = 'brian'
+
+class PynnSpinnakerBackendGraphTests(unittest.TestCase, GraphBrickTests):
+    @classmethod
+    def setUpClass(self):
+        self.backend = 'pynn'
+        self.backend_args['backend'] = 'spinnaker'
