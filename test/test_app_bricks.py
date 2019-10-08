@@ -77,7 +77,7 @@ class PynnBrianBackendAppTests(unittest.TestCase, AppBrickTests):
         self.backend = 'pynn'
         self.backend_args['backend'] = 'brian'
 
-class PynnSpinnakerBackendAppTests(unittest.TestCase, GraphBrickTests):
+class PynnSpinnakerBackendAppTests(unittest.TestCase, AppBrickTests):
     @classmethod
     def setUpClass(self):
         self.backend = 'pynn'

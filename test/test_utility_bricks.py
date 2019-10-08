@@ -10,74 +10,52 @@ def AssertValuesAreClose(value1, value2, tolerance = 0.0001):
         raise AssertionError('Values {} and {} are not close'.format(value1, value2))
 
 class UtilityBrickTests:
-
-    num_trials = 100
-    tolerance = 0.05
     backend = None
     backend_args = {}
 
-    def evaluate_thresh_params(self, output_coding, input_value, threshold, p_value, decay_value):
+    def evaluate_adder(spike_times):
         scaffold = Scaffold()
 
-        scaffold.add_brick(BRICKS.Vector_Input(np.array([0]), coding='Raster', name='input1'), 'input' )
-        scaffold.add_brick(BRICKS.Vector_Input(np.array([1]), coding='Raster', name='input2'), 'input' )
-        scaffold.add_brick(BRICKS.Dot([input_value], name='ADotOperator')) #don't know why i need two vector inputs
-        scaffold.add_brick(BRICKS.Threshold(threshold, 
-                                                 p=p_value, 
-                                                 decay=decay_value,
-                                                 name='Thresh',
-                                                 output_coding=output_coding),
-                                                  (2,0), output=True)
+        adder_brick = BRICKS.TemporalAdder(len(spike_times), name="Adder")
+        max_time = max(spike_times)
+        time_vector = [[0] * (2 * (max_time + 1)) for i in spike_times]
+        time_vector[0][spike_times[0] * 2] = 1
+        time_vector[1][spike_times[1] * 2] = 1
+        scaffold.add_brick(BRICKS.Vector_Input(np.array(time_vector), coding='Raster', name='Input', time_dimension=True), 'input')
+        scaffold.add_brick(adder_brick, output=True)
 
         scaffold.lay_bricks()
+        results = scaffold.evaluate(backend=self.backend max_runtime=(sum(spike_times) + 4) * 2, record_all=True)
 
-        evaluations = 0.0
-        hits = 0.0
-        results = []
-        for i in range(self.num_trials):
-            evaluations += 1.0
-            results = scaffold.evaluate(backend=self.backend, max_runtime=5, backend_args=self.backend_args, record_all=True)
-            graph_names = list(scaffold.graph.nodes.data('name'))
-            spiked = False
-            for row in results.itertuples():
-                neuron_name = graph_names[int(row.neuron_number)][0]
-                if "Thresh" in neuron_name:
-                    spiked = True
-            if spiked:
-                hits += 1
-        return hits / evaluations
+        answer = -1
+        graph_names = list(scaffold.graph.nodes.data('name'))
+        for row in result.itertuples():
+            neuron_name = graph_names[int(row.neuron_number)][0]
+            #print(neuron_name, row.time)
+            if 'Sum' in neuron_name:
+                self.assertTrue(answer < 0)
+                answer = 0.5 * row.time - 3
+        return answer
 
-    def test_thresh_current_no_spikes(self):
-        result = self.evaluate_thresh_params('current', 1.0, 1, 1, 0)
-        AssertValuesAreClose(0.0, result, self.tolerance)
+    def test_adder_1(self):
+        result = self.evaluate_adder([10,7])
+        self.assertEqual(17, result)
 
-    def test_thresh_current_always_spikes(self):
-        result = self.evaluate_thresh_params('current', 1.01, 1, 1, 0)
-        AssertValuesAreClose(1.0, result, self.tolerance)
+    def test_adder_2(self):
+        result = self.evaluate_adder([10,8])
+        self.assertEqual(18, result)
 
-    def test_thresh_current_sometimes_spikes(self):
-        result = self.evaluate_thresh_params('current', 1.01, 1, 0.75, 0)
-        AssertValuesAreClose(0.75, result, self.tolerance)
+    def test_adder_3(self):
+        result = self.evaluate_adder([6,8])
+        self.assertEqual(14, result)
 
-    def test_thresh_temporal_always_spikes_1(self):
-        result = self.evaluate_thresh_params('temporal-L', 1, 0, 1, 0)
-        AssertValuesAreClose(1.0, result, self.tolerance)
+    def test_adder_4(self):
+        result = self.evaluate_adder([9,9])
+        self.assertEqual(18, result)
 
-    def test_thresh_temporal_always_spikes_2(self):
-        result = self.evaluate_thresh_params('temporal-L', 3, 2, 1, 0)
-        AssertValuesAreClose(1.0, result, self.tolerance)
-
-    def test_thresh_temporal_never_spikes_1(self):
-        result = self.evaluate_thresh_params('temporal-L', 3, 3, 1, 0)
-        AssertValuesAreClose(0.0, result, self.tolerance)
-
-    def test_thresh_temporal_never_spikes_2(self):
-        result = self.evaluate_thresh_params('temporal-L', 3, 4, 1, 0)
-        AssertValuesAreClose(0.0, result, self.tolerance)
-
-    def test_thresh_temporal_sometimes_spikes(self):
-        result = self.evaluate_thresh_params('temporal-L', 3, 2, 0.23, 0)
-        AssertValuesAreClose(0.23, result, self.tolerance)
+    def test_adder_5(self):
+        result = self.evaluate_adder([1,9])
+        self.assertEqual(10, result)
 
 class SnnBackendUtilityTests(unittest.TestCase, UtilityBrickTests):
     @classmethod
@@ -89,9 +67,14 @@ class DsBackendUtilityTests(unittest.TestCase, UtilityBrickTests):
     def setUpClass(self):
         self.backend = 'ds'
 
-# Currently pynn does not stochastic neurons
-#class PynnBrianBackendUtilityTests(unittest.TestCase, UtilityBrickTests):
-    #@classmethod
-    #def setUpClass(self):
-        #self.backend = 'pynn'
-        ##self.backend_args['backend'] = 'brian'
+class PynnBrianBackendUtilityTests(unittest.TestCase, UtilityBrickTests):
+    @classmethod
+    def setUpClass(self):
+        self.backend = 'pynn'
+        self.backend_args['backend'] = 'brian'
+
+class PynnSpinnakerBackendUtilityTests(unittest.TestCase, UtilityBrickTests):
+    @classmethod
+    def setUpClass(self):
+        self.backend = 'pynn'
+        self.backend_args['backend'] = 'spinnaker'
