@@ -49,6 +49,15 @@ pynn_args['collect_metrics'] = True
 # Generate graph
 for case_index in range(1):
     search_key = random.randint(1,GRAPH_SIZE)
+    #search_key = 1
+    #graph = nx.DiGraph()
+    #factor = 7
+    #for i in range(factor):
+        #graph.add_edge(0,i + 1)
+        #graph.add_edge(1,factor + i + 1)
+        #graph.add_edge(2,2 * factor + i + 1)
+        #graph.add_edge(3,3 * factor + i + 1)
+
     print("---Building BFS Scaffold---")
     bfs_scaffold = Scaffold()
 

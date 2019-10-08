@@ -13,7 +13,7 @@ class UtilityBrickTests:
     backend = None
     backend_args = {}
 
-    def evaluate_adder(spike_times):
+    def evaluate_adder(self, spike_times):
         scaffold = Scaffold()
 
         adder_brick = BRICKS.TemporalAdder(len(spike_times), name="Adder")
@@ -25,11 +25,11 @@ class UtilityBrickTests:
         scaffold.add_brick(adder_brick, output=True)
 
         scaffold.lay_bricks()
-        results = scaffold.evaluate(backend=self.backend max_runtime=(sum(spike_times) + 4) * 2, record_all=True)
+        results = scaffold.evaluate(backend=self.backend, max_runtime=(sum(spike_times) + 4) * 2, record_all=True,  backend_args=self.backend_args)
 
         answer = -1
         graph_names = list(scaffold.graph.nodes.data('name'))
-        for row in result.itertuples():
+        for row in results.itertuples():
             neuron_name = graph_names[int(row.neuron_number)][0]
             #print(neuron_name, row.time)
             if 'Sum' in neuron_name:
