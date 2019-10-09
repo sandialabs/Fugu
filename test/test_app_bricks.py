@@ -61,23 +61,23 @@ class AppBrickTests:
         sequence = [1,4,8,6,2,7,19,13,14]
         self.evaluate_lis_sequence(sequence,6)
 
-class SnnBackendAppTests(unittest.TestCase, AppBrickTests):
+class SnnAppTests(unittest.TestCase, AppBrickTests):
     @classmethod
     def setUpClass(self):
         self.backend = 'snn'
 
-class DsBackendAppTests(unittest.TestCase, AppBrickTests):
+class DsAppTests(unittest.TestCase, AppBrickTests):
     @classmethod
     def setUpClass(self):
         self.backend = 'ds'
 
-class PynnBrianBackendAppTests(unittest.TestCase, AppBrickTests):
+class PynnBrianAppTests(unittest.TestCase, AppBrickTests):
     @classmethod
     def setUpClass(self):
         self.backend = 'pynn'
         self.backend_args['backend'] = 'brian'
 
-class PynnSpinnakerBackendAppTests(unittest.TestCase, AppBrickTests):
+class PynnSpinnakerAppTests(unittest.TestCase, AppBrickTests):
     @classmethod
     def setUpClass(self):
         self.backend = 'pynn'

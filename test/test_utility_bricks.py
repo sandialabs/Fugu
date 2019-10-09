@@ -57,23 +57,23 @@ class UtilityBrickTests:
         result = self.evaluate_adder([1,9])
         self.assertEqual(10, result)
 
-class SnnBackendUtilityTests(unittest.TestCase, UtilityBrickTests):
+class SnnUtilityTests(unittest.TestCase, UtilityBrickTests):
     @classmethod
     def setUpClass(self):
         self.backend = 'snn'
 
-class DsBackendUtilityTests(unittest.TestCase, UtilityBrickTests):
+class DsUtilityTests(unittest.TestCase, UtilityBrickTests):
     @classmethod
     def setUpClass(self):
         self.backend = 'ds'
 
-class PynnBrianBackendUtilityTests(unittest.TestCase, UtilityBrickTests):
+class PynnBrianUtilityTests(unittest.TestCase, UtilityBrickTests):
     @classmethod
     def setUpClass(self):
         self.backend = 'pynn'
         self.backend_args['backend'] = 'brian'
 
-class PynnSpinnakerBackendUtilityTests(unittest.TestCase, UtilityBrickTests):
+class PynnSpinnakerUtilityTests(unittest.TestCase, UtilityBrickTests):
     @classmethod
     def setUpClass(self):
         self.backend = 'pynn'

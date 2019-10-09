@@ -166,23 +166,23 @@ class GraphBrickTests:
         graph = create_weighted_graph(20, 0.3, 3)
         self.evaluate_sssp_graph(graph, 1, True)
 
-class SnnBackendGraphTests(unittest.TestCase, GraphBrickTests):
+class SnnGraphTests(unittest.TestCase, GraphBrickTests):
     @classmethod
     def setUpClass(self):
         self.backend = 'snn'
 
-class DsBackendGraphTests(unittest.TestCase, GraphBrickTests):
+class DsGraphTests(unittest.TestCase, GraphBrickTests):
     @classmethod
     def setUpClass(self):
         self.backend = 'ds'
 
-class PynnBrianBackendGraphTests(unittest.TestCase, GraphBrickTests):
+class PynnBrianGraphTests(unittest.TestCase, GraphBrickTests):
     @classmethod
     def setUpClass(self):
         self.backend = 'pynn'
         self.backend_args['backend'] = 'brian'
 
-class PynnSpinnakerBackendGraphTests(unittest.TestCase, GraphBrickTests):
+class PynnSpinnakerGraphTests(unittest.TestCase, GraphBrickTests):
     @classmethod
     def setUpClass(self):
         self.backend = 'pynn'

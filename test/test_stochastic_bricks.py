@@ -78,12 +78,12 @@ class StochasticBrickTests:
         result = self.evaluate_thresh_params('temporal-L', 3, 2, 0.23, 0)
         AssertValuesAreClose(0.23, result, self.tolerance)
 
-class SnnBackendStochasticTests(unittest.TestCase, StochasticBrickTests):
+class SnnStochasticTests(unittest.TestCase, StochasticBrickTests):
     @classmethod
     def setUpClass(self):
         self.backend = 'snn'
 
-class DsBackendStochasticTests(unittest.TestCase, StochasticBrickTests):
+class DsStochasticTests(unittest.TestCase, StochasticBrickTests):
     @classmethod
     def setUpClass(self):
         self.backend = 'ds'
