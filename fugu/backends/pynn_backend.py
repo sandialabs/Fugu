@@ -145,8 +145,10 @@ class pynn_Backend(Backend):
                 parameter_values['tau_m'].append(self.defaults['tau_m'])
 
         pynn_index = 0
-        input_populations = {} # Map of neuron to population
         neuron_to_pynn = {} # Map of neuron to pynn_index
+        input_to_pynn = {} # Map of input neuron to pynn_index
+        input_spikes = []
+        input_index = 0
 
         if self.collect_metrics:
             start = timer()
@@ -171,7 +173,9 @@ class pynn_Backend(Backend):
                         if verbose:
                             print("Spike array for {}: {}".format(neuron, spike_array))
                         if len(spike_array) > 0:
-                            input_populations[neuron] = pynn_sim.Population(1, pynn_sim.SpikeSourceArray(spike_times=spike_array), label=neuron)
+                            input_to_pynn[neuron] = input_index
+                            input_spikes.append(spike_array)
+                            input_index += 1
                     else:
                         neuron_to_pynn[neuron] = pynn_index
                         add_neuron_params(neuron)
@@ -198,6 +202,8 @@ class pynn_Backend(Backend):
             for neuron in neuron_to_pynn:
                 print("{}, {}".format(neuron, initial_potential[neuron_to_pynn[neuron]]))
 
+        input_population = pynn_sim.Population(input_index, pynn_sim.SpikeSourceArray(spike_times=input_spikes), label='Input Population')
+
         if self.backend == BRIAN_BACKEND:
             main_population = pynn_sim.Population(pynn_index, pynn_sim.IF_curr_exp(**parameter_values), label='Main Population')
         else:
@@ -209,9 +215,9 @@ class pynn_Backend(Backend):
         #   Main-to-main
 
         # create edge lists
-        input_to_main_exite = {} # Map of input neuron to projection
+        input_to_main_exite = []
         main_to_main_exite = []
-        input_to_main_inhib = {} # Map of input neuron to projection
+        input_to_main_inhib = []
         main_to_main_inhib = []
         for u, v, values in fugu_graph.edges.data():
             weight = 0.0
@@ -229,15 +235,11 @@ class pynn_Backend(Backend):
                 else:
                     delay = values['delay']
                 delay = delay * self.defaults['min_delay']
-            if u in input_populations:
+            if u in input_to_pynn:
                 if is_inhib:
-                    if u not in input_to_main_inhib:
-                        input_to_main_inhib[u] = []
-                    input_to_main_inhib[u].append((0, neuron_to_pynn[v], weight, delay))
+                    input_to_main_inhib.append((input_to_pynn[u], neuron_to_pynn[v], weight, delay))
                 else:
-                    if u not in input_to_main_exite:
-                        input_to_main_exite[u] = []
-                    input_to_main_exite[u].append((0, neuron_to_pynn[v], weight, delay))
+                    input_to_main_exite.append((input_to_pynn[u], neuron_to_pynn[v], weight, delay))
             elif u in neuron_to_pynn and v in neuron_to_pynn:
                 if is_inhib:
                     main_to_main_inhib.append((neuron_to_pynn[u], neuron_to_pynn[v], weight, delay))
@@ -247,32 +249,15 @@ class pynn_Backend(Backend):
         # create projections
         synapse = pynn_sim.StaticSynapse()
 
-        input_main_synapses = {}
-
-        for input_pop in input_to_main_exite:
-            connector = FromListConnector(input_to_main_exite[input_pop])
-            if input_pop not in input_main_synapses:
-                input_main_synapses[input_pop] = []
-            input_main_synapses[input_pop].append(pynn_sim.Projection(input_populations[input_pop], 
-                                                                 main_population, 
-                                                                 connector, 
-                                                                 synapse, 
-                                                                 label='{}-to-Main'.format(input_pop)))
-        for input_pop in input_to_main_inhib:
-            connector = FromListConnector(input_to_main_inhib[input_pop])
-            if input_pop not in input_main_synapses:
-                input_main_synapses[input_pop] = []
-            input_main_synapses[input_pop].append(pynn_sim.Projection(input_populations[input_pop], 
-                                                                 main_population, 
-                                                                 connector, 
-                                                                 synapse, 
-                                                                 label='{}-to-Main'.format(input_pop),
-                                                                 receptor_type='inhibitory'))
-
-        #input_proj_inhib0 = sim.Projection(pop_spk_src, pop_0, sim.FromListConnector(conn_list=conn_lst_inhib), receptor_type='inhibitory')
+        input_main_synapses = []
+        if len(input_to_main_exite) > 0:
+            connector = FromListConnector(input_to_main_exite)
+            input_main_synapses.append(pynn_sim.Projection(input_population, main_population, connector, synapse, label="Input-to-Main"))
+        if len(input_to_main_inhib) > 0:
+            connector = FromListConnector(input_to_main_inhib)
+            input_main_synapses.append(pynn_sim.Projection(input_population, main_population, connector, synapse, label="Input-to-Main", receptor_type='inhibitory'))
 
         main_synapses = []
-
         connector = FromListConnector(main_to_main_exite)
         main_synapses.append(pynn_sim.Projection(main_population, main_population, connector, synapse, label="Main-to-Main"))
         connector = FromListConnector(main_to_main_inhib)
@@ -302,8 +287,7 @@ class pynn_Backend(Backend):
 
         # Run sim
         main_population.record(['spikes','v'])
-        for neuron in input_populations:
-            input_populations[neuron].record('spikes')
+        input_population.record(['spikes'])
 
         if verbose:
             print("Runtime: {}".format(self.runtime))
@@ -315,7 +299,7 @@ class pynn_Backend(Backend):
             self.metrics['runtime'] = timer() - start 
 
         main_data = main_population.get_data()
-        input_data = {neuron:input_populations[neuron].get_data() for neuron in input_populations}
+        input_data = input_population.get_data()
 
         pynn_sim.end()
 
@@ -324,7 +308,7 @@ class pynn_Backend(Backend):
 
         main_spiketrains = main_data.segments[0].spiketrains
         main_voltage = main_data.segments[0].filter(name='v')[0]
-        input_spiketrains = {neuron:input_data[neuron].segments[0].spiketrains for neuron in input_data}
+        input_spiketrains = input_data.segments[0].spiketrains
 
         spikes = {}
         for neuron in neuron_to_pynn:
@@ -356,8 +340,9 @@ class pynn_Backend(Backend):
             )
             plt.show()
 
-        for neuron in input_populations:
-            spiketrain = input_spiketrains[neuron][0]
+        for neuron in input_to_pynn:
+            input_index = input_to_pynn[neuron]
+            spiketrain = input_spiketrains[input_index]
             if verbose:
                 print("---results for: {}".format(neuron))
                 print("spiketimes  {}".format(spiketrain))
