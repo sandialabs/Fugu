@@ -75,6 +75,7 @@ class pynn_Backend(Backend):
             self.runtime = self.steps * self.defaults['min_delay'] 
 
             pynn_sim.setup(timestep=self.defaults['min_delay'])
+            pynn_sim.set_number_of_neurons_per_core(pynn_sim.extra_models.IF1_curr_delta, 255)
         else:
             raise ValueError("unsupported pyNN backend")
 
@@ -266,13 +267,11 @@ class pynn_Backend(Backend):
         if verbose:
             print("---Input to main connections---")
             print("----Excite----")
-            for neuron in input_to_main_exite:
-                for edge in input_to_main_exite[neuron]:
-                    print(edge)
+            for edge in input_to_main_exite:
+                print(edge)
             print("----Inhib----")
-            for neuron in input_to_main_inhib:
-                for edge in input_to_main_inhib[neuron]:
-                    print(edge)
+            for edge in input_to_main_inhib:
+                print(edge)
 
             print("---Main to main connections---")
             print("----Excite----")

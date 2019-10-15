@@ -1029,7 +1029,7 @@ class Breadth_First_Search(Brick):
                            decay=0.0,
                            potential=0.0,
                            is_vertex=True)
-            graph.add_edge(node_name, node_name, weight=-1000, delay=default_delay)
+            graph.add_edge(node_name, node_name, weight=-1000, delay=1.0)
             if self.target_node:
                 if node==self.target_node:
                     target_node_list.append(node_name)
@@ -1054,14 +1054,16 @@ class Breadth_First_Search(Brick):
                     edge_reference_names.append(reference_name)
 
                     graph.add_node(reference_name, index=reference_index, threshold=0.9, decay=0.0,potential=0.0, from_vertex=node, to_vertex=neighbor, is_edge_reference=True )
-                    graph.add_edge(neighbor_name, reference_name, weight=-1000, delay=default_delay) 
+                    graph.add_edge(neighbor_name, reference_name, weight=-1000, delay=1.0) 
 
                     if self.target_node and node == self.target_node:
                         weight = -1000
+                        delay = 1.0
                     else:
                         weight = 1.0
-                    graph.add_edge(node_name, reference_name, weight=weight, delay=default_delay)
-                    graph.add_edge(reference_name, neighbor_name, weight=weight, delay=default_delay)
+                        delay = default_delay
+                    graph.add_edge(node_name, reference_name, weight=weight, delay=delay)
+                    graph.add_edge(reference_name, neighbor_name, weight=weight, delay=delay)
                     reference_index += 1
                 else:
                     graph.add_edge(node_name, neighbor_name, weight=1.0, delay = default_delay)
