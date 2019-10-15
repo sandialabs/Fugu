@@ -30,11 +30,11 @@ class GraphBrickTests:
         spikes.append(1)
         return spikes
 
-    def evaluate_bfs_graph(self, graph, search_key, debug=False):
+    def evaluate_bfs_graph(self, graph, search_key, return_pred=False, debug=False):
         scaffold = Scaffold()
 
         bfs_input = BRICKS.Vector_Input(self.get_spike_input(search_key), coding='Raster', name='BFSInput')
-        bfs_brick = BRICKS.Breadth_First_Search(graph, name="BFS")
+        bfs_brick = BRICKS.Breadth_First_Search(graph, name="BFS", store_edge_references=return_pred)
 
         scaffold.add_brick(bfs_input, 'input')
         scaffold.add_brick(bfs_brick, output=True)
@@ -45,6 +45,7 @@ class GraphBrickTests:
 
         results = scaffold.evaluate(backend=self.backend, max_runtime=len(graph.nodes) * 2, backend_args=self.backend_args)
         bfs_levels = {}
+        bfs_pred = {}
         bfs_names = list(scaffold.graph.nodes.data('name'))
 
         curr_level = 0
@@ -66,12 +67,26 @@ class GraphBrickTests:
 
                 bfs_levels[vertex] = curr_level
 
+            if 'is_edge_reference' in neuron_props:
+                u = neuron_props['from_vertex']
+                v = neuron_props['to_vertex']
+                bfs_pred[v] = u
+
         for edge in graph.edges():
             u = edge[0]
             v = edge[1]
             u_level = bfs_levels[u]
             v_level = bfs_levels[v]
             self.assertTrue(abs(u_level - v_level) <= 1)
+
+        if return_pred:
+            for u in bfs_pred:
+                v = bfs_pred[u]
+                if v > -1:
+                    u_level = bfs_levels[u]
+                    v_level = bfs_levels[v]
+                    self.assertTrue(abs(u_level - v_level) == 1)
+                    self.assertTrue((u,v) in graph.edges() or (v,u) in graph.edges())
 
     def evaluate_sssp_graph(self, graph, search_key, return_path):
         scaffold = Scaffold()
@@ -132,8 +147,11 @@ class GraphBrickTests:
 
                     self.assertTrue(abs(u_dist - v_dist) <= edge_weight)
 
-    def test_bfs_random_gnp(self):
-        self.evaluate_bfs_graph(create_graph(20, 0.3, 3), 1)
+    def test_bfs_random_gnp_levels(self):
+        self.evaluate_bfs_graph(create_graph(20, 0.3, 3), 1, False)
+
+    def test_bfs_random_gnp_full(self):
+        self.evaluate_bfs_graph(create_graph(20, 0.3, 3), 1, True)
 
     def test_sssp_race_condition(self): 
         graph = nx.DiGraph()

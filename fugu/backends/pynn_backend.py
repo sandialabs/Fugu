@@ -193,7 +193,6 @@ class pynn_Backend(Backend):
 
         if verbose:
             print("___Parameter values___:")
-            #print(parameter_values)
             for param in parameter_values:
                 print("Parameter: {}".format(param))
                 for neuron in neuron_to_pynn:
@@ -259,10 +258,12 @@ class pynn_Backend(Backend):
             input_main_synapses.append(pynn_sim.Projection(input_population, main_population, connector, synapse, label="Input-to-Main", receptor_type='inhibitory'))
 
         main_synapses = []
-        connector = FromListConnector(main_to_main_exite)
-        main_synapses.append(pynn_sim.Projection(main_population, main_population, connector, synapse, label="Main-to-Main"))
-        connector = FromListConnector(main_to_main_inhib)
-        main_synapses.append(pynn_sim.Projection(main_population, main_population, connector, synapse, label="Main-to-Main", receptor_type='inhibitory'))
+        if len(main_to_main_exite) > 0:
+            connector = FromListConnector(main_to_main_exite)
+            main_synapses.append(pynn_sim.Projection(main_population, main_population, connector, synapse, label="Main-to-Main"))
+        if len(main_to_main_inhib) > 0:
+            connector = FromListConnector(main_to_main_inhib)
+            main_synapses.append(pynn_sim.Projection(main_population, main_population, connector, synapse, label="Main-to-Main", receptor_type='inhibitory'))
 
         if verbose:
             print("---Input to main connections---")
