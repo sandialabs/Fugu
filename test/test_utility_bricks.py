@@ -12,6 +12,7 @@ def AssertValuesAreClose(value1, value2, tolerance = 0.0001):
 class UtilityBrickTests:
     backend = None
     backend_args = {}
+    scale_factor = 0.5
 
     def evaluate_adder(self, spike_times):
         scaffold = Scaffold()
@@ -34,7 +35,7 @@ class UtilityBrickTests:
             #print(neuron_name, row.time)
             if 'Sum' in neuron_name:
                 self.assertTrue(answer < 0)
-                answer = 0.5 * row.time - 3
+                answer = self.scale_factor * row.time - 3
         return answer
 
     def test_adder_1(self):

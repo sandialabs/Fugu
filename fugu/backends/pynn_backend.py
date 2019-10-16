@@ -16,24 +16,31 @@ SPINNAKER_BACKEND = 1
 
 class pynn_Backend(Backend):
 
-    def __init__(self, runtime=10):
+    def __init__(self):
         super(Backend, self).__init__()
         self.brick_population_map = {}
         self.node_neuron_map = {}
 
         # these parameters will have to be set based on the simulator
         self.defaults = {}
-        self.steps = runtime
-        self.runtime = self.steps * 0.01
 
         self.backend = BRIAN_BACKEND 
         self.collect_metrics = False
         self.metrics = {}
 
+    def _process_input_values(self, input_values):
+        raw_spike_arrays = {}
+        for time_step in sorted(input_values.keys()):
+            for neuron in input_values[time_step]:
+                if neuron not in raw_spike_arrays:
+                    raw_spike_arrays[neuron] = []
+                raw_spike_arrays[neuron].append(time_step)
+        return raw_spike_arrays
+
     def GetMetrics(self):
         return self.metrics
 
-    def _run_pynn_sim(self, fugu_scaffold, simulator='brian', verbose=False, show_plots=False):
+    def _run_pynn_sim(self, fugu_scaffold, steps, raw_spike_arrays, simulator='brian', verbose=False, show_plots=False):
         fugu_circuit = fugu_scaffold.circuit
         fugu_graph = fugu_scaffold.graph
 
@@ -54,7 +61,7 @@ class pynn_Backend(Backend):
             self.defaults['tau_m'] = 100000000
             self.defaults['v_rest'] = 0.0 
 
-            self.runtime = self.steps * self.defaults['min_delay'] 
+            max_runtime = steps * self.defaults['min_delay'] 
 
             pynn_sim.setup(timestep=self.defaults['min_delay'])
 
@@ -66,16 +73,16 @@ class pynn_Backend(Backend):
 
             self.backend = SPINNAKER_BACKEND 
 
-            self.defaults['min_delay'] = 1.00
+            self.defaults['min_delay'] = 1.00 * self.scale_factor
             self.defaults['cm'] = 1.00
             self.defaults['tau_m'] = 1.00
             self.defaults['i_offset'] = 0.00
             self.defaults['v_rest'] = 0.0 
 
-            self.runtime = self.steps * self.defaults['min_delay'] 
+            max_runtime = steps * self.defaults['min_delay'] 
 
             pynn_sim.setup(timestep=self.defaults['min_delay'])
-            pynn_sim.set_number_of_neurons_per_core(pynn_sim.extra_models.IF1_curr_delta, 255)
+            pynn_sim.set_number_of_neurons_per_core(pynn_sim.extra_models.IF1_curr_delta, 100)
         else:
             raise ValueError("unsupported pyNN backend")
 
@@ -157,32 +164,12 @@ class pynn_Backend(Backend):
         # Create neurons
         for brick in fugu_circuit.nodes:
             brick = fugu_circuit.nodes[brick]
-            if 'layer' in brick and brick['layer'] == 'input':
-                spike_arrays = brick['brick'].vector
-                if verbose:
-                    print("Brick's spike arrays: {}".format(spike_arrays))
-
-                for neuron in brick_neurons[brick['name']]:
-                    index = fugu_graph.nodes[neuron]['index']
-                    if index != -1:
-                        spike_array = []
-                        for i, spike in enumerate(spike_arrays[index]):
-                            if verbose:
-                                print("i, spike: {} {}".format(i, spike))
-                            if spike == 1:
-                                spike_array.append(i * self.defaults['min_delay'])
-                        if verbose:
-                            print("Spike array for {}: {}".format(neuron, spike_array))
-                        if len(spike_array) > 0:
-                            input_to_pynn[neuron] = input_index
-                            input_spikes.append(spike_array)
-                            input_index += 1
-                    else:
-                        neuron_to_pynn[neuron] = pynn_index
-                        add_neuron_params(neuron)
-                        pynn_index += 1
-            else:
-                for neuron in brick_neurons[brick['name']]:
+            for neuron in brick_neurons[brick['name']]:
+                if neuron in raw_spike_arrays:
+                    input_to_pynn[neuron] = input_index
+                    input_spikes.append([spike_time * self.defaults['min_delay'] for spike_time in raw_spike_arrays[neuron]])
+                    input_index += 1
+                else:
                     neuron_to_pynn[neuron] = pynn_index
                     add_neuron_params(neuron)
                     pynn_index += 1
@@ -286,15 +273,18 @@ class pynn_Backend(Backend):
             self.metrics['embed_time'] = timer() - start
 
         # Run sim
-        main_population.record(['spikes','v'])
+        if self.store_voltage:
+            main_population.record(['spikes','v'])
+        else:
+            main_population.record(['spikes'])
         input_population.record(['spikes'])
 
         if verbose:
-            print("Runtime: {}".format(self.runtime))
+            print("Runtime: {}".format(max_runtime))
 
         if self.collect_metrics:
             start = timer()
-        pynn_sim.run(self.runtime)
+        pynn_sim.run(max_runtime)
         if self.collect_metrics:
             self.metrics['runtime'] = timer() - start 
 
@@ -307,8 +297,10 @@ class pynn_Backend(Backend):
         spike_result = pd.DataFrame({'time':[],'neuron_number':[]})
 
         main_spiketrains = main_data.segments[0].spiketrains
-        main_voltage = main_data.segments[0].filter(name='v')[0]
         input_spiketrains = input_data.segments[0].spiketrains
+
+        if self.store_voltage:
+            main_voltage = main_data.segments[0].filter(name='v')[0]
 
         spikes = {}
         for neuron in neuron_to_pynn:
@@ -316,7 +308,8 @@ class pynn_Backend(Backend):
             spiketrain = main_spiketrains[pynn_index]
             if verbose:
                 print("---results for: {}".format(neuron))
-                #print("voltage  {}".format(main_voltage[pynn_index]))
+                if self.store_voltage:
+                    print("voltage  {}".format(main_voltage[pynn_index]))
                 print("spiketimes  {}".format(spiketrain))
 
             if spiketrain.any():
@@ -328,7 +321,7 @@ class pynn_Backend(Backend):
         labels = []
         for neuron in neuron_to_pynn:
             labels.append(neuron)
-        if show_plots:
+        if show_plots and self.store_voltage:
             from pyNN.utility.plotting import Figure, Panel
             import matplotlib.pyplot as plt
             Figure(
@@ -381,6 +374,8 @@ class pynn_Backend(Backend):
         verbose = backend_args['verbose'] if 'verbose' in backend_args else False
         show_plots = backend_args['show_plots'] if 'show_plots' in backend_args else False
         self.collect_metrics = backend_args['collect_metrics'] if 'collect_metrics' in backend_args else False
-        spike_result = self._run_pynn_sim(scaffold, simulator, verbose, show_plots)
+        self.store_voltage = backend_args['store_voltage'] if 'store_voltage' in backend_args else False
+        self.scale_factor = backend_args['scale_factor'] if 'scale_factor' in backend_args else 1.0 
+        spike_result = self._run_pynn_sim(scaffold, n_steps, self._process_input_values(input_values), simulator, verbose, show_plots)
         spike_result = spike_result.sort_values('time')
         return spike_result 
