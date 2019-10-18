@@ -780,7 +780,7 @@ class Shortest_Path(Brick):
              input_lists,
              input_codings):
         """
-        Build Parity brick.
+        Build Shortest Path brick.
 
         Arguments:
             + graph - networkx graph to define connections of the computational graph
@@ -831,7 +831,14 @@ class Shortest_Path(Brick):
                       weight = 1.0,
                       delay = 1)
 
-        complete_node_list = []
+        complete_name = self.name + '_complete'
+        graph.add_node(complete_name,
+                index = len(self.target_graph.nodes),
+                threshold = 0.9 if self.target_node else 1.0 * len(self.target_graph.nodes) - 0.1,
+                decay = 0.0,
+                potential = 0.0)
+        complete_node_list = [complete_name]
+
         output_node_list = []
         for node in self.target_graph.nodes:
             node_name = self.name + str(node)
@@ -844,13 +851,14 @@ class Shortest_Path(Brick):
             graph.add_edge(node_name, node_name, weight=-1000, delay = 1)
             if self.target_node:
                 if node == self.target_node:
-                    complete_node_list = [node_name]
                     output_node_list.append(node_name)
+                    graph.add_edge(node_name, complete_name, weight=1.0, delay=2.0)
             else:
-                complete_node_list.append(node_name)
                 output_node_list.append(node_name)
+                graph.add_edge(node_name, complete_name, weight=1.0, delay=2.0)
 
         edge_reference_names = []
+        reference_index = len(self.target_graph.nodes) + 1
         for node in self.target_graph.nodes:
             node_name = self.name + str(node)
             for neighbor in self.target_graph.neighbors(node):
@@ -859,25 +867,19 @@ class Shortest_Path(Brick):
                 delay = 2 * self.target_graph.edges[node,neighbor]['weight'] # works for pynn-spinnaker
                 neighbor_name = self.name + str(neighbor)
                 if self.return_path:
-                    if node == self.target_node:
-                        reference_name = "{}-{}-{}".format(self.name, node, neighbor)
-                        edge_reference_names.append(reference_name)
+                    reference_name = "{}-{}-{}".format(self.name, node, neighbor)
+                    edge_reference_names.append(reference_name)
 
-                        graph.add_node(reference_name, threshold=1.0, decay=0.0,potential=0.0, 
-                                        from_vertex = node, to_vertex = neighbor, is_edge_reference=True )
+                    graph.add_node(reference_name, index=reference_index, threshold=1.0, decay=0.0,potential=0.0,
+                                    from_vertex = node, to_vertex = neighbor, is_edge_reference=True )
+                    graph.add_edge(neighbor_name, reference_name, weight=-1000, delay=1) 
+                    if node == self.target_node:
                         graph.add_edge(node_name, reference_name, weight=-1000, delay=delay - 1)
                         graph.add_edge(reference_name, neighbor_name, weight=-1000, delay=1)
-                        graph.add_edge(neighbor_name, reference_name, weight=-1000, delay=1) 
                     else:
-                        reference_name = "{}-{}-{}".format(self.name, node, neighbor)
-                        edge_reference_names.append(reference_name)
-
-                        graph.add_node(reference_name, threshold=1.0, decay=0.0,potential=0.0,
-                                        from_vertex = node, to_vertex = neighbor, is_edge_reference=True )
                         graph.add_edge(node_name, reference_name, weight=1.1, delay=delay - 1.0)
                         graph.add_edge(reference_name, neighbor_name, weight=1.1, delay=1.0)
-                        
-                        graph.add_edge(neighbor_name, reference_name, weight=-1000, delay=1.0) 
+                    reference_index += 1
                 else:
                     if node == self.target_node:
                         graph.add_edge(node_name, neighbor_name, weight=-1000, delay=delay)
@@ -898,7 +900,7 @@ class Shortest_Path(Brick):
         self.is_built=True
 
         #Remember, bricks can have more than one output, so we need a list of list of output neurons
-        output_lists = [output_node_list, edge_reference_names]
+        output_lists = [complete_node_list, output_node_list, edge_reference_names]
 
         return (graph,
                self.metadata,
@@ -963,7 +965,7 @@ class Breadth_First_Search(Brick):
              input_lists,
              input_codings):
         """
-        Build Parity brick.
+        Build BFS brick.
 
         Arguments:
             + graph - networkx graph to define connections of the computational graph
@@ -1058,7 +1060,6 @@ class Breadth_First_Search(Brick):
                     edge_reference_names.append(reference_name)
 
                     graph.add_node(reference_name, index=reference_index, threshold=0.9, decay=0.0,potential=0.0, from_vertex=node, to_vertex=neighbor, is_edge_reference=True )
-                    graph.add_edge(neighbor_name, reference_name, weight=-1000, delay=1.0) 
 
                     if self.target_node and node == self.target_node:
                         weight = -1000
@@ -1066,8 +1067,10 @@ class Breadth_First_Search(Brick):
                     else:
                         weight = 1.0
                         delay = default_delay
+
                     graph.add_edge(node_name, reference_name, weight=weight, delay=delay)
                     graph.add_edge(reference_name, neighbor_name, weight=weight, delay=delay)
+                    graph.add_edge(neighbor_name, reference_name, weight=-1000, delay=1.0) 
                     reference_index += 1
                 else:
                     graph.add_edge(node_name, neighbor_name, weight=1.0, delay = default_delay)
