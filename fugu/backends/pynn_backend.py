@@ -40,10 +40,9 @@ class pynn_Backend(Backend):
     def GetMetrics(self):
         return self.metrics
 
-    def _run_pynn_sim(self, fugu_scaffold, steps, run_inputs, simulator='brian', verbose=False, show_plots=False):
+    def _run_pynn_sim(self, fugu_scaffold, steps, run_inputs, report_all=False, simulator='brian', verbose=False, show_plots=False):
         if self.collect_metrics:
             self.metrics['runtime'] = []
-
         fugu_circuit = fugu_scaffold.circuit
         fugu_graph = fugu_scaffold.graph
 
@@ -92,6 +91,7 @@ class pynn_Backend(Backend):
 
         fugu_circuit = fugu_scaffold.circuit
         fugu_graph = fugu_scaffold.graph
+        output_names = set()
 
         # Create dict for easy lookup of the vertices in a brick
         brick_neurons = {}
@@ -100,6 +100,13 @@ class pynn_Backend(Backend):
             if brick not in brick_neurons:
                 brick_neurons[brick] = []
             brick_neurons[brick].append(vertex)
+
+        if not report_all:
+            for brick in fugu_circuit.nodes:
+                if 'layer' in fugu_circuit.nodes[brick] and fugu_circuit.nodes[brick]['layer'] == 'output':
+                    for o_list in fugu_circuit.nodes[brick]['output_lists']:
+                        for neuron in o_list:
+                            output_names.add(neuron)
 
         if verbose:
             print("Brick_vertices: {}".format(brick_neurons))
@@ -344,19 +351,20 @@ class pynn_Backend(Backend):
 
             spikes = {}
             for neuron in neuron_to_pynn:
-                pynn_index = neuron_to_pynn[neuron]
-                spiketrain = main_spiketrains[pynn_index]
-                if verbose:
-                    print("---results for: {}".format(neuron))
-                    if self.store_voltage:
-                        print("voltage  {}".format(main_voltage[pynn_index]))
-                    print("spiketimes  {}".format(spiketrain))
+                if report_all or neuron in output_names:
+                    pynn_index = neuron_to_pynn[neuron]
+                    spiketrain = main_spiketrains[pynn_index]
+                    if verbose:
+                        print("---results for: {}".format(neuron))
+                        if self.store_voltage:
+                            print("voltage  {}".format(main_voltage[pynn_index]))
+                        print("spiketimes  {}".format(spiketrain))
 
-                if spiketrain.any():
-                    for time in np.array(spiketrain):
-                        if time not in spikes:
-                            spikes[time] = set()
-                        spikes[time].add(fugu_graph.node[neuron]['neuron_number'])
+                    if spiketrain.any():
+                        for time in np.array(spiketrain):
+                            if time not in spikes:
+                                spikes[time] = set()
+                            spikes[time].add(fugu_graph.node[neuron]['neuron_number'])
 
             labels = []
             for neuron in neuron_to_pynn:
@@ -374,16 +382,17 @@ class pynn_Backend(Backend):
                 plt.show()
 
             for neuron in input_to_pynn:
-                input_index = input_to_pynn[neuron]
-                spiketrain = input_spiketrains[input_index]
-                if verbose:
-                    print("---results for: {}".format(neuron))
-                    print("spiketimes  {}".format(spiketrain))
-                if spiketrain.any():
-                    for time in np.array(spiketrain):
-                        if time not in spikes:
-                            spikes[time] = set()
-                        spikes[time].add(fugu_graph.node[neuron]['neuron_number'])
+                if report_all or neuron in output_names:
+                    input_index = input_to_pynn[neuron]
+                    spiketrain = input_spiketrains[input_index]
+                    if verbose:
+                        print("---results for: {}".format(neuron))
+                        print("spiketimes  {}".format(spiketrain))
+                    if spiketrain.any():
+                        for time in np.array(spiketrain):
+                            if time not in spikes:
+                                spikes[time] = set()
+                            spikes[time].add(fugu_graph.node[neuron]['neuron_number'])
 
             for time in spikes:
                 mini_df = pd.DataFrame()
@@ -395,30 +404,26 @@ class pynn_Backend(Backend):
 
         return spike_results
 
-    def stream(self,
-               scaffold,
-               input_values,
-               stepping,
-               record,
-               backend_args):
+    def stream(self, scaffold, input_values, stepping, record, backend_args):
         warn("Stepping not supported yet.  Use a batching mode.")
         return None
     
-    def batch(self,
-             scaffold,
-             input_values,
-             n_steps,
-             record,
-             backend_args):
+    def batch(self, scaffold, input_values, n_steps, record, backend_args):
+        record_all = record == 'all' 
+
         simulator = backend_args['backend'] if 'backend' in backend_args else 'brian'
         verbose = backend_args['verbose'] if 'verbose' in backend_args else False
         show_plots = backend_args['show_plots'] if 'show_plots' in backend_args else False
+
         self.collect_metrics = backend_args['collect_metrics'] if 'collect_metrics' in backend_args else False
         self.store_voltage = backend_args['store_voltage'] if 'store_voltage' in backend_args else False
         self.scale_factor = backend_args['scale_factor'] if 'scale_factor' in backend_args else 1.0 
 
         #@TEMPORARY: will figure out a way to do this at a higher level (at the Fugu level)
         run_inputs = backend_args['run_inputs'] if 'run_inputs' in backend_args else [input_values]
-        spike_result = self._run_pynn_sim(scaffold, n_steps, run_inputs, simulator, verbose, show_plots)
-        #spike_result = spike_result.sort_values('time')
-        return spike_result if len(spike_result) > 1 else spike_result[0]
+        spike_result = self._run_pynn_sim(scaffold, n_steps, run_inputs, 
+                                            report_all = record_all,
+                                            simulator = simulator, 
+                                            verbose = verbose, 
+                                            show_plots = show_plots)
+        return spike_result if len(spike_result) > 1 else spike_result[0].sort_values('time')
