@@ -48,11 +48,7 @@ class Brick(ABC):
         self.supported_codings = []
 
     @abstractmethod
-    def build(self, graph,
-                   metadata,
-                   control_nodes,
-                   input_lists,
-                   input_codings):
+    def build(self, graph, metadata, control_nodes, input_lists, input_codings):
         """
         Build the computational graph of the brick. Method must be defined in any class inheriting from Brick.
 
@@ -147,11 +143,7 @@ class Vector_Input(InputBrick):
             assert type(t) is int
             return self.vector[...,t:t+1][...,-1]
 
-    def build(self, graph,
-             metadata,
-             control_nodes,
-             input_lists,
-             input_codings):
+    def build(self, graph, metadata, control_nodes, input_lists, input_codings):
         """
         Build spike input brick.
 
@@ -200,13 +192,8 @@ class Vector_Input(InputBrick):
                       p=1.0,
                       potential = 0.5)
         self.is_built = True
-        return (graph, {'output_shape':[self.vector.shape],
-                        'output_coding':self.coding,
-                        'layer' : input,
-                        'D':0},
-               [{'complete':complete_node}],
-               output_lists,
-               output_codings)
+        return (graph, {'output_shape':[self.vector.shape], 'output_coding':self.coding, 'layer' : input, 'D':0},
+               [{'complete':complete_node}], output_lists, output_codings)
         
 class Spike_Input(Vector_Input):
     def __init__(self,input_spikes,*args,**kwargs):
@@ -235,12 +222,7 @@ class PRN(Brick):
         self.output_coding = output_coding
         self.supported_codings = input_coding_types
         
-    def build(self,
-              graph,
-              metadata,
-              control_nodes,
-              input_lists,
-              input_codings):
+    def build(self, graph, metadata, control_nodes, input_lists, input_codings):
         if len(input_lists) == 0:
             raise ValueError("PRN brick requires at least 1 input.")
         #Driver Neuron
@@ -263,11 +245,7 @@ class PRN(Brick):
         for input_control_nodes in control_nodes:
             graph.add_edge(input_control_nodes['complete'], driver_neuron, weight=1.0, delay=1)
         self.is_built = True
-        return (graph,
-                self.metadata,
-                [{'complete':complete_neuron}],
-                [output_list],
-                [self.output_coding])
+        return (graph, self.metadata, [{'complete':complete_neuron}], [output_list], [self.output_coding])
 
 class Threshold(Brick):
     """Class to handle Threshold Brick. Inherits from Brick"""
@@ -292,12 +270,7 @@ class Threshold(Brick):
         self.output_coding=output_coding
         self.supported_codings = ['current', 'Undefined', 'temporal-L']
 
-    def build(self,
-             graph,
-             metadata,
-             control_nodes,
-             input_lists,
-             input_codings):
+    def build(self, graph, metadata, control_nodes, input_lists, input_codings):
         """
         Build Threshold brick.
 
@@ -388,12 +361,7 @@ class Threshold(Brick):
         else:
             output_codings = [self.output_coding]
         self.is_built = True
-        return (graph,
-               self.metadata,
-                [{'complete':new_complete_node}],
-                output_lists,
-                output_codings
-               )
+        return (graph, self.metadata, [{'complete':new_complete_node}], output_lists, output_codings)
 
 class Dot(Brick):
     """Class to handle the Dot brick. Inherits from Brick"""
@@ -412,12 +380,7 @@ class Dot(Brick):
         self.weights = weights
         self.supported_codings = ['Raster', 'Undefined']
 
-    def build(self,
-             graph,
-             metadata,
-             control_nodes,
-             input_lists,
-             input_codings):
+    def build(self, graph, metadata, control_nodes, input_lists, input_codings):
         """
         Build Dot brick.
 
@@ -465,11 +428,7 @@ class Dot(Brick):
                        weight=1.0,
                        delay=1)
         self.is_built = True
-        return (graph,
-                metadata,
-                [{'complete':self.name+"_complete"}],
-                [output_list],
-                output_codings)
+        return (graph, metadata, [{'complete':self.name+"_complete"}], [output_list], output_codings)
 
 class Copy(Brick):
     """Class to handle Copy Brick. Inherits from Brick
@@ -493,11 +452,7 @@ class Copy(Brick):
                      'temporal-L',
                        'Raster',
                      'Undefined']
-    def build(self, graph,
-              metadata,
-             control_nodes,
-             input_lists,
-             input_codings):
+    def build(self, graph, metadata, control_nodes, input_lists, input_codings):
         """
         Build Copy brick.
 
@@ -570,12 +525,7 @@ class Concatenate(Brick):
             self.coding = coding
         else:
             self.coding = None
-    def build(self,
-             graph,
-             metadata,
-             control_nodes,
-             input_lists,
-             input_codings):
+    def build(self, graph, metadata, control_nodes, input_lists, input_codings):
         """
         Build concatenate brick.
 
@@ -629,12 +579,7 @@ class Concatenate(Brick):
         self.is_built=True
 
 
-        return (graph,
-               self.metadata,
-                [{'complete':new_complete_node_name}],
-                output_lists,
-                output_codings
-               )
+        return (graph, self.metadata, [{'complete':new_complete_node_name}], output_lists, output_codings)
 
 class AND_OR(Brick):
     ''' Brick for performing a logical AND/OR.  Operation is performed entry-wise, matching based on index.  All codings are supported.
@@ -653,12 +598,7 @@ class AND_OR(Brick):
         #For this example, we'll let any input coding work even though the answer might not make sense.
         self.supported_codings = input_coding_types
         self.mode = mode  #A change here
-    def build(self,
-             graph,
-             metadata,
-             control_nodes,
-             input_lists,
-             input_codings):
+    def build(self, graph, metadata, control_nodes, input_lists, input_codings):
         """
         Build AND_OR brick.
 
@@ -734,12 +674,7 @@ class AND_OR(Brick):
         self.is_built=True
 
 
-        return (graph,
-               self.metadata,
-                [{'complete':new_complete_node_name}],
-                output_lists,
-                output_codings
-               )
+        return (graph, self.metadata, [{'complete':new_complete_node_name}], output_lists, output_codings)
 
 class Shortest_Path(Brick):
     '''This brick provides a single-source shortest path determination. Expects a single input where the index corresponds to the node number on the graph.
@@ -773,12 +708,7 @@ class Shortest_Path(Brick):
         self.metadata = {'D':None}
         self.return_path = return_path
 
-    def build(self,
-             graph,
-             metadata,
-             control_nodes,
-             input_lists,
-             input_codings):
+    def build(self, graph, metadata, control_nodes, input_lists, input_codings):
         """
         Build Shortest Path brick.
 
@@ -902,12 +832,9 @@ class Shortest_Path(Brick):
         #Remember, bricks can have more than one output, so we need a list of list of output neurons
         output_lists = [complete_node_list, output_node_list, edge_reference_names]
 
-        return (graph,
-               self.metadata,
-                [{'complete':complete_node_list, 'begin':new_begin_node_name}],
-                output_lists,
-                self.output_codings
-               )
+        return (graph, self.metadata, 
+                [{'complete':complete_node_list, 'begin':new_begin_node_name}], output_lists,
+                self.output_codings)
 
 class Breadth_First_Search(Brick):
     '''This brick performs a BFS traversal. Expects a single input where the index corresponds to the node number on the graph.
@@ -958,12 +885,7 @@ class Breadth_First_Search(Brick):
     def get_edge_synapse_map(self):
         return self.edge_synapse_map
 
-    def build(self,
-             graph,
-             metadata,
-             control_nodes,
-             input_lists,
-             input_codings):
+    def build(self, graph, metadata, control_nodes, input_lists, input_codings):
         """
         Build BFS brick.
 
@@ -1132,12 +1054,7 @@ class ParityCheck(Brick):
         self.name = name
         self.supported_codings = ['binary-B', 'binary-L', 'Raster']
 
-    def build(self,
-              graph,
-              metadata,
-              control_nodes,
-              input_lists,
-              input_codings):
+    def build(self, graph, metadata, control_nodes, input_lists, input_codings):
         """
         Build Parity brick.
 
@@ -1300,8 +1217,7 @@ class ParityCheck(Brick):
 
         output_lists = [['parity']]
 
-        return (graph, self.metadata, [{'complete':complete_node}], output_lists,
-                output_codings)
+        return (graph, self.metadata, [{'complete':complete_node}], output_lists, output_codings)
 
 class LIS(Brick):
     '''
@@ -1328,12 +1244,7 @@ class LIS(Brick):
             raise ValueError("Cannot have a sequence of only 1 element")
         self.sequence_length = sequence_length 
 
-    def build(self,
-             graph,
-             metadata,
-             control_nodes,
-             input_lists,
-             input_codings):
+    def build(self, graph, metadata, control_nodes, input_lists, input_codings):
         """
         Build LIS brick.
 
@@ -1466,12 +1377,9 @@ class LIS(Brick):
         output_lists = [complete_node_list, output_Ls]
         #output_lists = [complete_node_list]
 
-        return (graph,
-               self.metadata,
+        return (graph, self.metadata,
                 [{'complete':complete_node_list[0], 'begin':new_begin_node_name}],
-                output_lists,
-                self.output_codings
-               )
+                output_lists, self.output_codings)
 
 class TemporalAdder(Brick):
     '''
@@ -1499,12 +1407,7 @@ class TemporalAdder(Brick):
         self.num_elements = number_of_elements
         self.design = design
 
-    def build(self,
-             graph,
-             metadata,
-             control_nodes,
-             input_lists,
-             input_codings):
+    def build(self, graph, metadata, control_nodes, input_lists, input_codings):
         """
         Build Adder brick.
 
@@ -1594,9 +1497,119 @@ class TemporalAdder(Brick):
         #Remember, bricks can have more than one output, so we need a list of list of output neurons
         output_lists = [[output_name]]
 
-        return (graph,
-               self.metadata,
+        return (graph, self.metadata,
                 [{'complete':complete_node_list[0], 'begin':begin_node_name}],
-                output_lists,
-                self.output_codings
-               )
+                output_lists, self.output_codings)
+
+class Register(Brick):
+    '''
+    Brick that stores the binary encoding of an non-negative integer.
+    Brick also allows the value stored to be incremented (but not decremented).
+    '''
+
+    def __init__(self, max_size, name=None, output_coding='Undefined'):
+        super(Brick, self).__init__()
+        self.is_built = False
+        self.name = name
+        self.supported_codings = input_coding_types
+
+        self.output_codings = [output_coding]
+        self.metadata = {'D':None}
+
+        self.max_size = max_size
+
+        pass
+
+    def build(self, graph, metadata, control_nodes, input_lists, input_codings):
+        """
+        Build Register brick.
+
+        Arguments:
+            + graph - networkx graph to define connections of the computational graph
+            + metadata - dictionary to define the shapes and parameters of the brick
+            + control_nodes - dictionary of lists of auxillary networkx nodes.  Excpected keys: 'complete' - A list of neurons that fire when the brick is done
+            + input_lists - list of nodes that will contain input
+            + input_coding - list of input coding formats.  All coding types supported
+
+        Returns:
+            + graph of a computational elements and connections
+            + dictionary of output parameters (shape, coding, layers, depth, etc)
+            + dictionary of control nodes ('complete')
+            + list of output
+            + list of coding formats of output
+        """
+        num_inputs = 0
+        input_names = []
+        for input_list in input_lists:
+            num_inputs += len(input_list)
+            for name in input_list:
+                input_names.append(name)
+        if num_inputs < 2:
+            raise ValueError("Too few inputs: requires at least two, one for recall and others for incrementing")
+        for input_coding in input_codings:
+            if input_coding not in self.supported_codings:
+                raise ValueError("Unsupported Input Coding. Found: {}. Allowed: {}".format(input_coding, self.supported_codings))
+
+        begin_node_name = self.name+'_begin'
+        graph.add_node(begin_node_name,
+                       threshold = 0.1,
+                       decay = 0.0,
+                       potential=0.0)
+
+        complete_name = self.name + '_complete'
+        graph.add_node(complete_name,
+                threshold = 0.1,
+                decay = 0.0,
+                potential = 0.0)
+        complete_node_list = [complete_name]
+
+        reset_name = "reset"
+        recall_name = "recall"
+        graph.add_node(reset_name, threshold = 0.99, decay = 0.0, potential = 0.0)
+        graph.add_node(recall_name, threshold = 0.99, decay = 0.0, potential = 0.0)
+
+        add_name = "add_one"
+        add_counter = "add_counter"
+        graph.add_node(add_name, threshold = 0.99, decay = 0.0, potential = 0.0)
+        graph.add_node(add_counter, threshold = 0.00, decay = 0.0, potential = 0.00)
+
+        graph.add_edge(add_name, add_name, weight = 1.0, delay = self.max_size)
+        graph.add_edge(add_name, add_counter, weight = 1.0, delay = 1.0)
+        graph.add_edge(add_counter, add_name, weight = -1.0, delay = 1.0)
+        
+        graph.add_edge(input_names[0], recall_name, weight = 1.0, delay = 1.0)
+        for input_name in input_names[1:]:
+            graph.add_edge(input_name, add_counter, weight = -0.99, delay = 1.0)
+            graph.add_edge(input_name, add_name, weight = 1.0, delay = self.max_size)
+
+        register_name_base  = "slot_{}"
+        output_name_base = "output_{}"
+        outputs = []
+
+        for i in range(self.max_size):
+            register_name = register_name_base.format(i)
+            graph.add_node(register_name, threshold = 1.99, decay = 0.0, potential = 0.0)
+            output_name = output_name_base.format(i)
+            graph.add_node(output_name, threshold = 1.99, decay = 1.0, potential = 0.0)
+            outputs.append(output_name)
+            
+            graph.add_edge(register_name, output_name, weight = 1.0, delay = 1.0)
+            graph.add_edge(reset_name, register_name, weight = 1.0, delay = 1.0)
+            graph.add_edge(recall_name, register_name, weight = 1.0, delay = 1.0)
+            graph.add_edge(recall_name, output_name, weight = 1.0, delay = 2.0)
+
+        for i in range(1, self.max_size):
+            prev_name = register_name_base.format(i - 1)
+            curr_name = register_name_base.format(i)
+            graph.add_edge(prev_name, curr_name, weight = 1.0, delay = 1.0)
+
+        graph.add_edge(add_name, register_name_base.format(0), weight = 1.0, delay = 1.0)
+
+        self.is_built=True
+
+        #Remember, bricks can have more than one output, so we need a list of list of output neurons
+        output_lists = [outputs]
+
+        return (graph, self.metadata,
+                [{'complete':complete_node_list[0], 'begin':begin_node_name}],
+                output_lists, self.output_codings)
