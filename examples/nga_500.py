@@ -22,10 +22,8 @@ from fugu.bricks import Breadth_First_Search, Shortest_Path, Vector_Input
 #   - Compute SSSP predessor array and distance array (collect metrics)
 #       - verify tree
 
-MAX_RUNTIME = 2000
 BACKEND = "pynn"
-DEBUG = False 
-#GRAPH_SIZE = 2 ** 4 + 8
+DEBUG = False
 GRAPH_SIZE = 2 ** 7
 
 def create_graph(size, p, seed):
@@ -76,44 +74,99 @@ pynn_args = {}
 pynn_args['backend'] = 'spinnaker'
 pynn_args['collect_metrics'] = True
 
+bfs_scale_factor = 10.0
+sssp_scale_factor = 1.0
+
+search_keys = random.sample(range(GRAPH_SIZE), GRAPH_SIZE if 64 > GRAPH_SIZE else 64) 
+bfs_key_spikes = []
+sssp_key_spikes = []
+base_spikes = [0 for i in range(GRAPH_SIZE)]
+max_level, max_dist = 0, 0
 
 # Generate graph
-for case_index in range(1):
-    search_key = random.randint(1,GRAPH_SIZE)
+for search_key in search_keys:
+    #search_key = random.randint(0,GRAPH_SIZE)
+    #search_keys.append(search_key)
 
-    print("---Building BFS Scaffold---")
-    bfs_scaffold = Scaffold()
+    bfs_spikes = {0:deque()}
+    bfs_spikes[0].append('BFSInput_({},)'.format(search_key))
+    bfs_key_spikes.append(bfs_spikes)
 
-    spikes = [0] * search_key
-    spikes[-1] = 1
+    sssp_spikes = {0:deque()}
+    sssp_spikes[0].append('SSSPInput_({},)'.format(search_key))
+    sssp_key_spikes.append(sssp_spikes)
 
-    bfs_brick = Breadth_First_Search(graph, name="BFS", store_edge_references=True)
-    bfs_input = Vector_Input(spikes, coding='Raster', name='BFSInput')
-    bfs_scaffold.add_brick(bfs_input, 'input')
-    bfs_scaffold.add_brick(bfs_brick, output=True)
+    level, dist = estimate_max_time(graph, search_key)
+    if level > max_level:
+        max_level = level
+    if dist > max_dist:
+        max_dist = dist
 
-    bfs_scaffold.lay_bricks()
-    if DEBUG:
-        bfs_scaffold.summary(verbose=2)
+print("---Search Keys---")
+print(search_keys)
 
-    if DEBUG:
-        pynn_args['verbose'] = True
-    else:
-        pynn_args['verbose'] = False 
-    pynn_args['show_plots'] = False
+print("---Building BFS Scaffold---")
+bfs_scaffold = Scaffold()
 
-    print("---Running BFS---")
-    MAX_RUNTIME = 2 * GRAPH_SIZE * GRAPH_SIZE * 10 + 10
-    max_level, max_dist = estimate_max_time(graph, search_key)
+bfs_brick = Breadth_First_Search(graph, name="BFS", store_edge_references=True)
+bfs_input = Vector_Input(base_spikes, coding='Raster', name='BFSInput')
+bfs_scaffold.add_brick(bfs_input, 'input')
+bfs_scaffold.add_brick(bfs_brick, output=True)
 
-    pynn_args['scale_factor'] = 1.0
-    bfs_result = bfs_scaffold.evaluate(backend=BACKEND,max_runtime=3 * max_level + GRAPH_SIZE, record_all=True, backend_args=pynn_args)
-    bfs_runtime = bfs_scaffold.metrics['runtime']
-    bfs_embedding_time =  bfs_scaffold.metrics['embed_time']
+bfs_scaffold.lay_bricks()
+if DEBUG:
+    bfs_scaffold.summary(verbose=2)
 
-    print("---Interpreting Spikes for BFS---")
-    bfs_pass = True
-    bfs_finished = False
+if DEBUG:
+    pynn_args['verbose'] = True
+else:
+    pynn_args['verbose'] = False 
+pynn_args['show_plots'] = False
+pynn_args['run_inputs'] = bfs_key_spikes
+
+print("---Running BFS---")
+
+pynn_args['scale_factor'] = bfs_scale_factor
+bfs_results = bfs_scaffold.evaluate(backend=BACKEND,max_runtime=2 * (max_level + GRAPH_SIZE), record_all=True, backend_args=pynn_args)
+bfs_runtimes = bfs_scaffold.metrics['runtime']
+bfs_embedding_time =  bfs_scaffold.metrics['embed_time']
+bfs_pass = []
+bfs_finished = []
+bfs_last_spike_time = []
+bfs_spikes = []
+
+print("---Building SSSP Scaffold---")
+sssp_scaffold = Scaffold()
+
+sssp_brick = Shortest_Path(graph, name="SSSP", return_path=True)
+sssp_input = Vector_Input(base_spikes, coding='Raster', name='SSSPInput')
+sssp_scaffold.add_brick(sssp_input, 'input')
+sssp_scaffold.add_brick(sssp_brick, output=True)
+
+sssp_scaffold.lay_bricks()
+if DEBUG:
+    sssp_scaffold.summary(verbose=2)
+if DEBUG:
+    pynn_args['verbose'] = True
+else:
+    pynn_args['verbose'] = False 
+pynn_args['run_inputs'] = sssp_key_spikes
+pynn_args['store_voltage'] = False
+
+print("---Running SSSP---")
+pynn_args['scale_factor'] = sssp_scale_factor
+sssp_results = sssp_scaffold.evaluate(backend=BACKEND,max_runtime=3 * (max_dist + GRAPH_SIZE), record_all=True, backend_args=pynn_args)
+sssp_runtimes = sssp_scaffold.metrics['runtime']
+sssp_embedding_time = sssp_scaffold.metrics['embed_time']
+sssp_pass = []
+sssp_finished = []
+sssp_last_spike_time = []
+sssp_spikes = []
+
+print("---Interpreting Spikes for BFS---")
+for bfs_result in bfs_results:
+    run_pass = True
+    run_finished = False
 
     bfs_pred = {v:-1 for v in graph.nodes}
     bfs_levels = {}
@@ -121,13 +174,15 @@ for case_index in range(1):
 
     curr_level = 0
     curr_time = 0.0
-    bfs_spikes = 0
-    last_bfs_spike_time = 0.0
+    spikes = 0
+    last_spike_time = 0.0
+    if DEBUG: 
+        print("------")
     for row in bfs_result.sort_values("time").itertuples():
+        neuron_name = bfs_names[int(row.neuron_number)][0]
         if DEBUG:
             print(neuron_name, row.time)
-        bfs_spikes += 1
-        neuron_name = bfs_names[int(row.neuron_number)][0]
+        spikes += 1
 
         neuron_props = bfs_scaffold.graph.nodes[neuron_name]
         if 'is_vertex' in neuron_props:
@@ -136,7 +191,7 @@ for case_index in range(1):
                 curr_time = row.time
             vertex = neuron_props['index'][0]
             if vertex in bfs_levels:
-                bfs_pass = False
+                run_pass = False
                 print("Detected cycle: {}".format(vertex))
                 break
             else:
@@ -147,9 +202,9 @@ for case_index in range(1):
             if bfs_pred[v] < 0:
                 bfs_pred[v] = u
         if 'complete' in neuron_name:
-            bfs_finished = True
+            run_finished = True
 
-        last_bfs_spike_time = row.time
+        last_spike_time = row.time
 
     if DEBUG:
         print("preds>>>")
@@ -159,7 +214,7 @@ for case_index in range(1):
         for v in bfs_levels:
             print(v, bfs_levels[v])
 
-    if not bfs_finished:
+    if not run_finished:
         print("BFS did not finish")
 
     for u in bfs_pred:
@@ -168,11 +223,11 @@ for case_index in range(1):
             u_level = bfs_levels[u]
             v_level = bfs_levels[v]
             if abs(u_level - v_level) != 1:
-                bfs_pass = False
+                run_pass = False
                 print("Levels between node and pred != 1: {} {}".format(u,v))
                 break
             if (u,v) not in graph.edges() and (v,u) not in graph.edges():
-                bfs_pass = False
+                run_pass = False
                 break
 
     for edge in graph.edges():
@@ -181,48 +236,34 @@ for case_index in range(1):
         u_level = bfs_levels[u]
         v_level = bfs_levels[v]
         if abs(u_level - v_level) > 1:
-            bfs_pass = False
+            run_pass = False
             print("Levels between edge > 1: {} {}".format(*edge))
             break
 
-    print("---Building SSSP Scaffold---")
-    sssp_scaffold = Scaffold()
+    bfs_pass.append(run_pass)
+    bfs_finished.append(run_finished)
+    bfs_last_spike_time.append(last_spike_time)
+    bfs_spikes.append(spikes)
 
-    sssp_brick = Shortest_Path(graph, name="SSSP", return_path=True)
-    sssp_input = Vector_Input(spikes, coding='Raster', name='SSSPInput')
-    sssp_scaffold.add_brick(sssp_input, 'input')
-    sssp_scaffold.add_brick(sssp_brick, output=True)
-
-    sssp_scaffold.lay_bricks()
-    if DEBUG:
-        sssp_scaffold.summary(verbose=2)
-    if DEBUG:
-        pynn_args['verbose'] = True
-    else:
-        pynn_args['verbose'] = False 
-
-    print("---Running SSSP---")
-    pynn_args['scale_factor'] = 1.0
-    sssp_result = sssp_scaffold.evaluate(backend=BACKEND,max_runtime=2 * max_dist + GRAPH_SIZE, record_all=True, backend_args=pynn_args)
-    sssp_runtime = sssp_scaffold.metrics['runtime']
-    sssp_embedding_time = sssp_scaffold.metrics['embed_time']
-
-    print("---Interpreting Spikes for SSSP---")
-    sssp_pass = True
-    sssp_finished = False
+print("---Interpreting Spikes for SSSP---")
+for sssp_result in sssp_results:
+    run_pass = True
+    run_finished = False
 
     sssp_pred = {v:-1 for v in graph.nodes}
     sssp_table = {v:-1 for v in graph.nodes}
-    sssp_start_time = 0.0
+    sssp_start_time = 1.0
 
     sssp_names = list(sssp_scaffold.graph.nodes.data('name'))
-    sssp_spikes = 0
-    last_sssp_spike_time = 0.0
+    spikes = 0
+    last_spike_time = 0.0
+    if DEBUG: 
+        print("------")
     for row in sssp_result.itertuples():
+        neuron_name = sssp_names[int(row.neuron_number)][0]
         if DEBUG:
             print(neuron_name, row.time)
-        sssp_spikes += 1
-        neuron_name = sssp_names[int(row.neuron_number)][0]
+        spikes += 1
 
         neuron_props = sssp_scaffold.graph.nodes[neuron_name]
         if 'begin' in neuron_name:
@@ -235,8 +276,8 @@ for case_index in range(1):
             v = neuron_props['to_vertex']
             sssp_pred[v] = u if u < sssp_pred[v] or sssp_pred[v] < 0 else sssp_pred[v]
         if 'complete' in neuron_name:
-            sssp_finished = True
-        last_sssp_spike_time = row.time
+            run_finished = True
+        last_spike_time = row.time
 
     for v in sssp_table:
         if sssp_table[v] > -1:
@@ -250,7 +291,7 @@ for case_index in range(1):
         for edge in graph.edges():
             print("{}: weight {}".format(edge, graph.get_edge_data(*edge)['weight']))
 
-    if not sssp_finished:
+    if not run_finished:
         print("SSSP did not finish")
 
     for u in sssp_pred:
@@ -259,13 +300,13 @@ for case_index in range(1):
             u_dist = sssp_table[u]
             v_dist = sssp_table[v]
             if u_dist == -1 or v_dist == -1:
-                sssp_pass = False
+                run_pass = False
                 print("Distance and pred don't match: {} {}".format(u,v))
                 break
             else:
                 edge_weight = graph.get_edge_data(u,v)['weight']
-                if abs(u_dist - v_dist) > edge_weight:
-                    sssp_pass = False
+                if abs(u_dist - v_dist) > edge_weight / sssp_scale_factor:
+                    run_pass = False
                     print("Distance larger than tree edge weight ({},{}): {} {} {}".format(u,v,u_dist,v_dist, edge_weight))
                     break
 
@@ -273,14 +314,25 @@ for case_index in range(1):
         u_dist = sssp_table[u]
         v_dist = sssp_table[v]
         edge_weight = graph.get_edge_data(u,v)['weight']
-        if abs(u_dist - v_dist) > edge_weight:
-            sssp_pass = False
+        if abs(u_dist - v_dist) > edge_weight / sssp_scale_factor:
+            run_pass = False
             print("Distance larger than edge weight ({},{}): {} {} {}".format(u,v,u_dist,v_dist, edge_weight))
             break
 
+    sssp_pass.append(run_pass)
+    sssp_finished.append(run_finished)
+    sssp_last_spike_time.append(last_spike_time)
+    sssp_spikes.append(spikes)
 
-    results[search_key] = (bfs_pass, sssp_pass, bfs_embedding_time, sssp_embedding_time, bfs_runtime, sssp_runtime, last_bfs_spike_time, last_sssp_spike_time, bfs_spikes, sssp_spikes, len(bfs_scaffold.graph.nodes()), len(sssp_scaffold.graph.nodes()))
+print("Circuit sizes:")
+print("BFS {}, SSSP {}".format(len(bfs_scaffold.graph.nodes()), len(sssp_scaffold.graph.nodes())))
+print("Embedding times:")
+print("BFS {}, SSSP {}".format(bfs_embedding_time, sssp_embedding_time))
 
-print("Case ID, bfs pass, sssp pass, bfs_embed_time, sssp_embed_time, bfs_runtime, sssp_runtime, last_bfs_spike, last_sssp_spike, bfs_spikes, sssp_spikes, bfs_circuit_size, sssp_circuit_size")
-for key in results:
-    print(("{}, "+", ".join(["{}" for r in results[key]])).format(key, *results[key]))
+for index, search_key in enumerate(search_keys):
+    results = (bfs_pass[index], sssp_pass[index], 
+               bfs_runtimes[index], sssp_runtimes[index], 
+               bfs_last_spike_time[index], sssp_last_spike_time[index], 
+               bfs_spikes[index], sssp_spikes[index], 
+               max_level, max_dist)
+    print(("{}, "+", ".join(["{}" for r in results])).format(search_key, *results))

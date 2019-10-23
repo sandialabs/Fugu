@@ -40,7 +40,10 @@ class pynn_Backend(Backend):
     def GetMetrics(self):
         return self.metrics
 
-    def _run_pynn_sim(self, fugu_scaffold, steps, raw_spike_arrays, simulator='brian', verbose=False, show_plots=False):
+    def _run_pynn_sim(self, fugu_scaffold, steps, run_inputs, simulator='brian', verbose=False, show_plots=False):
+        if self.collect_metrics:
+            self.metrics['runtime'] = []
+
         fugu_circuit = fugu_scaffold.circuit
         fugu_graph = fugu_scaffold.graph
 
@@ -48,8 +51,8 @@ class pynn_Backend(Backend):
         if simulator == 'brian':
             # PyNN only has support for brian1 (i.e. brian) which is only python 2.x compatible
             assert sys.version_info <= (3,0)
-            import pyNN.brian as pynn_sim
 
+            import pyNN.brian as pynn_sim
             from pyNN.connectors import FromListConnector
 
             self.backend = BRIAN_BACKEND 
@@ -81,7 +84,8 @@ class pynn_Backend(Backend):
 
             max_runtime = steps * self.defaults['min_delay'] 
 
-            pynn_sim.setup(timestep=self.defaults['min_delay'])
+            #pynn_sim.setup(timestep=self.defaults['min_delay'])
+            pynn_sim.setup(timestep=1, max_delay=100)
             pynn_sim.set_number_of_neurons_per_core(pynn_sim.extra_models.IF1_curr_delta, 100)
         else:
             raise ValueError("unsupported pyNN backend")
@@ -155,8 +159,8 @@ class pynn_Backend(Backend):
         pynn_index = 0
         neuron_to_pynn = {} # Map of neuron to pynn_index
         input_to_pynn = {} # Map of input neuron to pynn_index
-        input_spikes = []
         input_index = 0
+        output_neurons = set()
 
         if self.collect_metrics:
             start = timer()
@@ -164,15 +168,18 @@ class pynn_Backend(Backend):
         # Create neurons
         for brick in fugu_circuit.nodes:
             brick = fugu_circuit.nodes[brick]
+            is_input = brick['layer'] == 'input'
             for neuron in brick_neurons[brick['name']]:
-                if neuron in raw_spike_arrays:
+                if is_input:
                     input_to_pynn[neuron] = input_index
-                    input_spikes.append([spike_time * self.defaults['min_delay'] for spike_time in raw_spike_arrays[neuron]])
                     input_index += 1
                 else:
                     neuron_to_pynn[neuron] = pynn_index
                     add_neuron_params(neuron)
                     pynn_index += 1
+                if neuron in brick['control_nodes'][0]['complete']:
+                    output_neurons.add(neuron)
+
         if verbose:
             print("---Neuron to pynn index---")
             for neuron in neuron_to_pynn:
@@ -189,7 +196,7 @@ class pynn_Backend(Backend):
             for neuron in neuron_to_pynn:
                 print("{}, {}".format(neuron, initial_potential[neuron_to_pynn[neuron]]))
 
-        input_population = pynn_sim.Population(input_index, pynn_sim.SpikeSourceArray(spike_times=input_spikes), label='Input Population')
+        input_population = pynn_sim.Population(input_index, pynn_sim.SpikeSourceArray(), label='Input Population')
 
         if self.backend == BRIAN_BACKEND:
             main_population = pynn_sim.Population(pynn_index, pynn_sim.IF_curr_exp(**parameter_values), label='Main Population')
@@ -282,11 +289,42 @@ class pynn_Backend(Backend):
         if verbose:
             print("Runtime: {}".format(max_runtime))
 
-        if self.collect_metrics:
-            start = timer()
-        pynn_sim.run(max_runtime)
-        if self.collect_metrics:
-            self.metrics['runtime'] = timer() - start 
+        def check_complete_status(t):
+            spike_data = main_population.get_data().segments[0].spiketrains
+            to_remove = []
+            for neuron in output_neurons:
+                if len(spike_data[neuron_to_pynn[neuron]]) > 1:
+                    to_remove.append(neuron)
+
+            for neuron in to_remove:
+                output_neurons.remove(neuron)
+
+            if len(output_neurons) > 0:
+                return t + self.defaults['min_delay'] 
+            else:
+                return max_runtime
+
+        #pynn_sim.run(max_runtime, callbacks=[check_complete_status])
+        for run_id, run_input in enumerate(run_inputs):
+            input_spikes = [None for n in input_to_pynn]
+            processed_spikes = self._process_input_values(run_input)
+            for neuron in input_to_pynn:
+                input_spikes[input_to_pynn[neuron]] = processed_spikes[neuron] if neuron in processed_spikes else []
+            input_population.set(spike_times=input_spikes)
+
+            if verbose:
+                for index, spike_time in enumerate(input_population.get('spike_times')):
+                    if len(spike_time) > 0:
+                        print("Set spike times for {}: {}".format(index, spike_time))
+
+            if run_id > 0:
+                pynn_sim.reset()
+
+            if self.collect_metrics:
+                start = timer()
+            pynn_sim.run(max_runtime)
+            if self.collect_metrics:
+                self.metrics['runtime'].append(timer() - start)
 
         main_data = main_population.get_data()
         input_data = input_population.get_data()
@@ -294,66 +332,68 @@ class pynn_Backend(Backend):
         pynn_sim.end()
 
         # process results
-        spike_result = pd.DataFrame({'time':[],'neuron_number':[]})
+        spike_results = []
+        for index, run in enumerate(run_inputs):
+            spike_result = pd.DataFrame({'time':[],'neuron_number':[]})
 
-        main_spiketrains = main_data.segments[0].spiketrains
-        input_spiketrains = input_data.segments[0].spiketrains
+            main_spiketrains = main_data.segments[index].spiketrains
+            input_spiketrains = input_data.segments[index].spiketrains
 
-        if self.store_voltage:
-            main_voltage = main_data.segments[0].filter(name='v')[0]
+            if self.store_voltage:
+                main_voltage = main_data.segments[index].filter(name='v')[0]
 
-        spikes = {}
-        for neuron in neuron_to_pynn:
-            pynn_index = neuron_to_pynn[neuron]
-            spiketrain = main_spiketrains[pynn_index]
-            if verbose:
-                print("---results for: {}".format(neuron))
-                if self.store_voltage:
-                    print("voltage  {}".format(main_voltage[pynn_index]))
-                print("spiketimes  {}".format(spiketrain))
+            spikes = {}
+            for neuron in neuron_to_pynn:
+                pynn_index = neuron_to_pynn[neuron]
+                spiketrain = main_spiketrains[pynn_index]
+                if verbose:
+                    print("---results for: {}".format(neuron))
+                    if self.store_voltage:
+                        print("voltage  {}".format(main_voltage[pynn_index]))
+                    print("spiketimes  {}".format(spiketrain))
 
-            if spiketrain.any():
-                for time in np.array(spiketrain):
-                    if time not in spikes:
-                        spikes[time] = set()
-                    spikes[time].add(fugu_graph.node[neuron]['neuron_number'])
+                if spiketrain.any():
+                    for time in np.array(spiketrain):
+                        if time not in spikes:
+                            spikes[time] = set()
+                        spikes[time].add(fugu_graph.node[neuron]['neuron_number'])
 
-        labels = []
-        for neuron in neuron_to_pynn:
-            labels.append(neuron)
-        if show_plots and self.store_voltage:
-            from pyNN.utility.plotting import Figure, Panel
-            import matplotlib.pyplot as plt
-            Figure(
-                Panel(main_voltage,
-                      ylabel="Membrane potential (mV)",
-                      yticks=True, linewidth=2.0),
-                #title="Neuron: {}".format(neuron), 
-                annotations=""
-            )
-            plt.show()
+            labels = []
+            for neuron in neuron_to_pynn:
+                labels.append(neuron)
+            if show_plots and self.store_voltage:
+                from pyNN.utility.plotting import Figure, Panel
+                import matplotlib.pyplot as plt
+                Figure(
+                    Panel(main_voltage,
+                          ylabel="Membrane potential (mV)",
+                          yticks=True, linewidth=2.0),
+                    #title="Neuron: {}".format(neuron), 
+                    annotations=""
+                )
+                plt.show()
 
-        for neuron in input_to_pynn:
-            input_index = input_to_pynn[neuron]
-            spiketrain = input_spiketrains[input_index]
-            if verbose:
-                print("---results for: {}".format(neuron))
-                print("spiketimes  {}".format(spiketrain))
-            if spiketrain.any():
-                for time in np.array(spiketrain):
-                    if time not in spikes:
-                        spikes[time] = set()
-                    spikes[time].add(fugu_graph.node[neuron]['neuron_number'])
+            for neuron in input_to_pynn:
+                input_index = input_to_pynn[neuron]
+                spiketrain = input_spiketrains[input_index]
+                if verbose:
+                    print("---results for: {}".format(neuron))
+                    print("spiketimes  {}".format(spiketrain))
+                if spiketrain.any():
+                    for time in np.array(spiketrain):
+                        if time not in spikes:
+                            spikes[time] = set()
+                        spikes[time].add(fugu_graph.node[neuron]['neuron_number'])
 
-        for time in spikes:
-            mini_df = pd.DataFrame()
-            times = [time for i in spikes[time]]
-            mini_df['time'] = times
-            mini_df['neuron_number'] = list(spikes[time])
-            spike_result = spike_result.append(mini_df, sort=False)
+            for time in spikes:
+                mini_df = pd.DataFrame()
+                times = [time for i in spikes[time]]
+                mini_df['time'] = times
+                mini_df['neuron_number'] = list(spikes[time])
+                spike_result = spike_result.append(mini_df, sort=False)
+            spike_results.append(spike_result)
 
-
-        return spike_result
+        return spike_results
 
     def stream(self,
                scaffold,
@@ -376,6 +416,9 @@ class pynn_Backend(Backend):
         self.collect_metrics = backend_args['collect_metrics'] if 'collect_metrics' in backend_args else False
         self.store_voltage = backend_args['store_voltage'] if 'store_voltage' in backend_args else False
         self.scale_factor = backend_args['scale_factor'] if 'scale_factor' in backend_args else 1.0 
-        spike_result = self._run_pynn_sim(scaffold, n_steps, self._process_input_values(input_values), simulator, verbose, show_plots)
-        spike_result = spike_result.sort_values('time')
-        return spike_result 
+
+        #@TEMPORARY: will figure out a way to do this at a higher level (at the Fugu level)
+        run_inputs = backend_args['run_inputs'] if 'run_inputs' in backend_args else [input_values]
+        spike_result = self._run_pynn_sim(scaffold, n_steps, run_inputs, simulator, verbose, show_plots)
+        #spike_result = spike_result.sort_values('time')
+        return spike_result if len(spike_result) > 1 else spike_result[0]

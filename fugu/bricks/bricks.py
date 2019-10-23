@@ -827,9 +827,9 @@ class Shortest_Path(Brick):
                       decay = 0.0,
                       potential=0.0)
         graph.add_edge(control_nodes[0]['complete'],
-                      self.name+'_begin',
+                      new_begin_node_name,
                       weight = 1.0,
-                      delay = 1)
+                      delay = 2)
 
         complete_name = self.name + '_complete'
         graph.add_node(complete_name,
@@ -872,7 +872,7 @@ class Shortest_Path(Brick):
 
                     graph.add_node(reference_name, index=reference_index, threshold=1.0, decay=0.0,potential=0.0,
                                     from_vertex = node, to_vertex = neighbor, is_edge_reference=True )
-                    graph.add_edge(neighbor_name, reference_name, weight=-1000, delay=1) 
+                    graph.add_edge(neighbor_name, reference_name, weight=-1000, delay=1.0) 
                     if node == self.target_node:
                         graph.add_edge(node_name, reference_name, weight=-1000, delay=delay - 1)
                         graph.add_edge(reference_name, neighbor_name, weight=-1000, delay=1)
@@ -1006,7 +1006,7 @@ class Breadth_First_Search(Brick):
                       decay = 0.0,
                       potential=0.0)
         graph.add_edge(control_nodes[0]['complete'],
-                      self.name+'_begin',
+                      new_begin_node_name,
                       weight = 1.0,
                       delay = default_delay)
 
