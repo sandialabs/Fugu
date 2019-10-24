@@ -53,6 +53,7 @@ class pynn_Backend(Backend):
 
             import pyNN.brian as pynn_sim
             from pyNN.connectors import FromListConnector
+            from pyNN.parameters import Sequence
 
             self.backend = BRIAN_BACKEND 
 
@@ -173,11 +174,21 @@ class pynn_Backend(Backend):
             start = timer()
 
         # Create neurons
+        if self.backend == BRIAN_BACKEND:
+            processed_spikes = self._process_input_values(run_inputs[0])
+            input_spikes = []
+
         for brick in fugu_circuit.nodes:
             brick = fugu_circuit.nodes[brick]
             is_input = brick['layer'] == 'input'
             for neuron in brick_neurons[brick['name']]:
                 if is_input:
+                    if self.backend == BRIAN_BACKEND:
+                        if neuron in processed_spikes:
+                            input_spikes.append([spike_time * self.defaults['min_delay'] for spike_time in processed_spikes[neuron]])
+                        else:
+                            input_spikes.append([])
+
                     input_to_pynn[neuron] = input_index
                     input_index += 1
                 else:
@@ -203,12 +214,13 @@ class pynn_Backend(Backend):
             for neuron in neuron_to_pynn:
                 print("{}, {}".format(neuron, initial_potential[neuron_to_pynn[neuron]]))
 
-        input_population = pynn_sim.Population(input_index, pynn_sim.SpikeSourceArray(), label='Input Population')
 
         if self.backend == BRIAN_BACKEND:
             main_population = pynn_sim.Population(pynn_index, pynn_sim.IF_curr_exp(**parameter_values), label='Main Population')
+            input_population = pynn_sim.Population(input_index, pynn_sim.SpikeSourceArray(spike_times=input_spikes), label='Input Population')
         else:
             main_population = pynn_sim.Population(pynn_index, pynn_sim.extra_models.IF1_curr_delta(**parameter_values), label='Main Population')
+            input_population = pynn_sim.Population(input_index, pynn_sim.SpikeSourceArray(), label='Input Population')
         main_population.initialize(v=initial_potential)
 
         # Setup synpases:
@@ -313,16 +325,18 @@ class pynn_Backend(Backend):
 
         #pynn_sim.run(max_runtime, callbacks=[check_complete_status])
         for run_id, run_input in enumerate(run_inputs):
-            input_spikes = [None for n in input_to_pynn]
-            processed_spikes = self._process_input_values(run_input)
-            for neuron in input_to_pynn:
-                input_spikes[input_to_pynn[neuron]] = processed_spikes[neuron] if neuron in processed_spikes else []
-            input_population.set(spike_times=input_spikes)
+            if self.backend == SPINNAKER_BACKEND:
+                input_spikes = [[] for n in input_to_pynn]
+                processed_spikes = self._process_input_values(run_input)
+                for neuron in input_to_pynn:
+                    if neuron in processed_spikes:
+                        spike_array = [spike_time * self.defaults['min_delay'] for spike_time in processed_spikes[neuron]]
+                        input_spikes[input_to_pynn[neuron]] = spike_array
+                input_population.set(spike_times=input_spikes)
 
             if verbose:
                 for index, spike_time in enumerate(input_population.get('spike_times')):
-                    if len(spike_time) > 0:
-                        print("Set spike times for {}: {}".format(index, spike_time))
+                    print("Set spike times for {}: {}".format(index, spike_time))
 
             if run_id > 0:
                 pynn_sim.reset()
@@ -341,6 +355,8 @@ class pynn_Backend(Backend):
         # process results
         spike_results = []
         for index, run in enumerate(run_inputs):
+            if verbose:
+                print("Spike results for run index {}".format(index))
             spike_result = pd.DataFrame({'time':[],'neuron_number':[]})
 
             main_spiketrains = main_data.segments[index].spiketrains
@@ -426,4 +442,5 @@ class pynn_Backend(Backend):
                                             simulator = simulator, 
                                             verbose = verbose, 
                                             show_plots = show_plots)
+
         return spike_result if len(spike_result) > 1 else spike_result[0].sort_values('time')
