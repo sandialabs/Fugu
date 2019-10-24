@@ -216,11 +216,11 @@ class pynn_Backend(Backend):
 
 
         if self.backend == BRIAN_BACKEND:
-            main_population = pynn_sim.Population(pynn_index, pynn_sim.IF_curr_exp(**parameter_values), label='Main Population')
             input_population = pynn_sim.Population(input_index, pynn_sim.SpikeSourceArray(spike_times=input_spikes), label='Input Population')
+            main_population = pynn_sim.Population(pynn_index, pynn_sim.IF_curr_exp(**parameter_values), label='Main Population')
         else:
-            main_population = pynn_sim.Population(pynn_index, pynn_sim.extra_models.IF1_curr_delta(**parameter_values), label='Main Population')
             input_population = pynn_sim.Population(input_index, pynn_sim.SpikeSourceArray(), label='Input Population')
+            main_population = pynn_sim.Population(pynn_index, pynn_sim.extra_models.IF1_curr_delta(**parameter_values), label='Main Population')
         main_population.initialize(v=initial_potential)
 
         # Setup synpases:
@@ -443,4 +443,4 @@ class pynn_Backend(Backend):
                                             verbose = verbose, 
                                             show_plots = show_plots)
 
-        return spike_result if len(spike_result) > 1 else spike_result[0].sort_values('time')
+        return spike_result if len(spike_result) > 1 else spike_result[0]
