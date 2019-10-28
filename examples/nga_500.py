@@ -24,7 +24,7 @@ from fugu.bricks import Breadth_First_Search, Shortest_Path, Vector_Input
 
 BACKEND = "pynn"
 DEBUG = False
-GRAPH_SIZE = 2 ** 7
+GRAPH_SIZE = 2 ** 4
 
 def create_graph(size, p, seed):
     # @TODO: Need to replace this with a Kronecker/R-Mat generator
@@ -77,7 +77,8 @@ pynn_args['collect_metrics'] = True
 bfs_scale_factor = 10.0
 sssp_scale_factor = 1.0
 
-search_keys = random.sample(range(GRAPH_SIZE), GRAPH_SIZE if 64 > GRAPH_SIZE else 64) 
+#search_keys = random.sample(range(GRAPH_SIZE), GRAPH_SIZE if 64 > GRAPH_SIZE else 64) 
+search_keys = random.sample(range(GRAPH_SIZE), 3) 
 bfs_key_spikes = []
 sssp_key_spikes = []
 base_spikes = [0 for i in range(GRAPH_SIZE)]
@@ -104,6 +105,8 @@ for search_key in search_keys:
 
 print("---Search Keys---")
 print(search_keys)
+for bfs_spike in bfs_key_spikes:
+    print(bfs_spike)
 
 print("---Building BFS Scaffold---")
 bfs_scaffold = Scaffold()
