@@ -18,15 +18,19 @@ class StochasticBrickTests:
     def evaluate_thresh_params(self, output_coding, input_value, threshold, p_value, decay_value):
         scaffold = Scaffold()
 
-        scaffold.add_brick(BRICKS.Vector_Input(np.array([0]), coding='Raster', name='input1'), 'input' )
-        scaffold.add_brick(BRICKS.Vector_Input(np.array([1]), coding='Raster', name='input2'), 'input' )
-        scaffold.add_brick(BRICKS.Dot([input_value], name='ADotOperator')) #don't know why i need two vector inputs
-        scaffold.add_brick(BRICKS.Threshold(threshold, 
-                                                 p=p_value, 
-                                                 decay=decay_value,
-                                                 name='Thresh',
-                                                 output_coding=output_coding),
-                                                  (2,0), output=True)
+        threshold_brick = BRICKS.Threshold(threshold,
+                                           p=p_value,
+                                           decay=decay_value,
+                                           name='Thresh',
+                                           output_coding=output_coding)
+        vector_1 = BRICKS.Vector_Input(np.array([0]), coding='Raster', name='input1')
+        vector_2 = BRICKS.Vector_Input(np.array([1]), coding='Raster', name='input2')
+        dot_brick = BRICKS.Dot([input_value], name='ADotOperator')
+
+        scaffold.add_brick(vector_1, 'input')
+        scaffold.add_brick(vector_2, 'input')
+        scaffold.add_brick(dot_brick) #don't know why i need two vector inputs
+        scaffold.add_brick(threshold_brick, (2,0), output=True)
 
         scaffold.lay_bricks()
 
@@ -35,7 +39,10 @@ class StochasticBrickTests:
         results = []
         for i in range(self.num_trials):
             evaluations += 1.0
-            results = scaffold.evaluate(backend=self.backend, max_runtime=5, backend_args=self.backend_args, record_all=True)
+            results = scaffold.evaluate(backend=self.backend,
+                                        max_runtime=5,
+                                        backend_args=self.backend_args,
+                                        record_all=True)
             graph_names = list(scaffold.graph.nodes.data('name'))
             spiked = False
             for row in results.itertuples():

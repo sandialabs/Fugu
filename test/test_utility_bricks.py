@@ -19,15 +19,21 @@ class UtilityBrickTests:
         scaffold = Scaffold()
 
         adder_brick = BRICKS.TemporalAdder(len(spike_times), name="Adder")
+
         max_time = max(spike_times)
         time_vector = [[0] * (2 * (max_time + 1)) for i in spike_times]
         time_vector[0][spike_times[0] * 2] = 1
         time_vector[1][spike_times[1] * 2] = 1
-        scaffold.add_brick(BRICKS.Vector_Input(np.array(time_vector), coding='Raster', name='Input', time_dimension=True), 'input')
+
+        vector_brick = BRICKS.Vector_Input(np.array(time_vector), coding='Raster', name='Input', time_dimension=True)
+
+        scaffold.add_brick(vector_brick, 'input')
         scaffold.add_brick(adder_brick, output=True)
 
         scaffold.lay_bricks()
-        results = scaffold.evaluate(backend=self.backend, max_runtime=(sum(spike_times) + 5) * 2, backend_args=self.backend_args)
+        results = scaffold.evaluate(backend=self.backend,
+                                    max_runtime=(sum(spike_times) + 5) * 2,
+                                    backend_args=self.backend_args)
 
         answer = -1
         graph_names = list(scaffold.graph.nodes.data('name'))
@@ -58,7 +64,7 @@ class UtilityBrickTests:
         result = self.evaluate_adder([1,9])
         self.assertEqual(10, result)
 
-    def evaluate_register(self, spike_times, register_size):
+    def evaluate_register(self, spike_times, register_size, initial_value=0.0):
         max_runtime = (2 ** (register_size + 2))
         scaffold = Scaffold()
 
@@ -68,8 +74,10 @@ class UtilityBrickTests:
         for spike in spike_times:
             inputs[1][spike] = 1
 
-        scaffold.add_brick(BRICKS.Vector_Input(np.array(inputs), coding='Raster', name='input', time_dimension = True), 'input' )
-        scaffold.add_brick(BRICKS.Register(register_size, name='register1'), output=True)
+        vector_brick = BRICKS.Vector_Input(np.array(inputs), coding='Raster', name='input', time_dimension=True)
+        register_brick = BRICKS.Register(register_size, initial_value=initial_value, name='register1')
+        scaffold.add_brick(vector_brick, 'input')
+        scaffold.add_brick(register_brick, output=True)
 
         scaffold.lay_bricks()
 
@@ -107,6 +115,14 @@ class UtilityBrickTests:
             spike_times.append(spike_times[-1] + random.randint(8, 12))
         answer = self.evaluate_register(spike_times, 8)
         self.assertEqual(26, answer)
+
+    def test_register_6(self):
+        answer = self.evaluate_register([5,20,45], 8, initial_value=5)
+        self.assertEqual(8, answer)
+
+    def test_register_7(self):
+        answer = self.evaluate_register([], 6, initial_value=34)
+        self.assertEqual(34, answer)
 
 class SnnUtilityTests(unittest.TestCase, UtilityBrickTests):
     @classmethod

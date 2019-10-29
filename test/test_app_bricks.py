@@ -17,13 +17,17 @@ class AppBrickTests:
             spike_times[i][time] = 1
         return spike_times
 
-    def evaluate_lis_sequence(self, sequence, expected, debug=False): 
+    def evaluate_lis_sequence(self, sequence, expected, debug=False):
         scaffold = Scaffold()
 
-        vector_brick = BRICKS.Vector_Input(self.get_lis_input(sequence), coding='Raster', name='Input0', time_dimension=True)
+        vector_brick = BRICKS.Vector_Input(self.get_lis_input(sequence),
+                                           coding='Raster',
+                                           name='Input0',
+                                           time_dimension=True)
+        lis_brick = BRICKS.LIS(len(sequence), name="LIS")
 
         scaffold.add_brick(vector_brick, 'input')
-        scaffold.add_brick(BRICKS.LIS(len(sequence), name="LIS"), output=True)
+        scaffold.add_brick(lis_brick, output=True)
 
         scaffold.lay_bricks()
 

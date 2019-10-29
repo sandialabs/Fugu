@@ -43,7 +43,9 @@ class GraphBrickTests:
         if debug:
             scaffold.summary(verbose=2)
 
-        results = scaffold.evaluate(backend=self.backend, max_runtime=len(graph.nodes) * 2, backend_args=self.backend_args)
+        results = scaffold.evaluate(backend=self.backend,
+                                    max_runtime=len(graph.nodes) * 2,
+                                    backend_args=self.backend_args)
         bfs_levels = {}
         bfs_pred = {}
         bfs_names = list(scaffold.graph.nodes.data('name'))
@@ -98,7 +100,9 @@ class GraphBrickTests:
         scaffold.add_brick(sssp_brick, output=True)
 
         scaffold.lay_bricks()
-        results = scaffold.evaluate(backend=self.backend, max_runtime=len(graph.nodes) * 30, backend_args=self.backend_args)
+        results = scaffold.evaluate(backend=self.backend,
+                                    max_runtime=len(graph.nodes) * 30,
+                                    backend_args=self.backend_args)
         sssp_pred = {v:-1 for v in graph.nodes}
         sssp_table = {v:-1 for v in graph.nodes}
         sssp_start_time = 0.0
@@ -153,7 +157,7 @@ class GraphBrickTests:
     def test_bfs_random_gnp_full(self):
         self.evaluate_bfs_graph(create_graph(20, 0.3, 3), 1, True)
 
-    def test_sssp_race_condition(self): 
+    def test_sssp_race_condition(self):
         graph = nx.DiGraph()
         graph.add_edge(0,1,weight=1)
         graph.add_edge(1,2,weight=1)
