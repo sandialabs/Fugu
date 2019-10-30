@@ -710,12 +710,6 @@ class Register(bricks.Brick):
 
         add_name = "add_one"
         graph.add_node(add_name, threshold = 0.99, decay = 0.0, potential = 0.0)
-        #add_counter = "add_counter"
-        #graph.add_node(add_counter, threshold = 0.00, decay = 0.0, potential = 0.00)
-
-        #graph.add_edge(add_name, add_name, weight = 1.0, delay = self.max_size)
-        #graph.add_edge(add_name, add_counter, weight = 1.0, delay = 1.0)
-        #graph.add_edge(add_counter, add_name, weight = -1.0, delay = 1.0)
         
         graph.add_edge(input_names[0], recall_name, weight = 1.0, delay = 1.0)
         for input_name in input_names[1:]:

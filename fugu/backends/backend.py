@@ -27,7 +27,7 @@ class Backend(ABC):
                           'supports_additive_leak':False,
                           'supports_hebbian_learning':False,
                           }
-        
+
     def serve(
           self,
           scaffold,
@@ -45,7 +45,7 @@ class Backend(ABC):
             raise ValueError("Cannot specify both n_steps and max_steps")
         if record_all:
             record = 'all'
-           
+
         self.embed(scaffold, record, backend_args)
 
         input_nodes = [node  for node in scaffold.circuit.nodes if ('layer' in scaffold.circuit.nodes[node])
@@ -71,8 +71,10 @@ class Backend(ABC):
                 result, halt = self.stream(scaffold, input_values, record, backend_args)
                 results = results.append(result)
 
+        self.cleanup()
+
         return results
-    
+
 
     @abstractmethod
     def embed(self, scaffold, record, embedding_args={}):
@@ -85,7 +87,7 @@ class Backend(ABC):
     @abstractmethod
     def stream(self, scaffold, input_values, stepping, record, backend_args):
         pass
-    
+
     @abstractmethod
     def batch(self, input_values, n_steps, backend_args):
         pass
@@ -98,7 +100,7 @@ class snn_Backend(Backend):
     #def _serve_fugu_to_snn(self, fugu_circuit, fugu_graph, n_steps=1, record_all=False, ds_format=False):
     def _serve_fugu_to_snn(self, input_values, n_steps=1):
         for node, vals in self.fugu_circuit.nodes.data():
-            if 'layer' in vals: 
+            if 'layer' in vals:
                 if vals['layer'] == 'input':
                     input_spike_lists = [input_spikes for input_spikes in self.fugu_circuit.nodes[node]['brick']]
                     input_values = {}
@@ -110,10 +112,10 @@ class snn_Backend(Backend):
                         for neuron in input_values:
                             if(len(input_values[neuron]) < timestep+1):
                                 input_values[neuron].append(0)
-                            
+
                     for neuron in self.fugu_circuit.nodes[node]['output_lists'][0]:
                         self.nn.update_input_neuron(neuron,input_values[neuron])
-        
+
         ''' Run the Simulator '''
         df = self.nn.run(n_steps=n_steps, debug_mode=False)
         res = {}
@@ -123,45 +125,45 @@ class snn_Backend(Backend):
             numerical_cols = {}
             for c in df.columns:
                 numerical_cols[c] = self.fugu_graph.nodes[c]['neuron_number']
-            df = df.rename(index=int, columns=numerical_cols) 
-            
+            df = df.rename(index=int, columns=numerical_cols)
+
             for r in df.index:
                 l = []
                 for c in df.columns:
                     if df.loc[r][c] == 1:
                         l.append(c)
                     res[r] = l
-    
+
             return res
         else:
             return df
 
     def embed(self, scaffold, record, embedding_args={}):
-        '''Reads in a built fugu graph and converts it to a spiking neural network 
+        '''Reads in a built fugu graph and converts it to a spiking neural network
         and runs it for n steps'''
         self.fugu_circuit = scaffold.circuit
         self.fugu_graph = scaffold.graph
 
         if 'ds_format' in embedding_args:
-            self.ds_format = embedding_args['ds_format'] 
+            self.ds_format = embedding_args['ds_format']
         else:
             self.ds_format = False
 
         import fugu.backends.SpikingNeuralNetwork as snn
         self.nn = snn.NeuralNetwork()
         neuron_dict = {}
-        
-        
+
+
         ''' Add Neurons '''
         #Add in input and output neurons. Use the fugu_circuit information to identify input and output layers
         #For input nodes, create input neurons and identity and associate the appropriate inputs to it
         #for output neurons, obtain neuron parameters from fugu_graph and create LIFNeurons
         #Add neurons to spiking neural network
         for node, vals in self.fugu_circuit.nodes.data():
-            if 'layer' in vals: 
+            if 'layer' in vals:
                 if vals['layer'] == 'input':
-                    
-                    
+
+
                     for neuron in self.fugu_circuit.nodes[node]['output_lists'][0]:
                         rc = True if record else vals.get('record', False)
                         neuron_dict[neuron] = snn.InputNeuron(neuron, record=rc)
@@ -190,7 +192,7 @@ class snn_Backend(Backend):
                                                         )
                             self.nn.add_neuron(neuron_dict[neuron])
         #add other neurons from self.fugu_graph to spiking neural network
-        #parse through the self.fugu_graph and if a neuron is not present in spiking neural network, add to it.                    
+        #parse through the self.fugu_graph and if a neuron is not present in spiking neural network, add to it.
         for neuron, params in self.fugu_graph.nodes.data():
             if neuron not in neuron_dict.keys():
                 th = params.get('threshold', 0.0)
@@ -213,36 +215,36 @@ class snn_Backend(Backend):
                                             record=rc,
                                             )
                 self.nn.add_neuron(neuron_dict[neuron])
-        
+
         ''' Add Synapses '''
-        #add synapses from self.fugu_graph edge information        
+        #add synapses from self.fugu_graph edge information
         for n1, n2, params in self.fugu_graph.edges.data():
             delay = int(params.get('delay', 1))
             wt = params.get('weight', 1.0)
             syn = snn.Synapse(neuron_dict[n1], neuron_dict[n2], delay=delay, weight=wt)
             self.nn.add_synapse(syn)
-        
+
         del neuron_dict
 
     def cleanup(self):
         pass
-    
+
     def stream(self, scaffold, input_values, stepping, record, backend_args):
         warn("Stepping not supported yet.  Use a batching mode.")
         return None
-    
+
     def batch(self, input_values, n_steps, backend_args):
         spike_result = self._serve_fugu_to_snn(
                               input_values,
                               n_steps=n_steps,
                               )
         return results_df_from_dict(spike_result,'time','neuron_number')
-    
+
 class ds_Backend(Backend):
     """Backend for the ds simulator"""
     def __init__(self):
         super(Backend,self).__init__()
-        
+
     def _create_ds_injection(self,input_values):
         #find input nodes
         import torch
@@ -253,7 +255,7 @@ class ds_Backend(Backend):
             spiking_neurons = [self.scaffold.graph.nodes[neuron]['neuron_number'] for neuron in input_values[t]]
             injection_tensors[t][spiking_neurons] = 1
 
-        return injection_tensors    
+        return injection_tensors
 
     def embed(self, scaffold, record, embedding_args={}):
         self.scaffold = scaffold
@@ -274,11 +276,11 @@ class ds_Backend(Backend):
 
     def cleanup(self):
         pass
-    
+
     def stream(self, scaffold, input_values, stepping, record, backend_args):
         warn("Stepping not supported yet.  Use a batching mode.")
         return None
-    
+
     def batch(self, input_values, n_steps, backend_args=None):
         injection_values = self._create_ds_injection(input_values)
 
