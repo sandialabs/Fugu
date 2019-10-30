@@ -352,6 +352,7 @@ class Scaffold:
                 backend = ds_Backend()
             if backend == 'snn':
                 backend = snn_Backend()
+                backend_args['ds_format'] = True
             if backend == 'pynn':
                 backend = pynn_Backend()
                 self.metrics = backend.GetMetrics()

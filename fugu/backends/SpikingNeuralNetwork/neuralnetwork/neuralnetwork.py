@@ -14,7 +14,8 @@ from ..synapse.synapse import Synapse
 
 class NeuralNetwork:
     def __init__(self):
-        self.nrns = set()
+        #self.nrns = set()
+        self.nrns = {}
         self.synps = set()
         self._nrn_count = 0
                 
@@ -22,15 +23,16 @@ class NeuralNetwork:
         '''Add a neuron to the network. If a string is passed, a default LIFNeuron is created with that name.'''
         if not new_neuron:
             self._nrn_count += 1
-            self.nrns.add(LIFNeuron(str(self._nrn_count)))
+            neuron = LIFNeuron(str(self._nrn_count))
         elif type(new_neuron) == str:
             self._nrn_count += 1
-            self.nrns.add(LIFNeuron(new_neuron))
+            neuron = LIFNeuron(new_neuron)
         elif isinstance(new_neuron, Neuron):
             self._nrn_count += 1
-            self.nrns.add(new_neuron)
+            neuron = new_neuron
         else:
             raise TypeError("{0} must be of type Neuron or str".format(new_neuron))
+        self.nrns[neuron.name] = neuron
             
     def add_multiple_neurons(self, neuron_iterable=None):
         '''Add Neurons from an iterable such as a list'''
@@ -46,7 +48,7 @@ class NeuralNetwork:
     def list_neurons(self):
         print("Neurons: {", end='')
         for n in self.nrns:
-            print("{},".format(n.name), end=" ")
+            print("{},".format(self.nrns[n].name), end=" ")
         print("\b\b}")
             
     def add_synapse(self, new_synapse=None):
@@ -76,7 +78,7 @@ class NeuralNetwork:
             
         for s in synapse_iterable:
             self.add_synapse(s)
-    
+
     ### NOT SURE IF THIS IS NEEDED! ### 
     #def build_network(self):
     #    for s in self.synps:
@@ -85,6 +87,9 @@ class NeuralNetwork:
     #        else:
     #            self._inmap[s._post] = {s}
     ###
+
+    def update_input_neuron(self, neuron_name, input_values):
+        self.nrns[neuron_name].connect_to_input(input_values)
     
     # Will be called automatically if a synapse is added
     def update_network(self, new_synapse):
@@ -94,7 +99,7 @@ class NeuralNetwork:
     def step(self):
         '''Evolve the network over one time step'''
         for n in self.nrns:
-            n.update_state()
+            self.nrns[n].update_state()
      
         for s in self.synps:
             s.update_state()
@@ -105,13 +110,13 @@ class NeuralNetwork:
         tempdct = defaultdict(list)
         nrn_list = []
         for n in self.nrns:
-            nrn_list.append(n.name)
+            nrn_list.append(self.nrns[n].name)
 
         for t in range(0, n_steps):
             self.step()
             tempdct[t] = []
             for n in self.nrns:
-                if n.spike and n.record:
+                if self.nrns[n].spike and self.nrns[n].record:
                     if debug_mode:
                         tempdct[t].append((1, n.voltage))
                     else:
@@ -127,7 +132,7 @@ class NeuralNetwork:
         df.index.rename('Time',inplace=True)
         
         if not debug_mode:
-            drop_list = [n.name for n in self.nrns if not n.record]
+            drop_list = [self.nrns[n].name for n in self.nrns if not self.nrns[n].record]
             df = df.drop(drop_list, axis=1)
         
         return df

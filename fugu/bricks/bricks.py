@@ -91,8 +91,7 @@ class InputBrick(Brick):
 class Vector_Input(InputBrick):
     """Class to handle a vector of spiking input. Inherits from InputBrick"""
 
-    def __init__(self, spikes, time_dimension = False,
-                 coding='Undefined', batchable = True, name=None):
+    def __init__(self, spikes, time_dimension=False, coding='Undefined', batchable=True, name=None):
         '''
         Construtor for this brick.
         Arguments:
@@ -111,7 +110,7 @@ class Vector_Input(InputBrick):
         self.name = name
         self.index_map = None
         self.supported_codings = []
-        self.metadata = {'D' : 0}
+        self.metadata = {'D': 0}
         self.current_time=0
         
     def __iter__(self):
