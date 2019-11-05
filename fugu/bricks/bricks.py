@@ -19,27 +19,27 @@ from collections import deque
 from warnings import warn
 
 default_brick_metadata = {
-      'input_shape' : [()],
-      'output_shape' : [()],
-      'D' : 0,
-      'layer' : 'output',
-      'input_coding' : 'unknown',
-      'output_coding' : 'unknown',
-      }
+  'input_shape': [()],
+  'output_shape': [()],
+  'D': 0,
+  'layer': 'output',
+  'input_coding': 'unknown',
+  'output_coding': 'unknown',
+  }
 
 input_coding_types = [
-      'current',
-      'unary-B',
-      'unary-L',
-      'binary-B',
-      'binary-L',
-      'temporal-B',
-      'temporal-L',
-      'Raster',
-      'Population',
-      'Rate',
-      'Undefined',
-      ]
+  'current',
+  'unary-B',
+  'unary-L',
+  'binary-B',
+  'binary-L',
+  'temporal-B',
+  'temporal-L',
+  'Raster',
+  'Population',
+  'Rate',
+  'Undefined',
+  ]
 
 
 class Brick(ABC):
@@ -69,6 +69,7 @@ class InputBrick(Brick):
     
     def __init__(self):
         self.streaming = False
+        self.is_multi_runs = False
     
     @abstractmethod
     def __iter__(self):
@@ -91,7 +92,7 @@ class InputBrick(Brick):
 class Vector_Input(InputBrick):
     """Class to handle a vector of spiking input. Inherits from InputBrick"""
 
-    def __init__(self, spikes, time_dimension=False, coding='Undefined', batchable=True, name=None):
+    def __init__(self, spikes, time_dimension=False, coding='Undefined', batchable=True, name=None, multi_run_inputs=False):
         '''
         Construtor for this brick.
         Arguments:
@@ -100,6 +101,7 @@ class Vector_Input(InputBrick):
 			+ coding - Coding type to be represented.
             + batchable - True if input should represent static data; currently True is the only supported mode.
 		    + name - Name of the brick.  If not specified, a default will be used.  Name should be unique.
+		    + multi_run_inputs - True if 'spikes' represents inputs for different runs
         '''
         super(InputBrick, self).__init__()
         self.vector = np.array(spikes)
@@ -111,28 +113,40 @@ class Vector_Input(InputBrick):
         self.index_map = None
         self.supported_codings = []
         self.metadata = {'D': 0}
-        self.current_time=0
+        self.current_time = 0
+        self.is_multi_runs = multi_run_inputs
         
     def __iter__(self):
-        self.current_time=0
+        self.current_time = 0
         return self
     
     def __next__(self):
-        if self.vector.shape[-1] > self.current_time:
-            self.current_time += 1
-            this_time_vector = self.vector[...,self.current_time-1]
-            local_idxs = np.array(np.where(this_time_vector))
-            num_spikes = len(local_idxs[0])
-            global_idxs = deque()
-            for spike in range(num_spikes):
-                idx_to_build = deque()
-                for dimension in range(len(local_idxs)):
-                    idx_to_build.append(local_idxs[dimension][spike])
-                global_idxs.append(tuple(idx_to_build))
-            spiking_neurons = [self.name+"_"+str(idx) for idx in global_idxs]
-            return spiking_neurons
+        if self.is_multi_runs:
+            if self.current_time < len(self.vector):
+                spiking_neurons = []
+                for i, spike in enumerate(self.vector[self.current_time]):
+                    if spike > 0:
+                        spiking_neurons.append("{}_({},)".format(self.name, i))
+                self.current_time += 1
+                return spiking_neurons
+            else:
+                raise StopIteration
         else:
-            raise StopIteration
+            if self.vector.shape[-1] > self.current_time:
+                self.current_time += 1
+                this_time_vector = self.vector[..., self.current_time - 1]
+                local_idxs = np.array(np.where(this_time_vector))
+                num_spikes = len(local_idxs[0])
+                global_idxs = deque()
+                for spike in range(num_spikes):
+                    idx_to_build = deque()
+                    for dimension in range(len(local_idxs)):
+                        idx_to_build.append(local_idxs[dimension][spike])
+                    global_idxs.append(tuple(idx_to_build))
+                spiking_neurons = [self.name + "_" + str(idx) for idx in global_idxs]
+                return spiking_neurons
+            else:
+                raise StopIteration
 
     next = __next__
 
@@ -143,7 +157,7 @@ class Vector_Input(InputBrick):
             return self.vector
         else:
             assert type(t) is int
-            return self.vector[...,t:t+1][...,-1]
+            return self.vector[..., t : t + 1][..., -1]
 
     def build(self, graph, metadata, control_nodes, input_lists, input_codings):
         """
@@ -164,22 +178,35 @@ class Vector_Input(InputBrick):
             + list of coding formats of output
         """
 
-        if not self.time_dimension:
-            self.vector = np.expand_dims(self.vector,
-                                         len(self.vector.shape))
+        if not self.time_dimension and not self.is_multi_runs:
+            self.vector = np.expand_dims(
+                               self.vector,
+                               len(self.vector.shape),
+                               )
 
         output_lists = [[]]
 
-        self.index_map = np.ndindex(self.vector.shape[:-1])
+        if self.is_multi_runs:
+            temp_vector = self.vector[0]
+            if not self.time_dimension:
+                temp_vector = np.expand_dims(
+                                   temp_vector,
+                                   len(temp_vector.shape),
+                                   )
+            self.index_map = np.ndindex(temp_vector.shape[:-1])
+        else:
+            self.index_map = np.ndindex(self.vector.shape[:-1])
         for i, index in enumerate(self.index_map):
             #neuron_name = self.name+"_" + str(i)
-            neuron_name = self.name+"_"+str(index)
+            neuron_name = self.name + "_" + str(index)
 
-            graph.add_node(neuron_name,
-                           index=index,
-                           threshold=0.0,
-                           decay=0.0,
-                           p=1.0)
+            graph.add_node(
+                    neuron_name,
+                    index=index,
+                    threshold=0.0,
+                    decay=0.0,
+                    p=1.0,
+                    )
             output_lists[0].append(neuron_name)
         output_codings = [self.coding]
         complete_node = self.name+"_complete"
@@ -187,15 +214,22 @@ class Vector_Input(InputBrick):
         #            'shape':self.vector.shape[:-1],
         #            'coding':output_codings,
         #            'complete_node':complete_node}]
-        graph.add_node(complete_node,
-                      index = -1,
-                      threshold = 0.0,
-                      decay = 0.0,
-                      p=1.0,
-                      potential = 0.5)
+        graph.add_node(
+                complete_node,
+                index=-1,
+                threshold=0.0,
+                decay=0.0,
+                p=1.0,
+                potential=0.5,
+                )
         self.is_built = True
-        return (graph, {'output_shape':[self.vector.shape], 'output_coding':self.coding, 'layer' : input, 'D':0},
-               [{'complete':complete_node}], output_lists, output_codings)
+        return (
+                graph, 
+                {'output_shape': [self.vector.shape], 'output_coding': self.coding, 'layer': input, 'D': 0},
+                [{'complete':complete_node}],
+                output_lists,
+                output_codings,
+                )
         
 class Spike_Input(Vector_Input):
     def __init__(self,input_spikes,*args,**kwargs):

@@ -24,14 +24,15 @@ from fugu.bricks import Breadth_First_Search, Shortest_Path, Vector_Input
 
 BACKEND = "pynn"
 DEBUG = False
-GRAPH_SIZE = 2 ** 4
+GRAPH_SIZE = 2 ** 5
 
 def create_graph(size, p, seed):
-    # @TODO: Need to replace this with a Kronecker/R-Mat generator
     G = fast_gnp_random_graph(size, p, seed=seed)
     for (u,v) in G.edges():
-        weight = random.randint(1,20)
+        weight = random.randint(1,10)
         G.edges[u,v]['weight'] = weight
+    if not nx.is_connected(G):
+        print("G is not connected!")
     return G
 
 def estimate_max_time(graph, key):
@@ -63,8 +64,12 @@ def estimate_max_time(graph, key):
     
     return max_level, max_dist 
 
-random.seed(3)
-graph = create_graph(GRAPH_SIZE, 0.3, 3)
+seed = 3
+random.seed(seed)
+graph = create_graph(GRAPH_SIZE, 0.3, seed)
+
+# Save graph to file for easier debugging/testing
+#nx.write_edgelist(graph, 'graph-s{}-N{}.txt'.format(seed, GRAPH_SIZE), data=True)
 
 results = {}
 timing_results = {}
@@ -78,23 +83,22 @@ bfs_scale_factor = 10.0
 sssp_scale_factor = 1.0
 
 #search_keys = random.sample(range(GRAPH_SIZE), GRAPH_SIZE if 64 > GRAPH_SIZE else 64) 
-search_keys = random.sample(range(GRAPH_SIZE), 3) 
+search_keys = random.sample(range(GRAPH_SIZE), 2) 
 bfs_key_spikes = []
 sssp_key_spikes = []
 base_spikes = [0 for i in range(GRAPH_SIZE)]
 max_level, max_dist = 0, 0
 
-# Generate graph
 for search_key in search_keys:
     #search_key = random.randint(0,GRAPH_SIZE)
     #search_keys.append(search_key)
 
-    bfs_spikes = {0:deque()}
-    bfs_spikes[0].append('BFSInput_({},)'.format(search_key))
+    bfs_spikes = [0 for i in range(GRAPH_SIZE)]
+    bfs_spikes[search_key] = 1
     bfs_key_spikes.append(bfs_spikes)
 
-    sssp_spikes = {0:deque()}
-    sssp_spikes[0].append('SSSPInput_({},)'.format(search_key))
+    sssp_spikes = [0 for i in range(GRAPH_SIZE)]
+    sssp_spikes[search_key] = 1
     sssp_key_spikes.append(sssp_spikes)
 
     level, dist = estimate_max_time(graph, search_key)
@@ -112,7 +116,7 @@ print("---Building BFS Scaffold---")
 bfs_scaffold = Scaffold()
 
 bfs_brick = Breadth_First_Search(graph, name="BFS", store_edge_references=True)
-bfs_input = Vector_Input(base_spikes, coding='Raster', name='BFSInput')
+bfs_input = Vector_Input(bfs_key_spikes, coding='Raster', name='BFSInput', multi_run_inputs=True)
 bfs_scaffold.add_brick(bfs_input, 'input')
 bfs_scaffold.add_brick(bfs_brick, output=True)
 
@@ -142,7 +146,7 @@ print("---Building SSSP Scaffold---")
 sssp_scaffold = Scaffold()
 
 sssp_brick = Shortest_Path(graph, name="SSSP", return_path=True)
-sssp_input = Vector_Input(base_spikes, coding='Raster', name='SSSPInput')
+sssp_input = Vector_Input(sssp_key_spikes, coding='Raster', name='SSSPInput', multi_run_inputs=True)
 sssp_scaffold.add_brick(sssp_input, 'input')
 sssp_scaffold.add_brick(sssp_brick, output=True)
 
@@ -183,8 +187,9 @@ for bfs_result in bfs_results:
         print("------")
     for row in bfs_result.sort_values("time").itertuples():
         neuron_name = bfs_names[int(row.neuron_number)][0]
-        if DEBUG:
-            print(neuron_name, row.time)
+        #if DEBUG:
+            #print(neuron_name, row.time)
+        print(neuron_name, row.time)
         spikes += 1
 
         neuron_props = bfs_scaffold.graph.nodes[neuron_name]
@@ -332,6 +337,7 @@ print("BFS {}, SSSP {}".format(len(bfs_scaffold.graph.nodes()), len(sssp_scaffol
 print("Embedding times:")
 print("BFS {}, SSSP {}".format(bfs_embedding_time, sssp_embedding_time))
 
+print("Key, BFS pass, SSSP pass, BFS time, SSSP time, BFS Last, SSSP Last, BFS total spikes, SSSP total spikes, Max BFS level, Max Dist")
 for index, search_key in enumerate(search_keys):
     results = (bfs_pass[index], sssp_pass[index], 
                bfs_runtimes[index], sssp_runtimes[index], 

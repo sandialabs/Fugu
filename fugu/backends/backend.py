@@ -48,16 +48,61 @@ class Backend(ABC):
 
         self.embed(scaffold, record, backend_args)
 
-        input_nodes = [node  for node in scaffold.circuit.nodes if ('layer' in scaffold.circuit.nodes[node])
+        input_nodes = [node for node in scaffold.circuit.nodes if ('layer' in scaffold.circuit.nodes[node])
                        and (scaffold.circuit.nodes[node]['layer'] == 'input')]
         if batch:
-            input_values = {}
-            for timestep in range(0,n_steps):
-                input_values[timestep]=deque()
+            multi_runs = []
+            single_runs = []
             for input_node in input_nodes:
-                for timestep, spike_list in enumerate(scaffold.circuit.nodes[input_node]['brick']):
-                    input_values[timestep].extend(spike_list)
-            results = self.batch(input_values, n_steps, backend_args)
+                brick = scaffold.circuit.nodes[input_node]['brick'] 
+                if brick.is_multi_runs:
+                    multi_runs.append(brick)
+                else:
+                    single_runs.append(brick)
+
+            if len(multi_runs) > 0:
+                results = pd.DataFrame()
+
+                static_values = {}
+                for timestep in range(0,n_steps):
+                    static_values[timestep] = deque()
+                for node in single_runs:
+                    for timestep, spike_list in enumerate(node):
+                        static_values[timestep].extend(spike_list)
+
+                max_runs = 0
+                multi_inputs = {}
+                for input_node in multi_runs:
+                    multi_inputs[input_node] = list(iter(input_node)) # This feels pretty hacky
+                    num_runs = len(multi_inputs[input_node])
+                    if num_runs > max_runs:
+                        max_runs = num_runs
+
+                for i in range(max_runs):
+                    # iterate through runs
+                    input_values = {}
+                    for timestep in range(0,n_steps):
+                        input_values[timestep] = deque()
+                    for key in static_values:
+                        input_values[key].extend(static_values[key])
+                    for node in multi_inputs:
+                        if i < len(multi_inputs[node]):
+                            input_values[0].extend(multi_inputs[node][i])
+                        else:
+                            number_finished += 1
+                            input_values[0].extend(multi_inputs[node][-1])
+                    self.batch(input_values, n_steps, backend_args)
+                results = self.get_results()
+            else:
+                input_values = {}
+                for timestep in range(0,n_steps):
+                    input_values[timestep] = deque()
+                for input_node in input_nodes:
+                    for timestep, spike_list in enumerate(scaffold.circuit.nodes[input_node]['brick']):
+                        input_values[timestep].extend(spike_list)
+
+                self.batch(input_values, n_steps, backend_args)
+                results = self.get_results()[0]
         else:
             if not self.features['supports_stepping']:
                 raise ValueError("Backend does not support stepping. Use a batch mode.")
@@ -75,6 +120,9 @@ class Backend(ABC):
 
         return results
 
+    @abstractmethod
+    def get_results(self):
+        pass
 
     @abstractmethod
     def embed(self, scaffold, record, embedding_args={}):
@@ -96,8 +144,8 @@ class snn_Backend(Backend):
     """Backend for Srideep's Noteworthy Network (SNN)"""
     def __init__(self):
         super(Backend, self).__init__()
+        self.results = []
 
-    #def _serve_fugu_to_snn(self, fugu_circuit, fugu_graph, n_steps=1, record_all=False, ds_format=False):
     def _serve_fugu_to_snn(self, input_values, n_steps=1):
         for node, vals in self.fugu_circuit.nodes.data():
             if 'layer' in vals:
@@ -134,9 +182,12 @@ class snn_Backend(Backend):
                         l.append(c)
                     res[r] = l
 
-            return res
+            self.results.append(res)
         else:
-            return df
+            self.results.append(df)
+    
+    def get_results(self):
+        return [results_df_from_dict(spike_result,'time','neuron_number') for spike_result in self.results]
 
     def embed(self, scaffold, record, embedding_args={}):
         '''Reads in a built fugu graph and converts it to a spiking neural network
@@ -234,16 +285,16 @@ class snn_Backend(Backend):
         return None
 
     def batch(self, input_values, n_steps, backend_args):
-        spike_result = self._serve_fugu_to_snn(
-                              input_values,
-                              n_steps=n_steps,
-                              )
-        return results_df_from_dict(spike_result,'time','neuron_number')
+        self._serve_fugu_to_snn(
+               input_values,
+               n_steps=n_steps,
+               )
 
 class ds_Backend(Backend):
     """Backend for the ds simulator"""
     def __init__(self):
         super(Backend,self).__init__()
+        self.results = []
 
     def _create_ds_injection(self,input_values):
         #find input nodes
@@ -256,6 +307,9 @@ class ds_Backend(Backend):
             injection_tensors[t][spiking_neurons] = 1
 
         return injection_tensors
+
+    def get_results(self):
+        return self.results
 
     def embed(self, scaffold, record, embedding_args={}):
         self.scaffold = scaffold
@@ -300,4 +354,4 @@ class ds_Backend(Backend):
                     mini_df['time'] = times
                     mini_df['neuron_number'] = neurons
                     spike_result = spike_result.append(mini_df, sort=True)
-        return spike_result
+        self.results.append(spike_result)

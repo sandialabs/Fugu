@@ -358,13 +358,15 @@ class Scaffold:
                 self.metrics = backend.GetMetrics()
         if not issubclass(type(backend), Backend):
             raise ValueError("Invalid backend option.")
-        results = backend.serve(self, 
-                      n_steps=max_runtime, 
-                      record=record, 
-                      batch=True,
-                      summary_steps=None,
-                      record_all=record_all,
-                      backend_args=backend_args)
+        results = backend.serve(
+                    self, 
+                    n_steps=max_runtime, 
+                    record=record, 
+                    batch=True,
+                    summary_steps=None,
+                    record_all=record_all,
+                    backend_args=backend_args,
+                    )
         return results
         
             

@@ -1,6 +1,5 @@
 import unittest
 
-
 from test_utility_bricks import SnnUtilityTests, DsUtilityTests, PynnBrianUtilityTests, PynnSpinnakerUtilityTests
 from test_stochastic_bricks import SnnStochasticTests, DsStochasticTests
 from test_graph_bricks import SnnGraphTests, DsGraphTests, PynnBrianGraphTests, PynnSpinnakerGraphTests
