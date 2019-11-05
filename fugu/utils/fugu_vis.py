@@ -595,7 +595,11 @@ def raster_plot(result, scaffold):
 if __name__ == "__main__":
     import networkx as nx
     from fugu.scaffold import Scaffold
-    from fugu.bricks import Vector_Input, Copy, Dot, Threshold, Shortest_Path
+    from fugu.bricks.bricks import Vector_Input
+    from fugu.bricks.utility_bricks import Copy, Dot
+    from fugu.bricks.graph_bricks import Shortest_Path
+    from fugu.bricks.stochastic_bricks import Threshold
+    #, Copy, Dot, Threshold, Shortest_Path
     scaffold = Scaffold()
     print("Building Graph")
     #Small graph:
@@ -619,7 +623,7 @@ if __name__ == "__main__":
     print('----------------------')
     print ('Results:', end='\n\n')
     print("Evaluating")
-    result = scaffold.evaluate(backend='ds', max_runtime=100, record_all=True)
+    result = scaffold.evaluate(backend='ds_legacy', max_runtime=100, record_all=True)
     print("Done evaluating.")
     print("Building Layout")
     #setting pos is optional: also can set position with networkx layout generators
