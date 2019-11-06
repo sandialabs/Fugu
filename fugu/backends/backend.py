@@ -69,7 +69,7 @@ class Backend(ABC):
                 # Iterate through all multi_run bricks and build input values for each run.
                 # If a brick does not explicitly specify an input for a given run then it is assumed that it uses
                 #   its previous input.
-                results = pd.DataFrame()
+                results = []
 
                 static_values = {}
                 for timestep in range(0, n_steps):
@@ -99,8 +99,7 @@ class Backend(ABC):
                         else:
                             number_finished += 1
                             input_values[0].extend(multi_inputs[node][-1])
-                    self.batch(input_values, n_steps, backend_args)
-                results = self.get_results()
+                    results.append(self.batch(input_values, n_steps, backend_args))
             else:
                 input_values = {}
                 for timestep in range(0, n_steps):
@@ -109,8 +108,7 @@ class Backend(ABC):
                     for timestep, spike_list in enumerate(scaffold.circuit.nodes[input_node]['brick']):
                         input_values[timestep].extend(spike_list)
 
-                self.batch(input_values, n_steps, backend_args)
-                results = self.get_results()[0]
+                results = self.batch(input_values, n_steps, backend_args)
         else:
             if not self.features['supports_stepping']:
                 raise ValueError("Backend does not support stepping. Use a batch mode.")
@@ -127,10 +125,6 @@ class Backend(ABC):
         self.cleanup()
 
         return results
-
-    @abstractmethod
-    def get_results(self):
-        pass
 
     @abstractmethod
     def embed(self, scaffold, record, embedding_args={}):
@@ -191,12 +185,12 @@ class snn_Backend(Backend):
                         l.append(c)
                     res[r] = l
 
-            self.results.append(res)
+            return res
         else:
-            self.results.append(df)
+            return df
 
     def get_results(self):
-        return [results_df_from_dict(spike_result, 'time', 'neuron_number') for spike_result in self.results]
+        return [ for spike_result in self.results]
 
     def embed(self, scaffold, record, embedding_args={}):
         '''Reads in a built fugu graph and converts it to a spiking neural network
@@ -291,10 +285,8 @@ class snn_Backend(Backend):
         return None
 
     def batch(self, input_values, n_steps, backend_args):
-        self._serve_fugu_to_snn(
-               input_values,
-               n_steps=n_steps,
-               )
+        results = self._serve_fugu_to_snn(input_values, n_steps=n_steps)
+        return results_df_from_dict(results, 'time', 'neuron_number')
 
 
 class ds_Backend(Backend):
@@ -314,9 +306,6 @@ class ds_Backend(Backend):
             injection_tensors[t][spiking_neurons] = 1
 
         return injection_tensors
-
-    def get_results(self):
-        return self.results
 
     def embed(self, scaffold, record, embedding_args={}):
         self.scaffold = scaffold
@@ -361,4 +350,4 @@ class ds_Backend(Backend):
                     mini_df['time'] = times
                     mini_df['neuron_number'] = neurons
                     spike_result = spike_result.append(mini_df, sort=True)
-        self.results.append(spike_result)
+        return spike_result

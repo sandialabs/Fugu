@@ -251,10 +251,10 @@ class pynn_Backend(Backend):
             return spike_result
 
         # process results
-        results = []
-        for i in range(self.number_of_runs):
-            results.append(_process_run(i))
-        return results
+        #results = []
+        #for i in range(self.number_of_runs):
+            #results.append(_process_run(i))
+        return _process_run(self.number_of_runs - 1)
 
     def embed(self, fugu_scaffold, record, embedding_args={}):
         self.report_all = record == 'all'
@@ -555,5 +555,83 @@ class pynn_Backend(Backend):
         return None
 
     def batch(self, input_values, n_steps, backend_args=None):
+        run_index = self.number_of_runs
         self.number_of_runs += 1
         self._run_pynn_sim(n_steps, input_values)
+
+        main_data = self.main_population.get_data()
+        input_data = self.input_population.get_data()
+
+        spike_result = pd.DataFrame({'time': [], 'neuron_number': []})
+
+        main_spiketrains = main_data.segments[run_index].spiketrains
+        input_spiketrains = input_data.segments[run_index].spiketrains
+
+        if self.store_voltage:
+            if self.report_all:
+                main_voltage = main_data.segments[run_index].filter(name='v')[0]
+            else:
+                main_voltage = []
+                data = main_data.segments[run_index].filter(name='v')[0]
+                for neuron in self.output_names:
+                    main_voltage.append(data[self.neuron_to_pynn[neuron]])
+
+        spikes = {}
+        for neuron in self.neuron_to_pynn:
+            if self.report_all or neuron in self.output_names:
+                pynn_index = self.neuron_to_pynn[neuron]
+                spiketrain = main_spiketrains[pynn_index]
+                if self.verbose:
+                    print("---results for: {}".format(neuron))
+                    if self.store_voltage:
+                        if self.report_all:
+                            print("voltage  {}".format(main_voltage[pynn_index]))
+                    print("spiketimes  {}".format(spiketrain))
+
+                if spiketrain.any():
+                    for time in np.array(spiketrain):
+                        if time not in spikes:
+                            spikes[time] = set()
+                        spikes[time].add(self.fugu_graph.node[neuron]['neuron_number'])
+
+        labels = []
+        for neuron in self.neuron_to_pynn:
+            labels.append(neuron)
+        if self.show_plots and self.store_voltage:
+            from pyNN.utility.plotting import Figure, Panel
+            import matplotlib.pyplot as plt
+            if self.report_all:
+                Figure(
+                    Panel(main_voltage,
+                          ylabel="Membrane potential (mV)",
+                          yticks=True, linewidth=2.0),
+                    annotations=""
+                )
+            else:
+                for i, neuron in enumerate(self.output_names):
+                    label = "Neuron: {}".format(neuron)
+                    plt.plot(main_voltage[i].times, main_voltage[i], label=label)
+                plt.legend()
+            plt.show()
+
+        for neuron in self.input_to_pynn:
+            if self.report_all or neuron in self.output_names:
+                input_index = self.input_to_pynn[neuron]
+                spiketrain = input_spiketrains[input_index]
+                if self.verbose:
+                    print("---results for: {}".format(neuron))
+                    print("spiketimes  {}".format(spiketrain))
+                if spiketrain.any():
+                    for time in np.array(spiketrain):
+                        if time not in spikes:
+                            spikes[time] = set()
+                        spikes[time].add(self.fugu_graph.node[neuron]['neuron_number'])
+
+        for time in spikes:
+            mini_df = pd.DataFrame()
+            times = [time for i in spikes[time]]
+            mini_df['time'] = times
+            mini_df['neuron_number'] = list(spikes[time])
+            spike_result = spike_result.append(mini_df, sort=False)
+
+        return spike_result
