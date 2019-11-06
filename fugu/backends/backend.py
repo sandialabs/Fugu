@@ -189,9 +189,6 @@ class snn_Backend(Backend):
         else:
             return df
 
-    def get_results(self):
-        return [ for spike_result in self.results]
-
     def embed(self, scaffold, record, embedding_args={}):
         '''Reads in a built fugu graph and converts it to a spiking neural network
         and runs it for n steps'''
