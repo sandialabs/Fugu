@@ -5,27 +5,32 @@ Created on Wed Jun 19 12:09:35 2019
 
 @author: smusuva
 """
+
+from abc import abstractmethod
+from collections import deque
+from warnings import warn
+
+from ..utils.export_utils import results_df_from_dict
+
+import pandas as pd
+import networkx as nx
+
 import abc
 import sys
 if sys.version_info >= (3, 4):
     ABC = abc.ABC
 else:
     ABC = abc.ABCMeta('ABC', (), {'__slots__': ()})
-from abc import abstractmethod
-from collections import deque
-import pandas as pd
-from warnings import warn
-from ..utils.export_utils import results_df_from_dict
-import networkx as nx
+
 
 class Backend(ABC):
     """Abstract Base Class definition of a Backend"""
     def __init__(self):
         self.features = {
-                          'supports_stepping':False,
-                          'supports_streaming_input':False,
-                          'supports_additive_leak':False,
-                          'supports_hebbian_learning':False,
+                          'supports_stepping': False,
+                          'supports_streaming_input': False,
+                          'supports_additive_leak': False,
+                          'supports_hebbian_learning': False,
                           }
 
     def serve(
@@ -54,17 +59,20 @@ class Backend(ABC):
             multi_runs = []
             single_runs = []
             for input_node in input_nodes:
-                brick = scaffold.circuit.nodes[input_node]['brick'] 
+                brick = scaffold.circuit.nodes[input_node]['brick']
                 if brick.is_multi_runs:
                     multi_runs.append(brick)
                 else:
                     single_runs.append(brick)
 
             if len(multi_runs) > 0:
+                # Iterate through all multi_run bricks and build input values for each run.
+                # If a brick does not explicitly specify an input for a given run then it is assumed that it uses
+                #   its previous input.
                 results = pd.DataFrame()
 
                 static_values = {}
-                for timestep in range(0,n_steps):
+                for timestep in range(0, n_steps):
                     static_values[timestep] = deque()
                 for node in single_runs:
                     for timestep, spike_list in enumerate(node):
@@ -73,7 +81,7 @@ class Backend(ABC):
                 max_runs = 0
                 multi_inputs = {}
                 for input_node in multi_runs:
-                    multi_inputs[input_node] = list(iter(input_node)) # This feels pretty hacky
+                    multi_inputs[input_node] = list(iter(input_node))  # This feels pretty hacky
                     num_runs = len(multi_inputs[input_node])
                     if num_runs > max_runs:
                         max_runs = num_runs
@@ -81,7 +89,7 @@ class Backend(ABC):
                 for i in range(max_runs):
                     # iterate through runs
                     input_values = {}
-                    for timestep in range(0,n_steps):
+                    for timestep in range(0, n_steps):
                         input_values[timestep] = deque()
                     for key in static_values:
                         input_values[key].extend(static_values[key])
@@ -95,7 +103,7 @@ class Backend(ABC):
                 results = self.get_results()
             else:
                 input_values = {}
-                for timestep in range(0,n_steps):
+                for timestep in range(0, n_steps):
                     input_values[timestep] = deque()
                 for input_node in input_nodes:
                     for timestep, spike_list in enumerate(scaffold.circuit.nodes[input_node]['brick']):
@@ -140,6 +148,7 @@ class Backend(ABC):
     def batch(self, input_values, n_steps, backend_args):
         pass
 
+
 class snn_Backend(Backend):
     """Backend for Srideep's Noteworthy Network (SNN)"""
     def __init__(self):
@@ -162,13 +171,13 @@ class snn_Backend(Backend):
                                 input_values[neuron].append(0)
 
                     for neuron in self.fugu_circuit.nodes[node]['output_lists'][0]:
-                        self.nn.update_input_neuron(neuron,input_values[neuron])
+                        self.nn.update_input_neuron(neuron, input_values[neuron])
 
         ''' Run the Simulator '''
         df = self.nn.run(n_steps=n_steps, debug_mode=False)
         res = {}
-        #if ds format is required, convert neuron names to numbers and return dictionary
-        #else return dataframe
+        # if ds format is required, convert neuron names to numbers and return dictionary
+        # else return dataframe
         if self.ds_format:
             numerical_cols = {}
             for c in df.columns:
@@ -185,9 +194,9 @@ class snn_Backend(Backend):
             self.results.append(res)
         else:
             self.results.append(df)
-    
+
     def get_results(self):
-        return [results_df_from_dict(spike_result,'time','neuron_number') for spike_result in self.results]
+        return [results_df_from_dict(spike_result, 'time', 'neuron_number') for spike_result in self.results]
 
     def embed(self, scaffold, record, embedding_args={}):
         '''Reads in a built fugu graph and converts it to a spiking neural network
@@ -204,17 +213,14 @@ class snn_Backend(Backend):
         self.nn = snn.NeuralNetwork()
         neuron_dict = {}
 
-
         ''' Add Neurons '''
-        #Add in input and output neurons. Use the fugu_circuit information to identify input and output layers
-        #For input nodes, create input neurons and identity and associate the appropriate inputs to it
-        #for output neurons, obtain neuron parameters from fugu_graph and create LIFNeurons
-        #Add neurons to spiking neural network
+        # Add in input and output neurons. Use the fugu_circuit information to identify input and output layers
+        # For input nodes, create input neurons and identity and associate the appropriate inputs to it
+        # for output neurons, obtain neuron parameters from fugu_graph and create LIFNeurons
+        # Add neurons to spiking neural network
         for node, vals in self.fugu_circuit.nodes.data():
             if 'layer' in vals:
                 if vals['layer'] == 'input':
-
-
                     for neuron in self.fugu_circuit.nodes[node]['output_lists'][0]:
                         rc = True if record else vals.get('record', False)
                         neuron_dict[neuron] = snn.InputNeuron(neuron, record=rc)
@@ -226,7 +232,7 @@ class snn_Backend(Backend):
                             th = params.get('threshold', 0.0)
                             rv = params.get('reset_voltage', 0.0)
                             lk = params.get('leakage_constant', 1.0)
-                            vol =params.get('voltage', 0.0)
+                            vol = params.get('voltage', 0.0)
                             prob = params.get('p', 1.0)
                             if 'potential' in params:
                                 vol = params['potential']
@@ -242,8 +248,8 @@ class snn_Backend(Backend):
                                                         record=True,
                                                         )
                             self.nn.add_neuron(neuron_dict[neuron])
-        #add other neurons from self.fugu_graph to spiking neural network
-        #parse through the self.fugu_graph and if a neuron is not present in spiking neural network, add to it.
+        # add other neurons from self.fugu_graph to spiking neural network
+        # parse through the self.fugu_graph and if a neuron is not present in spiking neural network, add to it.
         for neuron, params in self.fugu_graph.nodes.data():
             if neuron not in neuron_dict.keys():
                 th = params.get('threshold', 0.0)
@@ -268,7 +274,7 @@ class snn_Backend(Backend):
                 self.nn.add_neuron(neuron_dict[neuron])
 
         ''' Add Synapses '''
-        #add synapses from self.fugu_graph edge information
+        # add synapses from self.fugu_graph edge information
         for n1, n2, params in self.fugu_graph.edges.data():
             delay = int(params.get('delay', 1))
             wt = params.get('weight', 1.0)
@@ -290,14 +296,15 @@ class snn_Backend(Backend):
                n_steps=n_steps,
                )
 
+
 class ds_Backend(Backend):
     """Backend for the ds simulator"""
     def __init__(self):
-        super(Backend,self).__init__()
+        super(Backend, self).__init__()
         self.results = []
 
-    def _create_ds_injection(self,input_values):
-        #find input nodes
+    def _create_ds_injection(self, input_values):
+        # find input nodes
         import torch
 
         injection_tensors = {}
@@ -313,14 +320,14 @@ class ds_Backend(Backend):
 
     def embed(self, scaffold, record, embedding_args={}):
         self.scaffold = scaffold
-        if record =='output':
+        if record == 'output':
             for node in self.scaffold.circuit.nodes:
                 if 'layer' in self.scaffold.circuit.nodes[node] and self.scaffold.circuit.nodes[node]['layer'] == 'output':
                     for o_list in self.scaffold.circuit.nodes[node]['output_lists']:
                         for neuron in o_list:
                             self.scaffold.graph.nodes[neuron]['record'] = ['spikes']
         self.ds_graph = nx.convert_node_labels_to_integers(self.scaffold.graph)
-        self.ds_graph.graph['has_delay']=True
+        self.ds_graph.graph['has_delay'] = True
         if record == 'all':
             for neuron in self.ds_graph.nodes:
                 self.ds_graph.nodes[neuron]['record'] = ['spikes']
@@ -343,7 +350,7 @@ class ds_Backend(Backend):
                     self.ds_graph,
                     n_steps,
                     injection_values)
-        spike_result = pd.DataFrame({'time':[],'neuron_number':[]})
+        spike_result = pd.DataFrame({'time': [], 'neuron_number': []})
         for group in results:
             if 'spike_history' in results[group]:
                 spike_history = results[group]['spike_history']

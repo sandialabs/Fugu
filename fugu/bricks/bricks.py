@@ -9,37 +9,37 @@ import abc
 import sys
 import numpy as np
 
+from abc import abstractmethod
+from collections import deque
+from warnings import warn
+
 if sys.version_info >= (3, 4):
     ABC = abc.ABC
 else:
     ABC = abc.ABCMeta('ABC', (), {'__slots__': ()})
 
-from abc import abstractmethod
-from collections import deque
-from warnings import warn
-
 default_brick_metadata = {
-  'input_shape': [()],
-  'output_shape': [()],
-  'D': 0,
-  'layer': 'output',
-  'input_coding': 'unknown',
-  'output_coding': 'unknown',
-  }
+                           'input_shape': [()],
+                           'output_shape': [()],
+                           'D': 0,
+                           'layer': 'output',
+                           'input_coding': 'unknown',
+                           'output_coding': 'unknown',
+                           }
 
 input_coding_types = [
-  'current',
-  'unary-B',
-  'unary-L',
-  'binary-B',
-  'binary-L',
-  'temporal-B',
-  'temporal-L',
-  'Raster',
-  'Population',
-  'Rate',
-  'Undefined',
-  ]
+                       'current',
+                       'unary-B',
+                       'unary-L',
+                       'binary-B',
+                       'binary-L',
+                       'temporal-B',
+                       'temporal-L',
+                       'Raster',
+                       'Population',
+                       'Rate',
+                       'Undefined',
+                       ]
 
 
 class Brick(ABC):
@@ -58,23 +58,28 @@ class Brick(ABC):
         Arguments:
             + graph - networkx graph
             + metadata - A dictionary of shapes and parameters
-            + control_nodes - list of dictionary of auxillary nodes.  Acceptable keys include: 'complete' - A list of neurons that fire when the brick is done, 'begin' - A list of neurons that fire when the brick begins computation (used for temporal processing)
+            + control_nodes - list of dictionary of auxillary nodes.
+                Acceptable keys include:
+                    'complete' - A list of neurons that fire when the brick is done
+                    'begin' - A list of neurons that fire when the brick begins computation
+                                (used for temporal processing)
             + input_lists - list of lists of nodes for input neurons
             + input_codings - list of input coding types (as strings)
         """
         pass
 
+
 class InputBrick(Brick):
     """Abstract Base class for handling inputs inherited from Brick"""
-    
+
     def __init__(self):
         self.streaming = False
         self.is_multi_runs = False
-    
+
     @abstractmethod
     def __iter__(self):
         pass
-    
+
     @abstractmethod
     def __next__(self):
         pass
@@ -88,20 +93,29 @@ class InputBrick(Brick):
             + t - type of input (Default: None)
         """
         pass
-    
+
+
 class Vector_Input(InputBrick):
     """Class to handle a vector of spiking input. Inherits from InputBrick"""
 
-    def __init__(self, spikes, time_dimension=False, coding='Undefined', batchable=True, name=None, multi_run_inputs=False):
+    def __init__(
+          self,
+          spikes,
+          time_dimension=False,
+          coding='Undefined',
+          batchable=True,
+          name=None,
+          multi_run_inputs=False,
+          ):
         '''
         Construtor for this brick.
         Arguments:
-		    + spikes - A numpy array of which neurons should spike at which times
-			+ time_dimension - Time dimesion is included as dimension -1
-			+ coding - Coding type to be represented.
+            + spikes - A numpy array of which neurons should spike at which times
+            + time_dimension - Time dimesion is included as dimension -1
+            + coding - Coding type to be represented.
             + batchable - True if input should represent static data; currently True is the only supported mode.
-		    + name - Name of the brick.  If not specified, a default will be used.  Name should be unique.
-		    + multi_run_inputs - True if 'spikes' represents inputs for different runs
+            + name - Name of the brick.  If not specified, a default will be used.  Name should be unique.
+            + multi_run_inputs - True if 'spikes' represents inputs for different runs
         '''
         super(InputBrick, self).__init__()
         self.vector = np.array(spikes)
@@ -115,11 +129,11 @@ class Vector_Input(InputBrick):
         self.metadata = {'D': 0}
         self.current_time = 0
         self.is_multi_runs = multi_run_inputs
-        
+
     def __iter__(self):
         self.current_time = 0
         return self
-    
+
     def __next__(self):
         if self.is_multi_runs:
             if self.current_time < len(self.vector):
@@ -150,14 +164,14 @@ class Vector_Input(InputBrick):
 
     next = __next__
 
-
     def get_input_value(self, t=None):
-        warn("get_input_value is deprecated and will be removed from later versions.  Please ensure that your backend is up-to-date.")
+        warn("get_input_value is deprecated and will be removed from later versions.")
+        warn("Please ensure that your backend is up-to-date.")
         if t is None:
             return self.vector
         else:
             assert type(t) is int
-            return self.vector[..., t : t + 1][..., -1]
+            return self.vector[..., t: t + 1][..., -1]
 
     def build(self, graph, metadata, control_nodes, input_lists, input_codings):
         """
@@ -166,7 +180,9 @@ class Vector_Input(InputBrick):
         Arguments:
             + graph - networkx graph to define connections of the computational graph
             + metadata - dictionary to define the shapes and parameters of the brick
-            + control_nodes - list of dictionary of auxillary nodes.  Excpected keys: 'complete' - A list of neurons that fire when the brick is done
+            + control_nodes - list of dictionary of auxillary nodes.
+                Expected keys:
+                    'complete' - A list of neurons that fire when the brick is done
             + input_lists - list of nodes that will contain input
             + input_coding - list of input coding formats
 
@@ -197,7 +213,6 @@ class Vector_Input(InputBrick):
         else:
             self.index_map = np.ndindex(self.vector.shape[:-1])
         for i, index in enumerate(self.index_map):
-            #neuron_name = self.name+"_" + str(i)
             neuron_name = self.name + "_" + str(index)
 
             graph.add_node(
@@ -209,11 +224,7 @@ class Vector_Input(InputBrick):
                     )
             output_lists[0].append(neuron_name)
         output_codings = [self.coding]
-        complete_node = self.name+"_complete"
-        #outputs = [{'neurons':output_lists,
-        #            'shape':self.vector.shape[:-1],
-        #            'coding':output_codings,
-        #            'complete_node':complete_node}]
+        complete_node = self.name + "_complete"
         graph.add_node(
                 complete_node,
                 index=-1,
@@ -223,15 +234,17 @@ class Vector_Input(InputBrick):
                 potential=0.5,
                 )
         self.is_built = True
+
         return (
-                graph, 
-                {'output_shape': [self.vector.shape], 'output_coding': self.coding, 'layer': input, 'D': 0},
-                [{'complete':complete_node}],
-                output_lists,
-                output_codings,
-                )
-        
+                 graph,
+                 {'output_shape': [self.vector.shape], 'output_coding': self.coding, 'layer': input, 'D': 0},
+                 [{'complete': complete_node}],
+                 output_lists,
+                 output_codings,
+                 )
+
+
 class Spike_Input(Vector_Input):
-    def __init__(self,input_spikes,*args,**kwargs):
+    def __init__(self, input_spikes, *args, **kwargs):
         super().__init__(input_spikes, *args, **kwargs)
         warn("Spike_Input is deprecated.  Use Vector_Input instead.")

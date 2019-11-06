@@ -15,7 +15,7 @@ class UtilityBrickTests:
     backend_args = {}
     scale_factor = 0.5
 
-    def evaluate_adder(self, spike_times):
+    def evaluate_adder(self, spike_times, debug=False):
         scaffold = Scaffold()
 
         adder_brick = BRICKS.TemporalAdder(len(spike_times), name="Adder")
@@ -33,12 +33,15 @@ class UtilityBrickTests:
         scaffold.lay_bricks()
         results = scaffold.evaluate(backend=self.backend,
                                     max_runtime=(sum(spike_times) + 5) * 2,
-                                    backend_args=self.backend_args)
+                                    backend_args=self.backend_args,
+                                    record_all=True)
 
         answer = -1
         graph_names = list(scaffold.graph.nodes.data('name'))
         for row in results.itertuples():
             neuron_name = graph_names[int(row.neuron_number)][0]
+            if debug:
+                print(neuron_name, row.time)
             if 'Sum' in neuron_name:
                 self.assertTrue(answer < 0)
                 answer = self.scale_factor * row.time - 3
@@ -71,6 +74,7 @@ class UtilityBrickTests:
         inputs = [[0]*max_runtime for i in range(2)]
 
         inputs[0][max_runtime - register_size - 1] = 1 # recall 'input'
+        #inputs[0][max(spike_times) + 40] = 1 # recall 'input'
         for spike in spike_times:
             inputs[1][spike] = 1
 
@@ -81,6 +85,9 @@ class UtilityBrickTests:
 
         scaffold.lay_bricks()
 
+        #self.backend_args['verbose'] = True
+        #self.backend_args['store_voltage'] = True
+        #self.backend_args['show_plots'] = True
         result = scaffold.evaluate(backend=self.backend, max_runtime=max_runtime, backend_args=self.backend_args)
 
         value = 0
@@ -94,7 +101,7 @@ class UtilityBrickTests:
         return value
 
     def test_register_1(self):
-        answer = self.evaluate_register([5,20,45], 5)
+        answer = self.evaluate_register([5,10,25], 5)
         self.assertEqual(3, answer)
 
     def test_register_2(self):

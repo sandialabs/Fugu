@@ -17,7 +17,7 @@ class Scaffold:
     """Class to handle a scaffold of bricks"""
 
     supported_backends = ['ds', 'snn', 'ds_legacy', 'snn_legacy', 'pynn']
-    
+
     def __init__(self):
         self.circuit = nx.DiGraph()
         self.pos = {}
@@ -25,8 +25,8 @@ class Scaffold:
         self.graph = None
         self.is_built = False
         self.metrics = None
-        
-    def add_brick(self, brick_function, input_nodes=[-1], metadata = None, name=None, output=False):
+
+    def add_brick(self, brick_function, input_nodes=[-1], metadata=None, name=None, output=False):
         """
         Add a brick to the scaffold.
 
@@ -61,27 +61,29 @@ class Scaffold:
             brick_function.name = name
 
         node_number = self.circuit.number_of_nodes()
-        self.circuit.add_node(node_number, name=name,
-                             brick=brick_function)#,metadata=metadata)
+        self.circuit.add_node(
+                       node_number,
+                       name=name,
+                       brick=brick_function,
+                       )  # ,metadata=metadata)
 
-        #Make sure we're working with a list of inputs
+        # Make sure we're working with a list of inputs
         if type(input_nodes) is not list:
             input_nodes = [input_nodes]
 
-        #Make sure our inputs are integer formatted
+        # Make sure our inputs are integer formatted
         input_nodes = [-2 if node == 'input' else node for node in input_nodes]
-        node_names = {self.circuit.nodes[node]['name']:node for node in self.circuit.nodes}
+        node_names = {self.circuit.nodes[node]['name']: node for node in self.circuit.nodes}
         input_nodes = [node_names[node] if type(node) is str else node for node in input_nodes]
         input_nodes = [(node_names[node[0]], node[1]) if type(node) is tuple and type(node[0]) is str else node for node in input_nodes]
 
+        # Replace -1 with last node
+        input_nodes = [node_number - 1 if node == -1 else node for node in input_nodes]
 
-        #Replace -1 with last node
-        input_nodes = [node_number-1 if node==-1 else node for node in input_nodes]
-
-        #Create tuples for (node, channel) if not already done
+        # Create tuples for (node, channel) if not already done
         input_nodes = [(node, 0) if type(node) is int else node for node in input_nodes]
 
-        #Process inputs
+        # Process inputs
         for node in [node[0] for node in input_nodes]:
             if node < -1:
                 self.circuit.node[node_number]['layer'] = 'input'
@@ -102,44 +104,49 @@ class Scaffold:
         nodes = list(self.circuit.nodes())
         edges = list(self.circuit.edges())
         for edge in edges:
-            self.circuit.edges[edge[0], edge[1]]['weight']=self.circuit.node[edge[0]]['brick'].metadata['D']
+            self.circuit.edges[edge[0], edge[1]]['weight'] = self.circuit.node[edge[0]]['brick'].metadata['D']
 
         for node in reversed(nodes):
 
             # loop backwards through nodes
             # Find predecessor node for 'node'
-            pred_nodes=list(self.circuit.predecessors(node))
+            pred_nodes = list(self.circuit.predecessors(node))
             print(node, list(pred_nodes), len(list(pred_nodes)), len(pred_nodes))
 
-            if len(list(pred_nodes))<2:
+            if len(list(pred_nodes)) < 2:
                 pass
             else:
-                distances=[]
+                distances = []
                 for target_node in list(pred_nodes):
-                    distance_guess=0
-                    target_paths=nx.all_simple_paths(self.circuit, 0, target_node)
+                    distance_guess = 0
+                    target_paths = nx.all_simple_paths(self.circuit, 0, target_node)
                     for path in map(nx.utils.pairwise, target_paths):
-                        path_lengths=self.get_weight(path)
-                        if path_lengths>distance_guess: distance_guess=path_lengths
+                        path_lengths = self.get_weight(path)
+                        if path_lengths > distance_guess:
+                            distance_guess = path_lengths
 
-                    distance_guess=distance_guess+self.circuit.edges[target_node, node]['weight']
+                    distance_guess = distance_guess+self.circuit.edges[target_node, node]['weight']
                     print(target_node, distance_guess)
                     distances.append(distance_guess)
 
                 # Now, we need to add delay nodes to paths less than longest distance
 
-                max_value=max(distances)
-                max_index=distances.index(max_value)
+                max_value = max(distances)
+                max_index = distances.index(max_value)
                 print(list(distances), max_index, max_value)
 
                 for i in range(0, len(pred_nodes)):
                     # Check if this path needs a delay node
-                    if(distances[i]<max_value):
-                        target_node=pred_nodes[i]
-                        print('Adding delay node of length {} between {} and {}'.format(max_value-distances[i],
-                                                                                        target_node,
-                                                                                        node))
-                        N_delay=self.circuit.nodes[target_node]['N_out']
+                    if(distances[i] < max_value):
+                        target_node = pred_nodes[i]
+                        print(
+                          'Adding delay node of length {} between {} and {}'.format(
+                                                                               max_value-distances[i],
+                                                                               target_node,
+                                                                               node,
+                                                                               )
+                          )
+                        N_delay = self.circuit.nodes[target_node]['N_out']
                         self.circuit.add_node(target_node+0.5,
                                               brick=Delay,
                                               N_in=N_delay,
@@ -148,15 +155,15 @@ class Scaffold:
                                               T_out=1,
                                               D=max_value-distances[i],
                                               layer='delay')
-                        self.pos[target_node+0.5]=np.array([target_node+0.5, self.pos[target_node][1]])
+                        self.pos[target_node + 0.5] = np.array([target_node + 0.5, self.pos[target_node][1]])
                         self.circuit.remove_edge(target_node, node)
                         self.circuit.add_edge(target_node, target_node+0.5, weight=self.circuit.nodes[target_node]['D'])
                         self.circuit.add_edge(target_node+0.5, node, weight=self.circuit.nodes[target_node+0.5]['D'])
 
     def get_weight(self, path):
-        total_len=0
+        total_len = 0
         for i in list(path):
-            total_len=total_len+self.circuit.edges[i]['weight']
+            total_len = total_len + self.circuit.edges[i]['weight']
 
         return total_len
 
@@ -173,7 +180,7 @@ class Scaffold:
         b = True
         for node in self.circuit.nodes:
             b = b and self.circuit.nodes[node]['brick'].is_built
-        if verbose>0:
+        if verbose > 0:
             print("Nodes built:")
             for node in self.circuit.nodes:
                 print("{}:{}".format(node, self.circuit.nodes[node]['brick'].is_built))
@@ -195,8 +202,8 @@ class Scaffold:
         for neighbor in in_neighbors:
             b = b and self.circuit.nodes[neighbor]['brick'].is_built
         return b
-    
-    def _assign_brick_names(self,built_graph, name, field_to_check='brick'):
+
+    def _assign_brick_names(self, built_graph, name, field_to_check='brick'):
         new_nodes = [new_node for new_node, node_value in built_graph.nodes(data=True) if field_to_check not in node_value]
         for new_node in new_nodes:
             built_graph.nodes[new_node]['brick'] = name
@@ -223,11 +230,7 @@ class Scaffold:
              metadata,
              control_nodes,
              output_lists,
-             output_codings) = self.circuit.nodes[node]['brick'].build(built_graph,
-                              None,
-                              None,
-                              None,
-                              None)
+             output_codings) = self.circuit.nodes[node]['brick'].build(built_graph, None, None, None, None)
             self._assign_brick_names(built_graph,  self.circuit.nodes[node]['name'])
             self.circuit.nodes[node]['output_lists'] = output_lists
             self.circuit.nodes[node]['output_codings'] = output_codings
@@ -236,20 +239,21 @@ class Scaffold:
             if verbose > 0:
                 print("Completed: {}".format(node))
         while not self.all_nodes_built(verbose=verbose):
-            #Over unbuilt, ready edges
+            # Over unbuilt, ready edges
             for node in [node for node in self.circuit.nodes
                          if (not self.circuit.nodes[node]['brick'].is_built)
                          and self.all_in_neighbors_built(node)]:
                 inputs = {}
                 if verbose > 0:
                     print('Laying Brick: '.format(node))
-                for input_number in range(0,len(self.circuit.nodes[node]['input_nodes'])):
+                for input_number in range(0, len(self.circuit.nodes[node]['input_nodes'])):
                     if verbose > 0:
                         print("Processing input: {}".format(input_number))
-                    inputs[input_number] = {'input_node':self.circuit.nodes[node]['input_nodes'][input_number][0],
-                                           'input_channel':self.circuit.nodes[node]['input_nodes'][input_number][1]}
-                metadata = [self.circuit.nodes[inputs[key]['input_node']]['metadata']
-                                  for key in inputs]
+                    inputs[input_number] = {
+                                             'input_node': self.circuit.nodes[node]['input_nodes'][input_number][0],
+                                             'input_channel': self.circuit.nodes[node]['input_nodes'][input_number][1],
+                                             }
+                metadata = [self.circuit.nodes[inputs[key]['input_node']]['metadata'] for key in inputs]
                 control_nodes = [self.circuit.nodes[inputs[key]['input_node']]['control_nodes'][inputs[key]['input_channel']] for key in inputs]
                 input_lists = [self.circuit.nodes[inputs[key]['input_node']]['output_lists'][inputs[key]['input_channel']] for key in inputs]
                 input_codings = [self.circuit.nodes[inputs[key]['input_node']]['output_codings'][inputs[key]['input_channel']] for key in inputs]
@@ -257,11 +261,13 @@ class Scaffold:
                  metadata,
                  control_nodes,
                  output_lists,
-                 output_codings) = self.circuit.nodes[node]['brick'].build(built_graph,
-                                                      metadata,
-                                                      control_nodes,
-                                                      input_lists,
-                                                      input_codings)
+                 output_codings) = self.circuit.nodes[node]['brick'].build(
+                                                                       built_graph,
+                                                                       metadata,
+                                                                       control_nodes,
+                                                                       input_lists,
+                                                                       input_codings,
+                                                                       )
                 self._assign_brick_names(built_graph,  self.circuit.nodes[node]['name'])
                 self.circuit.nodes[node]['metadata'] = metadata
                 self.circuit.nodes[node]['output_codings'] = output_codings
@@ -270,16 +276,16 @@ class Scaffold:
                 if verbose > 0:
                     print("Complete.")
         for i, n in enumerate(built_graph.nodes):
-           built_graph.nodes[n]['neuron_number'] = i
-        self.is_built=True
+            built_graph.nodes[n]['neuron_number'] = i
+        self.is_built = True
         self.graph = built_graph
         return built_graph
 
     def _create_ds_injection(self):
-        warn("This function should only be called with 'ds_legacy' backend.  'ds_legacy' is deprecated and will be removed.  This method will be removed with it.")
-        #find input nodes
+        warn("This function should only be called with 'ds_legacy' backend. 'ds_legacy' is deprecated and will be removed. This method will be removed with it.")
+        # find input nodes
         import torch
-        input_nodes = [node  for node in self.circuit.nodes if ('layer' in self.circuit.nodes[node] )
+        input_nodes = [node for node in self.circuit.nodes if ('layer' in self.circuit.nodes[node])
                        and (self.circuit.nodes[node]['layer'] == 'input')]
         injection_tensors = {}
         for input_node in input_nodes:
@@ -289,10 +295,8 @@ class Scaffold:
                     injection_tensors[t] = torch.zeros((self.graph.number_of_nodes(),)).float()
                 for local_idx, neuron in enumerate(self.circuit.nodes[input_node]['output_lists'][0]):
                     tensor_idx = list(self.graph.nodes).index(neuron)
-                    injection_tensors[t][tensor_idx] += input_spikes[local_idx,t]
+                    injection_tensors[t][tensor_idx] += input_spikes[local_idx, t]
         return injection_tensors
-
-
 
     def evaluate(self, max_runtime=10, backend='ds', record='output', record_all=False, backend_args={}):
         """
@@ -310,7 +314,7 @@ class Scaffold:
         Exceptions:
             + ValueError if backend is not in list of supported backends
         """
-        
+
         if type(backend) is str:
             if backend not in Scaffold.supported_backends:
                 raise ValueError("Backend " + str(backend) + " not supported.")
@@ -324,7 +328,7 @@ class Scaffold:
                             for neuron in o_list:
                                 self.graph.nodes[neuron]['record'] = ['spikes']
                 ds_graph = nx.convert_node_labels_to_integers(self.graph)
-                ds_graph.graph['has_delay']=True
+                ds_graph.graph['has_delay'] = True
                 if record_all:
                     for neuron in ds_graph.nodes:
                         ds_graph.nodes[neuron]['record'] = ['spikes']
@@ -342,12 +346,18 @@ class Scaffold:
                             if entry[0] not in spike_result:
                                 spike_result[entry[0]] = []
                             spike_result[entry[0]].extend(entry[1].tolist())
-                return results_df_from_dict(spike_result,'time','neuron_number')
+                return results_df_from_dict(spike_result, 'time', 'neuron_number')
             if backend == 'snn_legacy':
                 warn("'snn_legacy' option uses old instantiation of backend object.  Use 'snn' in the future.")
                 from fugu.backends.sushi_chef import serve_fugu_to_snn
-                spike_result = serve_fugu_to_snn(self.circuit, self.graph, n_steps=max_runtime, record_all=record_all, ds_format=True)
-                return results_df_from_dict(spike_result,'time','neuron_number')
+                spike_result = serve_fugu_to_snn(
+                                 self.circuit,
+                                 self.graph,
+                                 n_steps=max_runtime,
+                                 record_all=record_all,
+                                 ds_format=True,
+                                 )
+                return results_df_from_dict(spike_result, 'time', 'neuron_number')
             if backend == 'ds':
                 backend = ds_Backend()
             if backend == 'snn':
@@ -359,17 +369,16 @@ class Scaffold:
         if not issubclass(type(backend), Backend):
             raise ValueError("Invalid backend option.")
         results = backend.serve(
-                    self, 
-                    n_steps=max_runtime, 
-                    record=record, 
+                    self,
+                    n_steps=max_runtime,
+                    record=record,
                     batch=True,
                     summary_steps=None,
                     record_all=record_all,
                     backend_args=backend_args,
                     )
         return results
-        
-            
+
     def summary(self, verbose=0):
 
         """Display a summary of the scaffold."""
@@ -378,7 +387,7 @@ class Scaffold:
         print("-------------------------------------------------------")
         print("List of Bricks:")
         print("\r\n")
-        for i,node in enumerate(self.circuit.nodes):
+        for i, node in enumerate(self.circuit.nodes):
             print("Brick No.: {}".format(i))
             print("Brick Name: {}".format(self.circuit.nodes[node]['name']))
             print(self.circuit.nodes[node])

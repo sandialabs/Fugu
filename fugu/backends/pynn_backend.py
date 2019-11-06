@@ -14,6 +14,7 @@ from .backend import Backend
 BRIAN_BACKEND = 0
 SPINNAKER_BACKEND = 1
 
+
 class pynn_Backend(Backend):
 
     def __init__(self):
@@ -147,27 +148,22 @@ class pynn_Backend(Backend):
                 for param in self.parameter_values:
                     main_params = self.main_population.get(param)
                     print("Parameter: {}, {}".format(param, main_params))
-                    #for neuron in self.neuron_to_pynn:
-                        #print("{}, {}".format(neuron, main_params[self.neuron_to_pynn[neuron]]))
 
                 print("___Initial potentials___:")
                 for neuron in self.neuron_to_pynn:
                     print("{}, {}".format(neuron, self.initial_potentials[self.neuron_to_pynn[neuron]]))
 
-                print("---Input to main connections---")
+                print("---Input to main connections (Edge lists)---")
                 for synapse_project in self.input_main_synapses:
                     for edge in synapse_project.connections:
                         print(edge.as_tuple('index', 'weight', 'delay'))
                     print('===')
 
-                print("---Main to main connections---")
+                print("---Main to main connections (Edge lists)---")
                 for synapse_project in self.main_synapses:
                     for edge in synapse_project.connections:
                         print(edge.as_tuple('index', 'weight', 'delay'))
                     print('===')
-
-                #for index, spike_time in enumerate(self.input_population.get('spike_times')):
-                    #print("New input spike times for {}: {}".format(index, spike_time))
 
         if self.collect_metrics:
             start = timer()
@@ -177,13 +173,13 @@ class pynn_Backend(Backend):
 
     def get_results(self):
         main_data = self.main_population.get_data()
-        #input_data = self.input_population.get_data()
+        input_data = self.input_population.get_data()
 
         def _process_run(run_index):
-            spike_result = pd.DataFrame({'time':[],'neuron_number':[]})
+            spike_result = pd.DataFrame({'time': [], 'neuron_number': []})
 
             main_spiketrains = main_data.segments[run_index].spiketrains
-            #input_spiketrains = input_data.segments[run_index].spiketrains
+            input_spiketrains = input_data.segments[run_index].spiketrains
 
             if self.store_voltage:
                 if self.report_all:
@@ -223,7 +219,6 @@ class pynn_Backend(Backend):
                         Panel(main_voltage,
                               ylabel="Membrane potential (mV)",
                               yticks=True, linewidth=2.0),
-                        #title="Neuron: {}".format(neuron),
                         annotations=""
                     )
                 else:
@@ -233,18 +228,18 @@ class pynn_Backend(Backend):
                     plt.legend()
                 plt.show()
 
-            #for neuron in self.input_to_pynn:
-                #if self.report_all or neuron in self.output_names:
-                    #input_index = self.input_to_pynn[neuron]
-                    #spiketrain = input_spiketrains[input_index]
-                    #if self.verbose:
-                        #print("---results for: {}".format(neuron))
-                        #print("spiketimes  {}".format(spiketrain))
-                    #if spiketrain.any():
-                        #for time in np.array(spiketrain):
-                            #if time not in spikes:
-                                #spikes[time] = set()
-                            #spikes[time].add(self.fugu_graph.node[neuron]['neuron_number'])
+            for neuron in self.input_to_pynn:
+                if self.report_all or neuron in self.output_names:
+                    input_index = self.input_to_pynn[neuron]
+                    spiketrain = input_spiketrains[input_index]
+                    if self.verbose:
+                        print("---results for: {}".format(neuron))
+                        print("spiketimes  {}".format(spiketrain))
+                    if spiketrain.any():
+                        for time in np.array(spiketrain):
+                            if time not in spikes:
+                                spikes[time] = set()
+                            spikes[time].add(self.fugu_graph.node[neuron]['neuron_number'])
 
             for time in spikes:
                 mini_df = pd.DataFrame()
@@ -281,9 +276,8 @@ class pynn_Backend(Backend):
         # setup simulator parameters
         if simulator == 'brian':
             # PyNN only has support for brian1 (i.e. brian) which is only python 2.x compatible
-            assert sys.version_info <= (3,0)
+            assert sys.version_info <= (3, 0)
 
-            #import pyNN.brian as pynn_sim
             import pyNN.brian as test_sim
             self.pynn_sim = test_sim
             from pyNN.connectors import FromListConnector
@@ -301,9 +295,8 @@ class pynn_Backend(Backend):
             self.pynn_sim.setup(timestep=self.defaults['min_delay'])
 
         elif simulator == 'spinnaker' or simulator == 'spynnaker':
-            assert sys.version_info <= (3,0)
+            assert sys.version_info <= (3, 0)
 
-            #import pyNN.spiNNaker as pynn_sim
             import pyNN.spiNNaker as test_sim
             self.pynn_sim = test_sim
             from pyNN.spiNNaker import FromListConnector
@@ -343,7 +336,7 @@ class pynn_Backend(Backend):
 
         # Setup neurons:
         #   Input neurons (each gets their own population)
-        #   Main neurons (all go into one population)
+        # Main neurons (all go into one population)
 
         params = []
         params.append('v_thresh')
@@ -358,7 +351,7 @@ class pynn_Backend(Backend):
         else:
             params.append('cm')
 
-        self.parameter_values = {key:[] for key in params}
+        self.parameter_values = {key: [] for key in params}
 
         self.initial_potentials = []
 
@@ -398,8 +391,8 @@ class pynn_Backend(Backend):
                 self.parameter_values['tau_m'].append(self.defaults['tau_m'])
 
         pynn_index = 0
-        self.neuron_to_pynn = {} # Map of neuron to pynn_index
-        self.input_to_pynn = {} # Map of input neuron to pynn_index
+        self.neuron_to_pynn = {}  # Map of neuron to pynn_index
+        self.input_to_pynn = {}  # Map of input neuron to pynn_index
         input_index = 0
         self.output_neurons = set()
 
@@ -408,7 +401,6 @@ class pynn_Backend(Backend):
 
         # Create neurons
         if self.backend == BRIAN_BACKEND:
-            #processed_spikes = self._process_input_values(run_inputs[0])
             input_spikes = []
 
         for brick in self.fugu_circuit.nodes:
@@ -474,8 +466,8 @@ class pynn_Backend(Backend):
         self.main_to_main_inhib = []
 
         synapse_prop_names = ['weight', 'delay']
-        self.input_to_main_props = [{key:[] for key in synapse_prop_names}, {key:[] for key in synapse_prop_names}]
-        self.main_to_main_props = [{key:[] for key in synapse_prop_names}, {key:[] for key in synapse_prop_names}]
+        self.input_to_main_props = [{key: [] for key in synapse_prop_names}, {key: [] for key in synapse_prop_names}]
+        self.main_to_main_props = [{key: [] for key in synapse_prop_names}, {key: [] for key in synapse_prop_names}]
         for u, v, values in self.fugu_graph.edges.data():
             weight = 0.0
             delay = self.defaults['min_delay']
@@ -512,17 +504,18 @@ class pynn_Backend(Backend):
                     self.main_to_main_props[0]['delay'].append(delay)
 
         # create projections
-        self._create_projections()
+        if self.backend != BRIAN_BACKEND:
+            self._create_projections()
 
         if self.verbose:
-            if self.backend == BRIAN_BACKEND:
-                print("---Input to main connections---")
+            if self.backend != BRIAN_BACKEND:
+                print("---Input to main connections (Edge List)---")
                 for synapse_project in self.input_main_synapses:
                     for edge in synapse_project.connections:
                         print(edge.as_tuple('index', 'weight', 'delay'))
                     print('===')
 
-                print("---Main to main connections---")
+                print("---Main to main connections (Edge List)---")
                 for synapse_project in self.main_synapses:
                     for edge in synapse_project.connections:
                         print(edge.as_tuple('index', 'weight', 'delay'))
@@ -549,7 +542,7 @@ class pynn_Backend(Backend):
 
         # Run sim
         if self.store_voltage:
-            self.main_population.record(['spikes','v'])
+            self.main_population.record(['spikes', 'v'])
         else:
             self.main_population.record(['spikes'])
         self.input_population.record(['spikes'])
@@ -564,5 +557,3 @@ class pynn_Backend(Backend):
     def batch(self, input_values, n_steps, backend_args=None):
         self.number_of_runs += 1
         self._run_pynn_sim(n_steps, input_values)
-
-        #return spike_result

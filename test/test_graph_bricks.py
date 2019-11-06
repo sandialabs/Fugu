@@ -34,7 +34,7 @@ class GraphBrickTests:
         scaffold = Scaffold()
 
         bfs_input = BRICKS.Vector_Input(self.get_spike_input(search_key), coding='Raster', name='BFSInput')
-        bfs_brick = BRICKS.Breadth_First_Search(graph, name="BFS", store_edge_references=return_pred)
+        bfs_brick = BRICKS.Breadth_First_Search(graph, name="BFS-Edge-Reference", store_edge_references=return_pred)
 
         scaffold.add_brick(bfs_input, 'input')
         scaffold.add_brick(bfs_brick, output=True)
@@ -43,9 +43,11 @@ class GraphBrickTests:
         if debug:
             scaffold.summary(verbose=2)
 
-        results = scaffold.evaluate(backend=self.backend,
-                                    max_runtime=len(graph.nodes) * 2,
-                                    backend_args=self.backend_args)
+        results = scaffold.evaluate(
+                             backend=self.backend,
+                             max_runtime=len(graph.nodes) * 2,
+                             backend_args=self.backend_args,
+                             )
         bfs_levels = {}
         bfs_pred = {}
         bfs_names = list(scaffold.graph.nodes.data('name'))
@@ -94,7 +96,7 @@ class GraphBrickTests:
         scaffold = Scaffold()
 
         sssp_input = BRICKS.Vector_Input(self.get_spike_input(search_key), coding='Raster', name='SSSPInput')
-        sssp_brick = BRICKS.Shortest_Path(graph, name="SSSP", return_path=return_path)
+        sssp_brick = BRICKS.Shortest_Path(graph, name="SSSP", store_edge_references=return_path)
 
         scaffold.add_brick(sssp_input, 'input')
         scaffold.add_brick(sssp_brick, output=True)
