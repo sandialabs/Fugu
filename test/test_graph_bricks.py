@@ -30,10 +30,19 @@ class GraphBrickTests:
         spikes.append(1)
         return spikes
 
-    def evaluate_bfs_graph(self, graph, search_key, return_pred=False, debug=False):
+    def evaluate_bfs_graph(self, graph, search_keys, return_pred=False, debug=False):
         scaffold = Scaffold()
 
-        bfs_input = BRICKS.Vector_Input(self.get_spike_input(search_key), coding='Raster', name='BFSInput')
+        is_multi_run = False
+        if len(search_keys) > 1:
+            is_multi_run = True
+            spike_inputs = []
+            for search_key in search_keys:
+                spike_inputs.append([0 for i in range(len(graph.nodes))])
+                spike_inputs[-1][search_key] = 1
+            bfs_input = BRICKS.Vector_Input(spike_inputs, coding='Raster', name='BFSInput', multi_run_inputs=True)
+        else:
+            bfs_input = BRICKS.Vector_Input(self.get_spike_input(search_keys[0]), coding='Raster', name='BFSInput')
         bfs_brick = BRICKS.Breadth_First_Search(graph, name="BFS-Edge-Reference", store_edge_references=return_pred)
 
         scaffold.add_brick(bfs_input, 'input')
@@ -48,49 +57,57 @@ class GraphBrickTests:
                              max_runtime=len(graph.nodes) * 2,
                              backend_args=self.backend_args,
                              )
-        bfs_levels = {}
-        bfs_pred = {}
-        bfs_names = list(scaffold.graph.nodes.data('name'))
 
-        curr_level = 0
-        curr_time = 0.0
-        for row in results.sort_values("time").itertuples():
-            neuron_name = bfs_names[int(row.neuron_number)][0]
+        def process_run(spikes):
+            bfs_levels = {}
+            bfs_pred = {}
+            bfs_names = list(scaffold.graph.nodes.data('name'))
 
-            neuron_props = scaffold.graph.nodes[neuron_name]
-            if debug:
-                print(neuron_name, row.time)
+            curr_level = 0
+            curr_time = 0.0
+            for row in spikes.sort_values("time").itertuples():
+                neuron_name = bfs_names[int(row.neuron_number)][0]
 
-            if 'is_vertex' in neuron_props:
-                if row.time > curr_time:
-                    curr_level += 1
-                    curr_time = row.time
-                vertex = neuron_props['index'][0]
+                neuron_props = scaffold.graph.nodes[neuron_name]
+                if debug:
+                    print(neuron_name, row.time)
 
-                self.assertFalse(vertex in bfs_levels)
+                if 'is_vertex' in neuron_props:
+                    if row.time > curr_time:
+                        curr_level += 1
+                        curr_time = row.time
+                    vertex = neuron_props['index'][0]
 
-                bfs_levels[vertex] = curr_level
+                    self.assertFalse(vertex in bfs_levels)
 
-            if 'is_edge_reference' in neuron_props:
-                u = neuron_props['from_vertex']
-                v = neuron_props['to_vertex']
-                bfs_pred[v] = u
+                    bfs_levels[vertex] = curr_level
 
-        for edge in graph.edges():
-            u = edge[0]
-            v = edge[1]
-            u_level = bfs_levels[u]
-            v_level = bfs_levels[v]
-            self.assertTrue(abs(u_level - v_level) <= 1)
+                if 'is_edge_reference' in neuron_props:
+                    u = neuron_props['from_vertex']
+                    v = neuron_props['to_vertex']
+                    bfs_pred[v] = u
 
-        if return_pred:
-            for u in bfs_pred:
-                v = bfs_pred[u]
-                if v > -1:
-                    u_level = bfs_levels[u]
-                    v_level = bfs_levels[v]
-                    self.assertTrue(abs(u_level - v_level) == 1)
-                    self.assertTrue((u,v) in graph.edges() or (v,u) in graph.edges())
+            for edge in graph.edges():
+                u = edge[0]
+                v = edge[1]
+                u_level = bfs_levels[u]
+                v_level = bfs_levels[v]
+                self.assertTrue(abs(u_level - v_level) <= 1)
+
+            if return_pred:
+                for u in bfs_pred:
+                    v = bfs_pred[u]
+                    if v > -1:
+                        u_level = bfs_levels[u]
+                        v_level = bfs_levels[v]
+                        self.assertTrue(abs(u_level - v_level) == 1)
+                        self.assertTrue((u,v) in graph.edges() or (v,u) in graph.edges())
+
+        if is_multi_run:
+            for result in results:
+                process_run(result)
+        else:
+            process_run(results)
 
     def evaluate_sssp_graph(self, graph, search_key, return_path):
         scaffold = Scaffold()
@@ -154,10 +171,16 @@ class GraphBrickTests:
                     self.assertTrue(abs(u_dist - v_dist) <= edge_weight)
 
     def test_bfs_random_gnp_levels(self):
-        self.evaluate_bfs_graph(create_graph(20, 0.3, 3), 1, False)
+        self.evaluate_bfs_graph(create_graph(20, 0.3, 3), [1], False)
 
     def test_bfs_random_gnp_full(self):
-        self.evaluate_bfs_graph(create_graph(20, 0.3, 3), 1, True)
+        self.evaluate_bfs_graph(create_graph(20, 0.3, 3), [1], True)
+
+    def test_bfs_multi_run_levels(self):
+        self.evaluate_bfs_graph(create_graph(20, 0.3, 3), [1, 5, 7], False)
+
+    def test_bfs_multi_run_full(self):
+        self.evaluate_bfs_graph(create_graph(20, 0.3, 3), [1, 5, 7], True)
 
     def test_sssp_race_condition(self):
         graph = nx.DiGraph()

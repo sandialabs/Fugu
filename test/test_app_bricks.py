@@ -20,10 +20,12 @@ class AppBrickTests:
     def evaluate_lis_sequence(self, sequence, expected, debug=False):
         scaffold = Scaffold()
 
-        vector_brick = BRICKS.Vector_Input(self.get_lis_input(sequence),
-                                           coding='Raster',
-                                           name='Input0',
-                                           time_dimension=True)
+        vector_brick = BRICKS.Vector_Input(
+                                self.get_lis_input(sequence),
+                                coding='Raster',
+                                name='Input0',
+                                time_dimension=True,
+                                )
         lis_brick = BRICKS.LIS(len(sequence), name="LIS")
 
         scaffold.add_brick(vector_brick, 'input')

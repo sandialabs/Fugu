@@ -207,7 +207,7 @@ class pynn_Backend(Backend):
             self.defaults['tau_m'] = 100000000
             self.defaults['v_rest'] = 0.0
 
-            self.pynn_sim.setup(timestep=self.defaults['min_delay'])
+            self.pynn_sim.setup(timestep=1)
 
         elif simulator == 'spinnaker' or simulator == 'spynnaker':
             assert sys.version_info <= (3, 0)
@@ -229,6 +229,9 @@ class pynn_Backend(Backend):
         else:
             raise ValueError("unsupported pyNN backend")
 
+        self._embed()
+
+    def _embed(self):
         self.output_names = set()
 
         # Create dict for easy lookup of the vertices in a brick
@@ -472,6 +475,10 @@ class pynn_Backend(Backend):
     def batch(self, input_values, n_steps, backend_args=None):
         run_index = self.number_of_runs
         self.number_of_runs += 1
+        if self.backend == BRIAN_BACKEND:
+            # Brian does not support multi run inputs
+            self.pynn_sim.setup(timestep=1)
+            self._embed()
         self._run_pynn_sim(n_steps, input_values)
 
         main_data = self.main_population.get_data()
@@ -479,8 +486,12 @@ class pynn_Backend(Backend):
 
         spike_result = pd.DataFrame({'time': [], 'neuron_number': []})
 
-        main_spiketrains = main_data.segments[run_index].spiketrains
-        input_spiketrains = input_data.segments[run_index].spiketrains
+        if self.backend == BRIAN_BACKEND:
+            main_spiketrains = main_data.segments[0].spiketrains
+            input_spiketrains = input_data.segments[0].spiketrains
+        else:
+            main_spiketrains = main_data.segments[run_index].spiketrains
+            input_spiketrains = input_data.segments[run_index].spiketrains
 
         if self.store_voltage:
             if self.report_all:

@@ -149,17 +149,18 @@ class snn_Backend(Backend):
         super(Backend, self).__init__()
         self.results = []
 
-    def _serve_fugu_to_snn(self, input_values, n_steps=1):
+    def _serve_fugu_to_snn(self, input_spike_lists, n_steps=1):
         for node, vals in self.fugu_circuit.nodes.data():
             if 'layer' in vals:
                 if vals['layer'] == 'input':
-                    input_spike_lists = [input_spikes for input_spikes in self.fugu_circuit.nodes[node]['brick']]
                     input_values = {}
                     for neuron in self.fugu_circuit.nodes[node]['output_lists'][0]:
                         input_values[neuron] = []
-                    for timestep, spike_list in enumerate(input_spike_lists):
+                    for timestep in input_spike_lists:
+                        spike_list = input_spike_lists[timestep]
                         for neuron in spike_list:
-                            input_values[neuron].append(1)
+                            if neuron in input_values:
+                                input_values[neuron].append(1)
                         for neuron in input_values:
                             if(len(input_values[neuron]) < timestep+1):
                                 input_values[neuron].append(0)
@@ -194,12 +195,15 @@ class snn_Backend(Backend):
         and runs it for n steps'''
         self.fugu_circuit = scaffold.circuit
         self.fugu_graph = scaffold.graph
-
+        self.record = record
         if 'ds_format' in embedding_args:
             self.ds_format = embedding_args['ds_format']
         else:
             self.ds_format = False
 
+        self._embed()
+
+    def _embed(self):
         import fugu.backends.SpikingNeuralNetwork as snn
         self.nn = snn.NeuralNetwork()
         neuron_dict = {}
@@ -213,7 +217,7 @@ class snn_Backend(Backend):
             if 'layer' in vals:
                 if vals['layer'] == 'input':
                     for neuron in self.fugu_circuit.nodes[node]['output_lists'][0]:
-                        rc = True if record else vals.get('record', False)
+                        rc = True if self.record else vals.get('record', False)
                         neuron_dict[neuron] = snn.InputNeuron(neuron, record=rc)
                         self.nn.add_neuron(neuron_dict[neuron])
                 if vals['layer'] == 'output':
@@ -252,7 +256,7 @@ class snn_Backend(Backend):
                     vol = params['potential']
                 if 'decay' in params:
                     lk = 1.0 - params['decay']
-                rc = True if record else params.get('record', False)
+                rc = True if self.record else params.get('record', False)
                 neuron_dict[neuron] = snn.LIFNeuron(
                                             neuron,
                                             threshold=th,
@@ -282,6 +286,8 @@ class snn_Backend(Backend):
         return None
 
     def batch(self, input_values, n_steps, backend_args):
+        self._embed()
+
         results = self._serve_fugu_to_snn(input_values, n_steps=n_steps)
         return results_df_from_dict(results, 'time', 'neuron_number')
 
