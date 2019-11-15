@@ -5,9 +5,11 @@ import fugu
 import fugu.bricks as BRICKS
 from fugu import Scaffold
 
-def AssertValuesAreClose(value1, value2, tolerance = 0.0001):
+
+def AssertValuesAreClose(value1, value2, tolerance=0.0001):
     if abs(value1 - value2) > tolerance:
         raise AssertionError('Values {} and {} are not close'.format(value1, value2))
+
 
 class StochasticBrickTests:
     num_trials = 100
@@ -29,8 +31,8 @@ class StochasticBrickTests:
 
         scaffold.add_brick(vector_1, 'input')
         scaffold.add_brick(vector_2, 'input')
-        scaffold.add_brick(dot_brick) #don't know why i need two vector inputs
-        scaffold.add_brick(threshold_brick, (2,0), output=True)
+        scaffold.add_brick(dot_brick)
+        scaffold.add_brick(threshold_brick, (2, 0), output=True)
 
         scaffold.lay_bricks()
 
@@ -87,10 +89,12 @@ class StochasticBrickTests:
         result = self.evaluate_thresh_params('temporal-L', 3, 2, 0.23, 0)
         AssertValuesAreClose(0.23, result, self.tolerance)
 
+
 class SnnStochasticTests(unittest.TestCase, StochasticBrickTests):
     @classmethod
     def setUpClass(self):
         self.backend = 'snn'
+
 
 class DsStochasticTests(unittest.TestCase, StochasticBrickTests):
     @classmethod

@@ -6,9 +6,11 @@ import fugu
 import fugu.bricks as BRICKS
 from fugu import Scaffold
 
-def AssertValuesAreClose(value1, value2, tolerance = 0.0001):
+
+def AssertValuesAreClose(value1, value2, tolerance=0.0001):
     if abs(value1 - value2) > tolerance:
         raise AssertionError('Values {} and {} are not close'.format(value1, value2))
+
 
 class UtilityBrickTests:
     backend = None
@@ -48,33 +50,32 @@ class UtilityBrickTests:
         return answer
 
     def test_adder_1(self):
-        result = self.evaluate_adder([10,7])
+        result = self.evaluate_adder([10, 7])
         self.assertEqual(17, result)
 
     def test_adder_2(self):
-        result = self.evaluate_adder([10,8])
+        result = self.evaluate_adder([10, 8])
         self.assertEqual(18, result)
 
     def test_adder_3(self):
-        result = self.evaluate_adder([6,8])
+        result = self.evaluate_adder([6, 8])
         self.assertEqual(14, result)
 
     def test_adder_4(self):
-        result = self.evaluate_adder([9,9])
+        result = self.evaluate_adder([9, 9])
         self.assertEqual(18, result)
 
     def test_adder_5(self):
-        result = self.evaluate_adder([1,9])
+        result = self.evaluate_adder([1, 9])
         self.assertEqual(10, result)
 
-    def evaluate_register(self, spike_times, register_size, initial_value=0.0):
+    def evaluate_register(self, spike_times, register_size, initial_value=0.0, debug=False):
         max_runtime = (2 ** (register_size + 2))
         scaffold = Scaffold()
 
-        inputs = [[0]*max_runtime for i in range(2)]
+        inputs = [[0] * max_runtime for i in range(2)]
 
-        inputs[0][max_runtime - register_size - 1] = 1 # recall 'input'
-        #inputs[0][max(spike_times) + 40] = 1 # recall 'input'
+        inputs[0][max_runtime - register_size - 1] = 1  # recall 'input'
         for spike in spike_times:
             inputs[1][spike] = 1
 
@@ -85,9 +86,9 @@ class UtilityBrickTests:
 
         scaffold.lay_bricks()
 
-        #self.backend_args['verbose'] = True
-        #self.backend_args['store_voltage'] = True
-        #self.backend_args['show_plots'] = True
+        if debug:
+            self.backend_args['verbose'] = True
+
         result = scaffold.evaluate(backend=self.backend, max_runtime=max_runtime, backend_args=self.backend_args)
 
         value = 0
@@ -101,7 +102,7 @@ class UtilityBrickTests:
         return value
 
     def test_register_1(self):
-        answer = self.evaluate_register([5,10,25], 5)
+        answer = self.evaluate_register([5, 10, 25], 5)
         self.assertEqual(3, answer)
 
     def test_register_2(self):
@@ -124,28 +125,32 @@ class UtilityBrickTests:
         self.assertEqual(26, answer)
 
     def test_register_6(self):
-        answer = self.evaluate_register([5,20,45], 8, initial_value=5)
+        answer = self.evaluate_register([5, 20, 45], 8, initial_value=5)
         self.assertEqual(8, answer)
 
     def test_register_7(self):
         answer = self.evaluate_register([], 6, initial_value=34)
         self.assertEqual(34, answer)
 
+
 class SnnUtilityTests(unittest.TestCase, UtilityBrickTests):
     @classmethod
     def setUpClass(self):
         self.backend = 'snn'
+
 
 class DsUtilityTests(unittest.TestCase, UtilityBrickTests):
     @classmethod
     def setUpClass(self):
         self.backend = 'ds'
 
+
 class PynnBrianUtilityTests(unittest.TestCase, UtilityBrickTests):
     @classmethod
     def setUpClass(self):
         self.backend = 'pynn'
         self.backend_args['backend'] = 'brian'
+
 
 class PynnSpinnakerUtilityTests(unittest.TestCase, UtilityBrickTests):
     @classmethod

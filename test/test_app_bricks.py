@@ -5,6 +5,7 @@ import fugu
 import fugu.bricks as BRICKS
 from fugu import Scaffold
 
+
 class AppBrickTests:
     backend = None
     backend_args = {}
@@ -52,36 +53,40 @@ class AppBrickTests:
         self.assertEqual(expected, answer)
 
     def test_lis_strictly_increasing(self):
-        sequence = [1,2,3,4,5,6,7,8,9,10]
-        self.evaluate_lis_sequence(sequence,len(sequence))
+        sequence = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+        self.evaluate_lis_sequence(sequence, len(sequence))
 
     def test_lis_strictly_decreasing(self):
-        sequence = [10,10,5,5,1]
-        self.evaluate_lis_sequence(sequence,1)
+        sequence = [10, 10, 5, 5, 1]
+        self.evaluate_lis_sequence(sequence, 1)
 
     def test_lis_general1(self):
         sequence = [5, 10, 2, 3, 4]
-        self.evaluate_lis_sequence(sequence,3)
+        self.evaluate_lis_sequence(sequence, 3)
 
     def test_lis_general2(self):
-        sequence = [1,4,8,6,2,7,19,13,14]
-        self.evaluate_lis_sequence(sequence,6)
+        sequence = [1, 4, 8, 6, 2, 7, 19, 13, 14]
+        self.evaluate_lis_sequence(sequence, 6)
+
 
 class SnnAppTests(unittest.TestCase, AppBrickTests):
     @classmethod
     def setUpClass(self):
         self.backend = 'snn'
 
+
 class DsAppTests(unittest.TestCase, AppBrickTests):
     @classmethod
     def setUpClass(self):
         self.backend = 'ds'
+
 
 class PynnBrianAppTests(unittest.TestCase, AppBrickTests):
     @classmethod
     def setUpClass(self):
         self.backend = 'pynn'
         self.backend_args['backend'] = 'brian'
+
 
 class PynnSpinnakerAppTests(unittest.TestCase, AppBrickTests):
     @classmethod

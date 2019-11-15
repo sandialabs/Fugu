@@ -11,15 +11,19 @@ import fugu.bricks as BRICKS
 from fugu import Scaffold
 
 random.seed(3)
+
+
 def create_graph(size, p, seed):
     G = fast_gnp_random_graph(size, p, seed=seed)
     return G
 
+
 def create_weighted_graph(size, p, seed):
     G = fast_gnp_random_graph(size, p, seed=seed)
-    for (u,v) in G.edges():
-        G.edges[u,v]['weight'] = random.randint(1,10)
+    for (u, v) in G.edges():
+        G.edges[u, v]['weight'] = random.randint(1, 10)
     return G
+
 
 class GraphBrickTests:
     backend = None
@@ -126,7 +130,7 @@ class GraphBrickTests:
                         u_level = bfs_levels[u]
                         v_level = bfs_levels[v]
                         self.assertTrue(abs(u_level - v_level) == 1)
-                        self.assertTrue((u,v) in graph.edges() or (v,u) in graph.edges())
+                        self.assertTrue((u, v) in graph.edges() or (v, u) in graph.edges())
 
         if is_multi_run:
             for result in results:
@@ -185,12 +189,15 @@ class GraphBrickTests:
         scaffold.add_brick(sssp_brick, output=True)
 
         scaffold.lay_bricks()
-        results = scaffold.evaluate(backend=self.backend,
-                                    max_runtime=len(graph.nodes) * 30,
-                                    backend_args=self.backend_args)
+        results = scaffold.evaluate(
+                             backend=self.backend,
+                             max_runtime=len(graph.nodes) * 30,
+                             backend_args=self.backend_args,
+                             )
+
         def process_run(spikes, pred_method='edge'):
-            sssp_pred = {v:-1 for v in graph.nodes}
-            sssp_table = {v:-1 for v in graph.nodes}
+            sssp_pred = {v: -1 for v in graph.nodes}
+            sssp_table = {v: -1 for v in graph.nodes}
             sssp_start_time = 0.0
 
             sssp_names = list(scaffold.graph.nodes.data('name'))
@@ -231,10 +238,10 @@ class GraphBrickTests:
                     sssp_table[v] -= sssp_start_time
                     sssp_table[v] /= 2.0
 
-            for u,v in graph.edges():
+            for u, v in graph.edges():
                 u_dist = sssp_table[u]
                 v_dist = sssp_table[v]
-                edge_weight = graph.get_edge_data(u,v)['weight']
+                edge_weight = graph.get_edge_data(u, v)['weight']
                 self.assertTrue(abs(u_dist - v_dist) <= edge_weight)
 
             if return_path:
@@ -256,7 +263,7 @@ class GraphBrickTests:
                         self.assertTrue(u_dist > -1)
                         self.assertTrue(v_dist > -1)
 
-                        edge_weight = graph.get_edge_data(u,v)['weight']
+                        edge_weight = graph.get_edge_data(u, v)['weight']
 
                         self.assertTrue(abs(u_dist - v_dist) <= edge_weight)
 
@@ -275,16 +282,17 @@ class GraphBrickTests:
         scaffold.add_brick(sssp_brick, output=True)
 
         scaffold.lay_bricks()
-        results = scaffold.evaluate(backend=self.backend,
-                                    max_runtime=len(graph.nodes) * 30,
-                                    backend_args=self.backend_args)
+        results = scaffold.evaluate(
+                             backend=self.backend,
+                             max_runtime=len(graph.nodes) * 30,
+                             backend_args=self.backend_args,
+                             )
 
         if is_multi_run:
             for result in results:
                 process_run(result)
         else:
             process_run(results)
-
 
     def test_bfs_random_gnp_levels(self):
         self.evaluate_bfs_graph(create_graph(20, 0.3, 3), [1], False)
@@ -343,16 +351,19 @@ class SnnGraphTests(unittest.TestCase, GraphBrickTests):
     def setUpClass(self):
         self.backend = 'snn'
 
+
 class DsGraphTests(unittest.TestCase, GraphBrickTests):
     @classmethod
     def setUpClass(self):
         self.backend = 'ds'
+
 
 class PynnBrianGraphTests(unittest.TestCase, GraphBrickTests):
     @classmethod
     def setUpClass(self):
         self.backend = 'pynn'
         self.backend_args['backend'] = 'brian'
+
 
 class PynnSpinnakerGraphTests(unittest.TestCase, GraphBrickTests):
     @classmethod

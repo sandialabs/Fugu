@@ -7,4 +7,3 @@ Created on Wed Dec 12 09:18:44 2018
 """
 
 from fugu.backends import SpikingNeuralNetwork
-

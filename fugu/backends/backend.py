@@ -24,7 +24,9 @@ else:
 
 
 class Backend(ABC):
-    """Abstract Base Class definition of a Backend"""
+    """
+    Abstract Base Class definition of a Backend
+    """
     def __init__(self):
         self.features = {
                           'supports_stepping': False,
@@ -144,7 +146,9 @@ class Backend(ABC):
 
 
 class snn_Backend(Backend):
-    """Backend for Srideep's Noteworthy Network (SNN)"""
+    """
+    Backend for Srideep's Noteworthy Network (SNN)
+    """
     def __init__(self):
         super(Backend, self).__init__()
         self.results = []
@@ -180,19 +184,20 @@ class snn_Backend(Backend):
             df = df.rename(index=int, columns=numerical_cols)
 
             for r in df.index:
-                l = []
+                col_list = []
                 for c in df.columns:
                     if df.loc[r][c] == 1:
-                        l.append(c)
-                    res[r] = l
+                        col_list.append(c)
+                    res[r] = col_list
 
             return res
         else:
             return df
 
     def embed(self, scaffold, record, embedding_args={}):
-        '''Reads in a built fugu graph and converts it to a spiking neural network
-        and runs it for n steps'''
+        '''
+        Reads in a built fugu graph and converts it to a spiking neural network and runs it for n steps
+        '''
         self.fugu_circuit = scaffold.circuit
         self.fugu_graph = scaffold.graph
         self.record = record
@@ -208,7 +213,9 @@ class snn_Backend(Backend):
         self.nn = snn.NeuralNetwork()
         neuron_dict = {}
 
-        ''' Add Neurons '''
+        ''' 
+        Add Neurons
+        '''
         # Add in input and output neurons. Use the fugu_circuit information to identify input and output layers
         # For input nodes, create input neurons and identity and associate the appropriate inputs to it
         # for output neurons, obtain neuron parameters from fugu_graph and create LIFNeurons
@@ -268,7 +275,9 @@ class snn_Backend(Backend):
                                             )
                 self.nn.add_neuron(neuron_dict[neuron])
 
-        ''' Add Synapses '''
+        '''
+        Add Synapses
+        '''
         # add synapses from self.fugu_graph edge information
         for n1, n2, params in self.fugu_graph.edges.data():
             delay = int(params.get('delay', 1))
@@ -293,7 +302,9 @@ class snn_Backend(Backend):
 
 
 class ds_Backend(Backend):
-    """Backend for the ds simulator"""
+    """
+    Backend for the ds simulator
+    """
     def __init__(self):
         super(Backend, self).__init__()
         self.results = []
@@ -314,10 +325,11 @@ class ds_Backend(Backend):
         self.scaffold = scaffold
         if record == 'output':
             for node in self.scaffold.circuit.nodes:
-                if 'layer' in self.scaffold.circuit.nodes[node] and self.scaffold.circuit.nodes[node]['layer'] == 'output':
-                    for o_list in self.scaffold.circuit.nodes[node]['output_lists']:
-                        for neuron in o_list:
-                            self.scaffold.graph.nodes[neuron]['record'] = ['spikes']
+                if 'layer' in self.scaffold.circuit.nodes[node]:
+                    if self.scaffold.circuit.nodes[node]['layer'] == 'output':
+                        for o_list in self.scaffold.circuit.nodes[node]['output_lists']:
+                            for neuron in o_list:
+                                self.scaffold.graph.nodes[neuron]['record'] = ['spikes']
         self.ds_graph = nx.convert_node_labels_to_integers(self.scaffold.graph)
         self.ds_graph.graph['has_delay'] = True
         if record == 'all':
@@ -338,10 +350,7 @@ class ds_Backend(Backend):
         injection_values = self._create_ds_injection(input_values)
 
         from fugu.backends.ds import run_simulation
-        results = run_simulation(
-                    self.ds_graph,
-                    n_steps,
-                    injection_values)
+        results = run_simulation(self.ds_graph, n_steps, injection_values)
         spike_result = pd.DataFrame({'time': [], 'neuron_number': []})
         for group in results:
             if 'spike_history' in results[group]:

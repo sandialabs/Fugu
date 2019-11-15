@@ -8,7 +8,6 @@ Created on Wed Jun 19 14:46:55 2019
 import abc
 import sys
 import numpy as np
-import networkx as nx
 
 from abc import abstractmethod
 from collections import deque
@@ -53,158 +52,6 @@ class Brick(ABC):
         self.is_built = False
         self.supported_codings = []
 
-    """
-    Sub-bricks:
-       - A sub-brick is a reoccuring circuit pattern that can be modularized
-           - e.g. registers that store the binary encoding of some value
-       - sub-bricks comprise of two functions:
-           - one that generates the nodes that make up the sub-brick
-           - one that generates the edges between the sub-brick and other elements of the circuit
-       - Must call nx.compose(graph, sub_brick) or graph.add_edges_from(sub_brick)
-           where graph is the graph passed to build()
-    """
-    def _sb_create_register(self, name, thresholds=None, decays=None, potentials=None, register_size=5, tag=None):
-        thresholds_is_single_value = False
-        if thresholds is None:
-            thresholds = 1.0
-            thresholds_is_single_value = True
-        elif isinstance(thresholds, float) or isinstance(thresholds, int):
-            thresholds_is_single_value = True
-
-        decays_is_single_value = False
-        if decays is None:
-            decays = 0.0
-            decays_is_single_value = True
-        elif isinstance(decays, float) or isinstance(decays, int):
-            decays_is_single_value = True
-
-        potentials_is_single_value = False
-        if potentials is None:
-            potentials = 0.0
-            potentials_is_single_value = True
-        elif isinstance(potentials, float) or isinstance(potentials, int):
-            potentials_is_single_value = True
-
-        nodes = []
-        for i in range(register_size):
-            i_suffix = "_{}".format(i)
-            nodes.append(
-                    (
-                      name + i_suffix,
-                      {
-                        'threshold': thresholds if thresholds_is_single_value else thresholds[i],
-                        'decay': decays if decays_is_single_value else decays[i],
-                        'potential': potentials if potentials_is_single_value else potentials[i],
-                        'is_register': True,
-                        'register_index': i,
-                        'register_tag': tag,
-                        'register_name': name,
-                        },
-                      )
-                    )
-
-        return nodes
-
-    def _sb_connect_register_to_register(
-          self,
-          register1_name,
-          register2_name,
-          weights=None,
-          delays=None,
-          register_size=5,
-          ):
-        weights_is_single_value = False
-        if weights is None:
-            weights = 1.0
-            weights_is_single_value = True
-        elif isinstance(weights, float) or isinstance(weights, int):
-            weights_is_single_value = True
-
-        delays_is_single_value = False
-        if delays is None:
-            delays = 1.0
-            delays_is_single_value = True
-        elif isinstance(delays, float) or isinstance(delays, int):
-            delays_is_single_value = True
-
-        edges = []
-        for i in range(register_size):
-            i_suffix = "_{}".format(i)
-            edges.append(
-                    (
-                      register1_name + i_suffix,
-                      register2_name + i_suffix,
-                      {
-                        'weight': weights if weights_is_single_value else weights[i],
-                        'delay': delays if delays_is_single_value else delays[i],
-                        },
-                      )
-                    )
-
-        return edges
-
-    def _sb_connect_neuron_to_register(self, neuron_name, register_name, weights=None, delays=None, register_size=5):
-        weights_is_single_value = False
-        if weights is None:
-            weights = 1.0
-            weights_is_single_value = True
-        elif isinstance(weights, float) or isinstance(weights, int):
-            weights_is_single_value = True
-
-        delays_is_single_value = False
-        if delays is None:
-            delays = 1.0
-            delays_is_single_value = True
-        elif isinstance(delays, float) or isinstance(delays, int):
-            delays_is_single_value = True
-
-        edges = []
-        for i in range(register_size):
-            i_suffix = "_{}".format(i)
-            edges.append(
-                    (
-                      neuron_name,
-                      register_name + i_suffix,
-                      {
-                        'weight': weights if weights_is_single_value else weights[i],
-                        'delay': delays if delays_is_single_value else delays[i],
-                        },
-                      )
-                    )
-
-        return edges
-
-    def _sb_connect_register_to_neuron(self, neuron_name, register_name, weights=None, delays=None, register_size=5):
-        weights_is_single_value = False
-        if weights is None:
-            weights = 1.0
-            weights_is_single_value = True
-        elif isinstance(weights, float) or isinstance(weights, int):
-            weights_is_single_value = True
-
-        delays_is_single_value = False
-        if delays is None:
-            delays = 1.0
-            delays_is_single_value = True
-        elif isinstance(delays, float) or isinstance(delays, int):
-            delays_is_single_value = True
-
-        edges = []
-        for i in range(register_size):
-            i_suffix = "_{}".format(i)
-            edges.append(
-                    (
-                      register_name + i_suffix,
-                      neuron_name,
-                      {
-                        'weight': weights if weights_is_single_value else weights[i],
-                        'delay': delays if delays_is_single_value else delays[i],
-                        },
-                      )
-                    )
-
-        return edges
-
     @abstractmethod
     def build(self, graph, metadata, control_nodes, input_lists, input_codings):
         """
@@ -248,6 +95,109 @@ class InputBrick(Brick):
 
         Arguments:
             + t - type of input (Default: None)
+        """
+        pass
+
+
+class InputSource:
+    """
+    Base class for handling various input sources/streams.
+
+    Example: Converted output (as a stream of 0's and 1's) from a DVI camera
+    """
+
+    def __init__(self):
+        self.name = "Empty Source"
+
+    @abstractmethod
+    def connect(self, graph, metadata, source):
+        """
+        Abstract method that tells the scaffold how it should connect the source to the circuit.
+        This is accomplished by using a "source" dictionary argument when you create neurons/synapses.
+        The "source" dictionary will contain whatever information the backends will need.
+
+        Example 1: 
+            Suppose the source was a motion detector (connected to hardware by a usb).
+            Everytime there is movement detected, we want a specific neuron to fire.
+            Then connect might look something like:
+                connect():
+                    scaffold.graph.add_node(
+                                     "Sensor",
+                                     threshold=1.0,
+                                     decay=1.0,
+                                     potential=0.0,
+                                     source={
+                                              'device_type': 'usb',
+                                              'device_name': 'camera',
+                                              'device_id': '00:07.0',
+                                            },
+                                     )
+                    scaffold.graph.add_edge(
+                                     "Sensor",
+                                     some_other_neuron,
+                                     weight=1.0,
+                                     delay=1.0,
+                                     )
+
+        Example 2:
+            Suppose the source was a network port receiving TCP packets
+            We want to fire specific neurons based on which flag bits are set
+            Then connect might look something like:
+                connect():
+                    scaffold.graph.add_node(
+                                     "TCPPortA",
+                                     threshold=1.0,
+                                     decay=1.0,
+                                     potential=0.0,
+                                     source={
+                                              'device_type': 'tcp_port',
+                                              'device_id': '20',
+                                              'flag_bit_id': 1,  # Look at flag bit #1 
+                                              'flag_fire_value': 0,  # Fire if flag bit #1 is a 0
+                                            },
+                                     )
+                    scaffold.graph.add_edge(
+                                     "TCPPortA",
+                                     some_other_neuron,
+                                     weight=1.0,
+                                     delay=1.0,
+                                     )
+                    scaffold.graph.add_node(
+                                     "TCPPortB",
+                                     threshold=1.0,
+                                     decay=1.0,
+                                     potential=0.0,
+                                     source={
+                                              'device_type': 'tcp_port',
+                                              'device_id': '20',
+                                              'flag_bit_id': 3,  # Look at flag bit #3 
+                                              'flag_fire_value': 1,  # Fire if flag bit #3 is a 1
+                                            },
+                                     )
+                    scaffold.graph.add_edge(
+                                     "TCPPortB",
+                                     some_other_neuron,
+                                     weight=1.0,
+                                     delay=1.0,
+                                     )
+                    scaffold.graph.add_node(
+                                     "TCPPortC",
+                                     threshold=1.0,
+                                     decay=1.0,
+                                     potential=0.0,
+                                     source={
+                                              'device_type': 'tcp_port',
+                                              'device_id': '20',
+                                              'flag_bit_id': 7,  # Look at flag bit #7 
+                                              'flag_fire_value': 0,  # Fire if flag bit #7 is a 0
+                                            },
+                                     )
+                    scaffold.graph.add_edge(
+                                     "TCPPortC",
+                                     some_other_neuron,
+                                     weight=1.0,
+                                     delay=1.0,
+                                     )
         """
         pass
 
