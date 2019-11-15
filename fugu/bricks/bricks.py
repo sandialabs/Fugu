@@ -8,6 +8,7 @@ Created on Wed Jun 19 14:46:55 2019
 import abc
 import sys
 import numpy as np
+import networkx as nx
 
 from abc import abstractmethod
 from collections import deque
@@ -43,12 +44,166 @@ input_coding_types = [
 
 
 class Brick(ABC):
-    """Abstract Base Class definition of a Brick class"""
+    """
+    Abstract Base Class definition of a Brick class
+    """
 
     def __init__(self):
         self.name = "Empty Brick"
         self.is_built = False
         self.supported_codings = []
+
+    """
+    Sub-bricks:
+       - A sub-brick is a reoccuring circuit pattern that can be modularized
+           - e.g. registers that store the binary encoding of some value
+       - sub-bricks comprise of two functions:
+           - one that generates the nodes that make up the sub-brick
+           - one that generates the edges between the sub-brick and other elements of the circuit
+       - Must call nx.compose(graph, sub_brick) or graph.add_edges_from(sub_brick)
+           where graph is the graph passed to build()
+    """
+    def _sb_create_register(self, name, thresholds=None, decays=None, potentials=None, register_size=5, tag=None):
+        thresholds_is_single_value = False
+        if thresholds is None:
+            thresholds = 1.0
+            thresholds_is_single_value = True
+        elif isinstance(thresholds, float) or isinstance(thresholds, int):
+            thresholds_is_single_value = True
+
+        decays_is_single_value = False
+        if decays is None:
+            decays = 0.0
+            decays_is_single_value = True
+        elif isinstance(decays, float) or isinstance(decays, int):
+            decays_is_single_value = True
+
+        potentials_is_single_value = False
+        if potentials is None:
+            potentials = 0.0
+            potentials_is_single_value = True
+        elif isinstance(potentials, float) or isinstance(potentials, int):
+            potentials_is_single_value = True
+
+        nodes = []
+        for i in range(register_size):
+            i_suffix = "_{}".format(i)
+            nodes.append(
+                    (
+                      name + i_suffix,
+                      {
+                        'threshold': thresholds if thresholds_is_single_value else thresholds[i],
+                        'decay': decays if decays_is_single_value else decays[i],
+                        'potential': potentials if potentials_is_single_value else potentials[i],
+                        'is_register': True,
+                        'register_index': i,
+                        'register_tag': tag,
+                        'register_name': name,
+                        },
+                      )
+                    )
+
+        return nodes
+
+    def _sb_connect_register_to_register(
+          self,
+          register1_name,
+          register2_name,
+          weights=None,
+          delays=None,
+          register_size=5,
+          ):
+        weights_is_single_value = False
+        if weights is None:
+            weights = 1.0
+            weights_is_single_value = True
+        elif isinstance(weights, float) or isinstance(weights, int):
+            weights_is_single_value = True
+
+        delays_is_single_value = False
+        if delays is None:
+            delays = 1.0
+            delays_is_single_value = True
+        elif isinstance(delays, float) or isinstance(delays, int):
+            delays_is_single_value = True
+
+        edges = []
+        for i in range(register_size):
+            i_suffix = "_{}".format(i)
+            edges.append(
+                    (
+                      register1_name + i_suffix,
+                      register2_name + i_suffix,
+                      {
+                        'weight': weights if weights_is_single_value else weights[i],
+                        'delay': delays if delays_is_single_value else delays[i],
+                        },
+                      )
+                    )
+
+        return edges
+
+    def _sb_connect_neuron_to_register(self, neuron_name, register_name, weights=None, delays=None, register_size=5):
+        weights_is_single_value = False
+        if weights is None:
+            weights = 1.0
+            weights_is_single_value = True
+        elif isinstance(weights, float) or isinstance(weights, int):
+            weights_is_single_value = True
+
+        delays_is_single_value = False
+        if delays is None:
+            delays = 1.0
+            delays_is_single_value = True
+        elif isinstance(delays, float) or isinstance(delays, int):
+            delays_is_single_value = True
+
+        edges = []
+        for i in range(register_size):
+            i_suffix = "_{}".format(i)
+            edges.append(
+                    (
+                      neuron_name,
+                      register_name + i_suffix,
+                      {
+                        'weight': weights if weights_is_single_value else weights[i],
+                        'delay': delays if delays_is_single_value else delays[i],
+                        },
+                      )
+                    )
+
+        return edges
+
+    def _sb_connect_register_to_neuron(self, neuron_name, register_name, weights=None, delays=None, register_size=5):
+        weights_is_single_value = False
+        if weights is None:
+            weights = 1.0
+            weights_is_single_value = True
+        elif isinstance(weights, float) or isinstance(weights, int):
+            weights_is_single_value = True
+
+        delays_is_single_value = False
+        if delays is None:
+            delays = 1.0
+            delays_is_single_value = True
+        elif isinstance(delays, float) or isinstance(delays, int):
+            delays_is_single_value = True
+
+        edges = []
+        for i in range(register_size):
+            i_suffix = "_{}".format(i)
+            edges.append(
+                    (
+                      register_name + i_suffix,
+                      neuron_name,
+                      {
+                        'weight': weights if weights_is_single_value else weights[i],
+                        'delay': delays if delays_is_single_value else delays[i],
+                        },
+                      )
+                    )
+
+        return edges
 
     @abstractmethod
     def build(self, graph, metadata, control_nodes, input_lists, input_codings):
@@ -70,7 +225,9 @@ class Brick(ABC):
 
 
 class InputBrick(Brick):
-    """Abstract Base class for handling inputs inherited from Brick"""
+    """
+    Abstract Base class for handling inputs inherited from Brick
+    """
 
     def __init__(self):
         self.streaming = False
@@ -96,7 +253,9 @@ class InputBrick(Brick):
 
 
 class Vector_Input(InputBrick):
-    """Class to handle a vector of spiking input. Inherits from InputBrick"""
+    """
+    Class to handle a vector of spiking input. Inherits from InputBrick
+    """
 
     def __init__(
           self,
@@ -107,7 +266,7 @@ class Vector_Input(InputBrick):
           name=None,
           multi_run_inputs=False,
           ):
-        '''
+        """
         Construtor for this brick.
         Arguments:
             + spikes - A numpy array of which neurons should spike at which times
@@ -116,7 +275,7 @@ class Vector_Input(InputBrick):
             + batchable - True if input should represent static data; currently True is the only supported mode.
             + name - Name of the brick.  If not specified, a default will be used.  Name should be unique.
             + multi_run_inputs - True if 'spikes' represents inputs for different runs
-        '''
+        """
         super(InputBrick, self).__init__()
         self.vector = np.array(spikes)
         self.coding = coding
@@ -195,44 +354,25 @@ class Vector_Input(InputBrick):
         """
 
         if not self.time_dimension and not self.is_multi_runs:
-            self.vector = np.expand_dims(
-                               self.vector,
-                               len(self.vector.shape),
-                               )
+            self.vector = np.expand_dims(self.vector, len(self.vector.shape))
 
         output_lists = [[]]
 
         if self.is_multi_runs:
             temp_vector = self.vector[0]
             if not self.time_dimension:
-                temp_vector = np.expand_dims(
-                                   temp_vector,
-                                   len(temp_vector.shape),
-                                   )
+                temp_vector = np.expand_dims(temp_vector, len(temp_vector.shape))
             self.index_map = np.ndindex(temp_vector.shape[:-1])
         else:
             self.index_map = np.ndindex(self.vector.shape[:-1])
         for i, index in enumerate(self.index_map):
             neuron_name = self.name + "_" + str(index)
 
-            graph.add_node(
-                    neuron_name,
-                    index=index,
-                    threshold=0.0,
-                    decay=0.0,
-                    p=1.0,
-                    )
+            graph.add_node(neuron_name, index=index, threshold=0.0, decay=0.0, p=1.0)
             output_lists[0].append(neuron_name)
         output_codings = [self.coding]
         complete_node = self.name + "_complete"
-        graph.add_node(
-                complete_node,
-                index=-1,
-                threshold=0.0,
-                decay=0.0,
-                p=1.0,
-                potential=0.5,
-                )
+        graph.add_node(complete_node, index=-1, threshold=0.0, decay=0.0, p=1.0, potential=0.5)
         self.is_built = True
 
         return (

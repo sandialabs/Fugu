@@ -410,7 +410,7 @@ class Scaffold:
                 print("List of Neurons:")
                 print("\r\n")
                 print("Neuron Number | Neuron Name | Neuron Properties")
-                for i, neuron in enumerate(self.graph.nodes):
+                for i, neuron in enumerate(sorted(self.graph.nodes)):
                     print(str(i) + " | " + str(neuron) + " | " + str(self.graph.nodes[neuron]))
                 print("\r\n")
                 print("-------------------------------------------------------")
