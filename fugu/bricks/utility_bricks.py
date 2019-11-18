@@ -5,9 +5,9 @@ Created on Wed Jun 19 14:46:55 2019
 
 @author: smusuva
 """
-import bricks
+from .bricks import Brick
 
-class Dot(bricks.Brick):
+class Dot(Brick):
     """Class to handle the Dot brick. Inherits from bricks.Brick"""
 
     def __init__(self, weights, name=None):
@@ -74,7 +74,7 @@ class Dot(bricks.Brick):
         self.is_built = True
         return (graph, metadata, [{'complete':self.name+"_complete"}], [output_list], output_codings)
 
-class Copy(bricks.Brick):
+class Copy(Brick):
     """Class to handle Copy bricks.Brick. Inherits from bricks.Brick
     """
 
@@ -154,7 +154,7 @@ class Copy(bricks.Brick):
         self.is_built = True
         return (graph, self.metadata, [{'complete':self.name+"_complete"}]*num_copies , output_lists, output_codings)
     
-class Concatenate(bricks.Brick):
+class Concatenate(Brick):
     ''' 
     Brick that concatenates multiple inputs into a single vector.  All codings are supported except 'current'; first coding is used if not specified.
     Arguments:
@@ -226,7 +226,7 @@ class Concatenate(bricks.Brick):
 
         return (graph, self.metadata, [{'complete':new_complete_node_name}], output_lists, output_codings)
 
-class AND_OR(bricks.Brick):
+class AND_OR(Brick):
     ''' 
     Brick for performing a logical AND/OR.  Operation is performed entry-wise, matching based on index.  All codings are supported.
     Arguments:
@@ -333,7 +333,7 @@ class AND(AND_OR):
         super(AND_OR, self).__init__(mode='AND', name=name)
 '''
 
-class ParityCheck(bricks.Brick):
+class ParityCheck(Brick):
     '''
     Brick to compute the parity of a 4 bit input.
     The output spikes after 2 time steps if the input has odd parity
@@ -519,7 +519,7 @@ class ParityCheck(bricks.Brick):
 
         return (graph, self.metadata, [{'complete':complete_node}], output_lists, output_codings)
 
-class TemporalAdder(bricks.Brick):
+class TemporalAdder(Brick):
     '''
     Brick that "adds" spike times together:
 
@@ -639,7 +639,7 @@ class TemporalAdder(bricks.Brick):
                 [{'complete':complete_node_list[0], 'begin':begin_node_name}],
                 output_lists, self.output_codings)
 
-class Register(bricks.Brick):
+class Register(Brick):
     '''
     Brick that stores the binary encoding of an non-negative integer.
     Brick also allows the value stored to be incremented (but not decremented).

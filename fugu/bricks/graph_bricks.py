@@ -5,9 +5,9 @@ Created on Wed Jun 19 14:46:55 2019
 
 @author: smusuva
 """
-import bricks
+from .bricks import Brick
 
-class Shortest_Path(bricks.Brick):
+class Shortest_Path(Brick):
     '''This brick provides a single-source shortest path determination. Expects a single input where the index corresponds to the node number on the graph.
 
     '''
@@ -167,7 +167,7 @@ class Shortest_Path(bricks.Brick):
                 [{'complete':complete_node_list, 'begin':new_begin_node_name}], output_lists,
                 self.output_codings)
 
-class Breadth_First_Search(bricks.Brick):
+class Breadth_First_Search(Brick):
     '''This brick performs a BFS traversal. Expects a single input where the index corresponds to the node number on the graph.
 
     '''

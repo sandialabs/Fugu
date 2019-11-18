@@ -7,9 +7,9 @@ Created on Wed Jun 19 14:46:55 2019
 """
 import numpy as np
 
-import bricks
+from .bricks import Brick
 
-class PRN(bricks.Brick):
+class PRN(Brick):
     """Psuedo-random neuron brick.  Generates spikes randomly (a uniform random [0,1] draw is compared against a threshold).  Implemented in-backend"""
     
     def __init__(self, probability=0.5, steps = None, shape=(1,), name=None, output_coding='Undefined'):
@@ -56,7 +56,7 @@ class PRN(bricks.Brick):
         self.is_built = True
         return (graph, self.metadata, [{'complete':complete_neuron}], [output_list], [self.output_coding])
 
-class Threshold(bricks.Brick):
+class Threshold(Brick):
     """Class to handle Threshold bricks.Brick. Inherits from bricks.Brick"""
 
     def __init__(self, threshold, decay=0.0, p=1.0, name=None, output_coding=None):

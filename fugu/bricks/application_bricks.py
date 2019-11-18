@@ -5,9 +5,9 @@ Created on Wed Jun 19 14:46:55 2019
 
 @author: smusuva
 """
-import bricks
+from .bricks import Brick
 
-class LIS(bricks.Brick):
+class LIS(Brick):
     '''
     This brick calculates the length of the longest common subsequence for a given sequence of numbers
 
