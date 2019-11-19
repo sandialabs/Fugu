@@ -74,6 +74,7 @@ To build the documentation, use pydocmd https://pypi.org/project/pydoc-markdown/
 ## Dependencies
 
 - Numpy
+- Scipy
 - NetworkX
 - Pandas
 - Pytorch (for DS)
