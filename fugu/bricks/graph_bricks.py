@@ -20,13 +20,13 @@ class Shortest_Path(Brick):
 		    + name - Name of the brick.  If not specified, a default will be used.  Name should be unique.
 			+ output_coding - Output coding type, default is 'temporal-L'
         '''
-        super(bricks.Brick, self).__init__()
+        super(Brick, self).__init__()
         #The brick hasn't been built yet.
         self.is_built = False
         #We just store the name passed at construction.
         self.name = name
         #For this example, we'll let any input coding work even though the answer might not make sense.
-        self.supported_codings = bricks.input_coding_types
+        self.supported_codings = input_coding_types
         #Right now, we'll convert node labels to integers in the order of
         #graph.nodes() However, in the fugure, this should be improved to be
         #more flexible.
@@ -180,13 +180,13 @@ class Breadth_First_Search(Brick):
 		    + name - Name of the brick.  If not specified, a default will be used.  Name should be unique.
 			+ output_coding - Output coding type, default is 'temporal-L'
         '''
-        super(bricks.Brick, self).__init__()
+        super(Brick, self).__init__()
         #The brick hasn't been built yet.
         self.is_built = False
         #We just store the name passed at construction.
         self.name = name
         #For this example, we'll let any input coding work even though the answer might not make sense.
-        self.supported_codings = bricks.input_coding_types
+        self.supported_codings = input_coding_types
         #Right now, we'll convert node labels to integers in the order of
         #graph.nodes() However, in the fugure, this should be improved to be
         #more flexible.
