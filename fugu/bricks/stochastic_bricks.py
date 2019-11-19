@@ -21,7 +21,7 @@ class PRN(Brick):
             + shape - shape of the neurons in the brick
             + output_coding - Desired output coding for the brick
         '''
-        super(bricks.Brick, self).__init__()
+        super(Brick, self).__init__()
         self.is_built = False
         self.metadata = {}
         self.probability = probability
@@ -29,7 +29,7 @@ class PRN(Brick):
         self.shape = shape
         self.steps = steps
         self.output_coding = output_coding
-        self.supported_codings = bricks.input_coding_types
+        self.supported_codings = input_coding_types
         
     def build(self, graph, metadata, control_nodes, input_lists, input_codings):
         if len(input_lists) == 0:
@@ -57,7 +57,7 @@ class PRN(Brick):
         return (graph, self.metadata, [{'complete':complete_neuron}], [output_list], [self.output_coding])
 
 class Threshold(Brick):
-    """Class to handle Threshold bricks.Brick. Inherits from bricks.Brick"""
+    """Class to handle Threshold Brick. Inherits from Brick"""
 
     def __init__(self, threshold, decay=0.0, p=1.0, name=None, output_coding=None):
         '''
@@ -69,7 +69,7 @@ class Threshold(Brick):
 		    + name - Name of the brick.  If not specified, a default will be used.  Name should be unique.
 			+ output_coding - Force a return of this output coding.  Default is 'unary-L'
         '''
-        super(bricks.Brick, self).__init__()
+        super(Brick, self).__init__()
         self.is_built=False
         self.metadata = {}
         self.name = name
