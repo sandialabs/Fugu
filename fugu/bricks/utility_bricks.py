@@ -5,12 +5,12 @@ Created on Wed Jun 19 14:46:55 2019
 
 @author: smusuva
 """
-import bricks
+from .bricks import Brick, input_coding_types
 
 
-class Dot(bricks.Brick):
+class Dot(Brick):
     """
-    Class to handle the Dot brick. Inherits from bricks.Brick
+    Class to handle the Dot brick. Inherits from Brick
     """
 
     def __init__(self, weights, name=None):
@@ -20,7 +20,7 @@ class Dot(bricks.Brick):
             + weights - Vector against which the input is dotted.
             + name - Name of the brick.  If not specified, a default will be used.  Name should be unique.
         '''
-        super(bricks.Brick, self).__init__()
+        super(Brick, self).__init__()
         self.is_built = False
         self.metadata = {'D': 1}
         self.name = name
@@ -89,9 +89,9 @@ class Dot(bricks.Brick):
         return (graph, metadata, [{'complete': self.name + "_complete"}], [output_list], output_codings)
 
 
-class Copy(bricks.Brick):
+class Copy(Brick):
     """
-    Class to handle Copy bricks.Brick. Inherits from bricks.Brick
+    Class to handle Copy Brick. Inherits from Brick
     """
 
     def __init__(self, name=None):
@@ -100,7 +100,7 @@ class Copy(bricks.Brick):
         Arguments:
             + name - Name of the brick.  If not specified, a default will be used.  Name should be unique.
         '''
-        super(bricks.Brick, self).__init__()
+        super(Brick, self).__init__()
         self.is_built = False
         self.metadata = {'D': 1}
         self.name = name
@@ -179,7 +179,7 @@ class Copy(bricks.Brick):
                  )
 
 
-class Concatenate(bricks.Brick):
+class Concatenate(Brick):
     '''
     Brick that concatenates multiple inputs into a single vector.
     All codings are supported except 'current'; first coding is used if not specified.
@@ -188,11 +188,11 @@ class Concatenate(bricks.Brick):
         + name - Name of the brick.  If not specified, a default will be used.  Name should be unique.
     '''
     def __init__(self, name=None, coding=None):
-        super(bricks.Brick, self).__init__()
+        super(Brick, self).__init__()
         self.is_built = False
         self.metadata = {'D': 0}
         self.name = name
-        self.supported_codings = bricks.input_coding_types
+        self.supported_codings = input_coding_types
         if coding is not None:
             self.coding = coding
         else:
@@ -263,7 +263,7 @@ class Concatenate(bricks.Brick):
         return (graph, self.metadata, [{'complete': new_complete_node_name}], output_lists, output_codings)
 
 
-class AND_OR(bricks.Brick):
+class AND_OR(Brick):
     '''
     Brick for performing a logical AND/OR.
     Operation is performed entry-wise, matching based on index.  All codings are supported.
@@ -273,7 +273,7 @@ class AND_OR(bricks.Brick):
         + name - Name of the brick.  If not specified, a default will be used.  Name should be unique.
     '''
     def __init__(self, mode='AND', name=None):   # A change here
-        super(bricks.Brick, self).__init__()
+        super(Brick, self).__init__()
         # The brick hasn't been built yet.
         self.is_built = False
         # Leave for compatibility, D represents the depth of the circuit.  Needs to be updated.
@@ -281,7 +281,7 @@ class AND_OR(bricks.Brick):
         # We just store the name passed at construction.
         self.name = name
         # For this example, we'll let any input coding work even though the answer might not make sense.
-        self.supported_codings = bricks.input_coding_types
+        self.supported_codings = input_coding_types
         self.mode = mode  # A change here
 
     def build(self, graph, metadata, control_nodes, input_lists, input_codings):
@@ -321,7 +321,7 @@ class AND_OR(bricks.Brick):
         # All nodes we add to the graph should have basic neuron parameters (threshold, decay)
         # Reasonable defaults will be filled-in, but these defaults may depend on the execution platform.
         # Additionally, nodes should have a field called 'index' which is a local index used to reference the
-        # position of the node.  This can be used by downstream bricks.  A simple example might be
+        # position of the node.  This can be used by downstream   A simple example might be
         # a 3-bit binary representation will add 3 nodes to the graph with indices 0,1,2
         # We do have to do some work to establish best practices here.
         new_complete_node_name = self.name + '_complete'
@@ -358,7 +358,7 @@ class AND(AND_OR):
 '''
 
 
-class ParityCheck(bricks.Brick):
+class ParityCheck(Brick):
     '''
     Brick to compute the parity of a 4 bit input.
     The output spikes after 2 time steps if the input has odd parity
@@ -599,7 +599,7 @@ class ParityCheck(bricks.Brick):
         return (graph, self.metadata, [{'complete': complete_node}], output_lists, output_codings)
 
 
-class TemporalAdder(bricks.Brick):
+class TemporalAdder(Brick):
     '''
     Brick that "adds" spike times together:
 
@@ -614,10 +614,10 @@ class TemporalAdder(bricks.Brick):
             + name - Name of the brick.  If not specified, a default will be used.  Name should be unique.
             + output_coding - Output coding type, default is 'temporal-L'
         '''
-        super(bricks.Brick, self).__init__()
+        super(Brick, self).__init__()
         self.is_built = False
         self.name = name
-        self.supported_codings = bricks.input_coding_types
+        self.supported_codings = input_coding_types
 
         self.output_codings = [output_coding]
         self.metadata = {'D': None}
@@ -706,17 +706,17 @@ class TemporalAdder(bricks.Brick):
                  )
 
 
-class Register(bricks.Brick):
+class Register(Brick):
     '''
     Brick that stores the binary encoding of an non-negative integer.
     Brick also allows the value stored to be incremented (but not decremented).
     '''
 
     def __init__(self, max_size, initial_value=0, name=None, output_coding='Undefined'):
-        super(bricks.Brick, self).__init__()
+        super(Brick, self).__init__()
         self.is_built = False
         self.name = name
-        self.supported_codings = bricks.input_coding_types
+        self.supported_codings = input_coding_types
 
         self.output_codings = [output_coding]
         self.metadata = {'D': None}

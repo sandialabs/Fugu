@@ -7,10 +7,10 @@ Created on Wed Jun 19 14:46:55 2019
 """
 import numpy as np
 
-import bricks
+from .bricks import Brick, input_coding_types
 
 
-class PRN(bricks.Brick):
+class PRN(Brick):
     """
     Psuedo-random neuron brick.
     Generates spikes randomly (a uniform random [0,1] draw is compared against a threshold).
@@ -25,7 +25,7 @@ class PRN(bricks.Brick):
             + shape - shape of the neurons in the brick
             + output_coding - Desired output coding for the brick
         '''
-        super(bricks.Brick, self).__init__()
+        super(Brick, self).__init__()
         self.is_built = False
         self.metadata = {}
         self.probability = probability
@@ -33,7 +33,7 @@ class PRN(bricks.Brick):
         self.shape = shape
         self.steps = steps
         self.output_coding = output_coding
-        self.supported_codings = bricks.input_coding_types
+        self.supported_codings = input_coding_types
 
     def build(self, graph, metadata, control_nodes, input_lists, input_codings):
         if len(input_lists) == 0:
@@ -61,9 +61,9 @@ class PRN(bricks.Brick):
         return (graph, self.metadata, [{'complete': complete_neuron}], [output_list], [self.output_coding])
 
 
-class Threshold(bricks.Brick):
+class Threshold(Brick):
     """
-    Class to handle Threshold bricks.Brick. Inherits from bricks.Brick
+    Class to handle Threshold Brick. Inherits from Brick
     """
 
     def __init__(self, threshold, decay=0.0, p=1.0, name=None, output_coding=None):
@@ -76,7 +76,7 @@ class Threshold(bricks.Brick):
             + name - Name of the brick.  If not specified, a default will be used.  Name should be unique.
             + output_coding - Force a return of this output coding.  Default is 'unary-L'
         '''
-        super(bricks.Brick, self).__init__()
+        super(Brick, self).__init__()
         self.is_built = False
         self.metadata = {}
         self.name = name

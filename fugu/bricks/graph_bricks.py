@@ -7,11 +7,11 @@ Created on Wed Jun 19 14:46:55 2019
 """
 import math
 
-import bricks
-import sub_bricks
+from .bricks import Brick, input_coding_types
+from .sub_bricks import create_register, connect_register_to_register, connect_neuron_to_register
 
 
-class Graph_Traversal(bricks.Brick):
+class Graph_Traversal(Brick):
     """
     This brick traverses a graph (using breadth first search) given a starting vertex.
     This brick can also be used to solve single source shortest path using edge delays.
@@ -36,10 +36,10 @@ class Graph_Traversal(bricks.Brick):
                 If not specified, a default will be used. Name should be unique.
             + output_coding - Output coding type, default is 'temporal-L'
         """
-        super(bricks.Brick, self).__init__()
+        super(Brick, self).__init__()
         self.is_built = False
         self.name = name
-        self.supported_codings = bricks.input_coding_types
+        self.supported_codings = input_coding_types
         self.target_node = target_node
         self.target_graph = target_graph
         self.output_codings = [output_coding]
@@ -120,32 +120,32 @@ class Graph_Traversal(bricks.Brick):
                 # Create registers
                 binary_id = "".join(["{:0", str(self.register_size), "b}"]).format(node)
                 id_potentials = [1.0 if bit == '1' else 0.0 for bit in binary_id[::-1]]
-                sub_bricks.create_register(
-                             graph,
-                             "ID_{}".format(node_name),
-                             thresholds=1.99,
-                             potentials=id_potentials,
-                             register_size=self.register_size,
-                             tag=node_name,
-                         )
-                parent_register = sub_bricks.create_register(
-                                               graph,
-                                               "ParentID_{}".format(node_name),
-                                               thresholds=0.99,
-                                               register_size=self.register_size,
-                                               tag=node_name,
-                                               )
+                create_register(
+                  graph,
+                  "ID_{}".format(node_name),
+                  thresholds=1.99,
+                  potentials=id_potentials,
+                  register_size=self.register_size,
+                  tag=node_name,
+                  )
+                parent_register = create_register(
+                                    graph,
+                                    "ParentID_{}".format(node_name),
+                                    thresholds=0.99,
+                                    register_size=self.register_size,
+                                    tag=node_name,
+                                    )
 
                 for node in parent_register:
                     output_node_list.append(node)
 
                 # connect neuron to id register
-                sub_bricks.connect_neuron_to_register(
-                             graph,
-                             node_name,
-                             "ID_{}".format(node_name),
-                             register_size=self.register_size,
-                             )
+                connect_neuron_to_register(
+                  graph,
+                  node_name,
+                  "ID_{}".format(node_name),
+                  register_size=self.register_size,
+                  )
 
         edge_reference_names = []
         reference_index = len(self.target_graph.nodes) + 1
@@ -188,13 +188,13 @@ class Graph_Traversal(bricks.Brick):
                     else:
                         graph.add_edge(node_name, neighbor_name, weight=1.1, delay=delay)
                 if self.store_parent_info:
-                    sub_bricks.connect_register_to_register(
-                                 graph,
-                                 "ID_{}".format(node_name),
-                                 "ParentID_{}".format(neighbor_name),
-                                 delays=delay - 1,
-                                 register_size=self.register_size,
-                                 )
+                    connect_register_to_register(
+                      graph,
+                      "ID_{}".format(node_name),
+                      "ParentID_{}".format(neighbor_name),
+                      delays=delay - 1,
+                      register_size=self.register_size,
+                      )
 
         for input_neuron in input_lists[0]:
             index = graph.nodes[input_neuron]['index']

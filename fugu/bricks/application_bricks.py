@@ -5,10 +5,10 @@ Created on Wed Jun 19 14:46:55 2019
 
 @author: smusuva
 """
-import bricks
+from .bricks import Brick, input_coding_types
 
 
-class LIS(bricks.Brick):
+class LIS(Brick):
     '''
     This brick calculates the length of the longest common subsequence for a given sequence of numbers
 
@@ -21,10 +21,10 @@ class LIS(bricks.Brick):
             + name - Name of the brick.  If not specified, a default will be used.  Name should be unique.
             + output_coding - Output coding type, default is 'temporal-L'
         '''
-        super(bricks.Brick, self).__init__()
+        super(Brick, self).__init__()
         self.is_built = False
         self.name = name
-        self.supported_codings = bricks.input_coding_types
+        self.supported_codings = input_coding_types
 
         self.output_codings = [output_coding]
         self.metadata = {'D': None}

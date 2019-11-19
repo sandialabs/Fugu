@@ -7,10 +7,11 @@ Created on Wed Jun 19 11:37:44 2019
 """
 import networkx as nx
 import numpy as np
-from ..utils.export_utils import results_df_from_dict
 from warnings import warn
+
 from ..backends.backend import Backend, snn_Backend, ds_Backend
 from ..backends.pynn_backend import pynn_Backend
+from ..utils.export_utils import results_df_from_dict
 
 
 class Scaffold:
@@ -99,12 +100,12 @@ class Scaffold:
         # Process inputs
         for node in [node[0] for node in processed_input_nodes]:
             if node < -1:
-                self.circuit.node[node_number]['layer'] = 'input'
+                self.circuit.nodes[node_number]['layer'] = 'input'
             else:
                 self.circuit.add_edge(node, node_number)
         self.circuit.nodes[node_number]['input_nodes'] = processed_input_nodes
         if output:
-            self.circuit.node[node_number]['layer'] = 'output'
+            self.circuit.nodes[node_number]['layer'] = 'output'
 
     def resolve_timing(self):
         # Set weights to equal source node timing (T_out + D?)
@@ -118,7 +119,7 @@ class Scaffold:
         nodes = list(self.circuit.nodes())
         edges = list(self.circuit.edges())
         for edge in edges:
-            self.circuit.edges[edge[0], edge[1]]['weight'] = self.circuit.node[edge[0]]['brick'].metadata['D']
+            self.circuit.edges[edge[0], edge[1]]['weight'] = self.circuit.nodes[edge[0]]['brick'].metadata['D']
 
         for node in reversed(nodes):
 
