@@ -116,7 +116,7 @@ class InputSource:
         This is accomplished by using a "source" dictionary argument when you create neurons/synapses.
         The "source" dictionary will contain whatever information the backends will need.
 
-        Example 1: 
+        Example 1:
             Suppose the source was a motion detector (connected to hardware by a usb).
             Everytime there is movement detected, we want a specific neuron to fire.
             Then connect might look something like:
@@ -152,7 +152,7 @@ class InputSource:
                                      source={
                                               'device_type': 'tcp_port',
                                               'device_id': '20',
-                                              'flag_bit_id': 1,  # Look at flag bit #1 
+                                              'flag_bit_id': 1,  # Look at flag bit #1
                                               'flag_fire_value': 0,  # Fire if flag bit #1 is a 0
                                             },
                                      )
@@ -170,7 +170,7 @@ class InputSource:
                                      source={
                                               'device_type': 'tcp_port',
                                               'device_id': '20',
-                                              'flag_bit_id': 3,  # Look at flag bit #3 
+                                              'flag_bit_id': 3,  # Look at flag bit #3
                                               'flag_fire_value': 1,  # Fire if flag bit #3 is a 1
                                             },
                                      )
@@ -188,7 +188,7 @@ class InputSource:
                                      source={
                                               'device_type': 'tcp_port',
                                               'device_id': '20',
-                                              'flag_bit_id': 7,  # Look at flag bit #7 
+                                              'flag_bit_id': 7,  # Look at flag bit #7
                                               'flag_fire_value': 0,  # Fire if flag bit #7 is a 0
                                             },
                                      )

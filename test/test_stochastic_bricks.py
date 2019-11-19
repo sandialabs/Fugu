@@ -5,15 +5,12 @@ import fugu
 import fugu.bricks as BRICKS
 from fugu import Scaffold
 
-
-def AssertValuesAreClose(value1, value2, tolerance=0.0001):
-    if abs(value1 - value2) > tolerance:
-        raise AssertionError('Values {} and {} are not close'.format(value1, value2))
+from utilities import AssertValuesAreClose
 
 
 class StochasticBrickTests:
     num_trials = 100
-    tolerance = 0.05
+    tolerance = 0.15
     backend = None
     backend_args = {}
 
@@ -63,7 +60,6 @@ class StochasticBrickTests:
         result = self.evaluate_thresh_params('current', 1.01, 1, 1, 0)
         AssertValuesAreClose(1.0, result, self.tolerance)
 
-    @unittest.skip('Since behavior is too inconsistent')
     def test_thresh_current_sometimes_spikes(self):
         result = self.evaluate_thresh_params('current', 1.01, 1, 0.75, 0)
         AssertValuesAreClose(0.75, result, self.tolerance)
@@ -84,16 +80,16 @@ class StochasticBrickTests:
         result = self.evaluate_thresh_params('temporal-L', 3, 4, 1, 0)
         AssertValuesAreClose(0.0, result, self.tolerance)
 
-    @unittest.skip('Since behavior is too inconsistent')
     def test_thresh_temporal_sometimes_spikes(self):
-        result = self.evaluate_thresh_params('temporal-L', 3, 2, 0.23, 0)
-        AssertValuesAreClose(0.23, result, self.tolerance)
+        result = self.evaluate_thresh_params('temporal-L', 3, 2, 0.13, 0)
+        AssertValuesAreClose(0.13, result, self.tolerance)
 
 
 class SnnStochasticTests(unittest.TestCase, StochasticBrickTests):
     @classmethod
     def setUpClass(self):
         self.backend = 'snn'
+        self.tolerance = .30
 
 
 class DsStochasticTests(unittest.TestCase, StochasticBrickTests):

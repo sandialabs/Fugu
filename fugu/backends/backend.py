@@ -213,7 +213,7 @@ class snn_Backend(Backend):
         self.nn = snn.NeuralNetwork()
         neuron_dict = {}
 
-        ''' 
+        '''
         Add Neurons
         '''
         # Add in input and output neurons. Use the fugu_circuit information to identify input and output layers

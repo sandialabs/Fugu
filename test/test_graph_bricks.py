@@ -1,28 +1,14 @@
 import unittest
 import math
-import random
 import numpy as np
 
 import networkx as nx
-from networkx.generators.random_graphs import fast_gnp_random_graph
 
 import fugu
 import fugu.bricks as BRICKS
 from fugu import Scaffold
 
-random.seed(3)
-
-
-def create_graph(size, p, seed):
-    G = fast_gnp_random_graph(size, p, seed=seed)
-    return G
-
-
-def create_weighted_graph(size, p, seed):
-    G = fast_gnp_random_graph(size, p, seed=seed)
-    for (u, v) in G.edges():
-        G.edges[u, v]['weight'] = random.randint(1, 10)
-    return G
+from utilities import create_graph, create_weighted_graph
 
 
 class GraphBrickTests:
