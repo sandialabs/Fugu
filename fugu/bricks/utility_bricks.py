@@ -8,7 +8,7 @@ Created on Wed Jun 19 14:46:55 2019
 from .bricks import Brick
 
 class Dot(Brick):
-    """Class to handle the Dot brick. Inherits from bricks.Brick"""
+    """Class to handle the Dot brick. Inherits from Brick"""
 
     def __init__(self, weights, name=None):
         '''
@@ -17,7 +17,7 @@ class Dot(Brick):
             + weights - Vector against which the input is dotted.
 		    + name - Name of the brick.  If not specified, a default will be used.  Name should be unique.
         '''
-        super(bricks.Brick, self).__init__()
+        super(Brick, self).__init__()
         self.is_built = False
         self.metadata = {'D':1}
         self.name = name
@@ -75,7 +75,7 @@ class Dot(Brick):
         return (graph, metadata, [{'complete':self.name+"_complete"}], [output_list], output_codings)
 
 class Copy(Brick):
-    """Class to handle Copy bricks.Brick. Inherits from bricks.Brick
+    """Class to handle Copy Brick. Inherits from Brick
     """
 
     def __init__(self, name=None):
@@ -84,7 +84,7 @@ class Copy(Brick):
         Arguments:
 		    + name - Name of the brick.  If not specified, a default will be used.  Name should be unique.
         '''
-        super(bricks.Brick, self).__init__()
+        super(Brick, self).__init__()
         self.is_built=False
         self.metadata = {'D':1}
         self.name = name
@@ -161,11 +161,11 @@ class Concatenate(Brick):
 		+ name - Name of the brick.  If not specified, a default will be used.  Name should be unique.
     '''
     def __init__(self, name=None, coding=None):   
-        super(bricks.Brick, self).__init__()
+        super(Brick, self).__init__()
         self.is_built = False
         self.metadata = {'D':0}
         self.name = name
-        self.supported_codings = bricks.input_coding_types
+        self.supported_codings = input_coding_types
         if coding is not None:
             self.coding = coding
         else:
@@ -234,7 +234,7 @@ class AND_OR(Brick):
 		+ name - Name of the brick.  If not specified, a default will be used.  Name should be unique.
     '''
     def __init__(self, mode='AND',name=None):   #A change here
-        super(bricks.Brick, self).__init__()
+        super(Brick, self).__init__()
         #The brick hasn't been built yet.
         self.is_built = False
         #Leave for compatibility, D represents the depth of the circuit.  Needs to be updated.
@@ -242,7 +242,7 @@ class AND_OR(Brick):
         #We just store the name passed at construction.
         self.name = name
         #For this example, we'll let any input coding work even though the answer might not make sense.
-        self.supported_codings = bricks.input_coding_types
+        self.supported_codings = input_coding_types
         self.mode = mode  #A change here
     def build(self, graph, metadata, control_nodes, input_lists, input_codings):
         """
@@ -534,10 +534,10 @@ class TemporalAdder(Brick):
             + name - Name of the brick.  If not specified, a default will be used.  Name should be unique.
             + output_coding - Output coding type, default is 'temporal-L'
         '''
-        super(bricks.Brick, self).__init__()
+        super(Brick, self).__init__()
         self.is_built = False
         self.name = name
-        self.supported_codings = bricks.input_coding_types
+        self.supported_codings = input_coding_types
 
         self.output_codings = [output_coding]
         self.metadata = {'D':None}
@@ -646,10 +646,10 @@ class Register(Brick):
     '''
 
     def __init__(self, max_size, initial_value=0, name=None, output_coding='Undefined'):
-        super(bricks.Brick, self).__init__()
+        super(Brick, self).__init__()
         self.is_built = False
         self.name = name
-        self.supported_codings = bricks.input_coding_types
+        self.supported_codings = input_coding_types
 
         self.output_codings = [output_coding]
         self.metadata = {'D':None}
