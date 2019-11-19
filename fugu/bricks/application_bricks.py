@@ -20,10 +20,10 @@ class LIS(Brick):
             + name - Name of the brick.  If not specified, a default will be used.  Name should be unique.
             + output_coding - Output coding type, default is 'temporal-L'
         '''
-        super(bricks.Brick, self).__init__()
+        super(Brick, self).__init__()
         self.is_built = False
         self.name = name
-        self.supported_codings = bricks.input_coding_types
+        self.supported_codings = input_coding_types
 
         self.output_codings = [output_coding]
         self.metadata = {'D':None}
