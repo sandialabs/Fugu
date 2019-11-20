@@ -6,6 +6,7 @@ Created on Wed Jun 19 14:46:55 2019
 @author: smusuva
 """
 from .bricks import Brick
+from .bricks import input_coding_types #added by Darb on 11/20/19
 
 class Shortest_Path(Brick):
     '''This brick provides a single-source shortest path determination. Expects a single input where the index corresponds to the node number on the graph.
