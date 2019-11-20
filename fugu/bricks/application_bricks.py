@@ -6,6 +6,7 @@ Created on Wed Jun 19 14:46:55 2019
 @author: smusuva
 """
 from .bricks import Brick
+from .bricks import input_coding_types #added by Darb on 11/20/19
 
 class LIS(Brick):
     '''
