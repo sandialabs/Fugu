@@ -8,6 +8,7 @@ Created on Wed Jun 19 14:46:55 2019
 import numpy as np
 
 from .bricks import Brick
+from .bricks import input_coding_types #added by Darb on 11/20/19
 
 class PRN(Brick):
     """Psuedo-random neuron brick.  Generates spikes randomly (a uniform random [0,1] draw is compared against a threshold).  Implemented in-backend"""
