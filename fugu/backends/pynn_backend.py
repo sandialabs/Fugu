@@ -299,7 +299,11 @@ class pynn_Backend(Backend):
                 self.parameter_values['tau_syn_I'].append(self.defaults['tau_syn_I'])
 
                 if 'decay' in neuron_props:
-                    self.parameter_values['tau_m'].append(self.defaults['tau_m'] * (1 - neuron_props['decay']))
+                    decay = neuron_props['decay']
+                    if decay == 1:
+                        self.parameter_values['tau_m'].append(10)
+                    else:
+                        self.parameter_values['tau_m'].append(self.defaults['tau_m'] * (1 - neuron_props['decay']))
                 else:
                     self.parameter_values['tau_m'].append(self.defaults['tau_m'])
             else:

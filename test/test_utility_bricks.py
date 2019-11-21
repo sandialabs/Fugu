@@ -84,7 +84,7 @@ class UtilityBrickTests:
         if debug:
             self.backend_args['verbose'] = True
 
-        result = scaffold.evaluate(backend=self.backend, max_runtime=max_runtime, backend_args=self.backend_args)
+        result = scaffold.evaluate(backend=self.backend, max_runtime=max_runtime, backend_args=self.backend_args, record_all=True)
 
         value = 0
         graph_names = list(scaffold.graph.nodes.data('name'))
@@ -96,27 +96,22 @@ class UtilityBrickTests:
 
         return value
 
-    @unittest.skip("Need to tweak pynn backend to support this")
     def test_register_1(self):
         answer = self.evaluate_register([5, 10, 25], 5)
         self.assertEqual(3, answer)
 
-    @unittest.skip("Need to tweak pynn backend to support this")
     def test_register_2(self):
         answer = self.evaluate_register([1 + i * 7 for i in range(10)], 7)
         self.assertEqual(10, answer)
 
-    @unittest.skip("Need to tweak pynn backend to support this")
     def test_register_3(self):
         answer = self.evaluate_register([i * 5 for i in range(19)], 5)
         self.assertEqual(19, answer)
 
-    @unittest.skip("Need to tweak pynn backend to support this")
     def test_register_4(self):
         answer = self.evaluate_register([1 + i * 8 for i in range(32)], 8)
         self.assertEqual(32, answer)
 
-    @unittest.skip("Need to tweak pynn backend to support this")
     def test_register_5(self):
         spike_times = [1]
         for i in range(25):
@@ -124,12 +119,10 @@ class UtilityBrickTests:
         answer = self.evaluate_register(spike_times, 8)
         self.assertEqual(26, answer)
 
-    @unittest.skip("Need to tweak pynn backend to support this")
     def test_register_6(self):
         answer = self.evaluate_register([5, 20, 45], 8, initial_value=5)
         self.assertEqual(8, answer)
 
-    @unittest.skip("Need to tweak pynn backend to support this")
     def test_register_7(self):
         answer = self.evaluate_register([], 6, initial_value=34)
         self.assertEqual(34, answer)
