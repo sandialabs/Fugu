@@ -1,10 +1,5 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""
-Created on Wed Jun 19 11:37:44 2019
-
-@author: smusuva
-"""
 import networkx as nx
 import numpy as np
 from ..utils.export_utils import results_df_from_dict
