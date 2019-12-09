@@ -28,10 +28,16 @@ class UtilityBrickTests:
         scaffold.add_brick(adder_brick, output=True)
 
         scaffold.lay_bricks()
-        results = scaffold.evaluate(backend=self.backend,
-                                    max_runtime=(sum(spike_times) + 5) * 2,
-                                    backend_args=self.backend_args,
-                                    record_all=True)
+
+        if debug:
+            self.backend_args['verbose'] = True
+
+        results = scaffold.evaluate(
+                             backend=self.backend,
+                             max_runtime=(sum(spike_times) + 5) * 2,
+                             backend_args=self.backend_args,
+                             record_all=True,
+                             )
 
         answer = -1
         graph_names = list(scaffold.graph.nodes.data('name'))
@@ -45,7 +51,7 @@ class UtilityBrickTests:
         return answer
 
     def test_adder_1(self):
-        result = self.evaluate_adder([10, 7])
+        result = self.evaluate_adder([10, 7], debug=False)
         self.assertEqual(17, result)
 
     def test_adder_2(self):
