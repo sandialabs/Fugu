@@ -162,31 +162,6 @@ class pynn_Backend(Backend):
                 self.main_populations[neuron_type].initialize(v=self.initial_potentials[neuron_type])
             self._create_projections()
 
-        if self.verbose:
-            #print("New inputs:", self.input_population.get('spike_times'))
-            if self.backend == BRIAN_BACKEND:
-                print("___Parameter values___:")
-                print("min delay: {}".format(self.defaults['min_delay']))
-                for param in self.parameter_values:
-                    main_params = self.main_population.get(param)
-                    print("Parameter: {}, {}".format(param, main_params))
-
-                print("___Initial potentials___:")
-                for neuron in self.neuron_index_map:
-                    print("{}, {}".format(neuron, self.initial_potentials[self.neuron_index_map[neuron]]))
-
-                print("---Input to main connections (Edge lists)---")
-                for synapse_project in self.input_main_synapses:
-                    for edge in synapse_project.connections:
-                        print(edge.as_tuple('index', 'weight', 'delay'))
-                    print('===')
-
-                print("---Main to main connections (Edge lists)---")
-                for synapse_project in self.main_synapses:
-                    for edge in synapse_project.connections:
-                        print(edge.as_tuple('index', 'weight', 'delay'))
-                    print('===')
-
         if self.collect_metrics:
             start = timer()
         self.pynn_sim.run(max_runtime)
@@ -340,7 +315,7 @@ class pynn_Backend(Backend):
                 if 'decay' in neuron_props:
                     decay = neuron_props['decay']
                     if decay >= 1:
-                        self.parameter_values[neuron_type]['tau_m'].append(10)
+                        self.parameter_values[neuron_type]['tau_m'].append(1)
                         if decay > 1:
                             print("Fugu warning: decay value is truncated to 1")
                     else:
