@@ -57,7 +57,7 @@ class pynn_Backend(Backend):
 
         self.backend = BRIAN_BACKEND
         self.collect_metrics = False
-        self.store_voltage = False
+        self.return_potentials = False
         self.scale_factor = 1.0
         self.metrics = {}
 
@@ -176,7 +176,7 @@ class pynn_Backend(Backend):
         self.show_plots = embedding_args['show_plots'] if 'show_plots' in embedding_args else False
         self.verbose = embedding_args['verbose'] if 'verbose' in embedding_args else False
         self.collect_metrics = embedding_args['collect_metrics'] if 'collect_metrics' in embedding_args else False
-        self.store_voltage = embedding_args['store_voltage'] if 'store_voltage' in embedding_args else False
+        self.return_potentials = embedding_args['return_potentials'] if 'return_potentials' in embedding_args else False
         self.scale_factor = embedding_args['scale_factor'] if 'scale_factor' in embedding_args else 1.0
 
         if self.collect_metrics:
@@ -330,7 +330,7 @@ class pynn_Backend(Backend):
                 thresh = neuron_props['threshold']
             else:
                 thresh = 1.0
-                print("Error, threshold not found in neuron_props: {}".format(neuron_props))
+                print("Error, threshold not found in \"{}\"'s props: {}".format(neuron, neuron_props))
             self.parameter_values[neuron_type]['v_thresh'].append(thresh if thresh > 0.0 else 0.01)
 
             self.parameter_values[neuron_type]['v_rest'].append(self.defaults['v_rest'])
@@ -509,7 +509,7 @@ class pynn_Backend(Backend):
             self.metrics['embed_time'] = timer() - start
 
         # Run sim
-        if self.store_voltage:
+        if self.return_potentials:
             for neuron_type in self.main_populations:
                 self.main_populations[neuron_type].record(['spikes', 'v'])
         else:
@@ -525,7 +525,7 @@ class pynn_Backend(Backend):
         warn("Stepping not supported yet.  Use a batching mode.")
         return None
 
-    def batch(self, input_values, n_steps, backend_args=None):
+    def batch(self, n_steps, input_values=None, backend_args=None):
         run_index = self.number_of_runs
         self.number_of_runs += 1
         if self.backend == BRIAN_BACKEND:
@@ -549,14 +549,16 @@ class pynn_Backend(Backend):
             input_data[neuron_type] = data
             input_spiketrains[neuron_type] = data.segments[run_index].spiketrains
 
-        spike_result = pd.DataFrame({'time': [], 'neuron_number': []})
+        if self.return_potentials:
+            main_voltage = {}
+            for neuron in self.main_neurons:
+                if neuron in self.output_neurons:
+                    neuron_type = self.neuron_type_map[neuron]
+                    data = main_data[neuron_type].segments[run_index].filter(name='v')[0]
+                    pynn_index = self.neuron_index_map[neuron]
+                    main_voltage[pynn_index] = data[-1]
 
-        if self.store_voltage:
-            main_voltage = []
-            for neuron in self.output_neurons:
-                neuron_type = self.neuron_type_map[neuron]
-                data = main_data[neuron_type].segments[run_index].filter(name='v')[0]
-                main_voltage.append(data[self.neuron_index_map[neuron]])
+            potentials = pd.DataFrame({'neuron_number': [], 'potential': []})
 
         spikes = {}
         for neuron in self.main_neurons:
@@ -566,21 +568,30 @@ class pynn_Backend(Backend):
                 spiketrain = main_spiketrains[neuron_type][pynn_index]
                 if self.verbose:
                     print("---results for: {}".format(neuron))
-                    if self.store_voltage:
+                    if self.return_potentials:
                         if self.report_all:
                             print("voltage  {}".format(main_voltage[pynn_index]))
                     print("spiketimes  {}".format(spiketrain))
 
                 if spiketrain.any():
+                    neuron_number = self.fugu_graph.node[neuron]['neuron_number']
                     for time in np.array(spiketrain):
                         if time not in spikes:
                             spikes[time] = set()
-                        spikes[time].add(self.fugu_graph.node[neuron]['neuron_number'])
+                        spikes[time].add(neuron_number)
+                    if self.return_potentials:
+                        potentials = potentials.append(
+                                                        {
+                                                          'neuron_number': pynn_index,
+                                                          'potential':  main_voltage[pynn_index],
+                                                          },
+                                                        ignore_index=True,
+                                                        )
 
         labels = []
         for neuron in self.neuron_index_map:
             labels.append(neuron)
-        if self.show_plots and self.store_voltage:
+        if self.show_plots and self.return_potentials:
             from pyNN.utility.plotting import Figure, Panel
             import matplotlib.pyplot as plt
             if self.report_all:
@@ -611,6 +622,7 @@ class pynn_Backend(Backend):
                             spikes[time] = set()
                         spikes[time].add(self.fugu_graph.node[neuron]['neuron_number'])
 
+        spike_result = pd.DataFrame({'time': [], 'neuron_number': []})
         for time in spikes:
             mini_df = pd.DataFrame()
             times = [time for i in spikes[time]]
@@ -618,4 +630,7 @@ class pynn_Backend(Backend):
             mini_df['neuron_number'] = list(spikes[time])
             spike_result = spike_result.append(mini_df, sort=False)
 
-        return spike_result
+        if self.return_potentials:
+            return spike_result, potentials
+        else:
+            return spike_result

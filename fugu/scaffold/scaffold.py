@@ -26,6 +26,7 @@ class Scaffold:
         self.graph = None
         self.is_built = False
         self.metrics = None
+        self.brick_to_number = {}
 
     def add_brick(self, brick_function, input_nodes=[-1], metadata=None, name=None, output=False):
         """
@@ -67,6 +68,7 @@ class Scaffold:
                        name=name,
                        brick=brick_function,
                        )  # ,metadata=metadata)
+        self.brick_to_number[name] = node_number
 
         # Make sure we're working with a list of inputs
         if type(input_nodes) is not list:
@@ -331,7 +333,7 @@ class Scaffold:
                     injection_tensors[t][tensor_idx] += input_spikes[local_idx, t]
         return injection_tensors
 
-    def evaluate(self, max_runtime=10, backend='ds', record='output', record_all=False, backend_args={}):
+    def evaluate(self, max_runtime=10, brick_properties={}, backend='ds', record='output', record_all=False, backend_args={}):
         """
         Run the computational graph through the backend.
 
@@ -347,6 +349,11 @@ class Scaffold:
         Exceptions:
             + ValueError if backend is not in list of supported backends
         """
+
+        # Update brick properties
+        for brick in brick_properties:
+            brick_number = self.brick_to_number[brick]
+            self.graph = self.circuit.nodes[brick_number]['brick'].set_properties(self.graph, brick_properties[brick])
 
         if type(backend) is str:
             if backend not in Scaffold.supported_backends:

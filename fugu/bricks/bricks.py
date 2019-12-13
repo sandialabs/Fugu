@@ -71,6 +71,22 @@ class Brick(ABC):
         pass
 
 
+class DynamicBrick(Brick):
+    """
+    Brick that has properties that can be changed between runs.
+    """
+
+    def __init__(self):
+        super(Brick, self).__init__()
+
+    @abstractmethod
+    def set_properties(self, graph, properties):
+        """
+        Returns an updated version of the graph based on the parameter values passed.
+        """
+        pass
+
+
 class InputBrick(Brick):
     """
     Abstract Base class for handling inputs inherited from Brick

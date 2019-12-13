@@ -101,7 +101,7 @@ class Backend(ABC):
                         else:
                             number_finished += 1
                             input_values[0].extend(multi_inputs[node][-1])
-                    results.append(self.batch(input_values, n_steps, backend_args))
+                    results.append(self.batch(n_steps, input_values, backend_args))
             else:
                 input_values = {}
                 for timestep in range(0, n_steps):
@@ -110,7 +110,7 @@ class Backend(ABC):
                     for timestep, spike_list in enumerate(scaffold.circuit.nodes[input_node]['brick']):
                         input_values[timestep].extend(spike_list)
 
-                results = self.batch(input_values, n_steps, backend_args)
+                results = self.batch(n_steps, input_values, backend_args)
         else:
             if not self.features['supports_stepping']:
                 raise ValueError("Backend does not support stepping. Use a batch mode.")
@@ -141,7 +141,7 @@ class Backend(ABC):
         pass
 
     @abstractmethod
-    def batch(self, input_values, n_steps, backend_args):
+    def batch(self, n_steps, input_values=None, backend_args=None):
         pass
 
 
@@ -294,7 +294,7 @@ class snn_Backend(Backend):
         warn("Stepping not supported yet.  Use a batching mode.")
         return None
 
-    def batch(self, input_values, n_steps, backend_args):
+    def batch(self, n_steps, input_values=None, backend_args=None):
         self._embed()
 
         results = self._serve_fugu_to_snn(input_values, n_steps=n_steps)
@@ -346,12 +346,20 @@ class ds_Backend(Backend):
         warn("Stepping not supported yet.  Use a batching mode.")
         return None
 
-    def batch(self, input_values, n_steps, backend_args=None):
+    def batch(self, n_steps, input_values=None, backend_args=None):
+        return_potentials = False
+        if 'return_potentials' in backend_args:
+            return_potentials = backend_args['return_potentials']
+
         injection_values = self._create_ds_injection(input_values)
 
         from fugu.backends.ds import run_simulation
         results = run_simulation(self.ds_graph, n_steps, injection_values)
         spike_result = pd.DataFrame({'time': [], 'neuron_number': []})
+
+        if return_potentials:
+            final_potentials = pd.DataFrame({'potential': [], 'neuron_number': []})
+
         for group in results:
             if 'spike_history' in results[group]:
                 spike_history = results[group]['spike_history']
@@ -362,4 +370,17 @@ class ds_Backend(Backend):
                     mini_df['time'] = times
                     mini_df['neuron_number'] = neurons
                     spike_result = spike_result.append(mini_df, sort=True)
-        return spike_result
+                if return_potentials and 'potential' in results[group]:
+                    for i, potential in enumerate(results[group]['potential']):
+                        final_potentials = final_potentials.append(
+                                                                    {
+                                                                      'potential':potential.tolist(),
+                                                                      'neuron_number':i,
+                                                                      },
+                                                                    ignore_index=True,
+                                                                    )
+
+        if return_potentials:
+            return (spike_result, final_potentials)
+        else:
+            return spike_result
