@@ -104,7 +104,7 @@ class NeuralNetwork:
         for s in self.synps:
             s.update_state()
             
-    def run(self, n_steps=1, debug_mode=False):
+    def run(self, n_steps=1, debug_mode=False, record_potentials=False):
         '''Iterate the network evolution for n_steps number of times and return results as a pandas dataFrame'''
         
         tempdct = defaultdict(list)
@@ -134,7 +134,20 @@ class NeuralNetwork:
         if not debug_mode:
             drop_list = [self.nrns[n].name for n in self.nrns if not self.nrns[n].record]
             df = df.drop(drop_list, axis=1)
-        
+
+        if record_potentials:
+            final_potentials = pd.DataFrame({'potential': [], 'neuron_number': []})
+            neuron_number = 0
+            for neuron in self.nrns:
+                final_potentials = final_potentials.append(
+                                                            {
+                                                              'potential':self.nrns[neuron].voltage,
+                                                              'neuron_number':neuron_number,
+                                                              },
+                                                            ignore_index=True,
+                                                            )
+                neuron_number += 1
+            return df, final_potentials
         return df
     
     

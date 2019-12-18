@@ -12,7 +12,7 @@ import numpy as np
 
 print("---Building Scaffold---")
 
-debug = False
+debug = True
 
 graph = nx.DiGraph()
 graph.add_edge('s', 1, capacity=4, flow=0)
@@ -40,8 +40,6 @@ scaffold.add_brick(input_brick, 'input')
 scaffold.add_brick(FAP_brick, output=True)
 scaffold.lay_bricks()
 
-#scaffold.summary(verbose=2)
-
 pynn_args = {}
 pynn_args['backend'] = 'brian'
 pynn_args['verbose'] = False 
@@ -52,8 +50,17 @@ print("---Running evaluation---")
 min_residual = 9 # max capacity
 
 while min_residual > 0:
+    print("--->Iteration")
     min_residual = 9
-    result = scaffold.evaluate(brick_properties=brick_properties, backend='ds', max_runtime=MAX_RUNTIME, record_all=True, backend_args=pynn_args)
+    result = scaffold.evaluate(
+                        brick_properties=brick_properties,
+                        backend='pynn',
+                        max_runtime=MAX_RUNTIME,
+                        record_all=True,
+                        backend_args=pynn_args,
+                        )
+
+    scaffold.summary(verbose=2)
     spikes, potentials = result
 
     graph_names = list(scaffold.graph.nodes.data('name'))
@@ -62,6 +69,7 @@ while min_residual > 0:
 
     if debug:
         print("---spike_times---")
+
     recall_spikes = []
     for row in spikes.itertuples():
         neuron_name = graph_names[int(row.neuron_number)][0]
@@ -99,6 +107,7 @@ while min_residual > 0:
 
 if debug:
     print("Final potentials")
+
 max_flow = 0
 final_flow_values = {}
 for row in potentials.itertuples():

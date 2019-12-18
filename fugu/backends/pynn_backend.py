@@ -551,14 +551,23 @@ class pynn_Backend(Backend):
 
         if self.return_potentials:
             main_voltage = {}
+            potentials = pd.DataFrame({'neuron_number': [], 'potential': []})
             for neuron in self.main_neurons:
                 if neuron in self.output_neurons:
                     neuron_type = self.neuron_type_map[neuron]
                     data = main_data[neuron_type].segments[run_index].filter(name='v')[0]
                     pynn_index = self.neuron_index_map[neuron]
-                    main_voltage[pynn_index] = data[-1]
-
-            potentials = pd.DataFrame({'neuron_number': [], 'potential': []})
+                    voltage = float(data[0][pynn_index])
+                    if neuron_type not in main_voltage:
+                        main_voltage[neuron_type] = {}
+                    main_voltage[neuron_type][pynn_index] = voltage
+                    potentials = potentials.append(
+                                              {
+                                                'neuron_number': pynn_index,
+                                                'potential': voltage,
+                                                },
+                                              ignore_index=True,
+                                              )
 
         spikes = {}
         for neuron in self.main_neurons:
@@ -570,7 +579,7 @@ class pynn_Backend(Backend):
                     print("---results for: {}".format(neuron))
                     if self.return_potentials:
                         if self.report_all:
-                            print("voltage  {}".format(main_voltage[pynn_index]))
+                            print("voltage  {}".format(main_voltage[neuron_type][pynn_index]))
                     print("spiketimes  {}".format(spiketrain))
 
                 if spiketrain.any():
@@ -579,14 +588,6 @@ class pynn_Backend(Backend):
                         if time not in spikes:
                             spikes[time] = set()
                         spikes[time].add(neuron_number)
-                    if self.return_potentials:
-                        potentials = potentials.append(
-                                                        {
-                                                          'neuron_number': pynn_index,
-                                                          'potential':  main_voltage[pynn_index],
-                                                          },
-                                                        ignore_index=True,
-                                                        )
 
         labels = []
         for neuron in self.neuron_index_map:

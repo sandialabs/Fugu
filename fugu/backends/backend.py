@@ -153,7 +153,7 @@ class snn_Backend(Backend):
         super(Backend, self).__init__()
         self.results = []
 
-    def _serve_fugu_to_snn(self, input_spike_lists, n_steps=1):
+    def _serve_fugu_to_snn(self, input_spike_lists, n_steps=1, record_potentials=False):
         for node, vals in self.fugu_circuit.nodes.data():
             if 'layer' in vals:
                 if vals['layer'] == 'input':
@@ -173,7 +173,11 @@ class snn_Backend(Backend):
                         self.nn.update_input_neuron(neuron, input_values[neuron])
 
         ''' Run the Simulator '''
-        df = self.nn.run(n_steps=n_steps, debug_mode=False)
+        output = self.nn.run(n_steps=n_steps, debug_mode=False, record_potentials=record_potentials)
+        if record_potentials:
+            df, potentials = output
+        else:
+            df = output
         res = {}
         # if ds format is required, convert neuron names to numbers and return dictionary
         # else return dataframe
@@ -190,9 +194,15 @@ class snn_Backend(Backend):
                         col_list.append(c)
                     res[r] = col_list
 
-            return res
+            if record_potentials:
+                return res, potentials
+            else:
+                return res
         else:
-            return df
+            if record_potentials:
+                return df, potentials
+            else:
+                return df
 
     def embed(self, scaffold, record, embedding_args={}):
         '''
@@ -297,8 +307,19 @@ class snn_Backend(Backend):
     def batch(self, n_steps, input_values=None, backend_args=None):
         self._embed()
 
-        results = self._serve_fugu_to_snn(input_values, n_steps=n_steps)
-        return results_df_from_dict(results, 'time', 'neuron_number')
+        record_potentials = False
+        if 'return_potentials' in backend_args:
+            record_potentials = backend_args['return_potentials']
+
+        results = self._serve_fugu_to_snn(input_values, n_steps=n_steps, record_potentials=record_potentials)
+
+        if record_potentials:
+            spike_times = results_df_from_dict(results[0], 'time', 'neuron_number')
+            final_potentials = results[1]
+            return spike_times, final_potentials
+        else:
+            spike_times = results_df_from_dict(results, 'time', 'neuron_number')
+            return spike_times
 
 
 class ds_Backend(Backend):
