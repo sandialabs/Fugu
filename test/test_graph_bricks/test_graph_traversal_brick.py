@@ -12,13 +12,29 @@ from utilities import create_graph, create_weighted_graph
 
 
 class GraphBrickTests:
-    backend = None
-    backend_args = {}
+    def build_scaffold(self, (graph, return_pred)):
+        scaffold = Scaffold()
+        bfs_input = BRICKS.Vector_Input(len(graph.nodes()), coding='Raster', name='BFSInput')
+        bfs_brick = BRICKS.Graph_Traversal(graph, name="BFS-Edge-Reference", store_edge_references=return_pred)
 
-    def get_spike_input(self, search_key):
-        spikes = [0] * search_key
+        scaffold.add_brick(bfs_input, 'input')
+        scaffold.add_brick(bfs_brick, output=True)
+
+        scaffold.lay_bricks()
+        pass
+
+    def calculate_max_timesteps(self, search_key):
+        pass
+
+    def check_spike_output(self, spikes, expected, scaffold):
+        pass
+
+    def convert_input(self, search_key):
+        spikes = [0] * search_key 
         spikes.append(1)
         return spikes
+
+    def get_spike_input(self, search_key):
 
     def evaluate_bfs_graph(self, graph, search_keys, return_pred=False, debug=False):
         # Edge reference version

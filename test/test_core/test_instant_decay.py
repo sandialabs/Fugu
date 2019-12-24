@@ -5,12 +5,50 @@ import fugu
 import fugu.bricks as BRICKS
 from fugu import Scaffold
 
+from ..base import BrickTest
 
-class CoreTests:
-    backend = None
-    backend_args = {}
 
-    def process_spike_times(self, spike_times):
+class InstantDecayTests(BrickTest):
+    # Base class function
+    def build_scaffold(self, input_times):
+        scaffold = Scaffold()
+
+        vector_brick = BRICKS.Vector_Input(
+                                self.convert_input(input_times),
+                                coding='Raster',
+                                name='Input',
+                                time_dimension=True,
+                                )
+        decay_brick = BRICKS.InstantDecay(len(input_times), name="InstantDecay")
+
+        scaffold.add_brick(vector_brick, 'input')
+        scaffold.add_brick(decay_brick, output=True)
+
+        scaffold.lay_bricks()
+        return scaffold
+
+    def calculate_max_timesteps(self, input_values):
+        max_time = 0
+        for sequence in input_values:
+            max_seq = max(sequence)
+            if max_seq > max_time:
+                max_time = max_seq
+
+        return 2 * max_seq
+
+    def check_spike_output(self, spikes, expected, scaffold):
+        graph_names = list(scaffold.graph.nodes.data('name'))
+        main_fired = False
+        for row in spikes.itertuples():
+            neuron_name = graph_names[int(row.neuron_number)][0]
+            if debug:
+                print(neuron_name, row.time)
+            if "main" in neuron_name:
+                main_fired = True
+
+        self.assertEqual(expected, main_fired)
+
+    def convert_input(self, spike_times):
         max_time = 0
         for spike_array in spike_times:
             last_spike = max(spike_array)
@@ -25,69 +63,37 @@ class CoreTests:
             converted_spikes.append(spikes)
 
         return converted_spikes
-            
 
-    def evaluate_instant_decay(self, input_times, expected, debug=False):
-        scaffold = Scaffold()
-
-        vector_brick = BRICKS.Vector_Input(
-                                self.process_spike_times(input_times),
-                                coding='Raster',
-                                name='Input',
-                                time_dimension=True,
-                                )
-        decay_brick = BRICKS.InstantDecay(len(input_times), name="InstantDecay")
-
-        scaffold.add_brick(vector_brick, 'input')
-        scaffold.add_brick(decay_brick, output=True)
-
-        scaffold.lay_bricks()
-
-        if debug:
-            scaffold.summary(verbose=2)
-
-        results = scaffold.evaluate(backend=self.backend, backend_args=self.backend_args, max_runtime=100)
-
-        graph_names = list(scaffold.graph.nodes.data('name'))
-        main_fired = False
-        for row in results.itertuples():
-            neuron_name = graph_names[int(row.neuron_number)][0]
-            if debug:
-                print(neuron_name, row.time)
-            if "main" in neuron_name:
-                main_fired = True
-
-        self.assertEqual(expected, main_fired)
-
+    # tests
     def test_fire(self):
         input_spikes = [[5, 10], [2, 10]]
-        self.evaluate_instant_decay(input_spikes, True)
+        self.basic_test(input_spikes, True)
 
     def test_no_fire(self):
         input_spikes = [[1,3,5,7,9], [2,4,6,8]]
-        self.evaluate_instant_decay(input_spikes, False, debug=False)
+        self.basic_test(input_spikes, False)
 
 
-class SnnCoreTests(unittest.TestCase, CoreTests):
+class SnnInstantDecayTests(unittest.TestCase, InstantDecayTests):
     @classmethod
     def setUpClass(self):
         self.backend = 'snn'
 
 
-class DsCoreTests(unittest.TestCase, CoreTests):
+class DsInstantDecayTests(unittest.TestCase, InstantDecayTests):
     @classmethod
     def setUpClass(self):
         self.backend = 'ds'
 
 
-class PynnBrianCoreTests(unittest.TestCase, CoreTests):
+class PynnBrianInstantDecayTests(unittest.TestCase, InstantDecayTests):
     @classmethod
     def setUpClass(self):
         self.backend = 'pynn'
         self.backend_args['backend'] = 'brian'
 
 
-class PynnSpinnakerCoreTests(unittest.TestCase, CoreTests):
+class PynnSpinnakerInstantDecayTests(unittest.TestCase, InstantDecayTests):
     @classmethod
     def setUpClass(self):
         self.backend = 'pynn'

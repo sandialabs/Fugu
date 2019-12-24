@@ -1,0 +1,1 @@
+from .test_instant_decay import SnnInstantDecayTests, DsInstantDecayTests, PynnBrianInstantDecayTests, PynnSpinnakerInstantDecayTests
