@@ -5,6 +5,7 @@ import random
 import fugu
 import fugu.bricks as BRICKS
 from fugu import Scaffold
+from fugu import ds_Backend, snn_Backend, pynn_Backend
 
 from ..base import BrickTest
 
@@ -25,6 +26,7 @@ class RegisterBrickTests(BrickTest):
         scaffold.add_brick(register_brick, output=True)
 
         scaffold.lay_bricks()
+        return scaffold
 
     def calculate_max_timesteps(self, input_values):
         _, register_size, _ = input_values
@@ -33,7 +35,7 @@ class RegisterBrickTests(BrickTest):
     def check_spike_output(self, spikes, expected, scaffold):
         value = 0
         graph_names = list(scaffold.graph.nodes.data('name'))
-        for row in result.sort_values('time').itertuples():
+        for row in spikes.sort_values('time').itertuples():
             neuron_name = graph_names[int(row.neuron_number)][0]
             if 'output' in neuron_name:
                 index = int(neuron_name.split('_')[1])
@@ -78,26 +80,26 @@ class RegisterBrickTests(BrickTest):
         self.basic_test([[], 6, 34], 34)
 
 
-class SnnRegisterTests(unittest.TestCase, RegisterBrickTests):
+class SnnRegisterTests(RegisterBrickTests, unittest.TestCase):
     @classmethod
     def setUpClass(self):
-        self.backend = 'snn'
+        self.backend = snn_Backend()
 
 
-class DsRegisterTests(unittest.TestCase, RegisterBrickTests):
+class DsRegisterTests(RegisterBrickTests, unittest.TestCase):
     @classmethod
     def setUpClass(self):
-        self.backend = 'ds'
+        self.backend = ds_Backend()
 
 
-class PynnBrianRegisterTests(unittest.TestCase, RegisterBrickTests):
+class PynnBrianRegisterTests(RegisterBrickTests, unittest.TestCase):
     @classmethod
     def setUpClass(self):
         self.backend = 'pynn'
         self.backend_args['backend'] = 'brian'
 
 
-class PynnSpinnakerRegisterTests(unittest.TestCase, RegisterBrickTests):
+class PynnSpinnakerRegisterTests(RegisterBrickTests, unittest.TestCase):
     @classmethod
     def setUpClass(self):
         self.backend = 'pynn'

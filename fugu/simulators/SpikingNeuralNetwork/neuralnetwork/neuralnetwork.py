@@ -118,12 +118,12 @@ class NeuralNetwork:
             for n in self.nrns:
                 if self.nrns[n].spike and self.nrns[n].record:
                     if debug_mode:
-                        tempdct[t].append((1, n.voltage))
+                        tempdct[t].append((1, self.nrns[n].voltage))
                     else:
                         tempdct[t].append(1)
                 else:
                     if debug_mode:
-                        tempdct[t].append((0, n.voltage))
+                        tempdct[t].append((0, self.nrns[n].voltage))
                     else:
                         tempdct[t].append(0)
                  
@@ -149,16 +149,3 @@ class NeuralNetwork:
                 neuron_number += 1
             return df, final_potentials
         return df
-    
-    
-                
-        
-
-    
-            
-                
-        
-        
-        
-        
-    

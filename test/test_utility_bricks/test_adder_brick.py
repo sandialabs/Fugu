@@ -4,6 +4,7 @@ import numpy as np
 import fugu
 import fugu.bricks as BRICKS
 from fugu import Scaffold
+from fugu import ds_Backend, snn_Backend, pynn_Backend
 
 from ..base import BrickTest
 
@@ -24,6 +25,7 @@ class AdderBrickTests(BrickTest):
         scaffold.add_brick(adder_brick, output=True)
 
         scaffold.lay_bricks()
+        return scaffold
 
     def calculate_max_timesteps(self, input_values):
         return (sum(input_values) + 5) * 2
@@ -33,8 +35,6 @@ class AdderBrickTests(BrickTest):
         graph_names = list(scaffold.graph.nodes.data('name'))
         for row in spikes.itertuples():
             neuron_name = graph_names[int(row.neuron_number)][0]
-            if debug:
-                print(neuron_name, row.time)
             if 'Sum' in neuron_name:
                 self.assertTrue(answer < 0)
                 answer = self.scale_factor * row.time - 3
@@ -64,26 +64,26 @@ class AdderBrickTests(BrickTest):
         self.basic_test([1, 9], 10)
 
 
-class SnnAdderTests(unittest.TestCase, AdderBrickTests):
+class SnnAdderTests(AdderBrickTests, unittest.TestCase):
     @classmethod
     def setUpClass(self):
-        self.backend = 'snn'
+        self.backend = snn_Backend()
 
 
-class DsAdderTests(unittest.TestCase, AdderBrickTests):
+class DsAdderTests(AdderBrickTests, unittest.TestCase):
     @classmethod
     def setUpClass(self):
-        self.backend = 'ds'
+        self.backend = ds_Backend() 
 
 
-class PynnBrianAdderTests(unittest.TestCase, AdderBrickTests):
+class PynnBrianAdderTests(AdderBrickTests, unittest.TestCase):
     @classmethod
     def setUpClass(self):
         self.backend = 'pynn'
         self.backend_args['backend'] = 'brian'
 
 
-class PynnSpinnakerAdderTests(unittest.TestCase, AdderBrickTests):
+class PynnSpinnakerAdderTests(AdderBrickTests, unittest.TestCase):
     @classmethod
     def setUpClass(self):
         self.backend = 'pynn'

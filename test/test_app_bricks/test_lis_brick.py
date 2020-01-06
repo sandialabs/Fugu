@@ -4,6 +4,7 @@ import numpy as np
 import fugu
 import fugu.bricks as BRICKS
 from fugu import Scaffold
+from fugu import ds_Backend, snn_Backend, pynn_Backend
 
 from ..base import BrickTest
 
@@ -32,8 +33,6 @@ class LISBrickTests(BrickTest):
         answer = 0
         for row in spikes.itertuples():
             neuron_name = graph_names[int(row.neuron_number)][0]
-            if debug:
-                print(neuron_name, row.time)
             if "Main" in neuron_name:
                 level = int(neuron_name.split("_")[1])
                 if level > answer:
@@ -67,26 +66,26 @@ class LISBrickTests(BrickTest):
         self.basic_test(sequence, 6)
 
 
-class SnnLISTests(unittest.TestCase, LISBrickTests):
+class SnnLISTests(LISBrickTests, unittest.TestCase):
     @classmethod
     def setUpClass(self):
-        self.backend = 'snn'
+        self.backend = snn_Backend()
 
 
-class DsLISTests(unittest.TestCase, LISBrickTests):
+class DsLISTests(LISBrickTests, unittest.TestCase):
     @classmethod
     def setUpClass(self):
-        self.backend = 'ds'
+        self.backend = ds_Backend() 
 
 
-class PynnBrianLISTests(unittest.TestCase, LISBrickTests):
+class PynnBrianLISTests(LISBrickTests, unittest.TestCase):
     @classmethod
     def setUpClass(self):
         self.backend = 'pynn'
         self.backend_args['backend'] = 'brian'
 
 
-class PynnSpinnakerLISTests(unittest.TestCase, LISBrickTests):
+class PynnSpinnakerLISTests(LISBrickTests, unittest.TestCase):
     @classmethod
     def setUpClass(self):
         self.backend = 'pynn'

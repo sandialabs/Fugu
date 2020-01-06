@@ -4,6 +4,7 @@ import numpy as np
 import fugu
 import fugu.bricks as BRICKS
 from fugu import Scaffold
+from fugu import ds_Backend, snn_Backend, pynn_Backend
 
 from ..base import BrickTest
 
@@ -41,8 +42,6 @@ class InstantDecayTests(BrickTest):
         main_fired = False
         for row in spikes.itertuples():
             neuron_name = graph_names[int(row.neuron_number)][0]
-            if debug:
-                print(neuron_name, row.time)
             if "main" in neuron_name:
                 main_fired = True
 
@@ -74,26 +73,26 @@ class InstantDecayTests(BrickTest):
         self.basic_test(input_spikes, False)
 
 
-class SnnInstantDecayTests(unittest.TestCase, InstantDecayTests):
+class SnnInstantDecayTests(InstantDecayTests, unittest.TestCase):
     @classmethod
     def setUpClass(self):
-        self.backend = 'snn'
+        self.backend = snn_Backend()
 
 
-class DsInstantDecayTests(unittest.TestCase, InstantDecayTests):
+class DsInstantDecayTests(InstantDecayTests, unittest.TestCase):
     @classmethod
     def setUpClass(self):
-        self.backend = 'ds'
+        self.backend = ds_Backend()
 
 
-class PynnBrianInstantDecayTests(unittest.TestCase, InstantDecayTests):
+class PynnBrianInstantDecayTests(InstantDecayTests, unittest.TestCase):
     @classmethod
     def setUpClass(self):
         self.backend = 'pynn'
         self.backend_args['backend'] = 'brian'
 
 
-class PynnSpinnakerInstantDecayTests(unittest.TestCase, InstantDecayTests):
+class PynnSpinnakerInstantDecayTests(InstantDecayTests, unittest.TestCase):
     @classmethod
     def setUpClass(self):
         self.backend = 'pynn'

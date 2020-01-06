@@ -9,8 +9,7 @@ import networkx as nx
 import numpy as np
 from warnings import warn
 
-from ..backends.backend import Backend, snn_Backend, ds_Backend
-from ..backends.pynn_backend import pynn_Backend
+from ..backends import Backend, snn_Backend, ds_Backend, pynn_Backend
 from ..utils.export_utils import results_df_from_dict
 
 

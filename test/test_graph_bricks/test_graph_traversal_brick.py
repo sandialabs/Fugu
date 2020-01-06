@@ -7,6 +7,7 @@ import networkx as nx
 import fugu
 import fugu.bricks as BRICKS
 from fugu import Scaffold
+from fugu import ds_Backend, snn_Backend, pynn_Backend
 
 from utilities import create_graph, create_weighted_graph
 
@@ -21,7 +22,7 @@ class GraphBrickTests:
         scaffold.add_brick(bfs_brick, output=True)
 
         scaffold.lay_bricks()
-        pass
+        return scaffold
 
     def calculate_max_timesteps(self, search_key):
         pass
@@ -348,26 +349,26 @@ class GraphBrickTests:
         self.evaluate_sssp_graph(graph, [1, 5, 7], True)
 
 
-class SnnGraphTests(unittest.TestCase, GraphBrickTests):
+class SnnGraphTests(GraphBrickTests, unittest.TestCase):
     @classmethod
     def setUpClass(self):
-        self.backend = 'snn'
+        self.backend = snn_Backend()
 
 
-class DsGraphTests(unittest.TestCase, GraphBrickTests):
+class DsGraphTests(GraphBrickTests, unittest.TestCase):
     @classmethod
     def setUpClass(self):
-        self.backend = 'ds'
+        self.backend = ds_Backend()
 
 
-class PynnBrianGraphTests(unittest.TestCase, GraphBrickTests):
+class PynnBrianGraphTests(GraphBrickTests, unittest.TestCase):
     @classmethod
     def setUpClass(self):
         self.backend = 'pynn'
         self.backend_args['backend'] = 'brian'
 
 
-class PynnSpinnakerGraphTests(unittest.TestCase, GraphBrickTests):
+class PynnSpinnakerGraphTests(GraphBrickTests, unittest.TestCase):
     @classmethod
     def setUpClass(self):
         self.backend = 'pynn'

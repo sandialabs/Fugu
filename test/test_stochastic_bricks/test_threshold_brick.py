@@ -4,6 +4,7 @@ import numpy as np
 import fugu
 import fugu.bricks as BRICKS
 from fugu import Scaffold
+from fugu import ds_Backend, snn_Backend
 
 from ..base import BrickTest
 from ..utilities import AssertValuesAreClose
@@ -12,6 +13,9 @@ from ..utilities import AssertValuesAreClose
 class ThresholdBrickTests(BrickTest):
     num_trials = 100
     tolerance = 0.15
+
+    def setUp(self):
+        self.hits = 0
 
     # Base class function
     def build_scaffold(self, input_values):
@@ -33,6 +37,7 @@ class ThresholdBrickTests(BrickTest):
         scaffold.add_brick(threshold_brick, (2, 0), output=True)
 
         scaffold.lay_bricks()
+        return scaffold
 
     def update_hit_count(self, spikes, scaffold):
         graph_names = list(scaffold.graph.nodes.data('name'))
@@ -72,7 +77,7 @@ class ThresholdBrickTests(BrickTest):
             spikes = self.backend.run(5)
             self.update_hit_count(spikes, scaffold)
 
-        self.AssertValuesAreClose(expected, self.hits / float(self.num_trials), self.tolerance)
+        AssertValuesAreClose(expected, self.hits / float(self.num_trials), self.tolerance)
 
     def test_thresh_current_no_spikes(self):
         scaffold = self.build_scaffold(['current', 1.0, 1, 1, 0])
@@ -107,14 +112,14 @@ class ThresholdBrickTests(BrickTest):
         self.run_iterations(0.13, scaffold)
 
 
-class SnnThresholdTests(unittest.TestCase, ThresholdBrickTests):
+class SnnThresholdTests(ThresholdBrickTests, unittest.TestCase):
     @classmethod
     def setUpClass(self):
-        self.backend = 'snn'
+        self.backend = snn_Backend()
         self.tolerance = .30
 
 
-class DsThresholdTests(unittest.TestCase, ThresholdBrickTests):
+class DsThresholdTests(ThresholdBrickTests, unittest.TestCase):
     @classmethod
     def setUpClass(self):
-        self.backend = 'ds'
+        self.backend = ds_Backend()

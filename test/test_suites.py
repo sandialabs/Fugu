@@ -1,12 +1,18 @@
 import unittest
 
-from test_core import SnnInstantDecayTests, DsInstantDecayTests, PynnBrianInstantDecayTests, PynnSpinnakerInstantDecayTests
-from test_utility_bricks import SnnAdderTests, DsAdderTests, PynnBrianAdderTests, PynnSpinnakerAdderTests
-from test_utility_bricks import SnnRegisterTests, DsRegisterTests, PynnBrianRegisterTests, PynnSpinnakerRegisterTests
-from test_app_bricks import SnnLISTests, DsLISTests, PynnBrianLISTests, PynnSpinnakerLISTests
-from test_stochastic_bricks import SnnThresholdTests, DsThresholdTests
+from .test_core import SnnInstantDecayTests, DsInstantDecayTests, PynnSpinnakerInstantDecayTests
+from .test_utility_bricks import SnnAdderTests, DsAdderTests, PynnSpinnakerAdderTests
+from .test_utility_bricks import SnnRegisterTests, DsRegisterTests, PynnSpinnakerRegisterTests
+from .test_app_bricks import SnnLISTests, DsLISTests, PynnSpinnakerLISTests
+from .test_stochastic_bricks import SnnThresholdTests, DsThresholdTests
+#from test_graph_bricks import SnnGraphTests, DsGraphTests, PynnSpinnakerGraphTests
 
-#from test_graph_bricks import SnnGraphTests, DsGraphTests, PynnBrianGraphTests, PynnSpinnakerGraphTests
+# Until pynn releases a brian2 backend, these tests are disabled for now
+#from .test_core import PynnBrianInstantDecayTests
+#from .test_utility_bricks import PynnBrianAdderTests, PynnBrianRegisterTests
+#from .test_app_bricks import PynnBrianLISTests
+#from .test_graph_bricks import PynnBrianGraphTests,
+
 
 loader = unittest.TestLoader()
 
@@ -24,11 +30,11 @@ ds_suite.addTest(loader.loadTestsFromTestCase(DsRegisterTests))
 ds_suite.addTest(loader.loadTestsFromTestCase(DsLISTests))
 ds_suite.addTest(loader.loadTestsFromTestCase(DsThresholdTests))
 
-pynn_brian_suite = unittest.TestSuite()
-pynn_brian_suite.addTest(loader.loadTestsFromTestCase(PynnBrianInstantDecayTests))
-pynn_brian_suite.addTest(loader.loadTestsFromTestCase(PynnBrianAdderTests))
-pynn_brian_suite.addTest(loader.loadTestsFromTestCase(PynnBrianRegisterTests))
-pynn_brian_suite.addTest(loader.loadTestsFromTestCase(PynnBrianLISTests))
+#pynn_brian_suite = unittest.TestSuite()
+#pynn_brian_suite.addTest(loader.loadTestsFromTestCase(PynnBrianInstantDecayTests))
+#pynn_brian_suite.addTest(loader.loadTestsFromTestCase(PynnBrianAdderTests))
+#pynn_brian_suite.addTest(loader.loadTestsFromTestCase(PynnBrianRegisterTests))
+#pynn_brian_suite.addTest(loader.loadTestsFromTestCase(PynnBrianLISTests))
 
 pynn_spinnaker_suite = unittest.TestSuite()
 pynn_spinnaker_suite.addTest(loader.loadTestsFromTestCase(PynnSpinnakerInstantDecayTests))

@@ -30,7 +30,7 @@ class BrickTest(ABC):
         pass
 
     def run_scaffold(self, scaffold, timesteps):
-        self.backend.compile(scaffold)
+        self.backend.compile(scaffold, self.backend_args)
         return self.backend.run(timesteps)
 
     def basic_test(self, input_values, expected_output):
@@ -42,5 +42,6 @@ class BrickTest(ABC):
     def tearDown(self):
         self.backend.reset()
 
+    @classmethod
     def tearDownClass(self):
         self.backend.cleanup()

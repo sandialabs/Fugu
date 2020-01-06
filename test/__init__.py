@@ -1,1 +1,1 @@
-import test_suites
+from .test_suites import *
