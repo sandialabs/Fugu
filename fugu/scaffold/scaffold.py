@@ -27,13 +27,13 @@ class Scaffold:
         self.metrics = None
         self.brick_to_number = {}
 
-    def add_brick(self, brick_function, input_nodes=[-1], metadata=None, name=None, output=False):
+    def add_brick(self, brick_function, input_nodes=[], metadata=None, name=None, output=False):
         """
         Add a brick to the scaffold.
 
         Arguments:
             + brick_function - object of type brick
-            + input_nodes - list of node numbers (Default: [-1])
+            + input_nodes - list of node numbers (Default: [])
             + dimesionality -  dictionary of shapes and parameters of the brick (Default: None)
             + name - string of the brick's name (Default: none)
             + output - bool flag to indicate if a brick is an output brick (Default: False)
@@ -332,7 +332,15 @@ class Scaffold:
                     injection_tensors[t][tensor_idx] += input_spikes[local_idx, t]
         return injection_tensors
 
-    def evaluate(self, max_runtime=10, brick_properties={}, backend='ds', record='output', record_all=False, backend_args={}):
+    def evaluate(
+          self,
+          max_runtime=10,
+          brick_properties={},
+          backend='ds',
+          record='output',
+          record_all=False,
+          backend_args={}
+          ):
         """
         Run the computational graph through the backend.
 

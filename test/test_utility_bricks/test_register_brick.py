@@ -23,7 +23,7 @@ class RegisterBrickTests(BrickTest):
         register_brick = BRICKS.Register(register_size, initial_value=initial_value, name='register1')
 
         scaffold.add_brick(vector_brick, 'input')
-        scaffold.add_brick(register_brick, output=True)
+        scaffold.add_brick(register_brick, input_nodes=(0, 0), output=True)
 
         scaffold.lay_bricks()
         return scaffold

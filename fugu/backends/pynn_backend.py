@@ -128,7 +128,6 @@ class pynn_Backend(Backend):
         max_runtime = steps * self.defaults['min_delay']
         if self.verbose:
             print("Max runtime: {}".format(max_runtime))
-            #print("Old inputs:", self.input_population.get('spike_times'))
 
         if self.number_of_runs > 1:
             self.pynn_sim.reset()
@@ -398,12 +397,18 @@ class pynn_Backend(Backend):
                     print("neuron values ---")
                     for neuron in self.neuron_index_map:
                         if self.neuron_type_map[neuron] == neuron_type:
-                            print("{}, {}".format(neuron, self.parameter_values[neuron_type][param][self.neuron_index_map[neuron]]))
+                            print("{}, {}".format(
+                                             neuron,
+                                             self.parameter_values[neuron_type][param][self.neuron_index_map[neuron]],
+                                             ))
 
                 print("___Initial potentials___:")
                 for neuron in self.neuron_index_map:
                     if self.neuron_type_map[neuron] == neuron_type:
-                        print("{}, {}".format(neuron, self.initial_potentials[neuron_type][self.neuron_index_map[neuron]]))
+                        print("{}, {}".format(
+                                         neuron,
+                                         self.initial_potentials[neuron_type][self.neuron_index_map[neuron]],
+                                         ))
 
         # Setup synpases:
         synapse_prop_names = ['weight', 'delay']
@@ -468,8 +473,6 @@ class pynn_Backend(Backend):
                     for source in self.input_main_synapses[receptor]:
                         for target in self.input_main_synapses[receptor][source]:
                             print("Synapse: ({})-{}->({})".format(source, receptor, target))
-                            #for edge in self.input_main_synapses[receptor][source][target].get(['weight', 'delay'], format='list'):
-                                #print(edge.as_tuple('index', 'weight', 'delay'))
                             for edge in self.input_main_edge_lists[receptor][source][target]:
                                 print(edge)
                 print('===')
@@ -479,8 +482,6 @@ class pynn_Backend(Backend):
                     for source in self.main_synapses[receptor]:
                         for target in self.main_synapses[receptor][source]:
                             print("Synapse: ({})-{}->({})".format(source, receptor, target))
-                            #for edge in self.main_synapses[receptor][source][target].get(['weight', 'delay'], format='list'):
-                                #print(edge.as_tuple('index', 'weight', 'delay'))
                             for edge in self.main_edge_lists[receptor][source][target]:
                                 print(edge)
                 print('===')

@@ -1,7 +1,7 @@
 import unittest
 import abc
 import sys
-    
+
 from abc import abstractmethod
 
 from fugu import Scaffold

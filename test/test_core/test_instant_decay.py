@@ -23,7 +23,7 @@ class InstantDecayTests(BrickTest):
         decay_brick = BRICKS.InstantDecay(len(input_times), name="InstantDecay")
 
         scaffold.add_brick(vector_brick, 'input')
-        scaffold.add_brick(decay_brick, output=True)
+        scaffold.add_brick(decay_brick, input_nodes=[(0, 0)], output=True)
 
         scaffold.lay_bricks()
         return scaffold
@@ -69,7 +69,7 @@ class InstantDecayTests(BrickTest):
         self.basic_test(input_spikes, True)
 
     def test_no_fire(self):
-        input_spikes = [[1,3,5,7,9], [2,4,6,8]]
+        input_spikes = [[1, 3, 5, 7, 9], [2, 4, 6, 8]]
         self.basic_test(input_spikes, False)
 
 

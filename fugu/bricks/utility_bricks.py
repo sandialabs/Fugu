@@ -21,6 +21,24 @@ class Dot(Brick):
         self.name = name
         self.weights = weights
         self.supported_codings = ['Raster', 'Undefined']
+        self.input_sources = []
+
+    def set_parameters(self, parameters):
+        if 'weight' in parameters:
+            weights = parameters['weight']
+            if len(weights) != len(self.input_sources):
+                raise ValueError(
+                        "# of weights ({}) != # of inputs to this, {}, Dot brick ({})".format(
+                                                                                         len(weights),
+                                                                                         self.name,
+                                                                                         len(self.input_sources),
+                                                                                         ),
+                        )
+            else:
+                synapse_props = {}
+                for neuron, weight in zip(self.input_sources, weights):
+                    synapse_props[neuron] = {'weight': weight}
+                return {}, synapse_props
 
     def build(self, graph, metadata, control_nodes, input_lists, input_codings):
         """
@@ -63,6 +81,7 @@ class Dot(Brick):
                     )
         for i, weight in enumerate(self.weights):
             output_list.append({'source': input_lists[0][i], 'weight': weight, 'delay': 1})
+            self.input_sources.append(input_lists[0][i])
         if type(metadata) is list:
             metadata = metadata[0]
         metadata['D'] = metadata['D'] + 1

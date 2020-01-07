@@ -2,12 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from collections import deque
-from warnings import warn
-
-from ..utils.export_utils import results_df_from_dict
-
-import pandas as pd
-import networkx as nx
+from abc import abstractmethod
 
 import abc
 import sys
@@ -15,8 +10,6 @@ if sys.version_info >= (3, 4):
     ABC = abc.ABC
 else:
     ABC = abc.ABCMeta('ABC', (), {'__slots__': ()})
-
-from abc import abstractmethod
 
 
 class Backend(ABC):
@@ -72,19 +65,4 @@ class Backend(ABC):
         #           set neuron properties
         #       for synapse in synapse_props:
         #           set synapse properties
-        pass
-
-    @abstractmethod
-    def set_spike_input(self, spike_times={}):
-        # tells the backend which neurons should spike at the specified times
-        #   - if the neuron does not support this, it will return an error
-        # spike_times = dictionary keyed by bricks that has spike time arrays
-        #   - note: each brick has their own spike_time input format
-
-        # Example:
-        #   for brick in spike_times:
-        #       neuron_spikes = self.circuit[brick].get_spike_times(spike_times[brick])
-        #       for neuron in neuron_spikes:
-        #           for t in neuron_spikes[neuron]:
-        #               set neuron to spike at timestep t
         pass

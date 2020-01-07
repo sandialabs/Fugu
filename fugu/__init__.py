@@ -11,7 +11,7 @@ from fugu import scaffold
 from fugu.bricks import Brick
 
 from fugu.scaffold import Scaffold
-from fugu.backends import Backend, snn_Backend, ds_Backend, pynn_Backend 
+from fugu.backends import Backend, snn_Backend, ds_Backend, pynn_Backend
 
 
 input_coding_types = [

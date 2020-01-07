@@ -1,13 +1,9 @@
 #!/usr/bin/env python
-print("Importing modules")
 import networkx as nx
 import numpy as np
 
-print("Importing fugu")
 import fugu
-print("Importing Scaffold")
 from fugu import Scaffold
-print("Importing Bricks")
 from fugu.bricks import TemporalAdder, Vector_Input
 
 

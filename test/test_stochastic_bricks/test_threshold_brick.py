@@ -27,14 +27,12 @@ class ThresholdBrickTests(BrickTest):
                                            decay=decay_value,
                                            name='Thresh',
                                            output_coding=coding)
-        vector_1 = BRICKS.Vector_Input(np.array([0]), coding='Raster', name='input1')
-        vector_2 = BRICKS.Vector_Input(np.array([1]), coding='Raster', name='input2')
+        vector = BRICKS.Vector_Input(np.array([1]), coding='Raster', name='input1')
         dot_brick = BRICKS.Dot([weight], name='ADotOperator')
 
-        scaffold.add_brick(vector_1, 'input')
-        scaffold.add_brick(vector_2, 'input')
-        scaffold.add_brick(dot_brick)
-        scaffold.add_brick(threshold_brick, (2, 0), output=True)
+        scaffold.add_brick(vector, 'input')
+        scaffold.add_brick(dot_brick, input_nodes=[(0, 0)])
+        scaffold.add_brick(threshold_brick, input_nodes=[(1, 0)], output=True)
 
         scaffold.lay_bricks()
         return scaffold
@@ -49,7 +47,7 @@ class ThresholdBrickTests(BrickTest):
         if spiked:
             self.hits += 1
 
-    def evaluate_thresh_params(self, output_coding, input_value, threshold, p_value, decay_value):
+    def evaluate_thresh_params(self, input_value, threshold, p_value, decay_value):
 
         evaluations = 0.0
         hits = 0.0

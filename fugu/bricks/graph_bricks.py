@@ -3,7 +3,7 @@
 import math
 import networkx as nx
 
-from .bricks import DynamicBrick, Brick, input_coding_types
+from .bricks import Brick, input_coding_types
 from .sub_bricks import create_register, connect_register_to_register, connect_neuron_to_register
 
 
@@ -212,7 +212,7 @@ class Graph_Traversal(Brick):
                  )
 
 
-class Flow_Augmenting_Path(DynamicBrick):
+class Flow_Augmenting_Path(Brick):
     """
     This brick computes flow augmenting path based on (Ali, Kwisthout 2019)
     """
@@ -225,7 +225,7 @@ class Flow_Augmenting_Path(DynamicBrick):
         """
         Construtor for this brick.
         Arguments:
-            + flow_graph - NetworkX.Digraph object representing the flow graph 
+            + flow_graph - NetworkX.Digraph object representing the flow graph
             + name - Name of the brick.
                 If not specified, a default will be used. Name should be unique.
             + output_coding - Output coding type, default is 'temporal-L'
@@ -239,7 +239,7 @@ class Flow_Augmenting_Path(DynamicBrick):
         self.residual_base = "H_({},{})"
         self.recall_base = "R_({},{})"
 
-        self.flow_graph = flow_graph 
+        self.flow_graph = flow_graph
 
         self.metadata = {'D': None}
 
@@ -319,7 +319,7 @@ class Flow_Augmenting_Path(DynamicBrick):
                     threshold=props['capacity'] + initial_potential - 0.01,
                     decay=0.0,
                     potential=props['flow'] + initial_potential,
-                    edge=(u,v),
+                    edge=(u, v),
                     neuron_type='capacity',
                     )
             curr_index += 1
@@ -329,7 +329,7 @@ class Flow_Augmenting_Path(DynamicBrick):
                     threshold=1 + initial_potential - 0.01,
                     decay=0.0,
                     potential=initial_potential,
-                    edge=(u,v),
+                    edge=(u, v),
                     neuron_type='residual',
                     )
             curr_index += 1
@@ -339,7 +339,7 @@ class Flow_Augmenting_Path(DynamicBrick):
                     threshold=1 + initial_potential - 0.01,
                     decay=0.0,
                     potential=initial_potential,
-                    edge=(u,v),
+                    edge=(u, v),
                     neuron_type='recall',
                     )
             curr_index += 1

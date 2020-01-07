@@ -22,7 +22,7 @@ class AdderBrickTests(BrickTest):
         adder_brick = BRICKS.TemporalAdder(len(input_values), name="Adder")
 
         scaffold.add_brick(vector_brick, 'input')
-        scaffold.add_brick(adder_brick, output=True)
+        scaffold.add_brick(adder_brick, input_nodes=(0, 0), output=True)
 
         scaffold.lay_bricks()
         return scaffold
@@ -73,7 +73,7 @@ class SnnAdderTests(AdderBrickTests, unittest.TestCase):
 class DsAdderTests(AdderBrickTests, unittest.TestCase):
     @classmethod
     def setUpClass(self):
-        self.backend = ds_Backend() 
+        self.backend = ds_Backend()
 
 
 class PynnBrianAdderTests(AdderBrickTests, unittest.TestCase):

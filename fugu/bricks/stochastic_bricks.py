@@ -85,6 +85,22 @@ class Threshold(Brick):
         self.threshold = threshold
         self.output_coding = output_coding
         self.supported_codings = ['current', 'Undefined', 'temporal-L']
+        self.indices = []
+
+    def set_parameters(self, parameters={}):
+        if 'threshold' in parameters:
+            value = parameters['threshold']
+            neuron_params = {}
+            synapse_params = {}
+            if self.metadata['D'] == 0:
+                neuron_params[self.name] = {'threshold': value}
+            else:
+                for index in self.indices:
+                    name = "{}_{}".format(self.name, index)
+                    neuron_params[name] = {'threshold': value}
+            return neuron_params, synapse_params
+        else:
+            return None
 
     def build(self, graph, metadata, control_nodes, input_lists, input_codings):
         """
@@ -152,16 +168,17 @@ class Threshold(Brick):
             #    begin_neuron = input_neuron
 
             for input_neuron in [input_n for input_n in input_lists[0] if graph.nodes[input_n]['index'] is not -2]:
-                threshold_neuron_name = "{}_{}".format(self.name, graph.nodes[input_neuron]['index'])
+                index = graph.nodes[input_neuron]['index']
+                self.indices.append(index)
+                threshold_neuron_name = "{}_{}".format(self.name, index)
                 graph.add_node(
                         threshold_neuron_name,
-                        index=graph.nodes[input_neuron]['index'],
+                        index=index,
                         threshold=1.0,
                         decay=0.0,
                         p=self.p,
                         )
                 output_neurons.append(threshold_neuron_name)
-                assert(type(self.threshold) is int)
                 graph.add_edge(
                         begin_neuron,
                         threshold_neuron_name,

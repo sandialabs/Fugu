@@ -1,8 +1,5 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-
-from collections import deque
-from warnings import warn
 import pandas as pd
 import networkx as nx
 
@@ -10,13 +7,12 @@ from .backend import Backend
 from fugu.simulators.ds import run_simulation
 
 
-
 class ds_Backend(Backend):
     def __init__(self):
         super(Backend, self).__init__()
-        self.results = []
         self.scaffold = None
         self.ds_graph = None
+        self.neuron_to_id_map = {}
 
     def _create_ds_injection(self, input_values):
         # find input nodes
@@ -42,7 +38,7 @@ class ds_Backend(Backend):
                         for o_list in self.scaffold.circuit.nodes[node]['output_lists']:
                             for neuron in o_list:
                                 self.scaffold.graph.nodes[neuron]['record'] = ['spikes']
-        self.ds_graph = nx.convert_node_labels_to_integers(self.scaffold.graph)
+        self.ds_graph = nx.convert_node_labels_to_integers(self.scaffold.graph, label_attribute='name')
         self.ds_graph.graph['has_delay'] = True
         if record == 'all':
             for neuron in self.ds_graph.nodes:
@@ -50,6 +46,7 @@ class ds_Backend(Backend):
         for neuron in self.ds_graph.nodes:
             if 'potential' not in self.ds_graph.nodes[neuron]:
                 self.ds_graph.nodes[neuron]['potential'] = 0.0
+            self.neuron_to_id_map[self.ds_graph.nodes[neuron]['name']] = neuron
 
         # Set initial inputs
         initial_spikes = self._get_initial_spike_times(scaffold.circuit)
@@ -79,8 +76,8 @@ class ds_Backend(Backend):
                     for i, potential in enumerate(results[group]['potential']):
                         final_potentials = final_potentials.append(
                                                                     {
-                                                                      'potential':potential.tolist(),
-                                                                      'neuron_number':i,
+                                                                      'potential': potential.tolist(),
+                                                                      'neuron_number': i,
                                                                       },
                                                                     ignore_index=True,
                                                                     )
@@ -92,13 +89,19 @@ class ds_Backend(Backend):
 
     def cleanup(self):
         # Deletes/frees neurons and synapses
-        pass
+        self.neuron_to_id_map = {}
+        self.scaffold = None
+        self.ds_graph = None
 
     def reset(self):
-        # resets time-step to 0 and resets neuron/synapse properties
-        for neuron in self.ds_graph.nodes:
-            if 'potential' not in self.ds_graph.nodes[neuron]:
-                self.ds_graph.nodes[neuron]['potential'] = 0.0
+        # resets time-step to 0 and resets neuron potentials
+        for node in self.scaffold.graph.nodes:
+            neuron_id = self.neuron_to_id_map[node]
+            properties = self.scaffold.graph.nodes[node]
+            if 'potential' in properties:
+                self.ds_graph.nodes[neuron_id]['potential'] = properties['potential']
+            else:
+                self.ds_graph.nodes[neuron_id]['potential'] = 0.0
 
     def set_parameters(self, parameters={}):
         # Set parameters for specific neurons and synapses
@@ -112,18 +115,33 @@ class ds_Backend(Backend):
         #           set neuron properties
         #       for synapse in synapse_props:
         #           set synapse properties
-        pass
+        for brick in parameters:
+            if brick != 'compile_args':
+                brick_id = self.scaffold.brick_to_number[brick]
+                changes = self.scaffold.circuit.nodes[brick_id]['brick'].set_parameters(parameters[brick])
+                if changes:
+                    neuron_props, synapse_props = changes
+                    for neuron in neuron_props:
+                        neuron_id = self.neuron_to_id_map[neuron]
+                        properties = neuron_props[neuron]
+                        for prop in properties:
+                            self.ds_graph.nodes[neuron_id][prop] = properties[prop]
 
-    def set_spike_input(self, spike_times={}):
-        # tells the backend which neurons should spike at the specified times
-        #   - if the neuron does not support this, it will return an error
-        # spike_times = dictionary keyed by bricks that has spike time arrays
-        #   - note: each brick has their own spike_time input format
+                    for synapse in synapse_props:
+                        if type(synapse) is tuple:
+                            pre, post = [self.neuron_to_id_map[p] for p in synapse]
+                            properties = synapse_props[synapse]
+                            for prop in properties:
+                                self.ds_graph.edges[pre, post][prop] = properties[prop]
+                        else:
+                            neuron_id = self.neuron_to_id_map[synapse]
+                            properties = synapse_props[synapse]
+                            for edge in self.ds_graph.edges:
+                                if edge[0] == neuron_id:
+                                    for prop in properties:
+                                        self.ds_graph.edges[edge][prop] = properties[prop]
 
-        # Example:
-        #   for brick in spike_times:
-        #       neuron_spikes = self.circuit[brick].get_spike_times(spike_times[brick])
-        #       for neuron in neuron_spikes:
-        #           for t in neuron_spikes[neuron]:
-        #               set neuron to spike at timestep t
-        pass
+        # Get new initial spike times
+        initial_spikes = self._get_initial_spike_times(self.scaffold.circuit)
+
+        self.injection_values = self._create_ds_injection(initial_spikes)

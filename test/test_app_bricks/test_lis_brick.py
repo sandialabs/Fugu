@@ -19,7 +19,7 @@ class LISBrickTests(BrickTest):
         lis_brick = BRICKS.LIS(len(input_values), name='LIS')
 
         scaffold.add_brick(input_brick, 'input')
-        scaffold.add_brick(lis_brick, output=True)
+        scaffold.add_brick(lis_brick, input_nodes=[(0, 0)], output=True)
 
         scaffold.lay_bricks()
 
@@ -75,7 +75,7 @@ class SnnLISTests(LISBrickTests, unittest.TestCase):
 class DsLISTests(LISBrickTests, unittest.TestCase):
     @classmethod
     def setUpClass(self):
-        self.backend = ds_Backend() 
+        self.backend = ds_Backend()
 
 
 class PynnBrianLISTests(LISBrickTests, unittest.TestCase):

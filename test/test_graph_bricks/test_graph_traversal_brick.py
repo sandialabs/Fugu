@@ -31,11 +31,12 @@ class GraphBrickTests:
         pass
 
     def convert_input(self, search_key):
-        spikes = [0] * search_key 
+        spikes = [0] * search_key
         spikes.append(1)
         return spikes
 
     def get_spike_input(self, search_key):
+        pass
 
     def evaluate_bfs_graph(self, graph, search_keys, return_pred=False, debug=False):
         # Edge reference version

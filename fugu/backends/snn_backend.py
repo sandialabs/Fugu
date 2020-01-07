@@ -125,14 +125,13 @@ class snn_Backend(Backend):
         if 'ds_format' in compile_args:
             self.ds_format = compile_args['ds_format']
         else:
-            self.ds_format = True 
+            self.ds_format = True
         if 'debug_mode' in compile_args:
             self.debug_mode = compile_args['debug_mode']
         else:
             self.debug_mode = False
 
         self._build_network()
-
 
     def run(self, n_steps=10, return_potentials=False):
         # runs circuit for n_steps then returns data

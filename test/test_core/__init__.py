@@ -1,1 +1,2 @@
 from .test_instant_decay import SnnInstantDecayTests, DsInstantDecayTests, PynnBrianInstantDecayTests, PynnSpinnakerInstantDecayTests
+from .test_vector_input import SnnVectorInputTests, DsVectorInputTests, PynnBrianVectorInputTests, PynnSpinnakerVectorInputTests
