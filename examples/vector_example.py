@@ -12,20 +12,20 @@ vector_1 = Vector_Input(spike_times, coding='Raster', name='input1')
 dot_brick = Dot([1.0, 1.0, 1.0, 1.0], name='Dot')
 no_time.add_brick(vector_1, 'input')
 no_time.add_brick(dot_brick, input_nodes=(0,0))
-no_time.add_brick(Threshold(3.0, name='Thresh', output_coding='temporal-L'), input_nodes=(1,0))
+no_time.add_brick(Threshold(3.0, name='Thresh', output_coding='temporal-L'), input_nodes=(1,0), output=True)
 
 no_time.lay_bricks()
 graph_names = list(no_time.graph.nodes.data('name'))
 
 params = {}
 
-params['Dot'] = {}
-params['Dot']['weight'] = [1.0, 1.0, 1.0, 2.1]
+params['Thresh'] = {}
+params['Thresh']['threshold'] = 1.0
 
-params['compile_args'] = {'record':'all'}
+params['compile_args'] = {}
 
 backend = ds_Backend()
-backend.compile(no_time, {'record':'all'})
+backend.compile(no_time, {})
 results = backend.run(10)
 for row in results.itertuples():
     neuron_name = graph_names[int(row.neuron_number)][0]

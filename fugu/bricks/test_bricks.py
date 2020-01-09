@@ -171,6 +171,7 @@ class SynapseProperties(Brick):
                 index=0,
                 )
 
+        output_list = []
         for index, weight in enumerate(self.weights):
             name = "{}_{}".format(self.name, index)
             graph.add_node(
@@ -186,6 +187,7 @@ class SynapseProperties(Brick):
                     weight=weight,
                     delay=1.0,
                     )
+            output_list.append(name)
 
         self.is_built = True
-        return (graph, metadata, [{'complete': self.name + "_complete"}], [[self.name + "_main"]], input_codings)
+        return (graph, metadata, [{'complete': self.name + "_complete"}], [output_list], input_codings)

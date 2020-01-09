@@ -197,17 +197,3 @@ class snn_Backend(Backend):
         #       for synapse in synapse_props:
         #           set synapse properties
         pass
-
-    def set_spike_input(self, spike_times={}):
-        # tells the backend which neurons should spike at the specified times
-        #   - if the neuron does not support this, it will return an error
-        # spike_times = dictionary keyed by bricks that has spike time arrays
-        #   - note: each brick has their own spike_time input format
-
-        # Example:
-        #   for brick in spike_times:
-        #       neuron_spikes = self.circuit[brick].get_spike_times(spike_times[brick])
-        #       for neuron in neuron_spikes:
-        #           for t in neuron_spikes[neuron]:
-        #               set neuron to spike at timestep t
-        pass

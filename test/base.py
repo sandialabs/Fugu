@@ -39,6 +39,21 @@ class BrickTest(ABC):
         spikes = self.run_scaffold(scaffold, timesteps)
         self.check_spike_output(spikes, expected_output, scaffold)
 
+    def run_parameter_test(self, initial_values, new_parameters, expected_outputs):
+        scaffold = self.build_scaffold(initial_values)
+        timesteps = self.calculate_max_timesteps(initial_values)
+
+        self.backend.compile(scaffold, self.backend_args)
+
+        before_results = self.backend.run(timesteps)
+
+        self.backend.reset()
+        self.backend.set_parameters(new_parameters)
+
+        after_results = self.backend.run(timesteps)
+
+        self.check_spike_output([before_results, after_results], expected_outputs, scaffold)
+
     def tearDown(self):
         self.backend.reset()
 

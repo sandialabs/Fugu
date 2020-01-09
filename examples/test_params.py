@@ -7,7 +7,7 @@ from fugu.backends import ds_Backend, snn_Backend
 
 no_time = Scaffold()
 
-no_time.add_brick(SynapseProperties(weights=[0.5, 0.5, 0.5, 0.5], name='Test'))
+no_time.add_brick(SynapseProperties(weights=[0.5, 0.5, 0.5, 0.5], name='Test'), output=True)
 
 no_time.lay_bricks()
 no_time.summary(verbose=2)
@@ -18,10 +18,8 @@ params = {}
 params['Test'] = {}
 params['Test']['weights'] = [1.1, 1.1, 1.0, 2.1]
 
-params['compile_args'] = {'record':'all'}
-
 backend = ds_Backend()
-backend.compile(no_time, {'record':'all'})
+backend.compile(no_time, {})
 results = backend.run(10)
 for row in results.itertuples():
     neuron_name = graph_names[int(row.neuron_number)][0]

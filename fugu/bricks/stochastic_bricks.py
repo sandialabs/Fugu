@@ -91,14 +91,13 @@ class Threshold(Brick):
         if 'threshold' in parameters:
             value = parameters['threshold']
             neuron_params = {}
-            synapse_params = {}
             if self.metadata['D'] == 0:
                 neuron_params[self.name] = {'threshold': value}
             else:
                 for index in self.indices:
                     name = "{}_{}".format(self.name, index)
                     neuron_params[name] = {'threshold': value}
-            return neuron_params, synapse_params
+            return neuron_params, {}
         else:
             return None
 
