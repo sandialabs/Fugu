@@ -49,9 +49,7 @@ class ds_Backend(Backend):
             self.neuron_to_id_map[self.ds_graph.nodes[neuron]['name']] = neuron
 
         # Set initial inputs
-        initial_spikes = self._get_initial_spike_times(scaffold.circuit)
-
-        self.injection_values = self._create_ds_injection(initial_spikes)
+        self.set_input_spikes()
 
     def run(self, n_steps=None, return_potentials=False):
         # runs circuit for n_steps then returns data
@@ -142,6 +140,9 @@ class ds_Backend(Backend):
                                         self.ds_graph.edges[edge][prop] = properties[prop]
 
         # Get new initial spike times
+        self.set_input_spikes()
+
+    def set_input_spikes(self):
         initial_spikes = self._get_initial_spike_times(self.scaffold.circuit)
 
         self.injection_values = self._create_ds_injection(initial_spikes)

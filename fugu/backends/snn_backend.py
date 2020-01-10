@@ -26,7 +26,7 @@ class snn_Backend(Backend):
             if 'layer' in vals:
                 if vals['layer'] == 'input':
                     for neuron in self.fugu_circuit.nodes[node]['output_lists'][0]:
-                        rc = True if self.record else vals.get('record', False)
+                        rc = True if self.record == 'all' else False
                         neuron_dict[neuron] = snn.InputNeuron(neuron, record=rc)
                         self.nn.add_neuron(neuron_dict[neuron])
                 if vals['layer'] == 'output':
@@ -65,7 +65,7 @@ class snn_Backend(Backend):
                     vol = params['potential']
                 if 'decay' in params:
                     lk = 1.0 - params['decay']
-                rc = True if self.record else params.get('record', False)
+                rc = True if self.record == 'all' else False
                 neuron_dict[neuron] = snn.LIFNeuron(
                                             neuron,
                                             threshold=th,
@@ -91,37 +91,17 @@ class snn_Backend(Backend):
         '''
         Set initial input values
         '''
-
-        initial_spike_data = self._get_initial_spike_times(self.fugu_circuit)
-
-        for node, vals in self.fugu_circuit.nodes.data():
-            if 'layer' in vals:
-                if vals['layer'] == 'input':
-                    initial_spikes = {}
-                    for neuron in self.fugu_circuit.nodes[node]['output_lists'][0]:
-                        initial_spikes[neuron] = []
-                    for timestep in initial_spike_data:
-                        spike_list = initial_spike_data[timestep]
-                        for neuron in spike_list:
-                            if neuron in initial_spikes:
-                                initial_spikes[neuron].append(1)
-                        for neuron in initial_spikes:
-                            if(len(initial_spikes[neuron]) < timestep+1):
-                                initial_spikes[neuron].append(0)
-
-                    for neuron in self.fugu_circuit.nodes[node]['output_lists'][0]:
-                        if self.debug_mode:
-                            print(neuron, initial_spikes[neuron])
-                        self.nn.update_input_neuron(neuron, initial_spikes[neuron])
+        self.set_input_spikes()
 
     def compile(self, scaffold, compile_args={}):
         # creates neuron populations and synapses
         self.fugu_circuit = scaffold.circuit
         self.fugu_graph = scaffold.graph
+        self.brick_to_number = scaffold.brick_to_number
         if 'record' in compile_args:
             self.record = compile_args['record']
         else:
-            self.record = 'output'
+            self.record = False
         if 'ds_format' in compile_args:
             self.ds_format = compile_args['ds_format']
         else:
@@ -196,4 +176,66 @@ class snn_Backend(Backend):
         #           set neuron properties
         #       for synapse in synapse_props:
         #           set synapse properties
-        pass
+        for brick in parameters:
+            if brick != 'compile_args':
+                brick_id = self.brick_to_number[brick]
+                changes = self.fugu_circuit.nodes[brick_id]['brick'].set_parameters(parameters[brick])
+                if changes:
+                    neuron_props, synapse_props = changes
+                    for neuron_name in self.nn.nrns:
+                        if neuron_name in neuron_props:
+                            new_props = neuron_props[neuron_name]
+                            for prop in new_props:
+                                value = new_props[prop]
+                                if prop == 'threshold':
+                                    self.nn.nrns[neuron_name].threshold = value
+                                elif prop == 'decay':
+                                    self.nn.nrns[neuron_name].leakage_constant = value
+                                elif prop == 'potential':
+                                    self.nn.nrns[neuron_name].voltage = value
+                                elif prop == 'p':
+                                    self.nn.nrns[neuron_name].p = value
+
+                    for synapse in self.nn.synps:
+                        pre, post = self.nn.synps[synapse].pre_neuron.name, self.nn.synps[synapse].post_neuron.name
+                        weight, delay = self.nn.synps[synapse].weight, self.nn.synps[synapse].delay
+                        if (pre, post) in synapse_props:
+                            new_props = synapse_props[(pre, post)]
+                            if 'weight' in new_props:
+                                weight = new_props['weight']
+                            elif 'delay' in new_props:
+                                delay = new_props['delay']
+                        if pre in synapse_props:
+                            new_props = synapse_props[pre]
+                            if 'weight' in new_props:
+                                weight = new_props['weight']
+                            elif 'delay' in new_props:
+                                delay = new_props['delay']
+
+                        self.nn.synps[synapse].set_params(delay, weight)
+
+        self.set_input_spikes()
+
+    def set_input_spikes(self):
+        # Get new initial spike times
+        initial_spike_data = self._get_initial_spike_times(self.fugu_circuit)
+
+        for node, vals in self.fugu_circuit.nodes.data():
+            if 'layer' in vals:
+                if vals['layer'] == 'input':
+                    initial_spikes = {}
+                    for neuron in self.fugu_circuit.nodes[node]['output_lists'][0]:
+                        initial_spikes[neuron] = []
+                    for timestep in initial_spike_data:
+                        spike_list = initial_spike_data[timestep]
+                        for neuron in spike_list:
+                            if neuron in initial_spikes:
+                                initial_spikes[neuron].append(1)
+                        for neuron in initial_spikes:
+                            if(len(initial_spikes[neuron]) < timestep+1):
+                                initial_spikes[neuron].append(0)
+
+                    for neuron in self.fugu_circuit.nodes[node]['output_lists'][0]:
+                        if self.debug_mode:
+                            print(neuron, initial_spikes[neuron])
+                        self.nn.update_input_neuron(neuron, initial_spikes[neuron])

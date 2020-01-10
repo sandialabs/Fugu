@@ -66,3 +66,7 @@ class Backend(ABC):
         #       for synapse in synapse_props:
         #           set synapse properties
         pass
+
+    @abstractmethod
+    def set_input_spikes(self):
+        pass

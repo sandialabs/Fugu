@@ -9,4 +9,3 @@ Created on Wed Dec 12 09:18:44 2018
 from .neuron.neuron import Neuron, LIFNeuron, InputNeuron
 from .synapse.synapse import Synapse
 from .neuralnetwork.neuralnetwork import NeuralNetwork
-
