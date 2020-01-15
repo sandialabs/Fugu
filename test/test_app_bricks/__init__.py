@@ -1,1 +1,1 @@
-from .test_lis_brick import SnnLISTests, DsLISTests, PynnBrianLISTests, PynnSpinnakerLISTests
+from .test_lis_brick import SnnLISTests, DsLISTests, PynnSpinnakerLISTests

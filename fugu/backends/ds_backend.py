@@ -3,7 +3,7 @@
 import pandas as pd
 import networkx as nx
 
-from .backend import Backend
+from .backend import Backend, CalculateSpikeTimes
 from fugu.simulators.ds import run_simulation
 
 
@@ -143,6 +143,6 @@ class ds_Backend(Backend):
         self.set_input_spikes()
 
     def set_input_spikes(self):
-        initial_spikes = self._get_initial_spike_times(self.scaffold.circuit)
+        initial_spikes = CalculateSpikeTimes(self.scaffold.circuit)
 
         self.injection_values = self._create_ds_injection(initial_spikes)

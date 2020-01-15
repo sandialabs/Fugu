@@ -362,15 +362,8 @@ class DsGraphTests(GraphBrickTests, unittest.TestCase):
         self.backend = ds_Backend()
 
 
-class PynnBrianGraphTests(GraphBrickTests, unittest.TestCase):
-    @classmethod
-    def setUpClass(self):
-        self.backend = 'pynn'
-        self.backend_args['backend'] = 'brian'
-
-
 class PynnSpinnakerGraphTests(GraphBrickTests, unittest.TestCase):
     @classmethod
     def setUpClass(self):
-        self.backend = 'pynn'
+        self.backend = pynn_Backend()
         self.backend_args['backend'] = 'spinnaker'

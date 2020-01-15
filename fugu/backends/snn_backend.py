@@ -5,7 +5,7 @@ from warnings import warn
 
 import fugu.simulators.SpikingNeuralNetwork as snn
 
-from .backend import Backend
+from .backend import Backend, CalculateSpikeTimes
 from ..utils.export_utils import results_df_from_dict
 
 
@@ -218,7 +218,7 @@ class snn_Backend(Backend):
 
     def set_input_spikes(self):
         # Get new initial spike times
-        initial_spike_data = self._get_initial_spike_times(self.fugu_circuit)
+        initial_spike_data = CalculateSpikeTimes(self.fugu_circuit)
 
         for node, vals in self.fugu_circuit.nodes.data():
             if 'layer' in vals:

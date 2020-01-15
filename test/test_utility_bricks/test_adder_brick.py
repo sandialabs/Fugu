@@ -76,15 +76,8 @@ class DsAdderTests(AdderBrickTests, unittest.TestCase):
         self.backend = ds_Backend()
 
 
-class PynnBrianAdderTests(AdderBrickTests, unittest.TestCase):
-    @classmethod
-    def setUpClass(self):
-        self.backend = 'pynn'
-        self.backend_args['backend'] = 'brian'
-
-
 class PynnSpinnakerAdderTests(AdderBrickTests, unittest.TestCase):
     @classmethod
     def setUpClass(self):
-        self.backend = 'pynn'
+        self.backend = pynn_Backend()
         self.backend_args['backend'] = 'spinnaker'

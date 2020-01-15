@@ -92,15 +92,8 @@ class DsRegisterTests(RegisterBrickTests, unittest.TestCase):
         self.backend = ds_Backend()
 
 
-class PynnBrianRegisterTests(RegisterBrickTests, unittest.TestCase):
-    @classmethod
-    def setUpClass(self):
-        self.backend = 'pynn'
-        self.backend_args['backend'] = 'brian'
-
-
 class PynnSpinnakerRegisterTests(RegisterBrickTests, unittest.TestCase):
     @classmethod
     def setUpClass(self):
-        self.backend = 'pynn'
+        self.backend = pynn_Backend()
         self.backend_args['backend'] = 'spinnaker'

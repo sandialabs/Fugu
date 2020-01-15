@@ -64,15 +64,8 @@ class DsVectorInputTests(VectorInputTests, unittest.TestCase):
         self.backend = ds_Backend()
 
 
-class PynnBrianVectorInputTests(VectorInputTests, unittest.TestCase):
-    @classmethod
-    def setUpClass(self):
-        self.backend = 'pynn'
-        self.backend_args['backend'] = 'brian'
-
-
 class PynnSpinnakerVectorInputTests(VectorInputTests, unittest.TestCase):
     @classmethod
     def setUpClass(self):
-        self.backend = 'pynn'
+        self.backend = pynn_Backend()
         self.backend_args['backend'] = 'spinnaker'

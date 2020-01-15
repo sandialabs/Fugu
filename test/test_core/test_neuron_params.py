@@ -68,15 +68,8 @@ class DsChangeNeuronPropertyTests(ChangeNeuronPropertyTests, unittest.TestCase):
         self.backend = ds_Backend()
 
 
-class PynnBrianChangeNeuronPropertyTests(ChangeNeuronPropertyTests, unittest.TestCase):
-    @classmethod
-    def setUpClass(self):
-        self.backend = 'pynn'
-        self.backend_args['backend'] = 'brian'
-
-
 class PynnSpinnakerChangeNeuronPropertyTests(ChangeNeuronPropertyTests, unittest.TestCase):
     @classmethod
     def setUpClass(self):
-        self.backend = 'pynn'
+        self.backend = pynn_Backend()
         self.backend_args['backend'] = 'spinnaker'
