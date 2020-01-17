@@ -281,7 +281,7 @@ class Vector_Input(InputBrick):
         complete_node = self.name + "_complete"
         begin_node = self.name + "_begin"
         vector_size = len(self.vector) * len(self.vector.shape)
-        graph.add_node(complete_node, index=-1, threshold=vector_size, decay=0.0, p=1.0, potential=0.1)
+        graph.add_node(complete_node, index=-1, threshold=0.0, decay=0.0, p=1.0, potential=0.1)
         graph.add_node(begin_node, index=-1, threshold=0.0, decay=0.0, p=1.0, potential=0.1)
 
         output_lists = [[]]
@@ -290,7 +290,6 @@ class Vector_Input(InputBrick):
             neuron_name = self.name + "_" + str(index)
 
             graph.add_node(neuron_name, index=index, threshold=0.0, decay=0.0, p=1.0)
-            graph.add_edge(neuron_name, complete_node, delay=1.0, weight=1.0)
             output_lists[0].append(neuron_name)
         output_codings = [self.coding]
 

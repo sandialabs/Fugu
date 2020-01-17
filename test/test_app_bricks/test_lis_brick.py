@@ -83,3 +83,10 @@ class PynnSpinnakerLISTests(LISBrickTests, unittest.TestCase):
     def setUpClass(self):
         self.backend = pynn_Backend()
         self.backend_args['backend'] = 'spinnaker'
+
+
+class PynnBrianLISTests(LISBrickTests, unittest.TestCase):
+    @classmethod
+    def setUpClass(self):
+        self.backend = pynn_Backend()
+        self.backend_args['backend'] = 'brian'

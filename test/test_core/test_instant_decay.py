@@ -90,3 +90,10 @@ class PynnSpinnakerInstantDecayTests(InstantDecayTests, unittest.TestCase):
     def setUpClass(self):
         self.backend = pynn_Backend()
         self.backend_args['backend'] = 'spinnaker'
+
+
+class PynnBrianInstantDecayTests(InstantDecayTests, unittest.TestCase):
+    @classmethod
+    def setUpClass(self):
+        self.backend = pynn_Backend()
+        self.backend_args['backend'] = 'brian'

@@ -1,2 +1,4 @@
-from .test_adder_brick import SnnAdderTests, DsAdderTests, PynnSpinnakerAdderTests
-from .test_register_brick import SnnRegisterTests, DsRegisterTests, PynnSpinnakerRegisterTests
+from .test_adder_brick import SnnAdderTests, DsAdderTests
+from .test_adder_brick import PynnSpinnakerAdderTests, PynnBrianAdderTests
+from .test_register_brick import SnnRegisterTests, DsRegisterTests
+from .test_register_brick import PynnSpinnakerRegisterTests, PynnBrianRegisterTests

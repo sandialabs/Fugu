@@ -1,14 +1,19 @@
 import unittest
 
-from .test_core import SnnInstantDecayTests, DsInstantDecayTests, PynnSpinnakerInstantDecayTests
-from .test_core import SnnVectorInputTests, DsVectorInputTests, PynnSpinnakerVectorInputTests
+from .test_core import SnnInstantDecayTests, DsInstantDecayTests
+from .test_core import PynnSpinnakerInstantDecayTests, PynnBrianInstantDecayTests
+from .test_core import SnnVectorInputTests, DsVectorInputTests
+from .test_core import PynnSpinnakerVectorInputTests, PynnBrianVectorInputTests
 from .test_core import SnnChangeNeuronPropertyTests, DsChangeNeuronPropertyTests
-from .test_core import PynnSpinnakerChangeNeuronPropertyTests
+from .test_core import PynnSpinnakerChangeNeuronPropertyTests, PynnBrianChangeNeuronPropertyTests
 from .test_core import SnnChangeSynapsePropertyTests, DsChangeSynapsePropertyTests
-from .test_core import PynnSpinnakerChangeSynapsePropertyTests
-from .test_utility_bricks import SnnAdderTests, DsAdderTests, PynnSpinnakerAdderTests
-from .test_utility_bricks import SnnRegisterTests, DsRegisterTests, PynnSpinnakerRegisterTests
-from .test_app_bricks import SnnLISTests, DsLISTests, PynnSpinnakerLISTests
+from .test_core import PynnSpinnakerChangeSynapsePropertyTests, PynnBrianChangeSynapsePropertyTests
+from .test_utility_bricks import SnnAdderTests, DsAdderTests
+from .test_utility_bricks import PynnSpinnakerAdderTests, PynnBrianAdderTests
+from .test_utility_bricks import SnnRegisterTests, DsRegisterTests
+from .test_utility_bricks import PynnSpinnakerRegisterTests, PynnBrianRegisterTests
+from .test_app_bricks import SnnLISTests, DsLISTests
+from .test_app_bricks import PynnSpinnakerLISTests, PynnBrianLISTests
 from .test_stochastic_bricks import SnnThresholdTests, DsThresholdTests
 #from test_graph_bricks import SnnGraphTests, DsGraphTests, PynnSpinnakerGraphTests
 
@@ -42,3 +47,12 @@ pynn_spinnaker_suite.addTest(loader.loadTestsFromTestCase(PynnSpinnakerChangeSyn
 pynn_spinnaker_suite.addTest(loader.loadTestsFromTestCase(PynnSpinnakerAdderTests))
 pynn_spinnaker_suite.addTest(loader.loadTestsFromTestCase(PynnSpinnakerRegisterTests))
 pynn_spinnaker_suite.addTest(loader.loadTestsFromTestCase(PynnSpinnakerLISTests))
+
+pynn_brian_suite = unittest.TestSuite()
+pynn_brian_suite.addTest(loader.loadTestsFromTestCase(PynnBrianInstantDecayTests))
+pynn_brian_suite.addTest(loader.loadTestsFromTestCase(PynnBrianVectorInputTests))
+#pynn_brian_suite.addTest(loader.loadTestsFromTestCase(PynnBrianChangeNeuronPropertyTests))
+#pynn_brian_suite.addTest(loader.loadTestsFromTestCase(PynnBrianChangeSynapsePropertyTests))
+pynn_brian_suite.addTest(loader.loadTestsFromTestCase(PynnBrianAdderTests))
+pynn_brian_suite.addTest(loader.loadTestsFromTestCase(PynnBrianRegisterTests))
+pynn_brian_suite.addTest(loader.loadTestsFromTestCase(PynnBrianLISTests))

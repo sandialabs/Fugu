@@ -38,31 +38,32 @@ def check_delay(graph):
 
 
 def remove_delay(graph, verbose=0):
-    max_delay = np.max([graph[edge[0]][edge[1]]['delay'] for edge in graph.edges()])
-    iteration = 0
-    while max_delay > 1:
-        iteration = iteration+1
-        for i, edge in enumerate(list(graph.edges())):
-            if verbose > 0:
-                print(str(i) + ' on iteration ' + str(iteration))
-            from_neuron = edge[0]
-            to_neuron = edge[1]
-            old_delay = graph[from_neuron][to_neuron]['delay']
-            if old_delay > 1:
-                to_add_neuron = graph.number_of_nodes()
-                graph.add_node(to_add_neuron)
-                graph.node[to_add_neuron]['potential'] = 0.0
-                graph.node[to_add_neuron]['threshold'] = 0.5
-                graph.add_edge(from_neuron, to_add_neuron, weight=1.0, delay=1)
-                graph.add_edge(
-                        to_add_neuron,
-                        to_neuron,
-                        weight=graph[from_neuron][to_neuron]['weight'],
-                        delay=old_delay-1,
-                        )
-                graph.remove_edge(edge[0], edge[1])
+    if len(graph.edges()) > 0:
         max_delay = np.max([graph[edge[0]][edge[1]]['delay'] for edge in graph.edges()])
-    graph.graph['has_delay'] = False
+        iteration = 0
+        while max_delay > 1:
+            iteration = iteration+1
+            for i, edge in enumerate(list(graph.edges())):
+                if verbose > 0:
+                    print(str(i) + ' on iteration ' + str(iteration))
+                from_neuron = edge[0]
+                to_neuron = edge[1]
+                old_delay = graph[from_neuron][to_neuron]['delay']
+                if old_delay > 1:
+                    to_add_neuron = graph.number_of_nodes()
+                    graph.add_node(to_add_neuron)
+                    graph.node[to_add_neuron]['potential'] = 0.0
+                    graph.node[to_add_neuron]['threshold'] = 0.5
+                    graph.add_edge(from_neuron, to_add_neuron, weight=1.0, delay=1)
+                    graph.add_edge(
+                            to_add_neuron,
+                            to_neuron,
+                            weight=graph[from_neuron][to_neuron]['weight'],
+                            delay=old_delay-1,
+                            )
+                    graph.remove_edge(edge[0], edge[1])
+            max_delay = np.max([graph[edge[0]][edge[1]]['delay'] for edge in graph.edges()])
+        graph.graph['has_delay'] = False
     return graph
 
 

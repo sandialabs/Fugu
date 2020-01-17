@@ -81,3 +81,10 @@ class PynnSpinnakerAdderTests(AdderBrickTests, unittest.TestCase):
     def setUpClass(self):
         self.backend = pynn_Backend()
         self.backend_args['backend'] = 'spinnaker'
+
+
+class PynnBrianAdderTests(AdderBrickTests, unittest.TestCase):
+    @classmethod
+    def setUpClass(self):
+        self.backend = pynn_Backend()
+        self.backend_args['backend'] = 'brian'

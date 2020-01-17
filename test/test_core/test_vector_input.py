@@ -24,10 +24,12 @@ class VectorInputTests(BrickTest):
                                 name=self.brick_name,
                                 time_dimension=use_time,
                                 )
+        print(vector_brick.vector)
 
-        scaffold.add_brick(vector_brick, 'input')
+        scaffold.add_brick(vector_brick, input_nodes=['input'])
 
         scaffold.lay_bricks()
+        scaffold.summary()
         return scaffold
 
     def check_spike_output(self, spikes, expected, scaffold):
@@ -69,3 +71,11 @@ class PynnSpinnakerVectorInputTests(VectorInputTests, unittest.TestCase):
     def setUpClass(self):
         self.backend = pynn_Backend()
         self.backend_args['backend'] = 'spinnaker'
+
+
+class PynnBrianVectorInputTests(VectorInputTests, unittest.TestCase):
+    @classmethod
+    def setUpClass(self):
+        self.backend = pynn_Backend()
+        self.backend_args['backend'] = 'brian'
+        #self.backend_args['record'] = 'all'

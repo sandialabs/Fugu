@@ -76,6 +76,11 @@ class Backend(ABC):
         #           set neuron properties
         #       for synapse in synapse_props:
         #           set synapse properties
+
+        # @NOTE: Currently, this function behaves differently for Input Bricks
+        #   - Instead of returning the changes, they change internally and reset the iterator
+        #   - This is because of how initial spike times are calculated using said bricks
+        #   - I have not yet found a way of incorporating my proposed method (above) into these bricks yet
         pass
 
     @abstractmethod

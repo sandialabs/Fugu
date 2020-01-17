@@ -6,14 +6,22 @@ import pandas as pd
 from timeit import default_timer as timer
 from warnings import warn
 
-from .backend import Backend
+from .backend import Backend, CalculateSpikeTimes
 
+BRIAN_BACKEND = 0
 SPINNAKER_BACKEND = 1
 
 
 class pynn_Backend(Backend):
+
     def __init__(self):
         super(Backend, self).__init__()
+        self._initialize_members()
+
+    def _initialize_members(self):
+        self.main_indicies = {}
+        self.parameter_values = {}
+        self.initial_potentials = {}
 
         # maps
         self.neuron_type_map = {}
@@ -51,8 +59,9 @@ class pynn_Backend(Backend):
         # these parameters will have to be set based on the simulator
         self.defaults = {}
 
-        self.backend = SPINNAKER_BACKEND
+        self.backend = BRIAN_BACKEND
         self.collect_metrics = False
+        self.return_potentials = False
         self.scale_factor = 1.0
         self.metrics = {}
 
@@ -106,161 +115,8 @@ class pynn_Backend(Backend):
                                                                                     receptor_type=receptor,
                                                                                     )
 
-    def compile(self, fugu_scaffold, compile_args={}):
-        # creates neuron populations and synapses
-        if 'record' in compile_args:
-            self.report_all = compile_args['record'] == 'all'
-        else:
-            self.report_all = False
-
-        simulator = compile_args['backend'] if 'backend' in compile_args else 'spinnaker'
-
-        self.show_plots = compile_args['show_plots'] if 'show_plots' in compile_args else False
-        self.verbose = compile_args['verbose'] if 'verbose' in compile_args else False
-        self.collect_metrics = compile_args['collect_metrics'] if 'collect_metrics' in compile_args else False
-        self.scale_factor = compile_args['scale_factor'] if 'scale_factor' in compile_args else 1.0
-
-        if self.collect_metrics:
-            start = timer()
-            self.metrics['runtime'] = []
-        self.fugu_scaffold = fugu_scaffold
-
-        # setup simulator parameters
-        if simulator == 'spinnaker' or simulator == 'spynnaker':
-            from pyNN.spiNNaker import FromListConnector
-
-            import pyNN.spiNNaker as spinnaker_sim
-
-            self.pynn_sim = spinnaker_sim
-
-            self.FromListConnector = FromListConnector
-
-            self.backend = SPINNAKER_BACKEND
-
-            self.defaults['min_delay'] = 1.00 * self.scale_factor
-            self.defaults['cm'] = 1.00
-            self.defaults['tau_m'] = 1.00
-            self.defaults['i_offset'] = 0.00
-            self.defaults['v_rest'] = 0.0
-
-            self.input_neuron_type_names.append('SpikeSourceArray')
-            self.input_neuron_types[self.input_neuron_type_names[0]] = self.pynn_sim.SpikeSourceArray
-            self.main_neuron_type_names.append('IF0_curr_delta')
-            self.main_neuron_type_names.append('IF1_curr_delta')
-            self.main_neuron_types[self.main_neuron_type_names[0]] = self.pynn_sim.extra_models.IF0_curr_delta
-            self.main_neuron_types[self.main_neuron_type_names[1]] = self.pynn_sim.extra_models.IF1_curr_delta
-
-            self.pynn_sim.setup(timestep=1, max_delay=100)
-            for main_type in self.main_neuron_types:
-                self.pynn_sim.set_number_of_neurons_per_core(self.main_neuron_types[main_type], 100)
-        else:
-            raise ValueError("unsupported pyNN backend")
-
-        # Create dict for easy lookup of the vertices in a brick
-        self.brick_neurons = {}
-        for vertex in self.fugu_scaffold.graph.nodes:
-            brick = self.fugu_scaffold.graph.nodes[vertex]['brick']
-            if brick not in self.brick_neurons:
-                self.brick_neurons[brick] = []
-            self.brick_neurons[brick].append(vertex)
-
-        if not self.report_all:
-            for brick in self.fugu_scaffold.circuit.nodes:
-                if 'layer' in self.fugu_scaffold.circuit.nodes[brick]:
-                    if self.fugu_scaffold.circuit.nodes[brick]['layer'] == 'output':
-                        for o_list in self.fugu_scaffold.circuit.nodes[brick]['output_lists']:
-                            for neuron in o_list:
-                                self.output_neurons.add(neuron)
-
-        if self.verbose:
-            print("Brick_vertices: {}".format(self.brick_neurons))
-
-        # Setup neurons:
-        #   Input neurons (each gets their own population)
-        # Main neurons (all go into one population)
-
-        params = []
-        params.append('v_thresh')
-        params.append('v_rest')
-        params.append('tau_m')
-        params.append('i_offset')
-        if self.backend == SPINNAKER_BACKEND:
-            params.append('cm')
-
-        self.input_indicies = {input_type: 0 for input_type in self.input_neuron_type_names}
-
-        self.main_indicies = {}
-        self.parameter_values = {}
-        self.initial_potentials = {}
-        for main_type in self.main_neuron_type_names:
-            self.main_indicies[main_type] = 0
-            self.parameter_values[main_type] = {param: [] for param in params}
-            self.initial_potentials[main_type] = []
-
-        # Sets a neuron's properties and initial values
-        def add_neuron_params(neuron):
-            neuron_props = self.fugu_scaffold.graph.nodes[neuron]
-
-            if self.backend == SPINNAKER_BACKEND:
-                neuron_type = self.main_neuron_type_names[1]
-                if 'decay' in neuron_props:
-                    if neuron_props['decay'] == 1.0:
-                        neuron_type = self.main_neuron_type_names[0]
-                    elif neuron_props['decay'] == 0.0:
-                        neuron_type = self.main_neuron_type_names[1]
-                    else:
-                        raise ValueError("sPyNNaker backend currently only supports no decay or instant decay")
-
-            self.neuron_type_map[neuron] = neuron_type
-
-            if self.backend == SPINNAKER_BACKEND:
-                self.parameter_values[neuron_type]['tau_m'].append(self.defaults['tau_m'])
-                self.parameter_values[neuron_type]['cm'].append(self.defaults['cm'])
-
-            if 'threshold' in neuron_props:
-                thresh = neuron_props['threshold']
-            else:
-                thresh = 1.0
-                print("Error, threshold not found in \"{}\"'s props: {}".format(neuron, neuron_props))
-            self.parameter_values[neuron_type]['v_thresh'].append(thresh if thresh > 0.0 else 0.01)
-
-            self.parameter_values[neuron_type]['v_rest'].append(self.defaults['v_rest'])
-
-            if 'potential' in neuron_props:
-                self.initial_potentials[neuron_type].append(neuron_props['potential'])
-            else:
-                self.initial_potentials[neuron_type].append(self.defaults['v_rest'])
-
-            self.parameter_values[neuron_type]['i_offset'].append(self.defaults['i_offset'])
-
-            self.neuron_index_map[neuron] = self.main_indicies[neuron_type]
-            self.main_indicies[neuron_type] += 1
-            self.main_neurons.add(neuron)
-
-        if self.collect_metrics:
-            start = timer()
-
-        # Create neurons
-        for brick in self.fugu_scaffold.circuit.nodes:
-            brick = self.fugu_scaffold.circuit.nodes[brick]
-            is_input = brick['layer'] == 'input'
-            for neuron in self.brick_neurons[brick['name']]:
-                if is_input:
-                    input_type = self.input_neuron_type_names[0]
-                    self.neuron_type_map[neuron] = input_type
-                    self.neuron_index_map[neuron] = self.input_indicies[input_type]
-                    self.input_indicies[input_type] += 1
-                    self.input_neurons.add(neuron)
-                else:
-                    add_neuron_params(neuron)
-                if neuron in brick['control_nodes'][0]['complete'] or self.report_all:
-                    self.output_neurons.add(neuron)
-
-        if self.verbose:
-            print("---Neuron to pynn index---")
-            for neuron in self.neuron_index_map:
-                print("{}, {}".format(neuron, self.neuron_index_map[neuron]))
-
+    def _create_pynn_network(self):
+        # create populations
         for input_type in self.input_neuron_type_names:
             if self.input_indicies[input_type] > 0:
                 self.input_populations[input_type] = self.pynn_sim.Population(
@@ -288,7 +144,9 @@ class pynn_Backend(Backend):
                 for param in self.parameter_values[neuron_type]:
                     main_params = self.main_populations[neuron_type].get(param)
                     print("Parameter: {}, {}".format(param, main_params))
+                    print("Parameter count: {}".format(len(self.parameter_values[neuron_type][param])))
                     print("neuron values ---")
+                    print("{}".format(self.neuron_index_map[neuron]))
                     for neuron in self.neuron_index_map:
                         if self.neuron_type_map[neuron] == neuron_type:
                             print("{}, {}".format(
@@ -303,6 +161,256 @@ class pynn_Backend(Backend):
                                          neuron,
                                          self.initial_potentials[neuron_type][self.neuron_index_map[neuron]],
                                          ))
+        if self.return_potentials:
+            for neuron_type in self.main_populations:
+                self.main_populations[neuron_type].record(['spikes', 'v'])
+        else:
+            for neuron_type in self.main_populations:
+                self.main_populations[neuron_type].record(['spikes'])
+        for neuron_type in self.input_populations:
+            self.input_populations[neuron_type].record(['spikes'])
+
+        # create projections
+        self._create_projections()
+
+        if self.verbose:
+            if self.backend != BRIAN_BACKEND:
+                print("---Input to main connections (Edge List)---")
+                for receptor in self.input_main_synapses:
+                    for source in self.input_main_synapses[receptor]:
+                        for target in self.input_main_synapses[receptor][source]:
+                            print("Synapse: ({})-{}->({})".format(source, receptor, target))
+                            for edge in self.input_main_edge_lists[receptor][source][target]:
+                                print(edge)
+                print('===')
+
+                print("---Main to main connections (Edge List)---")
+                for receptor in self.main_synapses:
+                    for source in self.main_synapses[receptor]:
+                        for target in self.main_synapses[receptor][source]:
+                            print("Synapse: ({})-{}->({})".format(source, receptor, target))
+                            for edge in self.main_edge_lists[receptor][source][target]:
+                                print(edge)
+                print('===')
+            else:
+                print("---Input to main connections (Edge List)---")
+                for receptor in self.input_main_edge_lists:
+                    for source in self.input_main_edge_lists[receptor]:
+                        for target in self.input_main_edge_lists[receptor][source]:
+                            print("Synapse: ({})-{}->({})".format(source, receptor, target))
+                            for edge in self.input_main_edge_lists[receptor][source][target]:
+                                print(edge)
+                print('===')
+
+                print("---Main to main connections (Edge List)---")
+                for receptor in self.main_edge_lists:
+                    for source in self.main_edge_lists[receptor]:
+                        for target in self.main_edge_lists[receptor][source]:
+                            print("Synapse: ({})-{}->({})".format(source, receptor, target))
+                            for edge in self.main_edge_lists[receptor][source][target]:
+                                print(edge)
+                print('===')
+
+    def compile(self, scaffold, compile_args={}):
+        # creates neuron populations and synapses
+        simulator = compile_args['backend'] if 'backend' in compile_args else 'brian'
+
+        self.report_all = compile_args['record'] == 'all' if 'record' in compile_args else False
+        self.show_plots = compile_args['show_plots'] if 'show_plots' in compile_args else False
+        self.verbose = compile_args['verbose'] if 'verbose' in compile_args else False
+        self.collect_metrics = compile_args['collect_metrics'] if 'collect_metrics' in compile_args else False
+        self.return_potentials = compile_args['return_potentials'] if 'return_potentials' in compile_args else False
+        self.scale_factor = compile_args['scale_factor'] if 'scale_factor' in compile_args else 1.0
+
+        if self.collect_metrics:
+            start = timer()
+            self.metrics['runtime'] = []
+        self.fugu_scaffold = scaffold
+
+        # setup simulator parameters
+        if simulator == 'brian':
+            # PyNN only has support for brian1 (i.e. brian) which is only python 2.x compatible
+            assert sys.version_info <= (3, 0)
+
+            import pyNN.brian as test_sim
+            self.pynn_sim = test_sim
+            from pyNN.connectors import FromListConnector
+            self.FromListConnector = FromListConnector
+
+            self.backend = BRIAN_BACKEND
+
+            self.defaults['min_delay'] = 1.00
+            self.defaults['tau_syn_E'] = 1.00
+            self.defaults['tau_syn_I'] = 1.00
+            self.defaults['i_offset'] = 0.00
+            self.defaults['tau_m'] = 100000000
+            self.defaults['v_rest'] = 0.0
+
+            self.input_neuron_type_names.append('SpikeSourceArray')
+            self.input_neuron_types[self.input_neuron_type_names[0]] = self.pynn_sim.SpikeSourceArray
+            self.main_neuron_type_names.append('IF_curr_exp')
+            self.main_neuron_types[self.main_neuron_type_names[0]] = self.pynn_sim.IF_curr_exp
+
+            self.pynn_sim.setup(timestep=1)
+
+        elif simulator == 'spinnaker' or simulator == 'spynnaker':
+            # Currently we only support spinnaker running on python 2
+            assert sys.version_info <= (3, 0)
+
+            import pyNN.spiNNaker as test_sim
+            self.pynn_sim = test_sim
+            from pyNN.spiNNaker import FromListConnector
+            self.FromListConnector = FromListConnector
+
+            self.backend = SPINNAKER_BACKEND
+
+            self.defaults['min_delay'] = 1.00 * self.scale_factor
+            self.defaults['cm'] = 1.00
+            self.defaults['tau_m'] = 1.00
+            self.defaults['i_offset'] = 0.00
+            self.defaults['v_rest'] = 0.0
+
+            self.input_neuron_type_names.append('SpikeSourceArray')
+            self.input_neuron_types[self.input_neuron_type_names[0]] = self.pynn_sim.SpikeSourceArray
+            self.main_neuron_type_names.append('IF0_curr_delta')
+            self.main_neuron_type_names.append('IF1_curr_delta')
+            self.main_neuron_types[self.main_neuron_type_names[0]] = self.pynn_sim.extra_models.IF0_curr_delta
+            self.main_neuron_types[self.main_neuron_type_names[1]] = self.pynn_sim.extra_models.IF1_curr_delta
+
+            self.pynn_sim.setup(timestep=1)
+            for main_type in self.main_neuron_types:
+                self.pynn_sim.set_number_of_neurons_per_core(self.main_neuron_types[main_type], 100)
+        else:
+            raise ValueError("unsupported pyNN backend")
+
+        # Create dict for easy lookup of the vertices in a brick
+        self.brick_neurons = {}
+        for vertex in self.fugu_scaffold.graph.nodes:
+            brick = self.fugu_scaffold.graph.nodes[vertex]['brick']
+            if brick not in self.brick_neurons:
+                self.brick_neurons[brick] = []
+            self.brick_neurons[brick].append(vertex)
+
+        if not self.report_all:
+            for brick in self.fugu_scaffold.circuit.nodes:
+                if 'layer' in self.fugu_scaffold.circuit.nodes[brick] and self.fugu_scaffold.circuit.nodes[brick]['layer'] == 'output':
+                    for o_list in self.fugu_scaffold.circuit.nodes[brick]['output_lists']:
+                        for neuron in o_list:
+                            self.output_neurons.add(neuron)
+
+        if self.verbose:
+            print("Brick_vertices: {}".format(self.brick_neurons))
+
+        # Setup neurons:
+        #   Input neurons (each gets their own population)
+        # Main neurons (all go into one population)
+
+        params = []
+        params.append('v_thresh')
+        params.append('v_rest')
+        params.append('tau_m')
+        params.append('i_offset')
+        if self.backend == BRIAN_BACKEND:
+            params.append('v_reset')
+            params.append('tau_refrac')
+            params.append('tau_syn_E')
+            params.append('tau_syn_I')
+        else:
+            params.append('cm')
+
+        self.input_indicies = {input_type: 0 for input_type in self.input_neuron_type_names}
+
+        for main_type in self.main_neuron_type_names:
+            self.main_indicies[main_type] = 0
+            self.parameter_values[main_type] = {param: [] for param in params}
+            self.initial_potentials[main_type] = []
+
+        # Sets a neuron's properties and initial values
+        def add_neuron_params(neuron):
+            neuron_props = self.fugu_scaffold.graph.nodes[neuron]
+
+            if self.backend == BRIAN_BACKEND:
+                neuron_type = self.main_neuron_type_names[0]
+            else:
+                neuron_type = self.main_neuron_type_names[1]
+                if 'decay' in neuron_props:
+                    if neuron_props['decay'] == 1.0:
+                        neuron_type = self.main_neuron_type_names[0]
+                    elif neuron_props['decay'] == 0.0:
+                        neuron_type = self.main_neuron_type_names[1]
+                    else:
+                        raise ValueError("sPyNNaker backend currently only supports no decay or instant decay")
+
+            self.neuron_type_map[neuron] = neuron_type
+
+            if self.backend == BRIAN_BACKEND:
+                self.parameter_values[neuron_type]['v_reset'].append(self.defaults['v_rest'])
+                self.parameter_values[neuron_type]['tau_refrac'].append(self.defaults['min_delay'])
+                self.parameter_values[neuron_type]['tau_syn_E'].append(self.defaults['tau_syn_E'])
+                self.parameter_values[neuron_type]['tau_syn_I'].append(self.defaults['tau_syn_I'])
+
+                if 'decay' in neuron_props:
+                    decay = neuron_props['decay']
+                    if decay >= 1:
+                        self.parameter_values[neuron_type]['tau_m'].append(1)
+                        if decay > 1:
+                            print("Fugu warning: decay value is truncated to 1")
+                    else:
+                        self.parameter_values[neuron_type]['tau_m'].append(self.defaults['tau_m'] * (1 - decay))
+                else:
+                    self.parameter_values[neuron_type]['tau_m'].append(self.defaults['tau_m'])
+            else:
+                self.parameter_values[neuron_type]['tau_m'].append(self.defaults['tau_m'])
+                self.parameter_values[neuron_type]['cm'].append(self.defaults['cm'])
+
+            if 'threshold' in neuron_props:
+                thresh = neuron_props['threshold']
+            else:
+                thresh = 1.0
+                print("Error, threshold not found in \"{}\"'s props: {}".format(neuron, neuron_props))
+            self.parameter_values[neuron_type]['v_thresh'].append(thresh if thresh > 0.0 else 0.01)
+
+            self.parameter_values[neuron_type]['v_rest'].append(self.defaults['v_rest'])
+
+            if 'potential' in neuron_props:
+                self.initial_potentials[neuron_type].append(neuron_props['potential'])
+            else:
+                self.initial_potentials[neuron_type].append(self.defaults['v_rest'])
+
+            self.parameter_values[neuron_type]['i_offset'].append(self.defaults['i_offset'])
+
+            self.neuron_index_map[neuron] = self.main_indicies[neuron_type]
+            self.main_indicies[neuron_type] += 1
+            self.main_neurons.add(neuron)
+
+        # Create neurons
+        for brick in self.fugu_scaffold.circuit.nodes:
+            brick = self.fugu_scaffold.circuit.nodes[brick]
+            is_input = brick['layer'] == 'input' if 'layer' in brick else False
+            for neuron in self.brick_neurons[brick['name']]:
+                if is_input:
+                    input_type = self.input_neuron_type_names[0]
+                    self.neuron_type_map[neuron] = input_type
+                    self.neuron_index_map[neuron] = self.input_indicies[input_type]
+                    self.input_indicies[input_type] += 1
+                    self.input_neurons.add(neuron)
+                else:
+                    add_neuron_params(neuron)
+                if neuron in brick['control_nodes'][0]['complete'] or self.report_all:
+                    self.output_neurons.add(neuron)
+
+        if self.verbose:
+            print("Input population counts:---")
+            for input_type in self.input_indicies:
+                print(input_type, self.input_indicies[input_type])
+            print("Main population counts:---")
+            for main_type in self.main_indicies:
+                print(main_type, self.main_indicies[main_type])
+            print("---Neuron to pynn index---")
+            print("Neuron name, type, index:")
+            for neuron in self.neuron_index_map:
+                print("{}, {}, {}".format(self.neuron_type_map[neuron], neuron, self.neuron_index_map[neuron]))
+
 
         # Setup synpases:
         synapse_prop_names = ['weight', 'delay']
@@ -317,7 +425,9 @@ class pynn_Backend(Backend):
                 if values['weight'] < 0:
                     is_inhib = True
             if 'delay' in values:
-                if self.backend == SPINNAKER_BACKEND:
+                if self.backend == BRIAN_BACKEND:
+                    delay = values['delay'] - 1
+                else:
                     delay = values['delay']
                 delay = delay * self.defaults['min_delay']
             u_type = self.neuron_type_map[u]
@@ -354,44 +464,23 @@ class pynn_Backend(Backend):
                                                                        ),
                                                                      )
 
-        # create projections
-        self._create_projections()
-
-        if self.verbose:
-            print("---Input to main connections (Edge List)---")
-            for receptor in self.input_main_synapses:
-                for source in self.input_main_synapses[receptor]:
-                    for target in self.input_main_synapses[receptor][source]:
-                        print("Synapse: ({})-{}->({})".format(source, receptor, target))
-                        for edge in self.input_main_edge_lists[receptor][source][target]:
-                            print(edge)
-            print('===')
-
-            print("---Main to main connections (Edge List)---")
-            for receptor in self.main_synapses:
-                for source in self.main_synapses[receptor]:
-                    for target in self.main_synapses[receptor][source]:
-                        print("Synapse: ({})-{}->({})".format(source, receptor, target))
-                        for edge in self.main_edge_lists[receptor][source][target]:
-                            print(edge)
-            print('===')
-
+        if self.collect_metrics:
+            start = timer()
+        self._create_pynn_network()
+        self.set_input_spikes()
         if self.collect_metrics:
             self.metrics['embed_time'] = timer() - start
 
     def run(self, n_steps=10, return_potential=False):
         # Runs circuit for n_steps then returns data
+        # If not None raise error
+        #if self.backend == BRIAN_BACKEND:
+            #for neuron_type in self.main_populations:
+                #self.main_populations[neuron_type].set(**self.parameter_values[neuron_type])
+                #self.main_populations[neuron_type].initialize(v=self.initial_potentials[neuron_type])
+            #self._create_projections()
+
         max_runtime = n_steps * self.defaults['min_delay']
-
-        if return_potential:
-            for neuron_type in self.main_populations:
-                self.main_populations[neuron_type].record(['spikes', 'v'])
-        else:
-            for neuron_type in self.main_populations:
-                self.main_populations[neuron_type].record(['spikes'])
-        for neuron_type in self.input_populations:
-            self.input_populations[neuron_type].record(['spikes'])
-
         if self.collect_metrics:
             start = timer()
         self.pynn_sim.run(max_runtime)
@@ -403,22 +492,22 @@ class pynn_Backend(Backend):
         input_data = {}
         input_spiketrains = {}
         for neuron_type in self.main_populations:
-            data = self.main_populations[neuron_type].get_data()
+            data = self.main_populations[neuron_type].get_data(clear=True)
             main_data[neuron_type] = data
-            main_spiketrains[neuron_type] = data.segments[-1].spiketrains
+            main_spiketrains[neuron_type] = data.segments[0].spiketrains
 
         for neuron_type in self.input_populations:
-            data = self.input_populations[neuron_type].get_data()
+            data = self.input_populations[neuron_type].get_data(clear=True)
             input_data[neuron_type] = data
-            input_spiketrains[neuron_type] = data.segments[-1].spiketrains
+            input_spiketrains[neuron_type] = data.segments[0].spiketrains
 
-        if return_potential:
+        if self.return_potentials:
             main_voltage = {}
             potentials = pd.DataFrame({'neuron_number': [], 'potential': []})
             for neuron in self.main_neurons:
                 if neuron in self.output_neurons:
                     neuron_type = self.neuron_type_map[neuron]
-                    data = main_data[neuron_type].segments[-1].filter(name='v')[0]
+                    data = main_data[neuron_type].segments[0].filter(name='v')[0]
                     pynn_index = self.neuron_index_map[neuron]
                     voltage = float(data[0][pynn_index])
                     if neuron_type not in main_voltage:
@@ -440,12 +529,12 @@ class pynn_Backend(Backend):
                 spiketrain = main_spiketrains[neuron_type][pynn_index]
                 if self.verbose:
                     print("---results for: {}".format(neuron))
-                    if return_potential:
+                    if self.return_potentials:
                         if self.report_all:
                             print("voltage  {}".format(main_voltage[neuron_type][pynn_index]))
                     print("spiketimes  {}".format(spiketrain))
 
-                if spiketrain.any():
+                if spiketrain.any() or len(np.array(spiketrain)) > 0:
                     neuron_number = self.fugu_scaffold.graph.node[neuron]['neuron_number']
                     for time in np.array(spiketrain):
                         if time not in spikes:
@@ -455,7 +544,7 @@ class pynn_Backend(Backend):
         labels = []
         for neuron in self.neuron_index_map:
             labels.append(neuron)
-        if self.show_plots and return_potential:
+        if self.show_plots and self.return_potentials:
             from pyNN.utility.plotting import Figure, Panel
             import matplotlib.pyplot as plt
             if self.report_all:
@@ -480,7 +569,7 @@ class pynn_Backend(Backend):
                 if self.verbose:
                     print("---results for: {}".format(neuron))
                     print("spiketimes  {}".format(spiketrain))
-                if spiketrain.any():
+                if spiketrain.any() or len(np.array(spiketrain)) > 0:
                     for time in np.array(spiketrain):
                         if time not in spikes:
                             spikes[time] = set()
@@ -494,19 +583,19 @@ class pynn_Backend(Backend):
             mini_df['neuron_number'] = list(spikes[time])
             spike_result = spike_result.append(mini_df, sort=False)
 
-        if return_potential:
+        if self.return_potentials:
             return spike_result, potentials
         else:
             return spike_result
 
     def cleanup(self):
-        self.pynn_sim.end()
         # Deletes/frees neurons and synapses
-        pass
+        self.pynn_sim.end()
+        self._initialize_members()
 
     def reset(self):
-        # Resets time-step to 0 and resets neuron/synapse properties
-        self.pynn_sim.setup(timestep=0)
+        # Reset time-step and reset neuron/synapse properties
+        self.pynn_sim.reset()
 
     def set_parameters(self, parameters={}):
         # Set parameters for specific neurons and synapses
@@ -520,51 +609,32 @@ class pynn_Backend(Backend):
         #           set neuron properties
         #       for synapse in synapse_props:
         #           set synapse properties
-        neuron_props = {}
-        synapse_props = {}
-        for brick in parameters:
-            if brick != 'compile_args':
-                brick_id = self.scaffold.brick_to_number[brick]
-                changes = self.scaffold.circuit.nodes[brick_id]['brick'].set_parameters(parameters[brick])
-                if changes:
-                    neuron_props, synapse_props = changes
-                    for neuron in neuron_props:
-                        neuron_id = self.neuron_to_id_map[neuron]
-                        neuron_type = self.neuron_type_map[neuron]
-                        if neuron_type not in neuron_props:
-                            neuron_props[neuron_type] = {}
-
-                        properties = neuron_props[neuron]
-                        for prop in properties:
-                            pass
-
-                    for synapse in synapse_props:
-                        if type(synapse) is tuple:
-                            pre, post = [self.neuron_to_id_map[p] for p in synapse]
-                            properties = synapse_props[synapse]
-                            for prop in properties:
-                                pass
-                        else:
-                            neuron_id = self.neuron_to_id_map[synapse]
-                            properties = synapse_props[synapse]
-                            for edge in self.ds_graph.edges:
-                                if edge[0] == neuron_id:
-                                    for prop in properties:
-                                        pass
+            #for neuron_type in self.main_populations:
+                #self.main_populations[neuron_type].set(**self.parameter_values[neuron_type])
+                #self.main_populations[neuron_type].initialize(v=self.initial_potentials[neuron_type])
+        self._create_pynn_network()
         self.set_input_spikes()
 
     def set_input_spikes(self):
+        initial_spikes = CalculateSpikeTimes(self.fugu_scaffold.circuit)
+        processed_spikes = {}
+        for time_step in sorted(initial_spikes.keys()):
+            for neuron in initial_spikes[time_step]:
+                if neuron not in processed_spikes:
+                    processed_spikes[neuron] = []
+                processed_spikes[neuron].append(time_step)
+
         input_spikes = {source: [[] for n in self.input_neurons] for source in self.input_neuron_type_names}
-        processed_spikes = CalculateSpikeTimes(self.fugu_scaffold.circuit)
+
         if self.verbose:
-            print("Run input: {}".format(run_input))
             print("Processed input value: {}".format(processed_spikes))
-            print("Input to pynn: {}".format(self.input_neurons))
         for neuron in self.input_neurons:
             if neuron in processed_spikes:
                 spike_array = [spike_time * self.defaults['min_delay'] for spike_time in processed_spikes[neuron]]
                 neuron_type = self.neuron_type_map[neuron]
-                if self.backend == SPINNAKER_BACKEND:
+                if self.backend == BRIAN_BACKEND:
+                    input_spikes[neuron_type][self.neuron_index_map[neuron]] = [val / 10.0 for val in spike_array]
+                else:
                     input_spikes[neuron_type][self.neuron_index_map[neuron]] = spike_array
 
         if self.verbose:

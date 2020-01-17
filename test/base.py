@@ -55,7 +55,7 @@ class BrickTest(ABC):
         self.check_spike_output([before_results, after_results], expected_outputs, scaffold)
 
     def tearDown(self):
-        self.backend.reset()
+        self.backend.cleanup()
 
     @classmethod
     def tearDownClass(self):
