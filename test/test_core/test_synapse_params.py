@@ -86,3 +86,4 @@ class PynnBrianChangeSynapsePropertyTests(ChangeSynapsePropertyTests, unittest.T
     def setUpClass(self):
         self.backend = pynn_Backend()
         self.backend_args['backend'] = 'brian'
+        self.backend_args['verbose'] = True

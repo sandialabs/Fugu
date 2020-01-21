@@ -24,12 +24,10 @@ class VectorInputTests(BrickTest):
                                 name=self.brick_name,
                                 time_dimension=use_time,
                                 )
-        print(vector_brick.vector)
 
         scaffold.add_brick(vector_brick, input_nodes=['input'])
 
         scaffold.lay_bricks()
-        scaffold.summary()
         return scaffold
 
     def check_spike_output(self, spikes, expected, scaffold):

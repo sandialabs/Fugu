@@ -48,6 +48,7 @@ class BrickTest(ABC):
         before_results = self.backend.run(timesteps)
 
         self.backend.reset()
+
         self.backend.set_parameters(new_parameters)
 
         after_results = self.backend.run(timesteps)
