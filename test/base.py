@@ -4,8 +4,6 @@ import sys
 
 from abc import abstractmethod
 
-from fugu import Scaffold
-
 if sys.version_info >= (3, 4):
     ABC = abc.ABC
 else:
@@ -60,4 +58,4 @@ class BrickTest(ABC):
 
     @classmethod
     def tearDownClass(self):
-        self.backend.cleanup()
+        pass

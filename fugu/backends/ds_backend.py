@@ -4,12 +4,13 @@ import pandas as pd
 import networkx as nx
 
 from .backend import Backend, CalculateSpikeTimes
-from fugu.simulators.ds import run_simulation
 
 
 class ds_Backend(Backend):
     def __init__(self):
         super(Backend, self).__init__()
+        from fugu.simulators.ds import run_simulation
+
         self.scaffold = None
         self.ds_graph = None
         self.neuron_to_id_map = {}
