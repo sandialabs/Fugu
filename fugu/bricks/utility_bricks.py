@@ -23,9 +23,9 @@ class Dot(Brick):
         self.supported_codings = ['Raster', 'Undefined']
         self.input_sources = []
 
-    def set_parameters(self, parameters):
-        if 'weight' in parameters:
-            weights = parameters['weight']
+    def set_properties(self, properties):
+        if 'weights' in properties:
+            weights = properties['weights']
             if len(weights) != len(self.input_sources):
                 raise ValueError(
                         "# of weights ({}) != # of inputs to this, {}, Dot brick ({})".format(

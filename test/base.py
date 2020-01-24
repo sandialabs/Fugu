@@ -37,7 +37,7 @@ class BrickTest(ABC):
         spikes = self.run_scaffold(scaffold, timesteps)
         self.check_spike_output(spikes, expected_output, scaffold)
 
-    def run_parameter_test(self, initial_values, new_parameters, expected_outputs):
+    def run_property_test(self, initial_values, new_properties, expected_outputs):
         scaffold = self.build_scaffold(initial_values)
         timesteps = self.calculate_max_timesteps(initial_values)
 
@@ -47,7 +47,7 @@ class BrickTest(ABC):
 
         self.backend.reset()
 
-        self.backend.set_parameters(new_parameters)
+        self.backend.set_properties(new_properties)
 
         after_results = self.backend.run(timesteps)
 

@@ -3,7 +3,8 @@
 import pandas as pd
 import networkx as nx
 
-from .backend import Backend, CalculateSpikeTimes
+from .backend import Backend
+from ..utils.misc import CalculateSpikeTimes
 
 
 class ds_Backend(Backend):
@@ -103,22 +104,12 @@ class ds_Backend(Backend):
             else:
                 self.ds_graph.nodes[neuron_id]['potential'] = 0.0
 
-    def set_parameters(self, parameters={}):
-        # Set parameters for specific neurons and synapses
-        # parameters = dictionary of parameter for bricks
-        # if not parameters: raise error
-
-        # Example:
-        #   for brick in parameters:
-        #       neuron_props, synapse_props = self.circuit[brick].get_changes(parameters[brick])
-        #       for neuron in neuron_props:
-        #           set neuron properties
-        #       for synapse in synapse_props:
-        #           set synapse properties
-        for brick in parameters:
+    def set_properties(self, properties={}):
+        # Set properties for specific neurons and synapses
+        for brick in properties:
             if brick != 'compile_args':
                 brick_id = self.scaffold.brick_to_number[brick]
-                changes = self.scaffold.circuit.nodes[brick_id]['brick'].set_parameters(parameters[brick])
+                changes = self.scaffold.circuit.nodes[brick_id]['brick'].set_properties(properties[brick])
                 if changes:
                     neuron_props, synapse_props = changes
                     for neuron in neuron_props:

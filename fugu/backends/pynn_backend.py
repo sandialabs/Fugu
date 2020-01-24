@@ -6,7 +6,8 @@ import pandas as pd
 from timeit import default_timer as timer
 from warnings import warn
 
-from .backend import Backend, CalculateSpikeTimes
+from .backend import Backend
+from ..utils.misc import CalculateSpikeTimes
 
 BRIAN_BACKEND = 0
 SPINNAKER_BACKEND = 1
@@ -42,7 +43,7 @@ class pynn_Backend(Backend):
 
         self.input_populations = {}
         self.main_populations = {}
-        self.parameter_values = {}
+        self.property_values = {}
         self.initial_potentials = {}
 
         # Neuron projections
@@ -55,8 +56,8 @@ class pynn_Backend(Backend):
         '''
         self.input_main_edge_lists = {syn_type: {} for syn_type in self.synapse_receptors}
         self.main_edge_lists = {syn_type: {} for syn_type in self.synapse_receptors}
-        self.input_main_edge_parameters = {syn_type: {} for syn_type in self.synapse_receptors}
-        self.main_edge_parameters = {syn_type: {} for syn_type in self.synapse_receptors}
+        self.input_main_edge_properties = {syn_type: {} for syn_type in self.synapse_receptors}
+        self.main_edge_properties = {syn_type: {} for syn_type in self.synapse_receptors}
 
         # I really hate this, this needs to be better
         self.input_main_edge_index_map = {}
@@ -95,16 +96,16 @@ class pynn_Backend(Backend):
         print("min delay: {}".format(self.defaults['min_delay']))
         for neuron_type in self.main_populations:
             print(">>>Neuron type: {}<<<".format(neuron_type))
-            for param in self.parameter_values[neuron_type]:
-                main_params = self.main_populations[neuron_type].get(param)
-                print("Parameter: {}, {}".format(param, main_params))
-                print("Parameter count: {}".format(len(self.parameter_values[neuron_type][param])))
+            for prop in self.property_values[neuron_type]:
+                main_props = self.main_populations[neuron_type].get(prop)
+                print("Parameter: {}, {}".format(prop, main_props))
+                print("Parameter count: {}".format(len(self.property_values[neuron_type][prop])))
                 print("neuron values ---")
                 for neuron in self.neuron_index_map:
                     if self.neuron_type_map[neuron] == neuron_type:
                         print("{}, {}".format(
                                          neuron,
-                                         self.parameter_values[neuron_type][param][self.neuron_index_map[neuron]],
+                                         self.property_values[neuron_type][prop][self.neuron_index_map[neuron]],
                                          ))
 
             print("___Initial potentials___:")
@@ -142,30 +143,33 @@ class pynn_Backend(Backend):
 
         print('===')
         print("---Input to main properties---")
-        for receptor in self.input_main_edge_parameters:
-            for source_type in self.input_main_edge_parameters[receptor]:
-                for target_type in self.input_main_edge_parameters[receptor][source_type]:
+        for receptor in self.input_main_edge_properties:
+            for source_type in self.input_main_edge_properties[receptor]:
+                for target_type in self.input_main_edge_properties[receptor][source_type]:
                     print("expected values:")
-                    for prop in self.input_main_edge_parameters[receptor][source_type][target_type]:
+                    for prop in self.input_main_edge_properties[receptor][source_type][target_type]:
                         print("Property: {}".format(prop))
-                        for value in self.input_main_edge_parameters[receptor][source_type][target_type][prop]:
+                        for value in self.input_main_edge_properties[receptor][source_type][target_type][prop]:
                             print(value)
                     print("actual values:")
-                    for prop in self.input_main_edge_parameters[receptor][source_type][target_type]:
+                    for prop in self.input_main_edge_properties[receptor][source_type][target_type]:
                         print("Property: {}".format(prop))
-                        for value in self.input_main_synapses[receptor][source_type][target_type].get(prop, format='list'):
+                        for value in self.input_main_synapses[receptor][source_type][target_type].get(
+                                                                                                   prop,
+                                                                                                   format='list'
+                                                                                                   ):
                             print(value)
         print("---Main to main properties---")
-        for receptor in self.main_edge_parameters:
-            for source_type in self.main_edge_parameters[receptor]:
-                for target_type in self.main_edge_parameters[receptor][source_type]:
+        for receptor in self.main_edge_properties:
+            for source_type in self.main_edge_properties[receptor]:
+                for target_type in self.main_edge_properties[receptor][source_type]:
                     print("expected values:")
-                    for prop in self.main_edge_parameters[receptor][source_type][target_type]:
+                    for prop in self.main_edge_properties[receptor][source_type][target_type]:
                         print("Property: {}".format(prop))
-                        for value in self.main_edge_parameters[receptor][source_type][target_type][prop]:
+                        for value in self.main_edge_properties[receptor][source_type][target_type][prop]:
                             print(value)
                     print("actual values:")
-                    for prop in self.main_edge_parameters[receptor][source_type][target_type]:
+                    for prop in self.main_edge_properties[receptor][source_type][target_type]:
                         print("Property: {}".format(prop))
                         for value in self.main_synapses[receptor][source_type][target_type].get(prop, format='list'):
                             print(value)
@@ -202,7 +206,7 @@ class pynn_Backend(Backend):
                                                                                           )
                     if self.backend != SPINNAKER_BACKEND:
                         self.input_main_synapses[receptor][source_type][target_type].set(
-                                **self.input_main_edge_parameters[receptor][source_type][target_type]
+                                **self.input_main_edge_properties[receptor][source_type][target_type]
                                 )
         for receptor in self.main_edge_lists:
             self.main_synapses[receptor] = {}
@@ -222,7 +226,7 @@ class pynn_Backend(Backend):
                                                                                     )
                     if self.backend != SPINNAKER_BACKEND:
                         self.main_synapses[receptor][source_type][target_type].set(
-                                **self.main_edge_parameters[receptor][source_type][target_type]
+                                **self.main_edge_properties[receptor][source_type][target_type]
                                 )
 
     def _create_pynn_network(self):
@@ -240,7 +244,7 @@ class pynn_Backend(Backend):
                 self.main_populations[main_type] = self.pynn_sim.Population(
                                                                    self.main_indicies[main_type],
                                                                    self.main_neuron_types[main_type](
-                                                                          **(self.parameter_values[main_type])
+                                                                          **(self.property_values[main_type])
                                                                           ),
                                                                    label="Main-{}".format(main_type),
                                                                    )
@@ -340,10 +344,11 @@ class pynn_Backend(Backend):
 
         if not self.report_all:
             for brick in self.fugu_scaffold.circuit.nodes:
-                if 'layer' in self.fugu_scaffold.circuit.nodes[brick] and self.fugu_scaffold.circuit.nodes[brick]['layer'] == 'output':
-                    for o_list in self.fugu_scaffold.circuit.nodes[brick]['output_lists']:
-                        for neuron in o_list:
-                            self.output_neurons.add(neuron)
+                if 'layer' in self.fugu_scaffold.circuit.nodes[brick]:
+                    if self.fugu_scaffold.circuit.nodes[brick]['layer'] == 'output':
+                        for o_list in self.fugu_scaffold.circuit.nodes[brick]['output_lists']:
+                            for neuron in o_list:
+                                self.output_neurons.add(neuron)
 
         if self.verbose:
             print("Brick_vertices: {}".format(self.brick_neurons))
@@ -352,28 +357,28 @@ class pynn_Backend(Backend):
         #   Input neurons (each gets their own population)
         # Main neurons (all go into one population)
 
-        params = []
-        params.append('v_thresh')
-        params.append('v_rest')
-        params.append('tau_m')
-        params.append('i_offset')
+        props = []
+        props.append('v_thresh')
+        props.append('v_rest')
+        props.append('tau_m')
+        props.append('i_offset')
         if self.backend == BRIAN_BACKEND:
-            params.append('v_reset')
-            params.append('tau_refrac')
-            params.append('tau_syn_E')
-            params.append('tau_syn_I')
+            props.append('v_reset')
+            props.append('tau_refrac')
+            props.append('tau_syn_E')
+            props.append('tau_syn_I')
         else:
-            params.append('cm')
+            props.append('cm')
 
         self.input_indicies = {input_type: 0 for input_type in self.input_neuron_type_names}
 
         for main_type in self.main_neuron_type_names:
             self.main_indicies[main_type] = 0
-            self.parameter_values[main_type] = {param: [] for param in params}
+            self.property_values[main_type] = {prop: [] for prop in props}
             self.initial_potentials[main_type] = []
 
         # Sets a neuron's properties and initial values
-        def add_neuron_params(neuron):
+        def add_neuron_props(neuron):
             neuron_props = self.fugu_scaffold.graph.nodes[neuron]
 
             if self.backend == BRIAN_BACKEND:
@@ -391,40 +396,40 @@ class pynn_Backend(Backend):
             self.neuron_type_map[neuron] = neuron_type
 
             if self.backend == BRIAN_BACKEND:
-                self.parameter_values[neuron_type]['v_reset'].append(self.defaults['v_rest'])
-                self.parameter_values[neuron_type]['tau_refrac'].append(self.defaults['min_delay'])
-                self.parameter_values[neuron_type]['tau_syn_E'].append(self.defaults['tau_syn_E'])
-                self.parameter_values[neuron_type]['tau_syn_I'].append(self.defaults['tau_syn_I'])
+                self.property_values[neuron_type]['v_reset'].append(self.defaults['v_rest'])
+                self.property_values[neuron_type]['tau_refrac'].append(self.defaults['min_delay'])
+                self.property_values[neuron_type]['tau_syn_E'].append(self.defaults['tau_syn_E'])
+                self.property_values[neuron_type]['tau_syn_I'].append(self.defaults['tau_syn_I'])
 
                 if 'decay' in neuron_props:
                     decay = neuron_props['decay']
                     if decay >= 1:
-                        self.parameter_values[neuron_type]['tau_m'].append(1)
+                        self.property_values[neuron_type]['tau_m'].append(1)
                         if decay > 1:
                             print("Fugu warning: decay value is truncated to 1")
                     else:
-                        self.parameter_values[neuron_type]['tau_m'].append(self.defaults['tau_m'] * (1 - decay))
+                        self.property_values[neuron_type]['tau_m'].append(self.defaults['tau_m'] * (1 - decay))
                 else:
-                    self.parameter_values[neuron_type]['tau_m'].append(self.defaults['tau_m'])
+                    self.property_values[neuron_type]['tau_m'].append(self.defaults['tau_m'])
             else:
-                self.parameter_values[neuron_type]['tau_m'].append(self.defaults['tau_m'])
-                self.parameter_values[neuron_type]['cm'].append(self.defaults['cm'])
+                self.property_values[neuron_type]['tau_m'].append(self.defaults['tau_m'])
+                self.property_values[neuron_type]['cm'].append(self.defaults['cm'])
 
             if 'threshold' in neuron_props:
                 thresh = neuron_props['threshold']
             else:
                 thresh = 1.0
                 print("Error, threshold not found in \"{}\"'s props: {}".format(neuron, neuron_props))
-            self.parameter_values[neuron_type]['v_thresh'].append(thresh if thresh > 0.0 else 0.01)
+            self.property_values[neuron_type]['v_thresh'].append(thresh if thresh > 0.0 else 0.01)
 
-            self.parameter_values[neuron_type]['v_rest'].append(self.defaults['v_rest'])
+            self.property_values[neuron_type]['v_rest'].append(self.defaults['v_rest'])
 
             if 'potential' in neuron_props:
                 self.initial_potentials[neuron_type].append(neuron_props['potential'])
             else:
                 self.initial_potentials[neuron_type].append(self.defaults['v_rest'])
 
-            self.parameter_values[neuron_type]['i_offset'].append(self.defaults['i_offset'])
+            self.property_values[neuron_type]['i_offset'].append(self.defaults['i_offset'])
 
             self.neuron_index_map[neuron] = self.main_indicies[neuron_type]
             self.main_indicies[neuron_type] += 1
@@ -442,7 +447,7 @@ class pynn_Backend(Backend):
                     self.input_indicies[input_type] += 1
                     self.input_neurons.add(neuron)
                 else:
-                    add_neuron_params(neuron)
+                    add_neuron_props(neuron)
                 if neuron in brick['control_nodes'][0]['complete'] or self.report_all:
                     self.output_neurons.add(neuron)
 
@@ -477,22 +482,22 @@ class pynn_Backend(Backend):
             if u in self.input_neurons:
                 if u_type not in self.input_main_edge_lists[syn_receptor]:
                     self.input_main_edge_lists[syn_receptor] = {u_type: {}}
-                    self.input_main_edge_parameters[syn_receptor] = {u_type: {}}
+                    self.input_main_edge_properties[syn_receptor] = {u_type: {}}
                     self.input_main_edge_counts[syn_receptor] = {u_type: {}}
                 if v_type not in self.input_main_edge_lists[syn_receptor][u_type]:
                     self.input_main_edge_lists[syn_receptor][u_type][v_type] = []
-                    self.input_main_edge_parameters[syn_receptor][u_type][v_type] = {'weight': [], 'delay': []}
+                    self.input_main_edge_properties[syn_receptor][u_type][v_type] = {'weight': [], 'delay': []}
                     self.input_main_edge_counts[syn_receptor][u_type][v_type] = 0
 
                 self.input_main_edge_lists[syn_receptor][u_type][v_type].append(synapse)
             else:
                 if u_type not in self.main_edge_lists[syn_receptor]:
                     self.main_edge_lists[syn_receptor] = {u_type: {}}
-                    self.main_edge_parameters[syn_receptor] = {u_type: {}}
+                    self.main_edge_properties[syn_receptor] = {u_type: {}}
                     self.main_edge_counts[syn_receptor] = {u_type: {}}
                 if v_type not in self.main_edge_lists[syn_receptor][u_type]:
                     self.main_edge_lists[syn_receptor][u_type][v_type] = []
-                    self.main_edge_parameters[syn_receptor][u_type][v_type] = {'weight': [], 'delay': []}
+                    self.main_edge_properties[syn_receptor][u_type][v_type] = {'weight': [], 'delay': []}
                     self.main_edge_counts[syn_receptor][u_type][v_type] = 0
 
                 self.main_edge_lists[syn_receptor][u_type][v_type].append(synapse)
@@ -503,28 +508,25 @@ class pynn_Backend(Backend):
                 for target in self.input_main_edge_lists[receptor][source]:
                     edge_list = self.input_main_edge_lists[receptor][source][target]
                     edge_list.sort()
+                    count = self.input_main_edge_counts[receptor][source][target]
                     for u, v, weight, delay in edge_list:
-                        self.input_main_edge_parameters[receptor][source][target]['weight'].append(weight)
-                        self.input_main_edge_parameters[receptor][source][target]['delay'].append(delay)
-                        self.input_main_edge_index_map[(u, v)] = (
-                                                                   self.input_main_edge_counts[receptor][source][target],
-                                                                   syn_receptor,
-                                                                   )
-                        self.input_main_edge_counts[receptor][source][target] += 1
+                        self.input_main_edge_properties[receptor][source][target]['weight'].append(weight)
+                        self.input_main_edge_properties[receptor][source][target]['delay'].append(delay)
+                        self.input_main_edge_index_map[(u, v)] = (count, syn_receptor)
+                        count += 1
+                    self.input_main_edge_counts[receptor][source][target] = count
         for receptor in self.main_edge_lists:
             for source in self.main_edge_lists[receptor]:
                 for target in self.main_edge_lists[receptor][source]:
                     edge_list = self.main_edge_lists[receptor][source][target]
                     edge_list.sort()
+                    count = self.main_edge_counts[receptor][source][target]
                     for u, v, weight, delay in edge_list:
-                        self.main_edge_parameters[receptor][source][target]['weight'].append(weight)
-                        self.main_edge_parameters[receptor][source][target]['delay'].append(delay)
-                        self.main_edge_index_map[(u, v)] = (
-                                                                   self.main_edge_counts[receptor][source][target],
-                                                                   syn_receptor,
-                                                                   )
-                        self.main_edge_counts[receptor][source][target] += 1
-
+                        self.main_edge_properties[receptor][source][target]['weight'].append(weight)
+                        self.main_edge_properties[receptor][source][target]['delay'].append(delay)
+                        self.main_edge_index_map[(u, v)] = (count, syn_receptor)
+                        count += 1
+                    self.main_edge_counts[receptor][source][target] = count
 
         if self.collect_metrics:
             start = timer()
@@ -654,30 +656,18 @@ class pynn_Backend(Backend):
             print(">>>Resetting<<<")
         self.pynn_sim.reset()
 
-    def set_parameters(self, parameters={}):
-        # Set parameters for specific neurons and synapses
-        # parameters = dictionary of parameter for bricks
-        # if not parameters: raise error
-
-        # Example:
-        #   for brick in parameters:
-        #       neuron_props, synapse_props = self.circuit[brick].get_changes(parameters[brick])
-        #       for neuron in neuron_props:
-        #           set neuron properties
-        #       for synapse in synapse_props:
-        #           set synapse properties
-            #for neuron_type in self.main_populations:
-                #self.main_populations[neuron_type].set(**self.parameter_values[neuron_type])
-                #self.main_populations[neuron_type].initialize(v=self.initial_potentials[neuron_type])
+    def set_properties(self, properties={}):
+        # Set properties for specific neurons and synapses
+        # properties = dictionary of property for bricks
         if self.verbose:
-            print("Before set_parameters")
-            print(parameters)
+            print("Before set_properties")
+            print(properties)
             self.print_network_info()
 
-        for brick in parameters:
+        for brick in properties:
             if brick != 'compile_args':
                 brick_id = self.fugu_scaffold.brick_to_number[brick]
-                changes = self.fugu_scaffold.circuit.nodes[brick_id]['brick'].set_parameters(parameters[brick])
+                changes = self.fugu_scaffold.circuit.nodes[brick_id]['brick'].set_properties(properties[brick])
                 if changes:
                     neuron_props, synapse_props = changes
                     if self.verbose:
@@ -694,15 +684,14 @@ class pynn_Backend(Backend):
                                     self.initial_potential[neuron_type][neuron_index] = prop_value
                                 elif prop == 'threshold':
                                     prop_value = prop_value if prop_value > 0.0 else 0.01
-                                    self.parameter_values[neuron_type]['v_thresh'][neuron_index] = prop_value
+                                    self.property_values[neuron_type]['v_thresh'][neuron_index] = prop_value
                                 elif prop == 'current_offset':
-                                    self.parameter_values[neuron_type]['i_offset'][neuron_index] = prop_value
+                                    self.property_values[neuron_type]['i_offset'][neuron_index] = prop_value
 
                     if synapse_props:
                         for synapse in synapse_props:
                             if type(synapse) is tuple:
                                 pre, post = [self.neuron_index_map[p] for p in synapse]
-                                #pre, post = synapse
                                 is_input = pre in self.input_neurons
                                 pre_type, post_type = [self.neuron_type_map[p] for p in synapse]
                                 if is_input:
@@ -716,21 +705,33 @@ class pynn_Backend(Backend):
                                 for prop in properties:
                                     value = properties[prop]
                                     if is_input:
-                                        self.input_main_edge_parameters[receptor][pre_type][post_type][prop][edge_index] = value
+                                        self.input_main_edge_properties[receptor][pre_type][post_type][prop][edge_index] = value
                                     else:
-                                        self.main_edge_parameters[receptor][pre_type][post_type][prop][edge_index] = value
+                                        self.main_edge_properties[receptor][pre_type][post_type][prop][edge_index] = value
                             else:
-                                pass
-                                #neuron_id = self.neuron_to_id_map[synapse]
-                                #properties = synapse_props[synapse]
-                                #for edge in self.ds_graph.edges:
-                                    #if edge[0] == neuron_id:
-                                        #for prop in properties:
-                                            #self.ds_graph.edges[edge][prop] = properties[prop]
-
+                                pre = synapse
+                                is_input = pre in self.input_neurons
+                                pre_index = self.neuron_index_map[pre]
+                                pre_type = self.neuron_type_map[pre]
+                                properties = synapse_props[pre]
+                                for fugu_edge in self.fugu_scaffold.graph.edges:
+                                    if fugu_edge[0] == pre:
+                                        post_index = self.neuron_index_map[fugu_edge[1]]
+                                        post_type = self.neuron_type_map[fugu_edge[1]]
+                                        pynn_edge = (pre_index, post_index)
+                                        if is_input:
+                                            edge_index, receptor = self.input_main_edge_index_map[pynn_edge]
+                                        else:
+                                            edge_index, receptor = self.main_edge_index_map[pynn_edge]
+                                        for prop in properties:
+                                            value = properties[prop]
+                                            if is_input:
+                                                self.input_main_edge_properties[receptor][pre_type][post_type][prop][edge_index] = value
+                                            else:
+                                                self.main_edge_properties[receptor][pre_type][post_type][prop][edge_index] = value
 
         for neuron_type in self.main_populations:
-            self.main_populations[neuron_type].set(**self.parameter_values[neuron_type])
+            self.main_populations[neuron_type].set(**self.property_values[neuron_type])
             self.main_populations[neuron_type].initialize(v=self.initial_potentials[neuron_type])
         self.set_input_spikes()
 
@@ -739,17 +740,17 @@ class pynn_Backend(Backend):
                 for source_type in self.input_main_synapses[receptor]:
                     for target_type in self.input_main_synapses[receptor][source_type]:
                         self.input_main_synapses[receptor][source_type][target_type].set(
-                               **self.input_main_edge_parameters[receptor][source_type][target_type]
+                               **self.input_main_edge_properties[receptor][source_type][target_type]
                                )
             for receptor in self.main_synapses:
                 for source_type in self.main_synapses[receptor]:
                     for target_type in self.main_synapses[receptor][source_type]:
                         self.main_synapses[receptor][source_type][target_type].set(
-                               **self.main_edge_parameters[receptor][source_type][target_type]
+                               **self.main_edge_properties[receptor][source_type][target_type]
                                )
 
         if self.verbose:
-            print("After set_parameters")
+            print("After set_properties")
             self.print_network_info()
 
     def set_input_spikes(self):

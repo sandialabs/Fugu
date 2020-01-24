@@ -109,9 +109,9 @@ class SynapseProperties(Brick):
         self.name = name
         self.weights = weights
 
-    def set_parameters(self, parameters):
-        if 'weights' in parameters:
-            weights = parameters['weights']
+    def set_properties(self, properties):
+        if 'weights' in properties:
+            weights = properties['weights']
             if len(weights) != len(self.weights):
                 raise ValueError("# of new weights ({}) != # of old weights ({})".format(
                                                                                     len(weights),

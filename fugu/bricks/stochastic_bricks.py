@@ -87,17 +87,17 @@ class Threshold(Brick):
         self.supported_codings = ['current', 'Undefined', 'temporal-L']
         self.indices = []
 
-    def set_parameters(self, parameters={}):
-        if 'threshold' in parameters:
-            value = parameters['threshold']
-            neuron_params = {}
+    def set_properties(self, properties={}):
+        if 'threshold' in properties:
+            value = properties['threshold']
+            neuron_props = {}
             if self.metadata['D'] == 0:
-                neuron_params[self.name] = {'threshold': value}
+                neuron_props[self.name] = {'threshold': value}
             else:
                 for index in self.indices:
                     name = "{}_{}".format(self.name, index)
-                    neuron_params[name] = {'threshold': value}
-            return neuron_params, {}
+                    neuron_props[name] = {'threshold': value}
+            return neuron_props, {}
         else:
             return None
 

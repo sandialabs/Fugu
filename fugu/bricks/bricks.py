@@ -56,7 +56,7 @@ class Brick(ABC):
 
         Arguments:
             + graph - networkx graph
-            + metadata - A dictionary of shapes and parameters
+            + metadata - A dictionary of shapes and properties
             + control_nodes - list of dictionary of auxillary nodes.
                 Acceptable keys include:
                     'complete' - A list of neurons that fire when the brick is done
@@ -69,6 +69,6 @@ class Brick(ABC):
 
     def set_properties(self, graph, properties):
         """
-        Returns an updated version of the graph based on the parameter values passed.
+        Returns an updated version of the graph based on the property values passed.
         """
         pass

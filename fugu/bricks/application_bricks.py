@@ -39,7 +39,7 @@ class LIS(Brick):
 
         Arguments:
             + graph - networkx graph to define connections of the computational graph
-            + metadata - dictionary to define the shapes and parameters of the brick
+            + metadata - dictionary to define the shapes and properties of the brick
             + control_nodes - dictionary of lists of auxillary networkx nodes.
                 Expected keys:
                     'complete' - A list of neurons that fire when the brick is done
@@ -48,7 +48,7 @@ class LIS(Brick):
 
         Returns:
             + graph of a computational elements and connections
-            + dictionary of output parameters (shape, coding, layers, depth, etc)
+            + dictionary of output properties (shape, coding, layers, depth, etc)
             + dictionary of control nodes ('complete')
             + list of output
             + list of coding formats of output

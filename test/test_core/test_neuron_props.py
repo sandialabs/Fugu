@@ -9,12 +9,19 @@ from fugu.backends import ds_Backend, snn_Backend, pynn_Backend
 from ..base import BrickTest
 
 
-class ChangeSynapsePropertyTests(BrickTest):
+class ChangeNeuronPropertyTests(BrickTest):
     # Base class function
     def build_scaffold(self, input_values):
         scaffold = Scaffold()
+        spike_times, old_threshold = input_values
 
-        scaffold.add_brick(BRICKS.SynapseProperties(weights=input_values, name='Test'), output=True)
+        vector_1 = BRICKS.Vector_Input(spike_times, coding='Raster', name='input1')
+        dot_brick = BRICKS.Dot([1.0 for t in spike_times], name='Dot')
+        thresh = BRICKS.Threshold(old_threshold, name='Thresh', output_coding='temporal-L')
+
+        scaffold.add_brick(vector_1, 'input')
+        scaffold.add_brick(dot_brick, input_nodes=(0, 0))
+        scaffold.add_brick(thresh, input_nodes=(1, 0), output=True)
 
         scaffold.lay_bricks()
         return scaffold
@@ -43,45 +50,32 @@ class ChangeSynapsePropertyTests(BrickTest):
 
     # tests
     def test_change_neuron_properties(self):
-        params = {}
-        params = {}
-        params['Test'] = {}
-        params['Test']['weights'] = [1.1, 1.1, 0.9, 2.1]
-
-        self.run_parameter_test(
-               [0.5, 0.1, 0.3, 0.4],
-               params,
-               [
-                 [],
-                 [
-                   ('Test_0', 1.0),
-                   ('Test_1', 1.0),
-                   ('Test_3', 1.0),
-                 ],
-               ],
-               )
+        props = {}
+        props['Thresh'] = {}
+        props['Thresh']['threshold'] = 1.0
+        self.run_property_test([[0, 1, 0, 1], 3.0], props, [[], [('Thresh', 1.0)]])
 
 
-class SnnChangeSynapsePropertyTests(ChangeSynapsePropertyTests, unittest.TestCase):
+class SnnChangeNeuronPropertyTests(ChangeNeuronPropertyTests, unittest.TestCase):
     @classmethod
     def setUpClass(self):
         self.backend = snn_Backend()
 
 
-class DsChangeSynapsePropertyTests(ChangeSynapsePropertyTests, unittest.TestCase):
+class DsChangeNeuronPropertyTests(ChangeNeuronPropertyTests, unittest.TestCase):
     @classmethod
     def setUpClass(self):
         self.backend = ds_Backend()
 
 
-class PynnSpinnakerChangeSynapsePropertyTests(ChangeSynapsePropertyTests, unittest.TestCase):
+class PynnSpinnakerChangeNeuronPropertyTests(ChangeNeuronPropertyTests, unittest.TestCase):
     @classmethod
     def setUpClass(self):
         self.backend = pynn_Backend()
         self.backend_args['backend'] = 'spinnaker'
 
 
-class PynnBrianChangeSynapsePropertyTests(ChangeSynapsePropertyTests, unittest.TestCase):
+class PynnBrianChangeNeuronPropertyTests(ChangeNeuronPropertyTests, unittest.TestCase):
     @classmethod
     def setUpClass(self):
         self.backend = pynn_Backend()

@@ -229,9 +229,9 @@ class Vector_Input(InputBrick):
 
     next = __next__
 
-    def set_parameters(self, parameters={}):
-        new_vector = np.array(parameters['spike_vector'])
-        if 'time_dimension' not in parameters or parameters['time_dimension']:
+    def set_properties(self, properties={}):
+        new_vector = np.array(properties['spike_vector'])
+        if 'time_dimension' not in properties or properties['time_dimension']:
             new_vector = np.expand_dims(new_vector, len(new_vector.shape))
         if new_vector.shape != self.vector.shape:
             raise ValueError(

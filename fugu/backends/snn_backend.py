@@ -5,8 +5,9 @@ from warnings import warn
 
 import fugu.simulators.SpikingNeuralNetwork as snn
 
-from .backend import Backend, CalculateSpikeTimes
+from .backend import Backend
 from ..utils.export_utils import results_df_from_dict
+from ..utils.misc import CalculateSpikeTimes
 
 
 class snn_Backend(Backend):
@@ -20,7 +21,7 @@ class snn_Backend(Backend):
         '''
         # Add in input and output neurons. Use the fugu_circuit information to identify input and output layers
         # For input nodes, create input neurons and identity and associate the appropriate inputs to it
-        # for output neurons, obtain neuron parameters from fugu_graph and create LIFNeurons
+        # for output neurons, obtain neuron properties from fugu_graph and create LIFNeurons
         # Add neurons to spiking neural network
         for node, vals in self.fugu_circuit.nodes.data():
             if 'layer' in vals:
@@ -32,16 +33,16 @@ class snn_Backend(Backend):
                 if vals['layer'] == 'output':
                     for olist in self.fugu_circuit.nodes[node]['output_lists']:
                         for neuron in olist:
-                            params = self.fugu_graph.nodes[neuron]
-                            th = params.get('threshold', 0.0)
-                            rv = params.get('reset_voltage', 0.0)
-                            lk = params.get('leakage_constant', 1.0)
-                            vol = params.get('voltage', 0.0)
-                            prob = params.get('p', 1.0)
-                            if 'potential' in params:
-                                vol = params['potential']
-                            if 'decay' in params:
-                                lk = 1.0 - params['decay']
+                            props = self.fugu_graph.nodes[neuron]
+                            th = props.get('threshold', 0.0)
+                            rv = props.get('reset_voltage', 0.0)
+                            lk = props.get('leakage_constant', 1.0)
+                            vol = props.get('voltage', 0.0)
+                            prob = props.get('p', 1.0)
+                            if 'potential' in props:
+                                vol = props['potential']
+                            if 'decay' in props:
+                                lk = 1.0 - props['decay']
                             neuron_dict[neuron] = snn.LIFNeuron(
                                                         neuron,
                                                         threshold=th,
@@ -54,17 +55,17 @@ class snn_Backend(Backend):
                             self.nn.add_neuron(neuron_dict[neuron])
         # add other neurons from self.fugu_graph to spiking neural network
         # parse through the self.fugu_graph and if a neuron is not present in spiking neural network, add to it.
-        for neuron, params in self.fugu_graph.nodes.data():
+        for neuron, props in self.fugu_graph.nodes.data():
             if neuron not in neuron_dict.keys():
-                th = params.get('threshold', 0.0)
-                rv = params.get('reset_voltage', 0.0)
-                lk = params.get('leakage_constant', 1.0)
-                vol = params.get('voltage', 0.0)
-                prob = params.get('p', 1.0)
-                if 'potential' in params:
-                    vol = params['potential']
-                if 'decay' in params:
-                    lk = 1.0 - params['decay']
+                th = props.get('threshold', 0.0)
+                rv = props.get('reset_voltage', 0.0)
+                lk = props.get('leakage_constant', 1.0)
+                vol = props.get('voltage', 0.0)
+                prob = props.get('p', 1.0)
+                if 'potential' in props:
+                    vol = props['potential']
+                if 'decay' in props:
+                    lk = 1.0 - props['decay']
                 rc = True if self.record == 'all' else False
                 neuron_dict[neuron] = snn.LIFNeuron(
                                             neuron,
@@ -81,9 +82,9 @@ class snn_Backend(Backend):
         Add Synapses
         '''
         # add synapses from self.fugu_graph edge information
-        for n1, n2, params in self.fugu_graph.edges.data():
-            delay = int(params.get('delay', 1))
-            wt = params.get('weight', 1.0)
+        for n1, n2, props in self.fugu_graph.edges.data():
+            delay = int(props.get('delay', 1))
+            wt = props.get('weight', 1.0)
             syn = snn.Synapse(neuron_dict[n1], neuron_dict[n2], delay=delay, weight=wt)
             self.nn.add_synapse(syn)
 
@@ -164,22 +165,13 @@ class snn_Backend(Backend):
         # resets time-step to 0 and resets neuron/synapse properties
         self._build_network()
 
-    def set_parameters(self, parameters={}):
-        # Set parameters for specific neurons and synapses
-        # parameters = dictionary of parameter for bricks
-        # if not parameters: raise error
-
-        # Example:
-        #   for brick in parameters:
-        #       neuron_props, synapse_props = self.circuit[brick].get_changes(parameters[brick])
-        #       for neuron in neuron_props:
-        #           set neuron properties
-        #       for synapse in synapse_props:
-        #           set synapse properties
-        for brick in parameters:
+    def set_properties(self, properties={}):
+        # Set properties for specific neurons and synapses
+        # properties = dictionary of properties for bricks
+        for brick in properties:
             if brick != 'compile_args':
                 brick_id = self.brick_to_number[brick]
-                changes = self.fugu_circuit.nodes[brick_id]['brick'].set_parameters(parameters[brick])
+                changes = self.fugu_circuit.nodes[brick_id]['brick'].set_properties(properties[brick])
                 if changes:
                     neuron_props, synapse_props = changes
                     for neuron_name in self.nn.nrns:

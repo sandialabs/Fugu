@@ -47,27 +47,6 @@ class ThresholdBrickTests(BrickTest):
         if spiked:
             self.hits += 1
 
-    def evaluate_thresh_params(self, input_value, threshold, p_value, decay_value):
-
-        evaluations = 0.0
-        hits = 0.0
-        results = []
-        for i in range(self.num_trials):
-            evaluations += 1.0
-            results = scaffold.evaluate(backend=self.backend,
-                                        max_runtime=5,
-                                        backend_args=self.backend_args,
-                                        record_all=True)
-            graph_names = list(scaffold.graph.nodes.data('name'))
-            spiked = False
-            for row in results.itertuples():
-                neuron_name = graph_names[int(row.neuron_number)][0]
-                if "Thresh" in neuron_name:
-                    spiked = True
-            if spiked:
-                hits += 1
-        return hits / evaluations
-
     def run_iterations(self, expected, scaffold):
         self.backend.compile(scaffold)
         for i in range(self.num_trials):
