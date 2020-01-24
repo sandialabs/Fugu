@@ -747,8 +747,6 @@ class pynn_Backend(Backend):
                         self.main_synapses[receptor][source_type][target_type].set(
                                **self.main_edge_parameters[receptor][source_type][target_type]
                                )
-        else:
-            raise ValueError("Pynn backend, {}, does not support changing of synapse properties".format(BACKEND_NAMES[self.backend]))
 
         if self.verbose:
             print("After set_parameters")
