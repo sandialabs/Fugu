@@ -200,7 +200,7 @@ class pynn_Backend(Backend):
                                                                                           label=label,
                                                                                           receptor_type=receptor,
                                                                                           )
-                    if self.backend != BRIAN_BACKEND and self.backend != SPINNAKER_BACKEND:
+                    if self.backend != SPINNAKER_BACKEND:
                         self.input_main_synapses[receptor][source_type][target_type].set(
                                 **self.input_main_edge_parameters[receptor][source_type][target_type]
                                 )
@@ -220,7 +220,7 @@ class pynn_Backend(Backend):
                                                                                     label=label,
                                                                                     receptor_type=receptor,
                                                                                     )
-                    if self.backend != BRIAN_BACKEND and self.backend != SPINNAKER_BACKEND:
+                    if self.backend != SPINNAKER_BACKEND:
                         self.main_synapses[receptor][source_type][target_type].set(
                                 **self.main_edge_parameters[receptor][source_type][target_type]
                                 )
@@ -472,7 +472,7 @@ class pynn_Backend(Backend):
                 syn_receptor = self.synapse_receptors[0]
             u_index = self.neuron_index_map[u]
             v_index = self.neuron_index_map[v]
-            synapse = [self.neuron_index_map[u], self.neuron_index_map[v], weight, delay]
+            synapse = (self.neuron_index_map[u], self.neuron_index_map[v], weight, delay)
 
             if u in self.input_neurons:
                 if u_type not in self.input_main_edge_lists[syn_receptor]:
@@ -484,15 +484,7 @@ class pynn_Backend(Backend):
                     self.input_main_edge_parameters[syn_receptor][u_type][v_type] = {'weight': [], 'delay': []}
                     self.input_main_edge_counts[syn_receptor][u_type][v_type] = 0
 
-                self.input_main_edge_parameters[syn_receptor][u_type][v_type]['weight'].append(weight)
-                self.input_main_edge_parameters[syn_receptor][u_type][v_type]['delay'].append(delay)
-
                 self.input_main_edge_lists[syn_receptor][u_type][v_type].append(synapse)
-                self.input_main_edge_index_map[(u, v)] = (
-                                                           self.input_main_edge_counts[syn_receptor][u_type][v_type],
-                                                           syn_receptor,
-                                                           )
-                self.input_main_edge_counts[syn_receptor][u_type][v_type] += 1
             else:
                 if u_type not in self.main_edge_lists[syn_receptor]:
                     self.main_edge_lists[syn_receptor] = {u_type: {}}
@@ -503,15 +495,36 @@ class pynn_Backend(Backend):
                     self.main_edge_parameters[syn_receptor][u_type][v_type] = {'weight': [], 'delay': []}
                     self.main_edge_counts[syn_receptor][u_type][v_type] = 0
 
-                self.main_edge_parameters[syn_receptor][u_type][v_type]['weight'].append(weight)
-                self.main_edge_parameters[syn_receptor][u_type][v_type]['delay'].append(delay)
-
                 self.main_edge_lists[syn_receptor][u_type][v_type].append(synapse)
-                self.main_edge_index_map[(u, v)] = (
-                                                     self.main_edge_counts[syn_receptor][u_type][v_type],
-                                                     syn_receptor,
-                                                     )
-                self.main_edge_counts[syn_receptor][u_type][v_type] += 1
+
+        # Create mappings to edge indicies to edges
+        for receptor in self.input_main_edge_lists:
+            for source in self.input_main_edge_lists[receptor]:
+                for target in self.input_main_edge_lists[receptor][source]:
+                    edge_list = self.input_main_edge_lists[receptor][source][target]
+                    edge_list.sort()
+                    for u, v, weight, delay in edge_list:
+                        self.input_main_edge_parameters[receptor][source][target]['weight'].append(weight)
+                        self.input_main_edge_parameters[receptor][source][target]['delay'].append(delay)
+                        self.input_main_edge_index_map[(u, v)] = (
+                                                                   self.input_main_edge_counts[receptor][source][target],
+                                                                   syn_receptor,
+                                                                   )
+                        self.input_main_edge_counts[receptor][source][target] += 1
+        for receptor in self.main_edge_lists:
+            for source in self.main_edge_lists[receptor]:
+                for target in self.main_edge_lists[receptor][source]:
+                    edge_list = self.main_edge_lists[receptor][source][target]
+                    edge_list.sort()
+                    for u, v, weight, delay in edge_list:
+                        self.main_edge_parameters[receptor][source][target]['weight'].append(weight)
+                        self.main_edge_parameters[receptor][source][target]['delay'].append(delay)
+                        self.main_edge_index_map[(u, v)] = (
+                                                                   self.main_edge_counts[receptor][source][target],
+                                                                   syn_receptor,
+                                                                   )
+                        self.main_edge_counts[receptor][source][target] += 1
+
 
         if self.collect_metrics:
             start = timer()
@@ -661,8 +674,6 @@ class pynn_Backend(Backend):
             print(parameters)
             self.print_network_info()
 
-        neurons_changed = False
-        synapses_changed = False
         for brick in parameters:
             if brick != 'compile_args':
                 brick_id = self.fugu_scaffold.brick_to_number[brick]
@@ -673,7 +684,6 @@ class pynn_Backend(Backend):
                         print("Neuron changes: {}".format(neuron_props))
                         print("Synapse changes: {}".format(synapse_props))
                     if neuron_props:
-                        neurons_changed = True
                         for neuron in neuron_props:
                             neuron_type = self.neuron_type_map[neuron]
                             neuron_index = self.neuron_index_map[neuron]
@@ -689,10 +699,10 @@ class pynn_Backend(Backend):
                                     self.parameter_values[neuron_type]['i_offset'][neuron_index] = prop_value
 
                     if synapse_props:
-                        synapses_changed = True
                         for synapse in synapse_props:
                             if type(synapse) is tuple:
-                                pre, post = synapse
+                                pre, post = [self.neuron_index_map[p] for p in synapse]
+                                #pre, post = synapse
                                 is_input = pre in self.input_neurons
                                 pre_type, post_type = [self.neuron_type_map[p] for p in synapse]
                                 if is_input:
@@ -719,28 +729,26 @@ class pynn_Backend(Backend):
                                             #self.ds_graph.edges[edge][prop] = properties[prop]
 
 
-        if neurons_changed:
-            for neuron_type in self.main_populations:
-                self.main_populations[neuron_type].set(**self.parameter_values[neuron_type])
-                self.main_populations[neuron_type].initialize(v=self.initial_potentials[neuron_type])
-            self.set_input_spikes()
+        for neuron_type in self.main_populations:
+            self.main_populations[neuron_type].set(**self.parameter_values[neuron_type])
+            self.main_populations[neuron_type].initialize(v=self.initial_potentials[neuron_type])
+        self.set_input_spikes()
 
-        if synapses_changed:
-            if self.backend != SPINNAKER_BACKEND and self.backend != BRIAN_BACKEND:
-                for receptor in self.input_main_synapses:
-                    for source_type in self.input_main_synapses[receptor]:
-                        for target_type in self.input_main_synapses[receptor][source_type]:
-                            self.input_main_synapses[receptor][source_type][target_type].set(
-                                   **self.input_main_edge_parameters[receptor][source_type][target_type]
-                                   )
-                for receptor in self.main_synapses:
-                    for source_type in self.main_synapses[receptor]:
-                        for target_type in self.main_synapses[receptor][source_type]:
-                            self.main_synapses[receptor][source_type][target_type].set(
-                                   **self.main_edge_parameters[receptor][source_type][target_type]
-                                   )
-            else:
-                raise ValueError("Pynn backend, {}, does not support changing of synapse properties".format(BACKEND_NAMES[self.backend]))
+        if self.backend != SPINNAKER_BACKEND:
+            for receptor in self.input_main_synapses:
+                for source_type in self.input_main_synapses[receptor]:
+                    for target_type in self.input_main_synapses[receptor][source_type]:
+                        self.input_main_synapses[receptor][source_type][target_type].set(
+                               **self.input_main_edge_parameters[receptor][source_type][target_type]
+                               )
+            for receptor in self.main_synapses:
+                for source_type in self.main_synapses[receptor]:
+                    for target_type in self.main_synapses[receptor][source_type]:
+                        self.main_synapses[receptor][source_type][target_type].set(
+                               **self.main_edge_parameters[receptor][source_type][target_type]
+                               )
+        else:
+            raise ValueError("Pynn backend, {}, does not support changing of synapse properties".format(BACKEND_NAMES[self.backend]))
 
         if self.verbose:
             print("After set_parameters")

@@ -165,10 +165,11 @@ class SynapseProperties(Brick):
 
         graph.add_node(
                 self.name + "_main",
-                threshold=0.0,
-                potential=0.1,
-                decay=1.0,
-                index=0,
+                threshold=0.5,
+                potential=1.0,
+                decay=0.0,
+                index=-1,
+                p=1.0,
                 )
 
         output_list = []

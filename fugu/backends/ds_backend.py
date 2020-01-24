@@ -9,7 +9,6 @@ from .backend import Backend, CalculateSpikeTimes
 class ds_Backend(Backend):
     def __init__(self):
         super(Backend, self).__init__()
-        from fugu.simulators.ds import run_simulation
 
         self.scaffold = None
         self.ds_graph = None
@@ -55,6 +54,8 @@ class ds_Backend(Backend):
     def run(self, n_steps=None, return_potentials=False):
         # runs circuit for n_steps then returns data
         # if not None raise error
+        from fugu.simulators.ds import run_simulation
+
         results = run_simulation(self.ds_graph, n_steps, self.injection_values)
         spike_result = pd.DataFrame({'time': [], 'neuron_number': []})
 

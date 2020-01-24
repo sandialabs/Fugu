@@ -49,7 +49,7 @@ class ChangeSynapsePropertyTests(BrickTest):
         params['Test']['weights'] = [1.1, 1.1, 0.9, 2.1]
 
         self.run_parameter_test(
-               [0.5, 0.5, 0.5, 0.5],
+               [0.5, 0.1, 0.3, 0.4],
                params,
                [
                  [],
@@ -86,4 +86,3 @@ class PynnBrianChangeSynapsePropertyTests(ChangeSynapsePropertyTests, unittest.T
     def setUpClass(self):
         self.backend = pynn_Backend()
         self.backend_args['backend'] = 'brian'
-        self.backend_args['verbose'] = True
