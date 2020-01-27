@@ -4,7 +4,7 @@ import math
 import networkx as nx
 
 from .bricks import Brick, input_coding_types
-from .sub_bricks import create_register, connect_register_to_register, connect_neuron_to_register
+from .templates import create_register, connect_register_to_register, connect_neuron_to_register
 
 
 class Graph_Traversal(Brick):

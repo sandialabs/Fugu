@@ -50,15 +50,15 @@ class ChangeSynapseInternalPropertyTests(BrickTest):
 
         self.run_property_test(
                [0.5, 0.1, 0.3, 0.4],
-               props,
-               [
+               [props],
+               [[
                  [],
                  [
                    ('Test_0', 1.0),
                    ('Test_1', 1.0),
                    ('Test_3', 1.0),
                  ],
-               ],
+               ]],
                )
 
 

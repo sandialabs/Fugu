@@ -17,7 +17,8 @@ from .test_utility_bricks import PynnSpinnakerRegisterTests, PynnBrianRegisterTe
 from .test_app_bricks import SnnLISTests, DsLISTests
 from .test_app_bricks import PynnSpinnakerLISTests, PynnBrianLISTests
 from .test_stochastic_bricks import SnnThresholdTests, DsThresholdTests
-#from test_graph_bricks import SnnGraphTests, DsGraphTests, PynnSpinnakerGraphTests
+from .test_graph_bricks import SnnGraphTraversalTests, DsGraphTraversalTests
+from .test_graph_bricks import PynnSpinnakerGraphTraversalTests, PynnBrianGraphTraversalTests
 
 loader = unittest.TestLoader()
 
@@ -31,6 +32,7 @@ snn_suite.addTest(loader.loadTestsFromTestCase(SnnAdderTests))
 snn_suite.addTest(loader.loadTestsFromTestCase(SnnRegisterTests))
 snn_suite.addTest(loader.loadTestsFromTestCase(SnnLISTests))
 snn_suite.addTest(loader.loadTestsFromTestCase(SnnThresholdTests))
+snn_suite.addTest(loader.loadTestsFromTestCase(SnnGraphTraversalTests))
 
 ds_suite = unittest.TestSuite()
 ds_suite.addTest(loader.loadTestsFromTestCase(DsInstantDecayTests))
@@ -42,16 +44,19 @@ ds_suite.addTest(loader.loadTestsFromTestCase(DsAdderTests))
 ds_suite.addTest(loader.loadTestsFromTestCase(DsRegisterTests))
 ds_suite.addTest(loader.loadTestsFromTestCase(DsLISTests))
 ds_suite.addTest(loader.loadTestsFromTestCase(DsThresholdTests))
+ds_suite.addTest(loader.loadTestsFromTestCase(DsGraphTraversalTests))
 
 pynn_spinnaker_suite = unittest.TestSuite()
 pynn_spinnaker_suite.addTest(loader.loadTestsFromTestCase(PynnSpinnakerInstantDecayTests))
 pynn_spinnaker_suite.addTest(loader.loadTestsFromTestCase(PynnSpinnakerVectorInputTests))
 pynn_spinnaker_suite.addTest(loader.loadTestsFromTestCase(PynnSpinnakerChangeNeuronPropertyTests))
-#pynn_spinnaker_suite.addTest(loader.loadTestsFromTestCase(PynnSpinnakerChangeSynapseInternalPropertyTests))
-#pynn_spinnaker_suite.addTest(loader.loadTestsFromTestCase(PynnSpinnakerChangeSynapseExternalPropertyTests))
 pynn_spinnaker_suite.addTest(loader.loadTestsFromTestCase(PynnSpinnakerAdderTests))
 pynn_spinnaker_suite.addTest(loader.loadTestsFromTestCase(PynnSpinnakerRegisterTests))
 pynn_spinnaker_suite.addTest(loader.loadTestsFromTestCase(PynnSpinnakerLISTests))
+pynn_spinnaker_suite.addTest(loader.loadTestsFromTestCase(PynnSpinnakerGraphTraversalTests))
+# NOTE: Spinnaker does not support the functionality for these tests
+#pynn_spinnaker_suite.addTest(loader.loadTestsFromTestCase(PynnSpinnakerChangeSynapseInternalPropertyTests))
+#pynn_spinnaker_suite.addTest(loader.loadTestsFromTestCase(PynnSpinnakerChangeSynapseExternalPropertyTests))
 
 pynn_brian_suite = unittest.TestSuite()
 pynn_brian_suite.addTest(loader.loadTestsFromTestCase(PynnBrianInstantDecayTests))
@@ -62,3 +67,4 @@ pynn_brian_suite.addTest(loader.loadTestsFromTestCase(PynnBrianChangeSynapseExte
 pynn_brian_suite.addTest(loader.loadTestsFromTestCase(PynnBrianAdderTests))
 pynn_brian_suite.addTest(loader.loadTestsFromTestCase(PynnBrianRegisterTests))
 pynn_brian_suite.addTest(loader.loadTestsFromTestCase(PynnBrianLISTests))
+pynn_brian_suite.addTest(loader.loadTestsFromTestCase(PynnBrianGraphTraversalTests))

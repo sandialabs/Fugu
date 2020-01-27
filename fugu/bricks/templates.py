@@ -1,18 +1,19 @@
 """
-Sub-bricks:
-    - A sub-brick is a reoccuring circuit pattern that can be modularized
+Templates:
+    - A template is a reoccuring circuit pattern that can be modularized
         - e.g. registers that store the binary encoding of some value
-    - sub-bricks comprise of two functions:
-        - one that generates the nodes that make up the sub-brick
+    - templates comprise of at least two functions:
+        - one that generates the nodes that make up the template
             - prefixed by "create_"
             - returns list of node names
-        - one that generates the edges between a sub-brick and other elements of the circuit
+        - one that generates the edges between a template and other elements of the circuit
             - prefixed by "connect_"
 
 These are only really useful for people writing bricks.
 """
 
 
+# Template: Static Register
 def create_register(graph, name, thresholds=None, decays=None, potentials=None, register_size=5, tag=None):
     thresholds_is_single_value = False
     if thresholds is None:
@@ -35,6 +36,7 @@ def create_register(graph, name, thresholds=None, decays=None, potentials=None, 
     elif isinstance(potentials, float) or isinstance(potentials, int):
         potentials_is_single_value = True
 
+    # Add template to graph
     nodes = []
     for i in range(register_size):
         slot_name = "{}_{}".format(name, i)
@@ -54,6 +56,7 @@ def create_register(graph, name, thresholds=None, decays=None, potentials=None, 
 
 
 def connect_register_to_register(graph, register1_name, register2_name, weights=None, delays=None, register_size=5):
+    # Connects a register to another register
     weights_is_single_value = False
     if weights is None:
         weights = 1.0
@@ -79,6 +82,7 @@ def connect_register_to_register(graph, register1_name, register2_name, weights=
 
 
 def connect_neuron_to_register(graph, neuron_name, register_name, weights=None, delays=None, register_size=5):
+    # Connects neuron to a register
     weights_is_single_value = False
     if weights is None:
         weights = 1.0
@@ -104,6 +108,9 @@ def connect_neuron_to_register(graph, neuron_name, register_name, weights=None, 
 
 
 def connect_register_to_neuron(graph, register_name, neuron_name, weights=None, delays=None, register_size=5):
+    # Connects a register to a neuron
+    # Example:
+    #   - Binary register to a threshold neuron (weights convert binary value to decimal value)
     weights_is_single_value = False
     if weights is None:
         weights = 1.0

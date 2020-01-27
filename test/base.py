@@ -45,17 +45,14 @@ class BrickTest(ABC):
 
         before_results = self.backend.run(timesteps)
 
-        self.backend.reset()
+        for properties, output in zip(new_properties, expected_outputs):
+            self.backend.reset()
 
-        self.backend.set_properties(new_properties)
+            self.backend.set_properties(properties)
 
-        after_results = self.backend.run(timesteps)
+            after_results = self.backend.run(timesteps)
 
-        self.check_spike_output([before_results, after_results], expected_outputs, scaffold)
+            self.check_spike_output([before_results, after_results], output, scaffold)
 
     def tearDown(self):
         self.backend.cleanup()
-
-    @classmethod
-    def tearDownClass(self):
-        pass

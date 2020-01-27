@@ -182,7 +182,6 @@ class Vector_Input(InputBrick):
           coding='Undefined',
           batchable=True,
           name=None,
-          multi_run_inputs=False,
           ):
         """
         Construtor for this brick.
@@ -192,7 +191,6 @@ class Vector_Input(InputBrick):
             + coding - Coding type to be represented.
             + batchable - True if input should represent static data; currently True is the only supported mode.
             + name - Name of the brick.  If not specified, a default will be used.  Name should be unique.
-            + multi_run_inputs - True if 'spikes' represents inputs for different runs
         """
         super(InputBrick, self).__init__()
         self.vector = np.array(spikes)

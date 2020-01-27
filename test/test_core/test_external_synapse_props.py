@@ -58,16 +58,7 @@ class ChangeSynapseExternalPropertyTests(BrickTest):
         props['ADotOperator'] = {}
         props['ADotOperator']['weights'] = [2.1]
 
-        self.run_property_test(
-               [0.5],
-               props,
-               [
-                 [],
-                 [
-                   ('Thresh', 1.0),
-                 ],
-               ],
-               )
+        self.run_property_test([0.5], [props], [[[], [('Thresh', 1.0)]]])
 
 
 class SnnChangeSynapseExternalPropertyTests(ChangeSynapseExternalPropertyTests, unittest.TestCase):

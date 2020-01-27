@@ -53,7 +53,7 @@ class ChangeNeuronPropertyTests(BrickTest):
         props = {}
         props['Thresh'] = {}
         props['Thresh']['threshold'] = 1.0
-        self.run_property_test([[0, 1, 0, 1], 3.0], props, [[], [('Thresh', 1.0)]])
+        self.run_property_test([[0, 1, 0, 1], 3.0], [props], [[[], [('Thresh', 1.0)]]])
 
 
 class SnnChangeNeuronPropertyTests(ChangeNeuronPropertyTests, unittest.TestCase):
