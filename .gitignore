@@ -7,3 +7,6 @@
 .direnv/
 .envrc
 *.ipynb_checkpoints/
+
+# IDEs
+.idea
