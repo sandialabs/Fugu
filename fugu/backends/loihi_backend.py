@@ -106,35 +106,50 @@ class LoihiBackend(Backend):
         for n1, n2, props in self.fugu_graph.edges.data():
             delay = int(props.get('delay', 1))
             wt = props.get('weight', 1.0)
+            sgn = nx.SYNAPSE_SIGN_MODE.EXCITATORY if wt >= 0.0 else nx.SYNAPSE_SIGN_MODE.INHIBITORY
             wt = self._cvt_weight(wt, floor = -wt_bdry, ceiling = wt_bdry)
             if delay <= 6:
                 conn_prototype = nx.ConnectionPrototype(weight          = wt,
                                                         numWeightBits   = 8,
                                                         compressionMode = 3,
+                                                        signMode        = sgn,
                                                         delay           = delay)
                 fugu_loihi_map[n1].connect(fugu_loihi_map[n2], prototype=conn_prototype)
             else:
+                temp1 = fugu_loihi_map[n1]
                 quot = delay//6
                 rem = delay%6
+                
+#                r = 1 if rem else 2
+                neuron_num = len(fugu_loihi_map)-1
                 for _ in range(quot-1):
-                    conn_prototype = nx.ConnectionPrototype(weight          = wt,
+                    conn_prototype = nx.ConnectionPrototype(weight          = 200,
                                                             numWeightBits   = 8,
                                                             compressionMode = 3,
                                                             delay           = 6)
                     temp_neuron_proto = nx.CompartmentPrototype(vThMant     = 100)
-                    neuron_num = len(fugu_loihi_map)
+                    neuron_num += 1
                     fugu_loihi_map[neuron_num] = self.net.createCompartment(temp_neuron_proto)
-                    fugu_loihi_map[n1].connect(fugu_loihi_map[neuron_num], prototype = conn_prototype)
+                    temp1.connect(fugu_loihi_map[neuron_num], prototype = conn_prototype)
+                    temp1 = fugu_loihi_map[neuron_num]
                 if rem:
-                    conn_prototype = nx.ConnectionPrototype(weight          = wt,
+                    conn_prototype = nx.ConnectionPrototype(weight          = 200,
                                                             numWeightBits   = 8,
                                                             compressionMode = 3,
+                                                            signMode        = sgn,
                                                             delay           = rem)
                     temp_neuron_proto = nx.CompartmentPrototype(vThMant     = 100)
-                    neuron_num = len(fugu_loihi_map)
+                    neuron_num += 1
                     fugu_loihi_map[neuron_num] = self.net.createCompartment(temp_neuron_proto)
                     fugu_loihi_map[n1].connect(fugu_loihi_map[neuron_num], prototype = conn_prototype)
-           
+                    temp1 = fugu_loihi_map[neuron_num]
+                
+                conn_prototype = nx.ConnectionPrototype(weight          = wt,
+                                                        numWeightBits   = 8,
+                                                        compressionMode = 3,
+                                                        signMode        = sgn,
+                                                        delay           = 6)
+                temp1.connect(fugu_loihi_map[n2], prototype=conn_prototype)
             
 
                                                                              
