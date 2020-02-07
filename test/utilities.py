@@ -3,9 +3,6 @@ import random
 from networkx.generators.random_graphs import fast_gnp_random_graph
 
 
-random.seed(3)
-
-
 def AssertValuesAreClose(value1, value2, tolerance=0.0001):
     if abs(value1 - value2) > tolerance:
         raise AssertionError('Values {} and {} are not close'.format(value1, value2))
@@ -17,6 +14,7 @@ def create_graph(size, p, seed):
 
 
 def create_weighted_graph(size, p, seed):
+    random.seed(3)
     G = fast_gnp_random_graph(size, p, seed=seed)
     for (u, v) in G.edges():
         G.edges[u, v]['weight'] = random.randint(1, 10)

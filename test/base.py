@@ -13,6 +13,7 @@ else:
 class BrickTest(ABC):
     backend = None
     backend_args = {}
+    debug = False
 
     @abstractmethod
     def build_scaffold(self, input_values):
@@ -56,3 +57,4 @@ class BrickTest(ABC):
 
     def tearDown(self):
         self.backend.cleanup()
+        self.debug = False
