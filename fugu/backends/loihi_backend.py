@@ -120,7 +120,6 @@ class LoihiBackend(Backend):
                 quot = delay//6
                 rem = delay%6
                 
-#                r = 1 if rem else 2
                 neuron_num = len(fugu_loihi_map)-1
                 for _ in range(quot-1):
                     conn_prototype = nx.ConnectionPrototype(weight          = 200,
