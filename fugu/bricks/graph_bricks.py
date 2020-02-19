@@ -98,8 +98,8 @@ class Graph_Traversal(Brick):
 
         output_node_list = []
 
-        id_base = "ID_{}_{}"
-        parent_base = "ParentID_{}_{}"
+        id_base = "NodeID_{}"
+        parent_base = "ParentID_{}"
         for node in self.target_graph.nodes:
             node_name = self.name + str(node)
             graph.add_node(node_name, index=(node,), threshold=1.0, decay=0.0, potential=0.0, is_vertex=True)
@@ -112,21 +112,21 @@ class Graph_Traversal(Brick):
                 output_node_list.append(node_name)
                 graph.add_edge(node_name, complete_name, weight=1.0, delay=2.0)
 
-            if self.store_parent_info:
+            if self.store_parent_info and not self.store_edge_references:
                 # Create registers
                 binary_id = "".join(["{:0", str(self.register_size), "b}"]).format(node)
                 id_potentials = [1.0 if bit == '1' else 0.0 for bit in binary_id[::-1]]
-                create_register(
-                  graph,
-                  "ID_{}".format(node_name),
-                  thresholds=1.99,
-                  potentials=id_potentials,
-                  register_size=self.register_size,
-                  tag=node_name,
-                  )
+                id_register = create_register(
+                                graph,
+                                id_base.format(node_name),
+                                thresholds=1.99,
+                                potentials=id_potentials,
+                                register_size=self.register_size,
+                                tag=node_name,
+                                )
                 parent_register = create_register(
                                     graph,
-                                    "ParentID_{}".format(node_name),
+                                    parent_base.format(node_name),
                                     thresholds=0.99,
                                     register_size=self.register_size,
                                     tag=node_name,
@@ -134,12 +134,21 @@ class Graph_Traversal(Brick):
 
                 for node in parent_register:
                     output_node_list.append(node)
+                for node in id_register:
+                    output_node_list.append(node)
 
                 # connect neuron to id register
                 connect_neuron_to_register(
                   graph,
                   node_name,
-                  "ID_{}".format(node_name),
+                  id_base.format(node_name),
+                  register_size=self.register_size,
+                  )
+                connect_neuron_to_register(
+                  graph,
+                  node_name,
+                  parent_base.format(node_name),
+                  weights=-1000,
                   register_size=self.register_size,
                   )
 
@@ -153,6 +162,7 @@ class Graph_Traversal(Brick):
                     delay = 2 * self.target_graph.edges[node, neighbor]['weight']
                 else:
                     delay = 2
+
                 neighbor_name = self.name + str(neighbor)
                 if self.store_edge_references:
                     reference_name = "{}-{}-{}".format(self.name, node, neighbor)
@@ -181,14 +191,14 @@ class Graph_Traversal(Brick):
                         graph.add_edge(node_name, neighbor_name, weight=-1000, delay=delay)
                     else:
                         graph.add_edge(node_name, neighbor_name, weight=1.1, delay=delay)
-                if self.store_parent_info:
-                    connect_register_to_register(
-                      graph,
-                      "ID_{}".format(node_name),
-                      "ParentID_{}".format(neighbor_name),
-                      delays=delay - 1,
-                      register_size=self.register_size,
-                      )
+                    if self.store_parent_info:
+                        connect_register_to_register(
+                          graph,
+                          id_base.format(node_name),
+                          parent_base.format(neighbor_name),
+                          delays=delay - 1,
+                          register_size=self.register_size,
+                          )
 
         for input_list in input_lists:
             for input_neuron in input_list:
