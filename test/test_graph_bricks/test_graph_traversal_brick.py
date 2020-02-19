@@ -161,7 +161,6 @@ class GraphTraversalBrickTests(BrickTest):
         spikes[search_key] = 1
         return spikes
 
-    @unittest.skip("debugging")
     def test_bfs_random_gnp_level(self):
         graph = create_graph(20, 0.3, 3)
         self.basic_test((graph, 1, False, False), "")
@@ -174,7 +173,6 @@ class GraphTraversalBrickTests(BrickTest):
         graph = create_graph(20, 0.3, 3)
         self.basic_test((graph, 1, True, False), "")
 
-    @unittest.skip("debugging")
     def test_bfs_multi_run_levels(self):
         graph = create_graph(20, 0.3, 3)
         properties = []
@@ -199,24 +197,18 @@ class GraphTraversalBrickTests(BrickTest):
             properties.append({'Input': {'spike_vector': self.convert_input((graph, key))}})
         self.run_property_test((graph, 1, True, False), properties, ["" for key in source_keys])
 
-    @unittest.skip("debugging")
     def test_sssp_random_gnp_distances(self):
         graph = create_weighted_graph(20, 0.3, 3)
         self.basic_test((graph, 1, False, False), "")
 
     def test_sssp_random_gnp_edge_references(self):
-        print("sssp edge ref")
-        self.debug = True
         graph = create_weighted_graph(20, 0.3, 3)
         self.basic_test((graph, 1, True, True), "")
 
     def test_sssp_random_gnp_edge_registers(self):
-        print("sssp edge reg")
-        self.debug = True
         graph = create_weighted_graph(20, 0.3, 3)
         self.basic_test((graph, 1, True, False), "")
 
-    @unittest.skip("debugging")
     def test_sssp_multi_run_distances(self):
         graph = create_weighted_graph(20, 0.3, 3)
         properties = []
@@ -241,7 +233,6 @@ class GraphTraversalBrickTests(BrickTest):
             properties.append({'Input': {'spike_vector': self.convert_input((graph, key))}})
         self.run_property_test((graph, 1, True, False), properties, ["" for key in source_keys])
 
-    @unittest.skip("debugging")
     def test_sssp_race_condition(self):
         graph = nx.DiGraph()
         graph.add_edge(0, 1, weight=1)
