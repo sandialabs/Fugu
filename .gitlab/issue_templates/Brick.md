@@ -42,4 +42,4 @@
 
 
 
-/label ~"brick proposal"
+/label ~"Brick"
