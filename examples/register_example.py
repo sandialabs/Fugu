@@ -5,7 +5,7 @@ print("---Importing modules---")
 print("---Importing fugu---")
 import fugu
 print("---Importing Scaffold---")
-from fugu import Scaffold
+from fugu.scaffold import Scaffold
 print("---Importing Bricks---")
 from fugu.bricks import Vector_Input, Register
 
@@ -30,11 +30,12 @@ for spike in spikes:
     inputs[1][spike] = 1
 
 scaffold.add_brick(Vector_Input(np.array(inputs), coding='Raster', name='input', time_dimension = True), 'input' )
-scaffold.add_brick(Register(5, name='register1'), output=True)
+scaffold.add_brick(Register(5, name='register1'), input_nodes=(0,0), output=True)
+scaffold.add_brick(Register(5, name='register2'), input_nodes=(0,0), output=True)
 
 scaffold.lay_bricks()
 
-#scaffold.summary(verbose=2)
+scaffold.summary(verbose=2)
 
 print("---Running evaluation---")
 result = scaffold.evaluate(backend=backend, max_runtime=MAX_RUNTIME, backend_args=pynn_args)

@@ -797,8 +797,8 @@ class Register(Brick):
         for input_name in input_names[1:]:
             graph.add_edge(input_name, add_name, weight=1.0, delay=self.max_size)
 
-        register_name_base = "slot_{}"
-        output_name_base = "output_{}"
+        register_name_base = "{}_slot_{{}}".format(self.name)
+        output_name_base = "{}_output_{{}}".format(self.name)
         outputs = []
 
         # determine initial states
@@ -816,7 +816,7 @@ class Register(Brick):
             outputs.append(output_name)
 
             graph.add_node(register_name, threshold=1.99, decay=0.0, potential=bit_string[i])
-            graph.add_node(output_name, threshold=1.99, decay=1.0, potential=0.0)
+            graph.add_node(output_name, threshold=1.99, decay=1.0, potential=0.0, bit_position=i)
 
             graph.add_edge(register_name, output_name, weight=1.0, delay=1.0)
             graph.add_edge(recall_name, register_name, weight=1.0, delay=1.0)
@@ -833,6 +833,278 @@ class Register(Brick):
 
         # Remember, bricks can have more than one output, so we need a list of list of output neurons
         output_lists = [outputs]
+
+        return (
+                 graph,
+                 self.metadata,
+                 [{'complete': complete_node_list[0], 'begin': begin_node_name}],
+                 output_lists,
+                 self.output_codings,
+                 )
+
+
+class Max(Brick):
+    '''
+    Brick that calculates the maximum value of a collection of values stored as binary registers.
+    '''
+
+    def __init__(self, name=None, output_coding='Undefined'):
+        super(Brick, self).__init__()
+        self.is_built = False
+        self.name = name
+        self.supported_codings = input_coding_types
+
+        self.output_codings = [output_coding]
+        self.metadata = {'D': None}
+
+    def build(self, graph, metadata, control_nodes, input_lists, input_codings):
+        """
+        Build Register brick.
+
+        Arguments:
+            + graph - networkx graph to define connections of the computational graph
+            + metadata - dictionary to define the shapes and parameters of the brick
+            + control_nodes - dictionary of lists of auxillary networkx nodes.
+                Expected keys:
+                    'complete' - A list of neurons that fire when the brick is done
+            + input_lists - list of nodes that will contain input
+            + input_coding - list of input coding formats.  All coding types supported
+
+        Returns:
+            + graph of a computational elements and connections
+            + dictionary of output parameters (shape, coding, layers, depth, etc)
+            + dictionary of control nodes ('complete')
+            + list of output
+            + list of coding formats of output
+        """
+        for input_coding in input_codings:
+            if input_coding not in self.supported_codings:
+                raise ValueError(
+                        "Unsupported Input Coding. Found: {}. Allowed: {}".format(
+                                                                             input_coding,
+                                                                             self.supported_codings,
+                                                                             )
+                        )
+
+        begin_node_name = self.name + '_begin'
+        graph.add_node(begin_node_name, threshold=0.1, decay=0.0, potential=0.0)
+
+        complete_name = self.name + '_complete'
+        graph.add_node(complete_name, threshold=0.1, decay=0.0, potential=0.0)
+        complete_node_list = [complete_name]
+
+        max_size = 0
+        for register in input_lists:
+            register_size = len(register)
+            if register_size > max_size:
+                max_size = register_size
+            for bit in register:
+                graph.add_edge(bit, begin_node_name, weight=1.0, delay=1.0)
+
+        max_time = 3 + 4 * max_size
+        graph.add_edge(begin_node_name, complete_name, weight=1.0, delay=max_time)
+
+        m_base = "M_{}"
+        copy_base = "c_{}_{}"
+        or_base = "OR_{}"
+        valid_base = "V_{}_{}"
+        active_base = "a_{}_{}"
+        intercept_base = "I_{}_{}"
+
+        m_names = []
+
+        for j in range(max_size):
+            # M_j
+            graph.add_node(
+                    m_base.format(j),
+                    threshold=0.5,
+                    decay=0.0,
+                    potential=0.0,
+                    )
+            m_names.append(m_base.format(j))
+
+            # OR_j
+            graph.add_node(
+                    or_base.format(j),
+                    threshold=0.5,
+                    decay=0.0,
+                    potential=0.0,
+                    )
+
+        for i, register_bits in enumerate(input_lists):
+            intercept_index = max_size - 1
+            # Setup Layer
+
+            # a_i_I
+            graph.add_node(
+                    active_base.format(i, 'I'),
+                    threshold=0.5,
+                    decay=0.0,
+                    potential=0.0,
+                    )
+
+            for bit in register_bits:
+                graph.add_edge(
+                        bit,
+                        active_base.format(i, 'I'),
+                        weight=1.0,
+                        delay=2.0,
+                        )
+
+            # First Layer
+            # a_i_L
+            graph.add_node(
+                    active_base.format(i, intercept_index),
+                    threshold=0.5,
+                    decay=0.0,
+                    potential=0.0,
+                    )
+            # I_i_L
+            graph.add_node(
+                    intercept_base.format(i, intercept_index),
+                    threshold=0.5,
+                    decay=0.0,
+                    potential=0.0,
+                    )
+
+            graph.add_edge(
+                    active_base.format(i, 'I'),
+                    active_base.format(i, intercept_index),
+                    weight=1.0,
+                    delay=4.0,
+                    )
+            graph.add_edge(
+                    register_bits[-1],
+                    intercept_base.format(i, intercept_index),
+                    weight=-1.0,
+                    delay=1.0,
+                    )
+            graph.add_edge(
+                    register_bits[intercept_index],
+                    or_base.format(intercept_index),
+                    weight=1.0,
+                    delay=1.0,
+                    )
+            graph.add_edge(
+                    or_base.format(intercept_index),
+                    intercept_base.format(i, intercept_index),
+                    weight=1.0,
+                    delay=1.0,
+                    )
+            graph.add_edge(
+                    intercept_base.format(i, intercept_index),
+                    active_base.format(i, intercept_index),
+                    weight=-1.0,
+                    delay=1.0
+                    )
+
+            # Middle Layers
+            for j in range(2, max_size + 1):
+                intercept_index = max_size - j
+
+                prev_active_name = active_base.format(i, intercept_index + 1)
+                curr_active_name = active_base.format(i, intercept_index)
+                intercept_name = intercept_base.format(i, intercept_index)
+                valid_name = valid_base.format(i, intercept_index)
+
+                # a_i_j
+                graph.add_node(
+                        curr_active_name,
+                        threshold=0.5,
+                        decay=0.0,
+                        potential=0.0,
+                        )
+                # I_i_j
+                graph.add_node(
+                        intercept_name,
+                        threshold=0.5,
+                        decay=0.0,
+                        potential=0.0,
+                        )
+                # V_i_j
+                graph.add_node(
+                        valid_name,
+                        threshold=1.9,
+                        decay=0.0,
+                        potential=0.0,
+                        )
+
+                graph.add_edge(
+                        prev_active_name,
+                        curr_active_name,
+                        weight=1.0,
+                        delay=4.0,
+                        )
+                graph.add_edge(
+                        prev_active_name,
+                        valid_name,
+                        weight=1.0,
+                        delay=1.0,
+                        )
+                graph.add_edge(
+                        register_bits[intercept_index],
+                        valid_name,
+                        weight=1.0,
+                        delay=1.0,
+                        )
+                graph.add_edge(
+                        valid_name,
+                        intercept_name,
+                        weight=-1.0,
+                        delay=1.0,
+                        )
+                graph.add_edge(
+                        valid_name,
+                        or_base.format(intercept_index),
+                        weight=1.0,
+                        delay=1.0,
+                        )
+                graph.add_edge(
+                        or_base.format(intercept_index),
+                        intercept_name,
+                        weight=1.0,
+                        delay=1.0,
+                        )
+                graph.add_edge(
+                        intercept_name,
+                        curr_active_name,
+                        weight=-1.0,
+                        delay=1.0,
+                        )
+
+            # Copy and Output Layer
+            for j in range(max_size):
+                copy_name = copy_base.format(i, j)
+                # c_i_j
+                graph.add_node(
+                        copy_name,
+                        threshold=1.9,
+                        decay=0.0,
+                        potential=0.0,
+                        )
+
+                graph.add_edge(
+                        curr_active_name,
+                        copy_name,
+                        weight=1.0,
+                        delay=1.0,
+                        )
+                graph.add_edge(
+                        register_bits[j],
+                        copy_name,
+                        weight=1.0,
+                        delay=1.0,
+                        )
+                graph.add_edge(
+                        copy_name,
+                        m_base.format(j),
+                        weight=1.0,
+                        delay=1.0,
+                        )
+
+        output_lists = [m_names]
+
+        self.is_built = True
 
         return (
                  graph,

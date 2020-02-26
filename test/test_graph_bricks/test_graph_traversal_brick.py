@@ -169,6 +169,7 @@ class GraphTraversalBrickTests(BrickTest):
         graph = create_graph(20, 0.3, 3)
         self.basic_test((graph, 1, True, True), "")
 
+    @unittest.skip("Skipped until compound bricks, max brick, and register bricks are added/updated")
     def test_bfs_random_gnp_edge_registers(self):
         graph = create_graph(20, 0.3, 3)
         self.basic_test((graph, 1, True, False), "")
@@ -189,6 +190,7 @@ class GraphTraversalBrickTests(BrickTest):
             properties.append({'Input': {'spike_vector': self.convert_input((graph, key))}})
         self.run_property_test((graph, 1, True, True), properties, ["" for key in source_keys])
 
+    @unittest.skip("Skipped until compound bricks, max brick, and register bricks are added/updated")
     def test_bfs_multi_run_edge_registers(self):
         graph = create_graph(20, 0.3, 3)
         properties = []
@@ -205,6 +207,7 @@ class GraphTraversalBrickTests(BrickTest):
         graph = create_weighted_graph(20, 0.3, 3)
         self.basic_test((graph, 1, True, True), "")
 
+    @unittest.skip("Skipped until compound bricks, max brick, and register bricks are added/updated")
     def test_sssp_random_gnp_edge_registers(self):
         graph = create_weighted_graph(20, 0.3, 3)
         self.basic_test((graph, 1, True, False), "")
@@ -225,6 +228,7 @@ class GraphTraversalBrickTests(BrickTest):
             properties.append({'Input': {'spike_vector': self.convert_input((graph, key))}})
         self.run_property_test((graph, 1, True, True), properties, ["" for key in source_keys])
 
+    @unittest.skip("Skipped until compound bricks, max brick, and register bricks are added/updated")
     def test_sssp_multi_run_edge_registers(self):
         graph = create_weighted_graph(20, 0.3, 3)
         properties = []
