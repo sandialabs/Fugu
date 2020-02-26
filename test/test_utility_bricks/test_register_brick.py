@@ -26,6 +26,9 @@ class RegisterBrickTests(BrickTest):
         scaffold.add_brick(register_brick, input_nodes=(0, 0), output=True)
 
         scaffold.lay_bricks()
+
+        if self.debug:
+            scaffold.summary(verbose=2)
         return scaffold
 
     def calculate_max_timesteps(self, input_values):
@@ -38,7 +41,7 @@ class RegisterBrickTests(BrickTest):
         for row in spikes.sort_values('time').itertuples():
             neuron_name = graph_names[int(row.neuron_number)][0]
             if 'output' in neuron_name:
-                index = int(neuron_name.split('_')[1])
+                index = int(neuron_name.split('_')[-1])
                 value += (2 ** index)
 
         self.assertEqual(expected, value)

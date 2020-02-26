@@ -29,6 +29,8 @@ class BrickTest(ABC):
         pass
 
     def run_scaffold(self, scaffold, timesteps):
+        if self.debug:
+            self.backend_args['record'] = 'all'
         self.backend.compile(scaffold, self.backend_args)
         return self.backend.run(timesteps)
 
