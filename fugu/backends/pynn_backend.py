@@ -539,7 +539,7 @@ class pynn_Backend(Backend):
             print("Finished compiling")
             self.print_network_info()
 
-    def run(self, n_steps=10, return_potential=False):
+    def run(self, n_steps=10, return_potentials=False):
         # Runs circuit for n_steps then returns data
 
         max_runtime = n_steps * self.defaults['min_delay']

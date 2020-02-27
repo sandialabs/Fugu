@@ -887,10 +887,20 @@ class Max(Brick):
                         )
 
         begin_node_name = self.name + '_begin'
-        graph.add_node(begin_node_name, threshold=0.1, decay=0.0, potential=0.0)
+        graph.add_node(
+                begin_node_name,
+                threshold=0.1,
+                decay=0.0,
+                potential=0.0,
+                )
 
         complete_name = self.name + '_complete'
-        graph.add_node(complete_name, threshold=0.1, decay=0.0, potential=0.0)
+        graph.add_node(
+                complete_name,
+                threshold=0.1,
+                decay=0.0,
+                potential=0.0,
+                )
         complete_node_list = [complete_name]
 
         max_size = 0
@@ -899,10 +909,20 @@ class Max(Brick):
             if register_size > max_size:
                 max_size = register_size
             for bit in register:
-                graph.add_edge(bit, begin_node_name, weight=1.0, delay=1.0)
+                graph.add_edge(
+                        bit,
+                        begin_node_name,
+                        weight=1.0,
+                        delay=1.0,
+                        )
 
         max_time = 3 + 4 * max_size
-        graph.add_edge(begin_node_name, complete_name, weight=1.0, delay=max_time)
+        graph.add_edge(
+                begin_node_name,
+                complete_name,
+                weight=1.0,
+                delay=max_time,
+                )
 
         m_base = "M_{}"
         copy_base = "c_{}_{}"
@@ -935,47 +955,50 @@ class Max(Brick):
             intercept_index = max_size - 1
             # Setup Layer
 
+            a_i_I = active_base.format(i, 'I')
             # a_i_I
             graph.add_node(
-                    active_base.format(i, 'I'),
+                    a_i_I,
                     threshold=0.5,
-                    decay=0.0,
+                    decay=1.0,
                     potential=0.0,
                     )
 
             for bit in register_bits:
                 graph.add_edge(
                         bit,
-                        active_base.format(i, 'I'),
+                        a_i_I,
                         weight=1.0,
-                        delay=2.0,
+                        delay=1.0,
                         )
 
             # First Layer
             # a_i_L
+            a_i_L = active_base.format(i, intercept_index)
             graph.add_node(
-                    active_base.format(i, intercept_index),
+                    a_i_L,
                     threshold=0.5,
-                    decay=0.0,
+                    decay=1.0,
                     potential=0.0,
                     )
             # I_i_L
+            I_i_L = intercept_base.format(i, intercept_index)
             graph.add_node(
-                    intercept_base.format(i, intercept_index),
+                    I_i_L,
                     threshold=0.5,
                     decay=0.0,
                     potential=0.0,
                     )
 
             graph.add_edge(
-                    active_base.format(i, 'I'),
-                    active_base.format(i, intercept_index),
+                    a_i_I,
+                    a_i_L,
                     weight=1.0,
-                    delay=4.0,
+                    delay=2.0,
                     )
             graph.add_edge(
-                    register_bits[-1],
-                    intercept_base.format(i, intercept_index),
+                    register_bits[intercept_index],
+                    I_i_L,
                     weight=-1.0,
                     delay=1.0,
                     )
@@ -987,13 +1010,13 @@ class Max(Brick):
                     )
             graph.add_edge(
                     or_base.format(intercept_index),
-                    intercept_base.format(i, intercept_index),
+                    I_i_L,
                     weight=1.0,
                     delay=1.0,
                     )
             graph.add_edge(
-                    intercept_base.format(i, intercept_index),
-                    active_base.format(i, intercept_index),
+                    I_i_L,
+                    a_i_L,
                     weight=-1.0,
                     delay=1.0
                     )
@@ -1011,7 +1034,7 @@ class Max(Brick):
                 graph.add_node(
                         curr_active_name,
                         threshold=0.5,
-                        decay=0.0,
+                        decay=1.0,
                         potential=0.0,
                         )
                 # I_i_j
@@ -1025,7 +1048,7 @@ class Max(Brick):
                 graph.add_node(
                         valid_name,
                         threshold=1.9,
-                        decay=0.0,
+                        decay=1.0,
                         potential=0.0,
                         )
 
@@ -1045,7 +1068,7 @@ class Max(Brick):
                         register_bits[intercept_index],
                         valid_name,
                         weight=1.0,
-                        delay=1.0,
+                        delay=4 * (j - 1),
                         )
                 graph.add_edge(
                         valid_name,
@@ -1079,7 +1102,7 @@ class Max(Brick):
                 graph.add_node(
                         copy_name,
                         threshold=1.9,
-                        decay=0.0,
+                        decay=1.0,
                         potential=0.0,
                         )
 
@@ -1093,7 +1116,7 @@ class Max(Brick):
                         register_bits[j],
                         copy_name,
                         weight=1.0,
-                        delay=1.0,
+                        delay=4 * (max_size),
                         )
                 graph.add_edge(
                         copy_name,

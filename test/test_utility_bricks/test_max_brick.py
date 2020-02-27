@@ -30,7 +30,7 @@ class MaxBrickTests(BrickTest):
         return scaffold
 
     def calculate_max_timesteps(self, input_values):
-        return (2 ** (5 + 2))
+        return 30
 
     def check_spike_output(self, spikes, expected, scaffold):
         value = 0
