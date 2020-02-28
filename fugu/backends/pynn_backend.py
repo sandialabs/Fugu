@@ -571,17 +571,18 @@ class pynn_Backend(Backend):
                     neuron_type = self.neuron_type_map[neuron]
                     data = main_data[neuron_type].segments[-1].analogsignals
                     pynn_index = self.neuron_index_map[neuron]
-                    voltage = data[0][pynn_index]
                     if neuron_type not in main_voltage:
                         main_voltage[neuron_type] = {}
-                    main_voltage[neuron_type][pynn_index] = voltage
-                    potentials = potentials.append(
-                                              {
-                                                'neuron_number': pynn_index,
-                                                'potential': voltage,
-                                                },
-                                              ignore_index=True,
-                                              )
+                    if pynn_index < len(data[0]):
+                        voltage = data[0][pynn_index]
+                        main_voltage[neuron_type][pynn_index] = voltage
+                        potentials = potentials.append(
+                                                  {
+                                                    'neuron_number': pynn_index,
+                                                    'potential': voltage,
+                                                    },
+                                                  ignore_index=True,
+                                                  )
 
         spikes = {}
         for neuron in self.main_neurons:

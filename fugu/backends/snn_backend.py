@@ -94,6 +94,9 @@ class snn_Backend(Backend):
         '''
         self.set_input_spikes()
 
+        if self.debug_mode:
+            self.nn.list_neurons()
+
     def compile(self, scaffold, compile_args={}):
         # creates neuron populations and synapses
         self.fugu_circuit = scaffold.circuit
