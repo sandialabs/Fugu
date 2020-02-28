@@ -99,6 +99,7 @@ class snn_Backend(Backend):
         self.fugu_circuit = scaffold.circuit
         self.fugu_graph = scaffold.graph
         self.brick_to_number = scaffold.brick_to_number
+        self.name_to_tag = scaffold.name_to_tag
         if 'record' in compile_args:
             self.record = compile_args['record']
         else:
@@ -170,7 +171,8 @@ class snn_Backend(Backend):
         # properties = dictionary of properties for bricks
         for brick in properties:
             if brick != 'compile_args':
-                brick_id = self.brick_to_number[brick]
+                brick_tag = self.name_to_tag[brick]
+                brick_id = self.brick_to_number[brick_tag]
                 changes = self.fugu_circuit.nodes[brick_id]['brick'].set_properties(properties[brick])
                 if changes:
                     neuron_props, synapse_props = changes

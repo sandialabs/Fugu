@@ -3,7 +3,7 @@
 import math
 import networkx as nx
 
-from .bricks import Brick, input_coding_types
+from .bricks import Brick, input_coding_types, generate_brick_tag
 from .templates import create_register, connect_register_to_register, connect_neuron_to_register
 
 
@@ -32,7 +32,8 @@ class Graph_Traversal(Brick):
                 If not specified, a default will be used. Name should be unique.
             + output_coding - Output coding type, default is 'temporal-L'
         """
-        super(Brick, self).__init__()
+        super(Graph_Traversal, self).__init__()
+        self.brick_tag = generate_brick_tag("Graph_Traversal")
         self.is_built = False
         self.name = name
         self.supported_codings = input_coding_types
@@ -240,7 +241,8 @@ class Flow_Augmenting_Path(Brick):
                 If not specified, a default will be used. Name should be unique.
             + output_coding - Output coding type, default is 'temporal-L'
         """
-        super(Brick, self).__init__()
+        super(Flow_Augmenting_Path, self).__init__()
+        self.brick_tag = generate_brick_tag("Flow_Augmenting_Path")
         self.is_built = False
         self.name = name
         self.supported_codings = input_coding_types

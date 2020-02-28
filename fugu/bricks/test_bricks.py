@@ -3,7 +3,7 @@
 """
 These bricks are used to test features/capabilities of fugu backends.
 """
-from .bricks import Brick, input_coding_types
+from .bricks import Brick, input_coding_types, generate_brick_tag
 
 
 class InstantDecay(Brick):
@@ -17,7 +17,8 @@ class InstantDecay(Brick):
         Arguments:
             + name - Name of the brick.  If not specified, a default will be used.  Name should be unique.
         '''
-        super(Brick, self).__init__()
+        super(InstantDecay, self).__init__()
+        self.brick_tag = generate_brick_tag("InstantDecay")
         self.is_built = False
         self.metadata = {'D': 1}
         self.name = name
@@ -103,7 +104,8 @@ class SynapseProperties(Brick):
         Arguments:
             + name - Name of the brick.  If not specified, a default will be used.  Name should be unique.
         '''
-        super(Brick, self).__init__()
+        super(SynapseProperties, self).__init__()
+        self.brick_tag = generate_brick_tag("SynapseProperties")
         self.is_built = False
         self.metadata = {'D': 1}
         self.name = name

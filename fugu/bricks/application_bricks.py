@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-from .bricks import Brick, input_coding_types
+from .bricks import Brick, input_coding_types, generate_brick_tag
 
 
 class LIS(Brick):
@@ -16,7 +16,8 @@ class LIS(Brick):
             + name - Name of the brick.  If not specified, a default will be used.  Name should be unique.
             + output_coding - Output coding type, default is 'temporal-L'
         '''
-        super(Brick, self).__init__()
+        super(LIS, self).__init__()
+        self.brick_tag = generate_brick_tag("LIS")
         self.is_built = False
         self.name = name
         self.supported_codings = input_coding_types

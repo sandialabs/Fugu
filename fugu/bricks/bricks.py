@@ -38,16 +38,22 @@ input_coding_types = [
                        'Undefined',
                        ]
 
+def generate_brick_tag(brick_name):
+    return "{}{}".format(brick_name, Brick.brick_id)
 
 class Brick(ABC):
     """
     Abstract Base Class definition of a Brick class
     """
 
+    brick_id = -1
+
     def __init__(self):
+        self.brick_tag = generate_brick_tag("Brick")
         self.name = "Empty Brick"
         self.is_built = False
         self.supported_codings = []
+        Brick.brick_id += 1
 
     @abstractmethod
     def build(self, graph, metadata, control_nodes, input_lists, input_codings):

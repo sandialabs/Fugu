@@ -5,7 +5,7 @@ Created on Wed Jun 19 14:46:55 2019
 
 @author: smusuva
 """
-from .bricks import Brick, input_coding_types
+from .bricks import Brick, input_coding_types, generate_brick_tag
 
 import numpy as np
 
@@ -43,6 +43,8 @@ class InputBrick(Brick):
     """
 
     def __init__(self):
+        super(InputBrick, self).__init__()
+        self.brick_tag = generate_brick_tag("InputBrick")
         self.streaming = False
 
     @abstractmethod
@@ -192,7 +194,8 @@ class Vector_Input(InputBrick):
             + batchable - True if input should represent static data; currently True is the only supported mode.
             + name - Name of the brick.  If not specified, a default will be used.  Name should be unique.
         """
-        super(InputBrick, self).__init__()
+        super(Vector_Input, self).__init__()
+        self.brick_tag = generate_brick_tag("Vector_Input")
         self.vector = np.array(spikes)
         self.coding = coding
         self.time_dimension = time_dimension

@@ -21,6 +21,8 @@ class Scaffold:
         self.is_built = False
         self.metrics = None
         self.brick_to_number = {}
+        self.tag_to_name = {}
+        self.name_to_tag = {}
 
     def add_brick(self, brick_function, input_nodes=[], metadata=None, name=None, output=False):
         """
@@ -50,26 +52,31 @@ class Scaffold:
             self.count[brick_type] = self.count[brick_type]+1
         elif name in self.circuit.nodes:
             raise ValueError("Node name already used.")
-        if name in [self.circuit.nodes[node]['name'] for node in self.circuit.nodes]:
+        if name in self.name_to_tag:
             raise ValueError("Node name already used.")
 
         if brick_function.name is None:
             brick_function.name = name
 
+        tag = brick_function.brick_tag
+        self.tag_to_name[tag] = name
+        self.name_to_tag[name] = tag
+
         node_number = self.circuit.number_of_nodes()
         self.circuit.add_node(
                        node_number,
+                       tag=tag,
                        name=name,
                        brick=brick_function,
                        )  # ,metadata=metadata)
-        self.brick_to_number[name] = node_number
+        self.brick_to_number[tag] = node_number
 
         # Make sure we're working with a list of inputs
         if type(input_nodes) is not list:
             input_nodes = [input_nodes]
 
         # Make sure our inputs are integer formatted
-        node_names = {self.circuit.nodes[node]['name']: node for node in self.circuit.nodes}
+        node_tags = {self.circuit.nodes[node]['tag']: node for node in self.circuit.nodes}
 
         processed_input_nodes = []
         for node in input_nodes:
@@ -79,10 +86,10 @@ class Scaffold:
                 processed_node = -2
 
             if type(processed_node) is str:
-                processed_node = node_names[processed_node]
+                processed_node = node_tags[processed_node]
 
             if type(processed_node) is tuple and type(processed_node[0]) is str:
-                processed_node = (node_names[processed_node[0]], processed_node[1])
+                processed_node = (node_tags[processed_node[0]], processed_node[1])
 
             # Replace -1 with last node
             if processed_node == -1:
@@ -224,10 +231,10 @@ class Scaffold:
             b = b and self.circuit.nodes[neighbor]['brick'].is_built
         return b
 
-    def _assign_brick_names(self, built_graph, name, field='brick'):
+    def _assign_brick_tags(self, built_graph, tag, field='brick'):
         new_nodes = [new_node for new_node, node_value in built_graph.nodes(data=True) if field not in node_value]
         for new_node in new_nodes:
-            built_graph.nodes[new_node]['brick'] = name
+            built_graph.nodes[new_node]['brick'] = tag
         return built_graph
 
     def lay_bricks(self, verbose=0):
@@ -252,7 +259,7 @@ class Scaffold:
              control_nodes,
              output_lists,
              output_codings) = self.circuit.nodes[node]['brick'].build(built_graph, None, None, None, None)
-            self._assign_brick_names(built_graph,  self.circuit.nodes[node]['name'])
+            self._assign_brick_tags(built_graph,  self.circuit.nodes[node]['tag'])
             self.circuit.nodes[node]['output_lists'] = output_lists
             self.circuit.nodes[node]['output_codings'] = output_codings
             self.circuit.nodes[node]['metadata'] = metadata
@@ -297,7 +304,7 @@ class Scaffold:
                                                                        input_lists,
                                                                        input_codings,
                                                                        )
-                self._assign_brick_names(built_graph,  self.circuit.nodes[node]['name'])
+                self._assign_brick_tags(built_graph,  self.circuit.nodes[node]['tag'])
                 self.circuit.nodes[node]['metadata'] = metadata
                 self.circuit.nodes[node]['output_codings'] = output_codings
                 self.circuit.nodes[node]['output_lists'] = output_lists
@@ -320,7 +327,8 @@ class Scaffold:
         print("\r\n")
         for i, node in enumerate(self.circuit.nodes):
             print("Brick No.: {}".format(i))
-            print("Brick Name: {}".format(self.circuit.nodes[node]['name']))
+            print("Brick Tag: {}".format(self.circuit.nodes[node]['tag']))
+            print("Brick Name: {}".format(self.tag_to_name[self.circuit.nodes[node]['tag']]))
             print(self.circuit.nodes[node])
             print("Brick is built: {}".format(self.circuit.nodes[node]['brick'].is_built))
             print("\r\n")

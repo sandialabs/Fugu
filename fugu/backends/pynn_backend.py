@@ -439,7 +439,7 @@ class pynn_Backend(Backend):
         for brick in self.fugu_scaffold.circuit.nodes:
             brick = self.fugu_scaffold.circuit.nodes[brick]
             is_input = brick['layer'] == 'input' if 'layer' in brick else False
-            for neuron in self.brick_neurons[brick['name']]:
+            for neuron in self.brick_neurons[brick['tag']]:
                 if is_input:
                     input_type = self.input_neuron_type_names[0]
                     self.neuron_type_map[neuron] = input_type
@@ -666,7 +666,8 @@ class pynn_Backend(Backend):
 
         for brick in properties:
             if brick != 'compile_args':
-                brick_id = self.fugu_scaffold.brick_to_number[brick]
+                brick_tag = self.fugu_scaffold.name_to_tag[brick]
+                brick_id = self.fugu_scaffold.brick_to_number[brick_tag]
                 changes = self.fugu_scaffold.circuit.nodes[brick_id]['brick'].set_properties(properties[brick])
                 if changes:
                     neuron_props, synapse_props = changes

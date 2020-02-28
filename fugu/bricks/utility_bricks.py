@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-from .bricks import Brick, input_coding_types
+from .bricks import Brick, input_coding_types, generate_brick_tag
 
 
 class Dot(Brick):
@@ -15,7 +15,8 @@ class Dot(Brick):
             + weights - Vector against which the input is dotted.
             + name - Name of the brick.  If not specified, a default will be used.  Name should be unique.
         '''
-        super(Brick, self).__init__()
+        super(Dot, self).__init__()
+        self.brick_tag = generate_brick_tag("Dot")
         self.is_built = False
         self.metadata = {'D': 1}
         self.name = name
@@ -114,7 +115,8 @@ class Copy(Brick):
         Arguments:
             + name - Name of the brick.  If not specified, a default will be used.  Name should be unique.
         '''
-        super(Brick, self).__init__()
+        super(Copy, self).__init__()
+        self.brick_tag = generate_brick_tag("Copy")
         self.is_built = False
         self.metadata = {'D': 1}
         self.name = name
@@ -202,7 +204,8 @@ class Concatenate(Brick):
         + name - Name of the brick.  If not specified, a default will be used.  Name should be unique.
     '''
     def __init__(self, name=None, coding=None):
-        super(Brick, self).__init__()
+        super(Concatenate, self).__init__()
+        self.brick_tag = generate_brick_tag("Concatenate")
         self.is_built = False
         self.metadata = {'D': 0}
         self.name = name
@@ -287,7 +290,8 @@ class AND_OR(Brick):
         + name - Name of the brick.  If not specified, a default will be used.  Name should be unique.
     '''
     def __init__(self, mode='AND', name=None):   # A change here
-        super(Brick, self).__init__()
+        super(AND_OR, self).__init__()
+        self.brick_tag = generate_brick_tag("AND_OR")
         # The brick hasn't been built yet.
         self.is_built = False
         # Leave for compatibility, D represents the depth of the circuit.  Needs to be updated.
@@ -387,7 +391,8 @@ class ParityCheck(Brick):
         Arguments:
             + name - Name of the brick.  If not specified, a default will be used.  Name should be unique.
         '''
-        super().__init__()
+        super(ParityCheck, self).__init__()
+        self.brick_tag = generate_brick_tag("ParityCheck")
         self.is_built = False
         self.metadata = {'D': 1}
         self.name = name
@@ -628,7 +633,8 @@ class TemporalAdder(Brick):
             + name - Name of the brick.  If not specified, a default will be used.  Name should be unique.
             + output_coding - Output coding type, default is 'temporal-L'
         '''
-        super(Brick, self).__init__()
+        super(TemporalAdder, self).__init__()
+        self.brick_tag = generate_brick_tag("TemporalAdder")
         self.is_built = False
         self.name = name
         self.supported_codings = input_coding_types
@@ -727,7 +733,8 @@ class Register(Brick):
     '''
 
     def __init__(self, max_size, initial_value=0, name=None, output_coding='Undefined'):
-        super(Brick, self).__init__()
+        super(Register, self).__init__()
+        self.brick_tag = generate_brick_tag("Register")
         self.is_built = False
         self.name = name
         self.supported_codings = input_coding_types
@@ -849,7 +856,8 @@ class Max(Brick):
     '''
 
     def __init__(self, name=None, output_coding='Undefined'):
-        super(Brick, self).__init__()
+        super(Max, self).__init__()
+        self.brick_tag = generate_brick_tag("Max")
         self.is_built = False
         self.name = name
         self.supported_codings = input_coding_types

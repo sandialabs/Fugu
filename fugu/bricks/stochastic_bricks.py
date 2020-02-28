@@ -7,7 +7,7 @@ Created on Wed Jun 19 14:46:55 2019
 """
 import numpy as np
 
-from .bricks import Brick, input_coding_types
+from .bricks import Brick, input_coding_types, generate_brick_tag
 
 
 class PRN(Brick):
@@ -25,7 +25,8 @@ class PRN(Brick):
             + shape - shape of the neurons in the brick
             + output_coding - Desired output coding for the brick
         '''
-        super(Brick, self).__init__()
+        super(PRN, self).__init__()
+        self.brick_tag = generate_brick_tag("PRN")
         self.is_built = False
         self.metadata = {}
         self.probability = probability
@@ -76,7 +77,8 @@ class Threshold(Brick):
             + name - Name of the brick.  If not specified, a default will be used.  Name should be unique.
             + output_coding - Force a return of this output coding.  Default is 'unary-L'
         '''
-        super(Brick, self).__init__()
+        super(Threshold, self).__init__()
+        self.brick_tag = generate_brick_tag("Threshold")
         self.is_built = False
         self.metadata = {}
         self.name = name
