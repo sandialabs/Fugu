@@ -13,6 +13,7 @@ from ..base import BrickTest
 class RegisterBrickTests(BrickTest):
     # Base class overrides
     def build_scaffold(self, input_values):
+        print(input_values)
         register_size, initial_value, action = input_values
 
         scaffold = Scaffold()
@@ -49,7 +50,7 @@ class RegisterBrickTests(BrickTest):
             neuron_name = graph_names[int(row.neuron_number)][0]
             if self.debug:
                 print(neuron_name, row.time)
-            if 'output' in neuron_name:
+            if "Register" in neuron_name and 'output' in neuron_name:
                 index = int(neuron_name.split('_')[-1])
                 value += (2 ** index)
 

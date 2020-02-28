@@ -723,7 +723,6 @@ class TemporalAdder(Brick):
 class Register(Brick):
     '''
     Brick that stores the binary encoding of an non-negative integer.
-    Brick also allows the value stored to be incremented (but not decremented).
     '''
 
     def __init__(self, max_size, initial_value=0, name=None, output_coding='Undefined'):
@@ -767,35 +766,112 @@ class Register(Brick):
                                                                              self.supported_codings,
                                                                              )
                         )
+
         input_value_bits = input_lists[0]
         recall_input = input_lists[1][-1]
         clear_input = input_lists[2][-1]
         set_input = input_lists[3][-1]
 
-        begin_node_name = self.name + '_begin'
-        complete_name = self.name + '_complete'
-
-        graph.add_node(begin_node_name, threshold=0.1, decay=0.0, potential=0.0)
-        graph.add_node(complete_name, threshold=0.1, decay=0.0, potential=0.0)
-        complete_node_list = [complete_name]
-
-        recall_control_name = "{}:recall_control".format(self.name)
-        set_control_name = "{}:set_control".format(self.name)
-        clear_control_name = "{}:clear_control".format(self.name)
-
-        graph.add_node(recall_control_name, threshold=0.9, decay=0.0, potential=0.0)
-        graph.add_node(set_control_name, threshold=0.9, decay=0.0, potential=0.0)
-        graph.add_node(clear_control_name, threshold=0.9, decay=0.0, potential=0.0)
-        
-        graph.add_edge(recall_input, recall_control_name, weight=1.0, delay=1.0)
-        graph.add_edge(clear_input, clear_control_name, weight=1.0, delay=1.0)
-        graph.add_edge(set_input, set_control_name, weight=1.0, delay=1.0)
+        begin_node_name = '{}:begin'.format(self.name)
+        complete_name = '{}:complete'.format(self.name)
 
         register_name_base = "{}:slot_{{}}".format(self.name)
         output_name_base = "{}:output_{{}}".format(self.name)
+        recall_control_name = "{}:recall_control".format(self.name)
         recall_name_base = "{}:recall_bit{{}}".format(self.name)
+        clear_control_name = "{}:clear_control".format(self.name)
         clear_name_base = "{}:clear_bit{{}}".format(self.name)
+        set_control_name = "{}:set_control".format(self.name)
         set_name_base = "{}:set_bit{{}}".format(self.name)
+
+        complete_node_list = [complete_name]
+
+        graph.add_node(
+                begin_node_name,
+                threshold=0.1,
+                decay=0.0,
+                potential=0.0,
+                )
+        graph.add_node(
+                complete_name,
+                threshold=0.9,
+                decay=0.0,
+                potential=0.0,
+                )
+
+        graph.add_node(
+                recall_control_name,
+                threshold=0.9,
+                decay=0.0,
+                potential=0.0,
+                )
+        graph.add_node(
+                set_control_name,
+                threshold=0.9,
+                decay=0.0,
+                potential=0.0,
+                )
+        graph.add_node(
+                clear_control_name,
+                threshold=0.9,
+                decay=0.0,
+                potential=0.0,
+                )
+
+        graph.add_edge(
+                recall_input,
+                recall_control_name,
+                weight=1.0,
+                delay=1.0,
+                )
+        graph.add_edge(
+                recall_input,
+                begin_node_name,
+                weight=1.0,
+                delay=1.0,
+                )
+        graph.add_edge(
+                recall_input,
+                complete_name,
+                weight=1.0,
+                delay=4.0,
+                )
+        graph.add_edge(
+                clear_input,
+                clear_control_name,
+                weight=1.0,
+                delay=1.0,
+                )
+        graph.add_edge(
+                clear_input,
+                begin_node_name,
+                weight=1.0,
+                delay=1.0,
+                )
+        graph.add_edge(
+                clear_input,
+                complete_name,
+                weight=1.0,
+                delay=3.0,
+                )
+        graph.add_edge(
+                set_input,
+                set_control_name,
+                weight=1.0,
+                delay=1.0,
+                )
+        graph.add_edge(
+                set_input,
+                begin_node_name,
+                weight=1.0,
+                delay=1.0,
+                )
+        graph.add_edge(
+                set_input,
+                complete_name,
+                weight=1.0,
+                delay=5.0,
+                )
 
         outputs = []
 
@@ -817,30 +893,122 @@ class Register(Brick):
 
             outputs.append(output_name)
 
-            graph.add_node(register_name, threshold=1.99, decay=0.0, potential=bit_string[i])
-            graph.add_node(output_name, threshold=1.99, decay=1.0, potential=0.0, bit_position=i)
-            graph.add_node(recall_name, threshold=0.99, decay=0.0, potential=0.0)
-            graph.add_node(clear_name, threshold=0.99, decay=1.0, potential=0.0)
-            graph.add_node(set_name, threshold=1.99, decay=1.0, potential=0.0)
+            # Create register slot
+            graph.add_node(
+                    register_name,
+                    threshold=1.99,
+                    decay=0.0,
+                    potential=bit_string[i],
+                    )
+            graph.add_node(
+                    output_name,
+                    threshold=1.99,
+                    decay=1.0,
+                    potential=0.0,
+                    bit_position=i,
+                    )
+            graph.add_node(
+                    recall_name,
+                    threshold=0.99,
+                    decay=0.0,
+                    potential=0.0,
+                    )
+            graph.add_node(
+                    clear_name,
+                    threshold=0.99,
+                    decay=1.0,
+                    potential=0.0,
+                    )
+            graph.add_node(
+                    set_name,
+                    threshold=1.99,
+                    decay=1.0,
+                    potential=0.0,
+                    )
 
+            # Connect controls to slot
             if i < len(input_value_bits):
-                graph.add_edge(input_value_bits[i], set_name, weight=1.0, delay=2.0)
-            graph.add_edge(set_control_name, clear_control_name, weight=1.0, delay=1.0)
-            graph.add_edge(set_control_name, set_name, weight=1.0, delay=1.0)
-            graph.add_edge(set_name, register_name, weight=1.0, delay=3.0)
-            graph.add_edge(recall_control_name, recall_name, weight=1.0, delay=2.0)
-            graph.add_edge(recall_control_name, register_name, weight=1.0, delay=1.0)
-            graph.add_edge(recall_control_name, output_name, weight=1.0, delay=2.0)
-            graph.add_edge(clear_name, register_name, weight=-1.0, delay=1.0)
-            graph.add_edge(clear_control_name, clear_name, weight=1.0, delay=1.0)
-            graph.add_edge(clear_control_name, register_name, weight=1.0, delay=1.0)
-            graph.add_edge(register_name, register_name, weight=1.0, delay=1.0)
-            graph.add_edge(register_name, recall_name, weight=-1.0, delay=1.0)
-            graph.add_edge(register_name, output_name, weight=1.0, delay=1.0)
+                graph.add_edge(
+                        input_value_bits[i],
+                        set_name,
+                        weight=1.0,
+                        delay=2.0,
+                        )
+            graph.add_edge(
+                    set_control_name,
+                    clear_control_name,
+                    weight=1.0,
+                    delay=1.0,
+                    )
+            graph.add_edge(
+                    set_control_name,
+                    set_name,
+                    weight=1.0,
+                    delay=1.0,
+                    )
+            graph.add_edge(
+                    set_name,
+                    register_name,
+                    weight=1.0,
+                    delay=3.0,
+                    )
+            graph.add_edge(
+                    recall_control_name,
+                    recall_name,
+                    weight=1.0,
+                    delay=2.0,
+                    )
+            graph.add_edge(
+                    recall_control_name,
+                    register_name,
+                    weight=1.0,
+                    delay=1.0,
+                    )
+            graph.add_edge(
+                    recall_control_name,
+                    output_name,
+                    weight=1.0,
+                    delay=2.0,
+                    )
+            graph.add_edge(
+                    clear_name,
+                    register_name,
+                    weight=-1.0,
+                    delay=1.0,
+                    )
+            graph.add_edge(
+                    clear_control_name,
+                    clear_name,
+                    weight=1.0,
+                    delay=1.0,
+                    )
+            graph.add_edge(
+                    clear_control_name,
+                    register_name,
+                    weight=1.0,
+                    delay=1.0,
+                    )
+            graph.add_edge(
+                    register_name,
+                    register_name,
+                    weight=1.0,
+                    delay=1.0,
+                    )
+            graph.add_edge(
+                    register_name,
+                    recall_name,
+                    weight=-1.0,
+                    delay=1.0,
+                    )
+            graph.add_edge(
+                    register_name,
+                    output_name,
+                    weight=1.0,
+                    delay=1.0,
+                    )
 
         self.is_built = True
 
-        # Remember, bricks can have more than one output, so we need a list of list of output neurons
         output_lists = [outputs]
 
         return (
