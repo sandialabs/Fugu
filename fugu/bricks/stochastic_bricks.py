@@ -7,7 +7,7 @@ Created on Wed Jun 19 14:46:55 2019
 """
 import numpy as np
 
-from .bricks import Brick, input_coding_types, generate_brick_tag
+from .bricks import Brick, input_coding_types
 
 
 class PRN(Brick):
@@ -25,8 +25,7 @@ class PRN(Brick):
             + shape - shape of the neurons in the brick
             + output_coding - Desired output coding for the brick
         '''
-        super(PRN, self).__init__()
-        self.brick_tag = generate_brick_tag("PRN")
+        super(PRN, self).__init__("PRN")
         self.is_built = False
         self.metadata = {}
         self.probability = probability
@@ -40,17 +39,17 @@ class PRN(Brick):
         if len(input_lists) == 0:
             raise ValueError("PRN brick requires at least 1 input.")
         # Driver Neuron
-        driver_neuron = self.name+'_driver'
+        driver_neuron = self.generate_neuron_name('driver')
         graph.add_node(driver_neuron, threshold=0.7, decay=1.0)
         graph.add_edge(driver_neuron, driver_neuron, weight=1.0, delay=1)
         # PRNs
         output_list = []
         for neuron_index in np.ndindex(self.shape):
-            output_neuron = self.name+'_' + str(neuron_index)
+            output_neuron = self.generate_neuron_name(str(neuron_index))
             graph.add_node(output_neuron, threshold=0.7, decay=1.0, p=self.probability)
             output_list.append(output_neuron)
             graph.add_edge(driver_neuron, output_neuron, weight=1.0, delay=1)
-        complete_neuron = self.name+'_complete'
+        complete_neuron = self.generate_neuron_name('_complete')
         complete_threshold = self.steps - 1.1 if self.steps is not None else 1.0
         graph.add_node(complete_neuron, threshold=complete_threshold, decay=0.0)
         if self.steps is not None:
@@ -77,8 +76,7 @@ class Threshold(Brick):
             + name - Name of the brick.  If not specified, a default will be used.  Name should be unique.
             + output_coding - Force a return of this output coding.  Default is 'unary-L'
         '''
-        super(Threshold, self).__init__()
-        self.brick_tag = generate_brick_tag("Threshold")
+        super(Threshold, self).__init__("Threshold")
         self.is_built = False
         self.metadata = {}
         self.name = name
@@ -94,10 +92,10 @@ class Threshold(Brick):
             value = properties['threshold']
             neuron_props = {}
             if self.metadata['D'] == 0:
-                neuron_props[self.name] = {'threshold': value}
+                neuron_props[self.generate_neuron_name("Main")] = {'threshold': value}
             else:
                 for index in self.indices:
-                    name = "{}_{}".format(self.name, index)
+                    name = self.generate_neuron_name("{}".format(index))
                     neuron_props[name] = {'threshold': value}
             return neuron_props, {}
         else:
@@ -135,8 +133,9 @@ class Threshold(Brick):
                                                                             )
                     )
         if input_codings[0] == 'current' or input_codings[0] == 'Undefined':
+            main_neuron = self.generate_neuron_name("Main")
             graph.add_node(
-                    self.name,
+                    main_neuron,
                     threshold=self.threshold,
                     decay=self.decay,
                     p=self.p,
@@ -144,13 +143,13 @@ class Threshold(Brick):
             for edge in input_lists[0]:
                 graph.add_edge(
                         edge['source'],
-                        self.name,
+                        main_neuron,
                         weight=edge['weight'],
                         delay=edge['delay'],
                         )
             new_complete_node = control_nodes[0]['complete']
             self.metadata['D'] = 0
-            output_lists = [[self.name]]
+            output_lists = [[main_neuron]]
         elif input_codings[0] == 'temporal-L':
             self.metadata['D'] = None
             new_complete_node = self.name+'_complete'
@@ -171,7 +170,7 @@ class Threshold(Brick):
             for input_neuron in [input_n for input_n in input_lists[0] if graph.nodes[input_n]['index'] is not -2]:
                 index = graph.nodes[input_neuron]['index']
                 self.indices.append(index)
-                threshold_neuron_name = "{}_{}".format(self.name, index)
+                threshold_neuron_name = self.generate_neuron_name("{}".format(index))
                 graph.add_node(
                         threshold_neuron_name,
                         index=index,

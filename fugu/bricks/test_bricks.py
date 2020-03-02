@@ -3,7 +3,7 @@
 """
 These bricks are used to test features/capabilities of fugu backends.
 """
-from .bricks import Brick, input_coding_types, generate_brick_tag
+from .bricks import Brick, input_coding_types
 
 
 class InstantDecay(Brick):
@@ -17,8 +17,7 @@ class InstantDecay(Brick):
         Arguments:
             + name - Name of the brick.  If not specified, a default will be used.  Name should be unique.
         '''
-        super(InstantDecay, self).__init__()
-        self.brick_tag = generate_brick_tag("InstantDecay")
+        super(InstantDecay, self).__init__("InstantDecay")
         self.is_built = False
         self.metadata = {'D': 1}
         self.name = name
@@ -55,15 +54,16 @@ class InstantDecay(Brick):
                     )
 
         graph.add_node(
-                self.name + "_begin",
+                self.generate_neuron_name("begin"),
                 threshold=0.5,
                 potential=1.0,
                 decay=0.0,
                 index=-1,
                 p=1.0,
                 )
+        complete_name = self.generate_neuron_name("complete")
         graph.add_node(
-                self.name + "_complete",
+                complete_name,
                 threshold=0.5,
                 potential=0.0,
                 decay=0.0,
@@ -71,26 +71,27 @@ class InstantDecay(Brick):
                 p=1.0,
                 )
 
+        main_name = self.generate_neuron_name("main")
         graph.add_node(
-                self.name + "_main",
+                main_name,
                 threshold=self.num_inputs - 0.01,
                 potential=0.0,
                 decay=1.0,
                 index=0,
                 )
-        graph.add_edge(self.name + "_main", self.name + "_complete", weight=1.0, delay=1.0)
+        graph.add_edge(main_name, complete_name, weight=1.0, delay=1.0)
 
         for input_list in input_lists:
             for input_neuron in input_list:
                 graph.add_edge(
                         input_neuron,
-                        self.name + "_main",
+                        main_name,
                         weight=1.0,
                         delay=1.0,
                         )
 
         self.is_built = True
-        return (graph, metadata, [{'complete': self.name + "_complete"}], [[self.name + "_main"]], input_codings)
+        return (graph, metadata, [{'complete': complete_name}], [[main_name]], input_codings)
 
 
 class SynapseProperties(Brick):
@@ -104,8 +105,7 @@ class SynapseProperties(Brick):
         Arguments:
             + name - Name of the brick.  If not specified, a default will be used.  Name should be unique.
         '''
-        super(SynapseProperties, self).__init__()
-        self.brick_tag = generate_brick_tag("SynapseProperties")
+        super(SynapseProperties, self).__init__("SynapseProperties")
         self.is_built = False
         self.metadata = {'D': 1}
         self.name = name
@@ -121,9 +121,9 @@ class SynapseProperties(Brick):
                                                                                     ))
             else:
                 synapse_props = {}
-                main_name = self.name + "_main"
+                main_name = self.generate_neuron_name("main")
                 for i, weight in enumerate(weights):
-                    name = "{}_{}".format(self.name, i)
+                    name = self.generate_neuron_name("{}".format(i))
                     synapse_props[(main_name, name)] = {'weight': weight}
                 return {}, synapse_props
 
@@ -148,16 +148,18 @@ class SynapseProperties(Brick):
             + list of coding formats of output ('current')
         """
 
+        begin_name = self.generate_neuron_name("begin")
         graph.add_node(
-                self.name + "_begin",
+                begin_name,
                 threshold=0.5,
                 potential=1.0,
                 decay=0.0,
                 index=-1,
                 p=1.0,
                 )
+        complete_name = self.generate_neuron_name("complete")
         graph.add_node(
-                self.name + "_complete",
+                complete_name,
                 threshold=0.5,
                 potential=0.0,
                 decay=0.0,
@@ -165,8 +167,9 @@ class SynapseProperties(Brick):
                 p=1.0,
                 )
 
+        main_name = self.generate_neuron_name("main")
         graph.add_node(
-                self.name + "_main",
+                main_name,
                 threshold=0.5,
                 potential=1.0,
                 decay=0.0,
@@ -176,7 +179,7 @@ class SynapseProperties(Brick):
 
         output_list = []
         for index, weight in enumerate(self.weights):
-            name = "{}_{}".format(self.name, index)
+            name = self.generate_neuron_name("{}".format(index))
             graph.add_node(
                     name,
                     threshold=1.0,
@@ -185,7 +188,7 @@ class SynapseProperties(Brick):
                     index=-1,
                     )
             graph.add_edge(
-                    self.name + "_main",
+                    main_name,
                     name,
                     weight=weight,
                     delay=1.0,
@@ -193,4 +196,4 @@ class SynapseProperties(Brick):
             output_list.append(name)
 
         self.is_built = True
-        return (graph, metadata, [{'complete': self.name + "_complete"}], [output_list], input_codings)
+        return (graph, metadata, [{'complete': complete_name}], [output_list], input_codings)

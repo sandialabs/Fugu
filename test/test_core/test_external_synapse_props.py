@@ -17,7 +17,7 @@ class ChangeSynapseExternalPropertyTests(BrickTest):
         threshold_brick = BRICKS.Threshold(1.0,
                                            p=1.0,
                                            decay=0,
-                                           name='Thresh',
+                                           name='Test',
                                            output_coding='temporal-L')
         vector = BRICKS.Vector_Input(np.array([1]), coding='Raster', name='input1')
         dot_brick = BRICKS.Dot([input_values[0]], name='ADotOperator')
@@ -35,19 +35,35 @@ class ChangeSynapseExternalPropertyTests(BrickTest):
         before_expected, after_expected = expected
 
         processed = set()
+        if self.debug:
+            print("Before")
         for row in before_spikes.itertuples():
             neuron_name = graph_names[int(row.neuron_number)][0]
+            if self.debug:
+                print(neuron_name, row.time)
             processed.add((neuron_name, row.time))
+        if self.debug:
+            print("After")
         for row in after_spikes.itertuples():
             neuron_name = graph_names[int(row.neuron_number)][0]
+            if self.debug:
+                print(neuron_name, row.time)
             processed.add((neuron_name, row.time))
 
+        test_brick_tag = scaffold.name_to_tag["Test"]
+        test_brick = scaffold.circuit.nodes[scaffold.brick_to_number[test_brick_tag]]['brick']
         for entry in before_expected:
-            self.assertTrue(entry in processed)
-            processed.remove(entry)
+            converted = (test_brick.generate_neuron_name(entry[0]), entry[1])
+            if self.debug:
+                print(entry, converted)
+            self.assertTrue(converted in processed)
+            processed.remove(converted)
         for entry in after_expected:
-            self.assertTrue(entry in processed)
-            processed.remove(entry)
+            converted = (test_brick.generate_neuron_name(entry[0]), entry[1])
+            if self.debug:
+                print(entry, converted)
+            self.assertTrue(converted in processed)
+            processed.remove(converted)
 
         self.assertTrue(len(processed) == 0)
 
@@ -58,7 +74,7 @@ class ChangeSynapseExternalPropertyTests(BrickTest):
         props['ADotOperator'] = {}
         props['ADotOperator']['weights'] = [2.1]
 
-        self.run_property_test([0.5], [props], [[[], [('Thresh', 1.0)]]])
+        self.run_property_test([0.5], [props], [[[], [('Main', 1.0)]]])
 
 
 class SnnChangeSynapseExternalPropertyTests(ChangeSynapseExternalPropertyTests, unittest.TestCase):

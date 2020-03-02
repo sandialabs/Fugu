@@ -36,7 +36,7 @@ class MaxBrickTests(BrickTest):
         value = 0
         graph_names = list(scaffold.graph.nodes.data('name'))
         for row in spikes.sort_values('time').itertuples():
-            neuron_name = graph_names[int(row.neuron_number)][0]
+            brick_tag, neuron_name = graph_names[int(row.neuron_number)][0].split(":")
             if self.debug:
                 print(neuron_name, row.time)
             if 'M' in neuron_name and 'Max' not in neuron_name:

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-from .bricks import Brick, input_coding_types, generate_brick_tag
+from .bricks import Brick, input_coding_types
 
 
 class Dot(Brick):
@@ -15,8 +15,7 @@ class Dot(Brick):
             + weights - Vector against which the input is dotted.
             + name - Name of the brick.  If not specified, a default will be used.  Name should be unique.
         '''
-        super(Dot, self).__init__()
-        self.brick_tag = generate_brick_tag("Dot")
+        super(Dot, self).__init__("Dot")
         self.is_built = False
         self.metadata = {'D': 1}
         self.name = name
@@ -86,8 +85,9 @@ class Dot(Brick):
         if type(metadata) is list:
             metadata = metadata[0]
         metadata['D'] = metadata['D'] + 1
+        complete_name = self.generate_neuron_name("complete")
         graph.add_node(
-                self.name + "_complete",
+                complete_name,
                 threshold=0.5,
                 potential=0.0,
                 decay=0.0,
@@ -96,12 +96,12 @@ class Dot(Brick):
                 )
         graph.add_edge(
                 control_nodes[0]['complete'],
-                self.name + "_complete",
+                complete_name,
                 weight=1.0,
                 delay=1,
                 )
         self.is_built = True
-        return (graph, metadata, [{'complete': self.name + "_complete"}], [output_list], output_codings)
+        return (graph, metadata, [{'complete': complete_name}], [output_list], output_codings)
 
 
 class Copy(Brick):
@@ -115,8 +115,7 @@ class Copy(Brick):
         Arguments:
             + name - Name of the brick.  If not specified, a default will be used.  Name should be unique.
         '''
-        super(Copy, self).__init__()
-        self.brick_tag = generate_brick_tag("Copy")
+        super(Copy, self).__init__("Copy")
         self.is_built = False
         self.metadata = {'D': 1}
         self.name = name
@@ -166,14 +165,15 @@ class Copy(Brick):
         output_codings = []
         for neuron in input_lists[0]:
             for copy_num in range(0, num_copies):
-                copy_name = "{}_copy{}".format(neuron, copy_num)
+                copy_name = self.generate_neuron_name("{}_copy{}".format(neuron, copy_num))
                 graph.add_node(copy_name, threshold=0.5, decay=0, p=1.0, index=graph.nodes[neuron]['index'])
                 graph.add_edge(neuron, copy_name, weight=1.0, delay=1)
                 output_lists[copy_num].append(copy_name)
         for copy_num in range(0, num_copies):
             output_codings.append(input_codings[0])
+        complete_name = self.generate_neuron_name("complete")
         graph.add_node(
-                self.name + "_complete",
+                complete_name,
                 threshold=0.5,
                 decay=0,
                 p=1.0,
@@ -181,7 +181,7 @@ class Copy(Brick):
                 )
         graph.add_edge(
                 control_nodes[0]['complete'],
-                self.name + "_complete",
+                complete_name,
                 weight=1.0,
                 delay=1,
                 )
@@ -204,8 +204,7 @@ class Concatenate(Brick):
         + name - Name of the brick.  If not specified, a default will be used.  Name should be unique.
     '''
     def __init__(self, name=None, coding=None):
-        super(Concatenate, self).__init__()
-        self.brick_tag = generate_brick_tag("Concatenate")
+        super(Concatenate, self).__init__("Concatenate")
         self.is_built = False
         self.metadata = {'D': 0}
         self.name = name
@@ -243,9 +242,9 @@ class Concatenate(Brick):
         else:
             output_codings = [self.coding]
 
-        new_complete_node_name = self.name + '_complete'
+        complete_name = self.generate_neuron_name("complete")
         graph.add_node(
-                new_complete_node_name,
+                complete_node_name,
                 index=-1,
                 threshold=1.0,
                 decay=0.0,
@@ -255,7 +254,7 @@ class Concatenate(Brick):
         for idx in range(len(input_lists)):
             graph.add_edge(
                     control_nodes[idx]['complete'],
-                    new_complete_node_name,
+                    complete_node_name,
                     weight=(1 / len(input_lists)) + 0.000001,
                     delay=1,
                     )
@@ -263,7 +262,7 @@ class Concatenate(Brick):
         output_lists = [[]]
         for input_brick in input_lists:
             for input_neuron in input_brick:
-                relay_neuron_name = "{}_relay_{}".format(self.name, input_neuron)
+                relay_neuron_name = self.generate_neuron_name("relay_{}".format(input_neuron))
                 graph.add_node(
                         relay_neuron_name,
                         index=(len(output_lists[0]),),
@@ -277,7 +276,7 @@ class Concatenate(Brick):
 
         self.is_built = True
 
-        return (graph, self.metadata, [{'complete': new_complete_node_name}], output_lists, output_codings)
+        return (graph, self.metadata, [{'complete': complete_node_name}], output_lists, output_codings)
 
 
 class AND_OR(Brick):
@@ -290,8 +289,7 @@ class AND_OR(Brick):
         + name - Name of the brick.  If not specified, a default will be used.  Name should be unique.
     '''
     def __init__(self, mode='AND', name=None):   # A change here
-        super(AND_OR, self).__init__()
-        self.brick_tag = generate_brick_tag("AND_OR")
+        super(AND_OR, self).__init__("AND_OR")
         # The brick hasn't been built yet.
         self.is_built = False
         # Leave for compatibility, D represents the depth of the circuit.  Needs to be updated.
@@ -342,9 +340,9 @@ class AND_OR(Brick):
         # position of the node.  This can be used by downstream   A simple example might be
         # a 3-bit binary representation will add 3 nodes to the graph with indices 0,1,2
         # We do have to do some work to establish best practices here.
-        new_complete_node_name = self.name + '_complete'
-        graph.add_node(new_complete_node_name, index=-1, threshold=0.0, decay=0.0, p=1.0, potential=0.0)
-        graph.add_edge(control_nodes[0]['complete'], new_complete_node_name, weight=1.0, delay=1)
+        complete_node_name = self.generate_neuron_name('complete')
+        graph.add_node(complete_node_name, index=-1, threshold=0.0, decay=0.0, p=1.0, potential=0.0)
+        graph.add_edge(control_nodes[0]['complete'], complete_node_name, weight=1.0, delay=1)
 
         output_lists = [[]]
         threshold_value = 1.0 if self.mode == 'AND' else 0.5
@@ -354,26 +352,14 @@ class AND_OR(Brick):
                 # If indices match, we'll do an AND on them
                 if graph.nodes[operand0]['index'] == graph.nodes[operand1]['index']:
                     # Remember all of our output neurons need to be marked
-                    and_node_name = "{}_{}_{}".format(self.name, operand0, operand1)
+                    and_node_name = self.generate_neuron_name("{}_{}".format(operand0, operand1))
                     output_lists[0].append(and_node_name)
                     graph.add_node(and_node_name, index=0, threshold=threshold_value, decay=1.0, p=1.0, potential=0.0)
                     graph.add_edge(operand0, and_node_name, weight=0.75, delay=1.0)
                     graph.add_edge(operand1, and_node_name, weight=0.75, delay=1.0)
         self.is_built = True
 
-        return (graph, self.metadata, [{'complete': new_complete_node_name}], output_lists, output_codings)
-
-
-'''
-class AND(AND_OR):
-    Performs logical AND.
-
-    Input neurons are matched based on index.
-
-    All codings are supported.
-    def __init__(self, name=None):
-        super(AND_OR, self).__init__(mode='AND', name=name)
-'''
+        return (graph, self.metadata, [{'complete': complete_node_name}], output_lists, output_codings)
 
 
 class ParityCheck(Brick):
@@ -391,8 +377,7 @@ class ParityCheck(Brick):
         Arguments:
             + name - Name of the brick.  If not specified, a default will be used.  Name should be unique.
         '''
-        super(ParityCheck, self).__init__()
-        self.brick_tag = generate_brick_tag("ParityCheck")
+        super(ParityCheck, self).__init__("ParityCheck")
         self.is_built = False
         self.metadata = {'D': 1}
         self.name = name
@@ -424,26 +409,27 @@ class ParityCheck(Brick):
 
         output_codings = [input_codings[0]]
 
-        new_complete_node_name = self.name + '_complete'
+        complete_node_name = self.generate_neuron_name('complete')
 
         graph.add_node(
-                new_complete_node_name,
+                complete_node_name,
                 index=-1,
                 threshold=0.0,
                 decay=0.0,
                 p=1.0,
                 potential=0.0,
                 )
-        graph.add_edge(control_nodes[0]['complete'], new_complete_node_name, weight=1.0, delay=2)
-        complete_node = new_complete_node_name
+        graph.add_edge(control_nodes[0]['complete'], complete_node_name, weight=1.0, delay=2)
+        complete_node = complete_node_name
 
         # add 4 hidden nodes with thresholds <=1, >=1, <=3, >=3.
         # since the thresholds only compute >=, the <=1, <=3 computations are performed by negating
         # the threshold weights and the inputs (via the weights on incomming edges)
 
         # first hidden node and connect edges from input layer
+        h_00 = self.generate_neuron_name('h_00')
         graph.add_node(
-                'h_00',
+                h_00,
                 index=0,
                 threshold=-1.1,
                 decay=1.0,
@@ -452,32 +438,33 @@ class ParityCheck(Brick):
                 )
         graph.add_edge(
                 input_lists[0][0],
-                'h_00',
+                h_00,
                 weight=-1.0,
                 delay=1,
                 )
         graph.add_edge(
                 input_lists[0][1],
-                'h_00',
+                h_00,
                 weight=-1.0,
                 delay=1,
                 )
         graph.add_edge(
                 input_lists[0][2],
-                'h_00',
+                h_00,
                 weight=-1.0,
                 delay=1,
                 )
         graph.add_edge(
                 input_lists[0][3],
-                'h_00',
+                h_00,
                 weight=-1.0,
                 delay=1,
                 )
 
         # second hidden node and edges from input layer
+        h_01 = self.generate_neuron_name('h_01')
         graph.add_node(
-                'h_01',
+                h_01,
                 index=1,
                 threshold=0.9,
                 decay=1.0,
@@ -486,32 +473,33 @@ class ParityCheck(Brick):
                 )
         graph.add_edge(
                 input_lists[0][0],
-                'h_01',
+                h_01,
                 weight=1.0,
                 delay=1,
                 )
         graph.add_edge(
                 input_lists[0][1],
-                'h_01',
+                h_01,
                 weight=1.0,
                 delay=1,
                 )
         graph.add_edge(
                 input_lists[0][2],
-                'h_01',
+                h_01,
                 weight=1.0,
                 delay=1,
                 )
         graph.add_edge(
                 input_lists[0][3],
-                'h_01',
+                h_01,
                 weight=1.0,
                 delay=1,
                 )
 
         # third hidden node and edges from input layer
+        h_02 = self.generate_neuron_name('h_02')
         graph.add_node(
-                'h_02',
+                h_02,
                 index=2,
                 threshold=-3.1,
                 decay=1.0,
@@ -520,32 +508,33 @@ class ParityCheck(Brick):
                 )
         graph.add_edge(
                 input_lists[0][0],
-                'h_02',
+                h_02,
                 weight=-1.0,
                 delay=1,
                 )
         graph.add_edge(
                 input_lists[0][1],
-                'h_02',
+                h_02,
                 weight=-1.0,
                 delay=1,
                 )
         graph.add_edge(
                 input_lists[0][2],
-                'h_02',
+                h_02,
                 weight=-1.0,
                 delay=1,
                 )
         graph.add_edge(
                 input_lists[0][3],
-                'h_02',
+                h_02,
                 weight=-1.0,
                 delay=1,
                 )
 
         # fourth hidden node and edges from input layer
+        h_03 = self.generate_neuron_name('h_03')
         graph.add_node(
-                'h_03',
+                h_03,
                 index=3,
                 threshold=2.9,
                 decay=1.0,
@@ -554,32 +543,33 @@ class ParityCheck(Brick):
                 )
         graph.add_edge(
                 input_lists[0][0],
-                'h_03',
+                h_03,
                 weight=1.0,
                 delay=1,
                 )
         graph.add_edge(
                 input_lists[0][1],
-                'h_03',
+                h_03,
                 weight=1.0,
                 delay=1,
                 )
         graph.add_edge(
                 input_lists[0][2],
-                'h_03',
+                h_03,
                 weight=1.0,
                 delay=1,
                 )
         graph.add_edge(
                 input_lists[0][3],
-                'h_03',
+                h_03,
                 weight=1.0,
                 delay=1,
                 )
 
         # output_node and edges from hidden nodes
+        parity = self.generate_neuron_name('parity')
         graph.add_node(
-                'parity',
+                parity,
                 index=4,
                 threshold=2.9,
                 decay=1.0,
@@ -587,33 +577,33 @@ class ParityCheck(Brick):
                 potential=0.0,
                 )
         graph.add_edge(
-                'h_00',
-                'parity',
+                h_00,
+                parity,
                 weight=1.0,
                 delay=1,
                 )
         graph.add_edge(
-                'h_01',
-                'parity',
+                h_01,
+                parity,
                 weight=1.0,
                 delay=1,
                 )
         graph.add_edge(
-                'h_02',
-                'parity',
+                h_02,
+                parity,
                 weight=1.0,
                 delay=1,
                 )
         graph.add_edge(
-                'h_03',
-                'parity',
+                h_03,
+                parity,
                 weight=1.0,
                 delay=1,
                 )
 
         self.is_built = True
 
-        output_lists = [['parity']]
+        output_lists = [[parity]]
 
         return (graph, self.metadata, [{'complete': complete_node}], output_lists, output_codings)
 
@@ -633,8 +623,7 @@ class TemporalAdder(Brick):
             + name - Name of the brick.  If not specified, a default will be used.  Name should be unique.
             + output_coding - Output coding type, default is 'temporal-L'
         '''
-        super(TemporalAdder, self).__init__()
-        self.brick_tag = generate_brick_tag("TemporalAdder")
+        super(TemporalAdder, self).__init__("TemporalAdder")
         self.is_built = False
         self.name = name
         self.supported_codings = input_coding_types
@@ -682,21 +671,21 @@ class TemporalAdder(Brick):
                                                                              )
                         )
 
-        begin_node_name = self.name + '_begin'
+        begin_node_name = self.generate_neuron_name('begin')
         graph.add_node(begin_node_name, threshold=0.1, decay=0.0, potential=0.0)
 
-        complete_name = self.name + '_complete'
+        complete_name = self.generate_neuron_name('complete')
         graph.add_node(complete_name, threshold=0.1, decay=0.0, potential=0.0)
         complete_node_list = [complete_name]
 
-        output_name = "Sum"
+        output_name = self.generate_neuron_name("Sum")
         graph.add_node(output_name, threshold=0.00, decay=0.0, potential=-0.01)
 
         graph.add_edge(output_name, complete_name, weight=1.0, delay=2.0)
         graph.add_edge(output_name, output_name, weight=-5.0, delay=2.0)
 
-        increment_timer_name = "T_I"
-        decrement_timer_name = "T_D"
+        increment_timer_name = self.generate_neuron_name("T_I")
+        decrement_timer_name = self.generate_neuron_name("T_D")
         graph.add_node(increment_timer_name, threshold=self.num_elements - 0.01, decay=0.0, potential=0.0)
         graph.add_edge(increment_timer_name, increment_timer_name, weight=self.num_elements, delay=2.0)
         graph.add_edge(increment_timer_name, output_name, weight=1.0, delay=2.0)
@@ -733,8 +722,7 @@ class Register(Brick):
     '''
 
     def __init__(self, max_size, initial_value=0, name=None, output_coding='Undefined'):
-        super(Register, self).__init__()
-        self.brick_tag = generate_brick_tag("Register")
+        super(Register, self).__init__("Register")
         self.is_built = False
         self.name = name
         self.supported_codings = input_coding_types
@@ -783,29 +771,29 @@ class Register(Brick):
                                                                              )
                         )
 
-        begin_node_name = self.name + '_begin'
+        begin_node_name = self.generate_neuron_name('begin')
         graph.add_node(begin_node_name, threshold=0.1, decay=0.0, potential=0.0)
 
-        complete_name = self.name + '_complete'
+        complete_name = self.generate_neuron_name('complete')
         graph.add_node(complete_name, threshold=0.1, decay=0.0, potential=0.0)
         complete_node_list = [complete_name]
 
-        recall_name = "recall"
+        recall_name = self.generate_neuron_name("recall")
         graph.add_node(recall_name, threshold=0.99, decay=0.0, potential=0.0)
-        reset_name = "reset"
+        reset_name = self.generate_neuron_name("reset")
         graph.add_node(reset_name, threshold=0.99, decay=0.0, potential=0.0)
 
         graph.add_edge(recall_name, reset_name, weight=1.0, delay=self.max_size)
 
-        add_name = "add_one"
+        add_name = self.generate_neuron_name("add_one")
         graph.add_node(add_name, threshold=0.99, decay=0.0, potential=0.0)
 
         graph.add_edge(input_names[0], recall_name, weight=1.0, delay=1.0)
         for input_name in input_names[1:]:
             graph.add_edge(input_name, add_name, weight=1.0, delay=self.max_size)
 
-        register_name_base = "{}_slot_{{}}".format(self.name)
-        output_name_base = "{}_output_{{}}".format(self.name)
+        register_name_base = "slot_{}"
+        output_name_base = "output_{}"
         outputs = []
 
         # determine initial states
@@ -818,8 +806,8 @@ class Register(Brick):
                 bit_string[i] = 1.0
 
         for i in range(self.max_size):
-            register_name = register_name_base.format(i)
-            output_name = output_name_base.format(i)
+            register_name = self.generate_neuron_name(register_name_base.format(i))
+            output_name = self.generate_neuron_name(output_name_base.format(i))
             outputs.append(output_name)
 
             graph.add_node(register_name, threshold=1.99, decay=0.0, potential=bit_string[i])
@@ -830,11 +818,11 @@ class Register(Brick):
             graph.add_edge(recall_name, output_name, weight=1.0, delay=2.0)
 
         for i in range(1, self.max_size):
-            prev_name = register_name_base.format(i - 1)
-            curr_name = register_name_base.format(i)
+            prev_name = self.generate_neuron_name(register_name_base.format(i - 1))
+            curr_name = self.generate_neuron_name(register_name_base.format(i))
             graph.add_edge(prev_name, curr_name, weight=1.0, delay=1.0)
 
-        graph.add_edge(add_name, register_name_base.format(0), weight=1.0, delay=self.max_size)
+        graph.add_edge(add_name, self.generate_neuron_name(register_name_base.format(0)), weight=1.0, delay=self.max_size)
 
         self.is_built = True
 
@@ -856,9 +844,7 @@ class Max(Brick):
     '''
 
     def __init__(self, name=None, output_coding='Undefined'):
-        super(Max, self).__init__()
-        self.brick_tag = generate_brick_tag("Max")
-        self.is_built = False
+        super(Max, self).__init__("Max")
         self.name = name
         self.supported_codings = input_coding_types
 
@@ -894,7 +880,7 @@ class Max(Brick):
                                                                              )
                         )
 
-        begin_node_name = self.name + '_begin'
+        begin_node_name = self.generate_neuron_name('begin')
         graph.add_node(
                 begin_node_name,
                 threshold=0.1,
@@ -902,7 +888,7 @@ class Max(Brick):
                 potential=0.0,
                 )
 
-        complete_name = self.name + '_complete'
+        complete_name = self.generate_neuron_name('complete')
         graph.add_node(
                 complete_name,
                 threshold=0.1,
@@ -943,17 +929,18 @@ class Max(Brick):
 
         for j in range(max_size):
             # M_j
+            m_j = self.generate_neuron_name(m_base.format(j))
             graph.add_node(
-                    m_base.format(j),
+                    m_j,
                     threshold=0.5,
                     decay=0.0,
                     potential=0.0,
                     )
-            m_names.append(m_base.format(j))
+            m_names.append(m_j)
 
             # OR_j
             graph.add_node(
-                    or_base.format(j),
+                    self.generate_neuron_name(or_base.format(j)),
                     threshold=0.5,
                     decay=0.0,
                     potential=0.0,
@@ -963,7 +950,7 @@ class Max(Brick):
             intercept_index = max_size - 1
             # Setup Layer
 
-            a_i_I = active_base.format(i, 'I')
+            a_i_I = self.generate_neuron_name(active_base.format(i, 'I'))
             # a_i_I
             graph.add_node(
                     a_i_I,
@@ -982,7 +969,7 @@ class Max(Brick):
 
             # First Layer
             # a_i_L
-            a_i_L = active_base.format(i, intercept_index)
+            a_i_L = self.generate_neuron_name(active_base.format(i, intercept_index))
             graph.add_node(
                     a_i_L,
                     threshold=0.5,
@@ -990,7 +977,7 @@ class Max(Brick):
                     potential=0.0,
                     )
             # I_i_L
-            I_i_L = intercept_base.format(i, intercept_index)
+            I_i_L = self.generate_neuron_name(intercept_base.format(i, intercept_index))
             graph.add_node(
                     I_i_L,
                     threshold=0.5,
@@ -1012,12 +999,12 @@ class Max(Brick):
                     )
             graph.add_edge(
                     register_bits[intercept_index],
-                    or_base.format(intercept_index),
+                    self.generate_neuron_name(or_base.format(intercept_index)),
                     weight=1.0,
                     delay=1.0,
                     )
             graph.add_edge(
-                    or_base.format(intercept_index),
+                    self.generate_neuron_name(or_base.format(intercept_index)),
                     I_i_L,
                     weight=1.0,
                     delay=1.0,
@@ -1033,10 +1020,11 @@ class Max(Brick):
             for j in range(2, max_size + 1):
                 intercept_index = max_size - j
 
-                prev_active_name = active_base.format(i, intercept_index + 1)
-                curr_active_name = active_base.format(i, intercept_index)
-                intercept_name = intercept_base.format(i, intercept_index)
-                valid_name = valid_base.format(i, intercept_index)
+                prev_active_name = self.generate_neuron_name(active_base.format(i, intercept_index + 1))
+                curr_active_name = self.generate_neuron_name(active_base.format(i, intercept_index))
+                intercept_name = self.generate_neuron_name(intercept_base.format(i, intercept_index))
+                valid_name = self.generate_neuron_name(valid_base.format(i, intercept_index))
+                or_name = self.generate_neuron_name(or_base.format(intercept_index))
 
                 # a_i_j
                 graph.add_node(
@@ -1086,12 +1074,12 @@ class Max(Brick):
                         )
                 graph.add_edge(
                         valid_name,
-                        or_base.format(intercept_index),
+                        or_name,
                         weight=1.0,
                         delay=1.0,
                         )
                 graph.add_edge(
-                        or_base.format(intercept_index),
+                        or_name,
                         intercept_name,
                         weight=1.0,
                         delay=1.0,
@@ -1105,7 +1093,7 @@ class Max(Brick):
 
             # Copy and Output Layer
             for j in range(max_size):
-                copy_name = copy_base.format(i, j)
+                copy_name = self.generate_neuron_name(copy_base.format(i, j))
                 # c_i_j
                 graph.add_node(
                         copy_name,
@@ -1128,7 +1116,7 @@ class Max(Brick):
                         )
                 graph.add_edge(
                         copy_name,
-                        m_base.format(j),
+                        self.generate_neuron_name(m_base.format(j)),
                         weight=1.0,
                         delay=1.0,
                         )

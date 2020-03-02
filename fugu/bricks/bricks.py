@@ -46,14 +46,17 @@ class Brick(ABC):
     Abstract Base Class definition of a Brick class
     """
 
-    brick_id = -1
+    brick_id = 0
 
-    def __init__(self):
-        self.brick_tag = generate_brick_tag("Brick")
+    def __init__(self, tag="Brick"):
+        self.brick_tag = generate_brick_tag(tag)
         self.name = "Empty Brick"
         self.is_built = False
         self.supported_codings = []
         Brick.brick_id += 1
+
+    def generate_neuron_name(self, neuron_name):
+        return "{}:{}".format(self.brick_tag, neuron_name)
 
     @abstractmethod
     def build(self, graph, metadata, control_nodes, input_lists, input_codings):

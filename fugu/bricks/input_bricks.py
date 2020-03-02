@@ -5,7 +5,7 @@ Created on Wed Jun 19 14:46:55 2019
 
 @author: smusuva
 """
-from .bricks import Brick, input_coding_types, generate_brick_tag
+from .bricks import Brick, input_coding_types
 
 import numpy as np
 
@@ -42,9 +42,8 @@ class InputBrick(Brick):
     Abstract Base class for handling inputs inherited from Brick
     """
 
-    def __init__(self):
-        super(InputBrick, self).__init__()
-        self.brick_tag = generate_brick_tag("InputBrick")
+    def __init__(self, tag="InputBrick"):
+        super(InputBrick, self).__init__(tag)
         self.streaming = False
 
     @abstractmethod
@@ -194,8 +193,7 @@ class Vector_Input(InputBrick):
             + batchable - True if input should represent static data; currently True is the only supported mode.
             + name - Name of the brick.  If not specified, a default will be used.  Name should be unique.
         """
-        super(Vector_Input, self).__init__()
-        self.brick_tag = generate_brick_tag("Vector_Input")
+        super(Vector_Input, self).__init__("VectorInput")
         self.vector = np.array(spikes)
         self.coding = coding
         self.time_dimension = time_dimension
@@ -223,7 +221,7 @@ class Vector_Input(InputBrick):
                 for dimension in range(len(local_idxs)):
                     idx_to_build.append(local_idxs[dimension][spike])
                 global_idxs.append(tuple(idx_to_build))
-            spiking_neurons = [self.name + "_" + str(idx) for idx in global_idxs]
+            spiking_neurons = [self.generate_neuron_name(str(idx)) for idx in global_idxs]
             return spiking_neurons
         else:
             raise StopIteration
@@ -279,8 +277,8 @@ class Vector_Input(InputBrick):
         if not self.time_dimension:
             self.vector = np.expand_dims(self.vector, len(self.vector.shape))
 
-        complete_node = self.name + "_complete"
-        begin_node = self.name + "_begin"
+        complete_node = self.generate_neuron_name("complete")
+        begin_node = self.generate_neuron_name("begin")
         vector_size = len(self.vector) * len(self.vector.shape)
         graph.add_node(complete_node, index=-1, threshold=0.0, decay=0.0, p=1.0, potential=0.1)
         graph.add_node(begin_node, index=-1, threshold=0.0, decay=0.0, p=1.0, potential=0.1)
@@ -288,7 +286,7 @@ class Vector_Input(InputBrick):
         output_lists = [[]]
         self.index_map = np.ndindex(self.vector.shape[:-1])
         for i, index in enumerate(self.index_map):
-            neuron_name = self.name + "_" + str(index)
+            neuron_name = self.generate_neuron_name(str(index))
 
             graph.add_node(neuron_name, index=index, threshold=0.0, decay=0.0, p=1.0)
             output_lists[0].append(neuron_name)

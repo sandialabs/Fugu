@@ -3,7 +3,7 @@
 import math
 import networkx as nx
 
-from .bricks import Brick, input_coding_types, generate_brick_tag
+from .bricks import Brick, input_coding_types
 from .templates import create_register, connect_register_to_register, connect_neuron_to_register
 
 
@@ -32,8 +32,7 @@ class Graph_Traversal(Brick):
                 If not specified, a default will be used. Name should be unique.
             + output_coding - Output coding type, default is 'temporal-L'
         """
-        super(Graph_Traversal, self).__init__()
-        self.brick_tag = generate_brick_tag("Graph_Traversal")
+        super(Graph_Traversal, self).__init__("Graph_Traversal")
         self.is_built = False
         self.name = name
         self.supported_codings = input_coding_types
@@ -83,11 +82,11 @@ class Graph_Traversal(Brick):
                                                                              )
                         )
 
-        begin_node_name = self.name + '_begin'
+        begin_node_name = self.generate_neuron_name('begin')
         graph.add_node(begin_node_name, threshold=0.5, decay=0.0, potential=0.0)
         graph.add_edge(control_nodes[0]['complete'], begin_node_name, weight=1.0, delay=2)
 
-        complete_name = self.name + '_complete'
+        complete_name = self.generate_neuron_name('complete')
         graph.add_node(
                 complete_name,
                 index=len(self.target_graph.nodes),
@@ -99,10 +98,10 @@ class Graph_Traversal(Brick):
 
         output_node_list = []
 
-        id_base = "NodeID_{}"
-        parent_base = "ParentID_{}"
+        id_base = self.generate_neuron_name("NodeID_{}")
+        parent_base = self.generate_neuron_name("ParentID_{}")
         for node in self.target_graph.nodes:
-            node_name = self.name + str(node)
+            node_name = self.generate_neuron_name(str(node))
             graph.add_node(node_name, index=(node,), threshold=1.0, decay=0.0, potential=0.0, is_vertex=True)
             graph.add_edge(node_name, node_name, weight=-1000, delay=1)
             if self.target_node:
@@ -156,7 +155,7 @@ class Graph_Traversal(Brick):
         edge_reference_names = []
         reference_index = len(self.target_graph.nodes) + 1
         for node in self.target_graph.nodes:
-            node_name = self.name + str(node)
+            node_name = self.generate_neuron_name(str(node))
             for neighbor in self.target_graph.neighbors(node):
                 # Need to scale up the delays for timing issues
                 if not self.ignore_edge_weights and 'weight' in self.target_graph.edges[node, neighbor]:
@@ -164,9 +163,9 @@ class Graph_Traversal(Brick):
                 else:
                     delay = 2
 
-                neighbor_name = self.name + str(neighbor)
+                neighbor_name = self.generate_neuron_name(str(neighbor))
                 if self.store_edge_references:
-                    reference_name = "{}-{}-{}".format(self.name, node, neighbor)
+                    reference_name = self.generate_neuron_name("{}-{}-{}".format(self.name, node, neighbor))
                     edge_reference_names.append(reference_name)
 
                     graph.add_node(
@@ -208,7 +207,7 @@ class Graph_Traversal(Brick):
                     index = index[0]
                 if type(index) is not int:
                     raise TypeError("Neuron index should be Tuple or Int.")
-                graph.add_edge(input_neuron, self.name + str(index), weight=2.0, delay=1)
+                graph.add_edge(input_neuron, self.generate_neuron_name(str(index)), weight=2.0, delay=1)
 
         self.is_built = True
 
@@ -241,8 +240,7 @@ class Flow_Augmenting_Path(Brick):
                 If not specified, a default will be used. Name should be unique.
             + output_coding - Output coding type, default is 'temporal-L'
         """
-        super(Flow_Augmenting_Path, self).__init__()
-        self.brick_tag = generate_brick_tag("Flow_Augmenting_Path")
+        super(Flow_Augmenting_Path, self).__init__("Flow_Augmenting_Path")
         self.is_built = False
         self.name = name
         self.supported_codings = input_coding_types
@@ -263,7 +261,8 @@ class Flow_Augmenting_Path(Brick):
         initial_potential = num_edges + 1
         flow_values = {}
         for edge in properties['flow']:
-            flow_values[self.capacity_base.format(*edge)] = properties['flow'][edge] + initial_potential
+            key = self.generate_neuron_name(self.capacity_base.format(*edge))
+            flow_values[key] = properties['flow'][edge] + initial_potential
         nx.set_node_attributes(graph, name='potential', values=flow_values)
         return graph
 
@@ -303,11 +302,11 @@ class Flow_Augmenting_Path(Brick):
         num_edges = len(self.flow_graph.edges())
         initial_potential = num_edges + 1
 
-        begin_node_name = self.name + '_begin'
+        begin_node_name = self.generate_neuron_name('begin')
         graph.add_node(begin_node_name, threshold=0.5, decay=0.0, potential=0.0)
         graph.add_edge(control_nodes[0]['complete'], begin_node_name, weight=1.0, delay=2)
 
-        complete_name = self.name + '_complete'
+        complete_name = self.generate_neuron_name('complete')
         graph.add_node(
                 complete_name,
                 index=len(self.flow_graph.edges),
@@ -322,9 +321,9 @@ class Flow_Augmenting_Path(Brick):
         capacity_neurons = []
         curr_index = 1
         for u, v, props in self.flow_graph.edges(data=True):
-            capacity_name = self.capacity_base.format(u, v)
-            residual_name = self.residual_base.format(u, v)
-            recall_name = self.recall_base.format(u, v)
+            capacity_name = self.generate_neuron_name(self.capacity_base.format(u, v))
+            residual_name = self.generate_neuron_name(self.residual_base.format(u, v))
+            recall_name = self.generate_neuron_name(self.recall_base.format(u, v))
             graph.add_node(
                     capacity_name,
                     index=curr_index,
@@ -373,8 +372,8 @@ class Flow_Augmenting_Path(Brick):
             out_neighbors = self.flow_graph.succ[node]
             for in_neighbor in in_neighbors:
                 for out_neighbor in out_neighbors:
-                    residual_ab = self.residual_base.format(in_neighbor, node)
-                    residual_cd = self.residual_base.format(node, out_neighbor)
+                    residual_ab = self.generate_neuron_name(self.residual_base.format(in_neighbor, node))
+                    residual_cd = self.generate_neuron_name(self.residual_base.format(node, out_neighbor))
                     graph.add_edge(
                             residual_cd,
                             residual_ab,
@@ -382,8 +381,8 @@ class Flow_Augmenting_Path(Brick):
                             delay=1.0,
                             )
 
-                    recall_ab = self.recall_base.format(in_neighbor, node)
-                    recall_cd = self.recall_base.format(node, out_neighbor)
+                    recall_ab = self.generate_neuron_name(self.recall_base.format(in_neighbor, node))
+                    recall_cd = self.generate_neuron_name(self.recall_base.format(node, out_neighbor))
                     graph.add_edge(
                             recall_ab,
                             recall_cd,
@@ -392,15 +391,15 @@ class Flow_Augmenting_Path(Brick):
                             )
             if 's' in in_neighbors:
                 graph.add_edge(
-                        self.residual_base.format('s', node),
-                        self.recall_base.format('s', node),
+                        self.generate_neuron_name(self.residual_base.format('s', node)),
+                        self.generate_neuron_name(self.recall_base.format('s', node)),
                         weight=1.0,
                         delay=1.0,
                         )
             if 't' in out_neighbors:
                 graph.add_edge(
                         begin_node_name,
-                        self.residual_base.format(node, 't'),
+                        self.generate_neuron_name(self.residual_base.format(node, 't')),
                         weight=1.0,
                         delay=1.0,
                         )
