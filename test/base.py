@@ -36,8 +36,8 @@ class BrickTest(ABC):
         return self.backend.run(timesteps)
 
     def basic_test(self, input_values, expected_output):
-        scaffold = self.build_scaffold(input_values)
         timesteps = self.calculate_max_timesteps(input_values)
+        scaffold = self.build_scaffold(input_values)
         spikes = self.run_scaffold(scaffold, timesteps)
         self.check_spike_output(spikes, expected_output, scaffold)
 

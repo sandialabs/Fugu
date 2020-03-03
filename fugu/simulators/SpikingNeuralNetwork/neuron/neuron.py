@@ -45,7 +45,8 @@ class LIFNeuron(Neuron):
         input_v = 0.0
         if self.presyn:
             for s in self.presyn:
-                input_v += s._hist[0]
+                if len(s._hist) > 0:
+                    input_v += s._hist[0]
 
 #        self.v = (self._m * self.v) + input_v
         self.v = self.v + input_v
