@@ -15,13 +15,19 @@
 > - Existing issues that must be completed first (link as a related issue)
 > - New issues the must be developed first (create issue and link as related)
 
+#### Definition of Success
+- Diagram/High-Level description is made
+- Tests are written
+- Brick is implemented
+- Tests pass
+
 
 #### Additional Details
 > Document useful details here, for example:  
 > - Use cases  
 > - Benefits  
 > - Goals  
-> - Pre-requisites  
+> - Prerequisites  
 > - External resources needed  
 > - Useful links and references
 
@@ -31,9 +37,6 @@
 
 ### TODOs
 
-- [ ] Tests are written
-- [ ] Brick is implemented
-- [ ] Tests pass
 
 -----
 ----- 
