@@ -39,6 +39,9 @@ input_coding_types = [
                        ]
 
 def generate_brick_tag(brick_name):
+    """
+    Function that generates a unique brick tag
+    """
     return "{}{}".format(brick_name, Brick.brick_id)
 
 class Brick(ABC):
@@ -56,6 +59,9 @@ class Brick(ABC):
         Brick.brick_id += 1
 
     def generate_neuron_name(self, neuron_name):
+        """
+        Adds the brick_tag to a neuron's name
+        """
         return "{}:{}".format(self.brick_tag, neuron_name)
 
     @abstractmethod
