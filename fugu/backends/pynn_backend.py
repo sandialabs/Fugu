@@ -27,6 +27,8 @@ class pynn_Backend(Backend):
         # maps
         self.neuron_type_map = {}
         self.neuron_index_map = {}
+        self.index_neuron_input_map = {}
+        self.index_neuron_main_map = {}
 
         self.input_neurons = set()
         self.main_neurons = set()
@@ -60,10 +62,10 @@ class pynn_Backend(Backend):
         self.main_edge_properties = {syn_type: {} for syn_type in self.synapse_receptors}
 
         # I really hate this, this needs to be better
-        self.input_main_edge_index_map = {}
-        self.input_main_edge_counts = {}
-        self.main_edge_index_map = {}
-        self.main_edge_counts = {}
+        self.input_main_edge_index_map = {syn_type: {} for syn_type in self.synapse_receptors}
+        self.input_main_edge_counts = {syn_type: {} for syn_type in self.synapse_receptors}
+        self.main_edge_index_map = {syn_type: {} for syn_type in self.synapse_receptors}
+        self.main_edge_counts = {syn_type: {} for syn_type in self.synapse_receptors}
 
         self.input_main_synapses = {}
         self.main_synapses = {}
@@ -120,10 +122,12 @@ class pynn_Backend(Backend):
         for receptor in self.input_main_synapses:
             for source in self.input_main_synapses[receptor]:
                 for target in self.input_main_synapses[receptor][source]:
-                    print("Synapse: ({})-{}->({})".format(source, receptor, target))
+                    print("Synapse: ({})-{}->({}), {}".format(source, receptor, target, self.input_main_edge_counts[receptor][source][target]))
                     if self.backend == BRIAN_BACKEND or self.backend == SPINNAKER_BACKEND:
                         for edge in self.input_main_edge_lists[receptor][source][target]:
-                            print(edge)
+                            u_name = self.index_neuron_input_map[edge[0]]
+                            v_name = self.index_neuron_main_map[edge[1]]
+                            print(u_name, v_name, edge[2:])
                     else:
                         for edge in self.input_main_synapses[receptor][source][target]:
                             print(edge)
@@ -133,10 +137,11 @@ class pynn_Backend(Backend):
         for receptor in self.main_synapses:
             for source in self.main_synapses[receptor]:
                 for target in self.main_synapses[receptor][source]:
-                    print("Synapse: ({})-{}->({})".format(source, receptor, target))
+                    print("Synapse: ({})-{}->({}), {}".format(source, receptor, target, self.main_edge_counts[receptor][source][target]))
                     if self.backend == BRIAN_BACKEND or self.backend == SPINNAKER_BACKEND:
                         for edge in self.main_edge_lists[receptor][source][target]:
-                            print(edge)
+                            u_name, v_name = [self.index_neuron_main_map[e] for e in edge[:2]]
+                            print(u_name, v_name, edge[2:])
                     else:
                         for edge in self.main_synapses[receptor][source][target]:
                             print(edge)
@@ -330,7 +335,7 @@ class pynn_Backend(Backend):
 
             self.pynn_sim.setup(timestep=1)
             for main_type in self.main_neuron_types:
-                self.pynn_sim.set_number_of_neurons_per_core(self.main_neuron_types[main_type], 100)
+                self.pynn_sim.set_number_of_neurons_per_core(self.main_neuron_types[main_type], 200)
         else:
             raise ValueError("unsupported pyNN backend")
 
@@ -432,6 +437,7 @@ class pynn_Backend(Backend):
             self.property_values[neuron_type]['i_offset'].append(self.defaults['i_offset'])
 
             self.neuron_index_map[neuron] = self.main_indicies[neuron_type]
+            self.index_neuron_main_map[self.main_indicies[neuron_type]] = neuron
             self.main_indicies[neuron_type] += 1
             self.main_neurons.add(neuron)
 
@@ -444,6 +450,7 @@ class pynn_Backend(Backend):
                     input_type = self.input_neuron_type_names[0]
                     self.neuron_type_map[neuron] = input_type
                     self.neuron_index_map[neuron] = self.input_indicies[input_type]
+                    self.index_neuron_input_map[self.input_indicies[input_type]] = neuron
                     self.input_indicies[input_type] += 1
                     self.input_neurons.add(neuron)
                 else:
@@ -481,9 +488,9 @@ class pynn_Backend(Backend):
 
             if u in self.input_neurons:
                 if u_type not in self.input_main_edge_lists[syn_receptor]:
-                    self.input_main_edge_lists[syn_receptor] = {u_type: {}}
-                    self.input_main_edge_properties[syn_receptor] = {u_type: {}}
-                    self.input_main_edge_counts[syn_receptor] = {u_type: {}}
+                    self.input_main_edge_lists[syn_receptor][u_type] = {}
+                    self.input_main_edge_properties[syn_receptor][u_type] = {}
+                    self.input_main_edge_counts[syn_receptor][u_type] = {}
                 if v_type not in self.input_main_edge_lists[syn_receptor][u_type]:
                     self.input_main_edge_lists[syn_receptor][u_type][v_type] = []
                     self.input_main_edge_properties[syn_receptor][u_type][v_type] = {'weight': [], 'delay': []}
@@ -491,10 +498,14 @@ class pynn_Backend(Backend):
 
                 self.input_main_edge_lists[syn_receptor][u_type][v_type].append(synapse)
             else:
+                if syn_receptor not in self.main_edge_lists:
+                    self.main_edge_lists[syn_receptor] = {}
+                    self.main_edge_properties[syn_receptor] = {}
+                    self.main_edge_counts[syn_receptor] = {}
                 if u_type not in self.main_edge_lists[syn_receptor]:
-                    self.main_edge_lists[syn_receptor] = {u_type: {}}
-                    self.main_edge_properties[syn_receptor] = {u_type: {}}
-                    self.main_edge_counts[syn_receptor] = {u_type: {}}
+                    self.main_edge_lists[syn_receptor][u_type] = {}
+                    self.main_edge_properties[syn_receptor][u_type] = {}
+                    self.main_edge_counts[syn_receptor][u_type] = {}
                 if v_type not in self.main_edge_lists[syn_receptor][u_type]:
                     self.main_edge_lists[syn_receptor][u_type][v_type] = []
                     self.main_edge_properties[syn_receptor][u_type][v_type] = {'weight': [], 'delay': []}
@@ -548,6 +559,10 @@ class pynn_Backend(Backend):
         self.pynn_sim.run(max_runtime)
         if self.collect_metrics:
             self.metrics['runtime'].append(timer() - start)
+
+        if self.verbose and self.backend == SPINNAKER_BACKEND:
+            print("Finsihed running, here is network info:")
+            self.print_network_info()
 
         main_data = {}
         main_spiketrains = {}
