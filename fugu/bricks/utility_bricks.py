@@ -1294,3 +1294,160 @@ class Max(Brick):
                  output_lists,
                  self.output_codings,
                  )
+
+
+class Adder(Brick):
+    '''
+    Brick that calculates the maximum value of a collection of values stored as binary registers.
+    '''
+
+    def __init__(self, name=None, output_coding='Undefined'):
+        super(Adder, self).__init__("Adder")
+        self.name = name
+        self.supported_codings = input_coding_types
+
+        self.output_codings = [output_coding]
+        self.metadata = {'D': None}
+
+    def build(self, graph, metadata, control_nodes, input_lists, input_codings):
+        """
+        Build Register brick.
+
+        Arguments:
+            + graph - networkx graph to define connections of the computational graph
+            + metadata - dictionary to define the shapes and parameters of the brick
+            + control_nodes - dictionary of lists of auxillary networkx nodes.
+                Expected keys:
+                    'complete' - A list of neurons that fire when the brick is done
+            + input_lists - list of nodes that will contain input
+            + input_coding - list of input coding formats.  All coding types supported
+
+        Returns:
+            + graph of a computational elements and connections
+            + dictionary of output parameters (shape, coding, layers, depth, etc)
+            + dictionary of control nodes ('complete')
+            + list of output
+            + list of coding formats of output
+        """
+        if len(input_lists) > 2:
+            raise ValueError(
+                    "Too many inputs! {} can only support two inputs, received: {}".format(
+                                                                                      self.brick_tag,
+                                                                                      len(input_lists),
+                                                                                      )
+                    )
+        for input_coding in input_codings:
+            if input_coding not in self.supported_codings:
+                raise ValueError(
+                        "Unsupported Input Coding. Found: {}. Allowed: {}".format(
+                                                                             input_coding,
+                                                                             self.supported_codings,
+                                                                             )
+                        )
+
+        begin_node_name = self.generate_neuron_name('begin')
+        graph.add_node(
+                begin_node_name,
+                threshold=0.1,
+                decay=0.0,
+                potential=0.0,
+                )
+
+        complete_name = self.generate_neuron_name('complete')
+        graph.add_node(
+                complete_name,
+                threshold=0.1,
+                decay=0.0,
+                potential=0.0,
+                )
+        complete_node_list = [complete_name]
+
+        max_size = 0
+        for register in input_lists:
+            register_size = len(register)
+            if register_size > max_size:
+                max_size = register_size
+            for bit in register:
+                graph.add_edge(
+                        bit,
+                        begin_node_name,
+                        weight=1.0,
+                        delay=1.0,
+                        )
+
+        graph.add_edge(
+                begin_node_name,
+                complete_name,
+                weight=1.0,
+                delay=1,
+                )
+
+        carry_base = "C_{}"
+        S_base = "S_{}"
+
+        S_names = []
+        for i in range(max_size + 1):
+            carry_name = self.generate_neuron_name(carry_base.format(i))
+            S_name = self.generate_neuron_name(S_base.format(i))
+            S_names.append(S_name)
+
+            graph.add_node(
+                    carry_name,
+                    threshold=2 ** (i + 1) - 0.01,
+                    decay=1.0,
+                    potential=0.0,
+                    )
+            graph.add_node(
+                    S_name,
+                    threshold=0.99,
+                    decay=1.0,
+                    potential=0.0,
+                    bit_position=i,
+                    )
+
+            graph.add_edge(
+                    carry_name,
+                    S_name,
+                    weight=-2.0,
+                    delay=1.0,
+                    )
+            if i > 0:
+                prev_carry_name = self.generate_neuron_name(carry_base.format(i - 1))
+
+                graph.add_edge(
+                        prev_carry_name,
+                        S_name,
+                        weight=1.0,
+                        delay=1.0,
+                        )
+
+        for register in input_lists:
+            for i, bit in enumerate(register):
+                S_name = self.generate_neuron_name(S_base.format(i))
+                graph.add_edge(
+                        bit,
+                        S_name,
+                        weight=1.0,
+                        delay=2.0,
+                        )
+
+                for j in range(i, max_size):
+                    carry_name = self.generate_neuron_name(carry_base.format(j))
+                    graph.add_edge(
+                            bit,
+                            carry_name,
+                            weight=2 ** i,
+                            delay=1.0,
+                            )
+
+        output_lists = [S_names]
+
+        self.is_built = True
+
+        return (
+                 graph,
+                 self.metadata,
+                 [{'complete': complete_node_list[0], 'begin': begin_node_name}],
+                 output_lists,
+                 self.output_codings,
+                 )
