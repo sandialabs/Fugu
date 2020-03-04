@@ -25,19 +25,35 @@ class ChangeSynapseInternalPropertyTests(BrickTest):
         before_expected, after_expected = expected
 
         processed = set()
+        if self.debug:
+            print("Before")
         for row in before_spikes.itertuples():
             neuron_name = graph_names[int(row.neuron_number)][0]
+            if self.debug:
+                print(neuron_name, row.time)
             processed.add((neuron_name, row.time))
+        if self.debug:
+            print("After")
         for row in after_spikes.itertuples():
             neuron_name = graph_names[int(row.neuron_number)][0]
+            if self.debug:
+                print(neuron_name, row.time)
             processed.add((neuron_name, row.time))
 
+        test_brick_tag = scaffold.name_to_tag["Test"]
+        test_brick = scaffold.circuit.nodes[scaffold.brick_to_number[test_brick_tag]]['brick']
         for entry in before_expected:
-            self.assertTrue(entry in processed)
-            processed.remove(entry)
+            converted = (test_brick.generate_neuron_name(entry[0]), entry[1])
+            if self.debug:
+                print(entry, converted)
+            self.assertTrue(converted in processed)
+            processed.remove(converted)
         for entry in after_expected:
-            self.assertTrue(entry in processed)
-            processed.remove(entry)
+            converted = (test_brick.generate_neuron_name(entry[0]), entry[1])
+            if self.debug:
+                print(entry, converted)
+            self.assertTrue(converted in processed)
+            processed.remove(converted)
 
         self.assertTrue(len(processed) == 0)
 
@@ -54,9 +70,9 @@ class ChangeSynapseInternalPropertyTests(BrickTest):
                [[
                  [],
                  [
-                   ('Test_0', 1.0),
-                   ('Test_1', 1.0),
-                   ('Test_3', 1.0),
+                   ('0', 1.0),
+                   ('1', 1.0),
+                   ('3', 1.0),
                  ],
                ]],
                )

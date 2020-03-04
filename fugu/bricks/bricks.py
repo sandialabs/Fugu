@@ -38,16 +38,31 @@ input_coding_types = [
                        'Undefined',
                        ]
 
+def generate_brick_tag(brick_name):
+    """
+    Function that generates a unique brick tag
+    """
+    return "{}{}".format(brick_name, Brick.brick_id)
 
 class Brick(ABC):
     """
     Abstract Base Class definition of a Brick class
     """
 
-    def __init__(self):
+    brick_id = 0
+
+    def __init__(self, tag="Brick"):
+        self.brick_tag = generate_brick_tag(tag)
         self.name = "Empty Brick"
         self.is_built = False
         self.supported_codings = []
+        Brick.brick_id += 1
+
+    def generate_neuron_name(self, neuron_name):
+        """
+        Adds the brick_tag to a neuron's name
+        """
+        return "{}:{}".format(self.brick_tag, neuron_name)
 
     @abstractmethod
     def build(self, graph, metadata, control_nodes, input_lists, input_codings):

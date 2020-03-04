@@ -12,7 +12,7 @@ from fugu.backends import ds_Backend
 
 MAX_RUNTIME = 605
 
-backend = 'pynn'
+backend = 'ds'
 pynn_args = {}
 pynn_args['backend'] = 'brian'
 pynn_args['verbose'] = False 
@@ -25,11 +25,11 @@ scaffold.add_brick(Vector_Input(np.array([0,1,0,1]), coding='Raster', name='inpu
 scaffold.add_brick(Vector_Input(np.array([0,0,1,0]), coding='Raster', name='input2'), 'input' )
 scaffold.add_brick(Vector_Input(np.array([1,0,1,0]), coding='Raster', name='input3'), 'input' )
 scaffold.add_brick(Vector_Input(np.array([1,0,1,1]), coding='Raster', name='input4'), 'input' )
-scaffold.add_brick(Max(4, name='Max'), input_nodes=[(0,0), (1,0), (2,0), (3,0)], output=True)
+scaffold.add_brick(Max(name='MaxBrick'), input_nodes=[(0,0), (1,0), (2,0), (3,0)], output=True)
 
 scaffold.lay_bricks()
 
-#scaffold.summary(verbose=2)
+scaffold.summary(verbose=2)
 
 backend = ds_Backend()
 backend_args = {}

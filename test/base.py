@@ -30,6 +30,7 @@ class BrickTest(ABC):
 
     def run_scaffold(self, scaffold, timesteps):
         if self.debug:
+            scaffold.summary(verbose=2)
             self.backend_args['record'] = 'all'
         self.backend.compile(scaffold, self.backend_args)
         return self.backend.run(timesteps)
@@ -42,6 +43,10 @@ class BrickTest(ABC):
 
     def run_property_test(self, initial_values, new_properties, expected_outputs):
         scaffold = self.build_scaffold(initial_values)
+        if self.debug:
+            scaffold.summary(verbose=2)
+            self.backend_args['record'] = 'all'
+
         timesteps = self.calculate_max_timesteps(initial_values)
 
         self.backend.compile(scaffold, self.backend_args)

@@ -108,7 +108,8 @@ class ds_Backend(Backend):
         # Set properties for specific neurons and synapses
         for brick in properties:
             if brick != 'compile_args':
-                brick_id = self.scaffold.brick_to_number[brick]
+                brick_tag = self.scaffold.name_to_tag[brick]
+                brick_id = self.scaffold.brick_to_number[brick_tag]
                 changes = self.scaffold.circuit.nodes[brick_id]['brick'].set_properties(properties[brick])
                 if changes:
                     neuron_props, synapse_props = changes

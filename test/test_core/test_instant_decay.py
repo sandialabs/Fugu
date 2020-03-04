@@ -17,7 +17,7 @@ class InstantDecayTests(BrickTest):
         vector_brick = BRICKS.Vector_Input(
                                 self.convert_input(input_times),
                                 coding='Raster',
-                                name='Input',
+                                name='InputBrick',
                                 time_dimension=True,
                                 )
         decay_brick = BRICKS.InstantDecay(len(input_times), name="InstantDecay")
@@ -26,6 +26,9 @@ class InstantDecayTests(BrickTest):
         scaffold.add_brick(decay_brick, input_nodes=[(0, 0)], output=True)
 
         scaffold.lay_bricks()
+        if self.debug:
+            scaffold.summary(verbose=2)
+
         return scaffold
 
     def calculate_max_timesteps(self, input_values):
