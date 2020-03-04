@@ -5,7 +5,7 @@ Created on Wed Jun 19 14:46:55 2019
 
 @author: smusuva
 """
-from .bricks import Brick, input_coding_types
+from .bricks import InputBrick, input_coding_types
 
 import numpy as np
 
@@ -35,37 +35,6 @@ input_coding_types = [
                        'Rate',
                        'Undefined',
                        ]
-
-
-class InputBrick(Brick):
-    """
-    Abstract Base class for handling inputs inherited from Brick
-    """
-
-    def __init__(self, tag="InputBrick"):
-        super(InputBrick, self).__init__(tag)
-        self.streaming = False
-
-    @abstractmethod
-    def __iter__(self):
-        pass
-
-    @abstractmethod
-    def __next__(self):
-        pass
-
-    @abstractmethod
-    def get_input_value(self, t=None):
-        """
-        Abstract method to get input values. InputBricks must implement this method
-
-        Arguments:
-            + t - type of input (Default: None)
-        """
-        pass
-
-    def set_properties(self, properties=None):
-        pass
 
 
 class InputSource:

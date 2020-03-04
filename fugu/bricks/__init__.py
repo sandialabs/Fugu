@@ -11,5 +11,6 @@ from .input_bricks import InputBrick, Vector_Input, Spike_Input
 from .stochastic_bricks import PRN, Threshold
 from .application_bricks import LIS
 from .graph_bricks import Graph_Traversal, Flow_Augmenting_Path
-from .utility_bricks import Dot, Copy, Concatenate, AND_OR, ParityCheck, TemporalAdder, Register, Max, Adder
+from .utility_bricks import Dot, Copy, Concatenate, AND_OR, ParityCheck, TemporalAdder
+from .register_bricks import Register, Max, Adder
 from .test_bricks import InstantDecay, SynapseProperties
