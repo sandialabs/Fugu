@@ -12,5 +12,5 @@ from .stochastic_bricks import PRN, Threshold
 from .application_bricks import LIS
 from .graph_bricks import Graph_Traversal, Flow_Augmenting_Path
 from .utility_bricks import Dot, Copy, Concatenate, AND_OR, ParityCheck, TemporalAdder
-from .register_bricks import Register, Max, Adder
+from .register_bricks import Register, Max, Addition, Subtraction
 from .test_bricks import InstantDecay, SynapseProperties
