@@ -10,8 +10,6 @@ from ..base import BrickTest
 
 
 class AdditionBrickTests(BrickTest):
-    scale_factor = 0.5
-
     # Base class overrides
     def build_scaffold(self, input_values):
         scaffold = Scaffold()

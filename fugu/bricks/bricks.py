@@ -38,11 +38,13 @@ input_coding_types = [
                        'Undefined',
                        ]
 
+
 def generate_brick_tag(brick_name):
     """
     Function that generates a unique brick tag
     """
     return "{}{}".format(brick_name, Brick.brick_id)
+
 
 class Brick(ABC):
     """

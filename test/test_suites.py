@@ -10,6 +10,8 @@ from .test_core import SnnChangeSynapseInternalPropertyTests, DsChangeSynapseInt
 from .test_core import PynnSpinnakerChangeSynapseInternalPropertyTests, PynnBrianChangeSynapseInternalPropertyTests
 from .test_core import SnnChangeSynapseExternalPropertyTests, DsChangeSynapseExternalPropertyTests
 from .test_core import PynnSpinnakerChangeSynapseExternalPropertyTests, PynnBrianChangeSynapseExternalPropertyTests
+from .test_core import SnnCompoundBrickTests, DsCompoundBrickTests
+from .test_core import PynnSpinnakerCompoundBrickTests, PynnBrianCompoundBrickTests
 from .test_utility_bricks import SnnTemporalAdderTests, DsTemporalAdderTests
 from .test_utility_bricks import PynnSpinnakerTemporalAdderTests, PynnBrianTemporalAdderTests
 from .test_register_bricks import SnnAdditionTests, DsAdditionTests
@@ -31,6 +33,7 @@ loader = unittest.TestLoader()
 snn_suite = unittest.TestSuite()
 snn_suite.addTest(loader.loadTestsFromTestCase(SnnInstantDecayTests))
 snn_suite.addTest(loader.loadTestsFromTestCase(SnnVectorInputTests))
+snn_suite.addTest(loader.loadTestsFromTestCase(SnnCompoundBrickTests))
 snn_suite.addTest(loader.loadTestsFromTestCase(SnnChangeNeuronPropertyTests))
 snn_suite.addTest(loader.loadTestsFromTestCase(SnnChangeSynapseInternalPropertyTests))
 snn_suite.addTest(loader.loadTestsFromTestCase(SnnChangeSynapseExternalPropertyTests))
@@ -46,6 +49,7 @@ snn_suite.addTest(loader.loadTestsFromTestCase(SnnGraphTraversalTests))
 ds_suite = unittest.TestSuite()
 ds_suite.addTest(loader.loadTestsFromTestCase(DsInstantDecayTests))
 ds_suite.addTest(loader.loadTestsFromTestCase(DsVectorInputTests))
+ds_suite.addTest(loader.loadTestsFromTestCase(DsCompoundBrickTests))
 ds_suite.addTest(loader.loadTestsFromTestCase(DsChangeNeuronPropertyTests))
 ds_suite.addTest(loader.loadTestsFromTestCase(DsChangeSynapseInternalPropertyTests))
 ds_suite.addTest(loader.loadTestsFromTestCase(DsChangeSynapseExternalPropertyTests))
@@ -61,6 +65,7 @@ ds_suite.addTest(loader.loadTestsFromTestCase(DsGraphTraversalTests))
 pynn_spinnaker_suite = unittest.TestSuite()
 pynn_spinnaker_suite.addTest(loader.loadTestsFromTestCase(PynnSpinnakerInstantDecayTests))
 pynn_spinnaker_suite.addTest(loader.loadTestsFromTestCase(PynnSpinnakerVectorInputTests))
+pynn_spinnaker_suite.addTest(loader.loadTestsFromTestCase(PynnSpinnakerCompoundBrickTests))
 pynn_spinnaker_suite.addTest(loader.loadTestsFromTestCase(PynnSpinnakerChangeNeuronPropertyTests))
 pynn_spinnaker_suite.addTest(loader.loadTestsFromTestCase(PynnSpinnakerTemporalAdderTests))
 pynn_spinnaker_suite.addTest(loader.loadTestsFromTestCase(PynnSpinnakerRegisterTests))
@@ -76,6 +81,7 @@ pynn_spinnaker_suite.addTest(loader.loadTestsFromTestCase(PynnSpinnakerGraphTrav
 pynn_brian_suite = unittest.TestSuite()
 pynn_brian_suite.addTest(loader.loadTestsFromTestCase(PynnBrianInstantDecayTests))
 pynn_brian_suite.addTest(loader.loadTestsFromTestCase(PynnBrianVectorInputTests))
+pynn_brian_suite.addTest(loader.loadTestsFromTestCase(PynnBrianCompoundBrickTests))
 pynn_brian_suite.addTest(loader.loadTestsFromTestCase(PynnBrianChangeNeuronPropertyTests))
 pynn_brian_suite.addTest(loader.loadTestsFromTestCase(PynnBrianChangeSynapseInternalPropertyTests))
 pynn_brian_suite.addTest(loader.loadTestsFromTestCase(PynnBrianChangeSynapseExternalPropertyTests))

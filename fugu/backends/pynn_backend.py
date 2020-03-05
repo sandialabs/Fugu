@@ -122,7 +122,14 @@ class pynn_Backend(Backend):
         for receptor in self.input_main_synapses:
             for source in self.input_main_synapses[receptor]:
                 for target in self.input_main_synapses[receptor][source]:
-                    print("Synapse: ({})-{}->({}), {}".format(source, receptor, target, self.input_main_edge_counts[receptor][source][target]))
+                    print(
+                      "Synapse: ({})-{}->({}), {}".format(
+                                                     source,
+                                                     receptor,
+                                                     target,
+                                                     self.input_main_edge_counts[receptor][source][target],
+                                                     ),
+                      )
                     if self.backend == BRIAN_BACKEND or self.backend == SPINNAKER_BACKEND:
                         for edge in self.input_main_edge_lists[receptor][source][target]:
                             u_name = self.index_neuron_input_map[edge[0]]
@@ -137,7 +144,14 @@ class pynn_Backend(Backend):
         for receptor in self.main_synapses:
             for source in self.main_synapses[receptor]:
                 for target in self.main_synapses[receptor][source]:
-                    print("Synapse: ({})-{}->({}), {}".format(source, receptor, target, self.main_edge_counts[receptor][source][target]))
+                    print(
+                      "Synapse: ({})-{}->({}), {}".format(
+                                                     source,
+                                                     receptor,
+                                                     target,
+                                                     self.main_edge_counts[receptor][source][target],
+                                                     ),
+                      )
                     if self.backend == BRIAN_BACKEND or self.backend == SPINNAKER_BACKEND:
                         for edge in self.main_edge_lists[receptor][source][target]:
                             u_name, v_name = [self.index_neuron_main_map[e] for e in edge[:2]]

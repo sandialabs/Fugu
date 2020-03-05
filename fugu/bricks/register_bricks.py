@@ -293,13 +293,15 @@ class Max(Brick):
     Brick that calculates the maximum value of a collection of values stored as binary registers.
     '''
 
-    def __init__(self, name=None, output_coding='Undefined'):
+    def __init__(self, default_size=-1, name=None, output_coding='Undefined'):
         super(Max, self).__init__("Max")
         self.name = name
         self.supported_codings = input_coding_types
 
         self.output_codings = [output_coding]
         self.metadata = {'D': None}
+
+        self.default_size = default_size
 
     def build(self, graph, metadata, control_nodes, input_lists, input_codings):
         """
@@ -347,7 +349,10 @@ class Max(Brick):
                 )
         complete_node_list = [complete_name]
 
-        max_size = 0
+        if self.default_size > 0:
+            max_size = self.default_size
+        else:
+            max_size = 0
         for register in input_lists:
             register_size = len(register)
             if register_size > max_size:
@@ -597,7 +602,7 @@ class Addition(Brick):
         self.output_codings = [output_coding]
         self.metadata = {'D': None}
 
-        self.register_size = register_size 
+        self.register_size = register_size
 
     def build(self, graph, metadata, control_nodes, input_lists, input_codings):
         """
@@ -878,7 +883,6 @@ class Subtraction(CompoundBrick):
                         delay=1.0,
                         )
 
-                
                 graph.add_edge(
                         y_bit,
                         complement_name,

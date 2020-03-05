@@ -28,5 +28,3 @@ def CalculateSpikeTimes(circuit, main_key='timestep'):
         raise ValueError("main_key argument must be 'timestep' or 'neuron_name', not {}".format(main_key))
 
     return initial_spikes
-
-

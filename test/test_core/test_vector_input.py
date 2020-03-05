@@ -76,4 +76,3 @@ class PynnBrianVectorInputTests(VectorInputTests, unittest.TestCase):
     def setUpClass(self):
         self.backend = pynn_Backend()
         self.backend_args['backend'] = 'brian'
-        #self.backend_args['record'] = 'all'
