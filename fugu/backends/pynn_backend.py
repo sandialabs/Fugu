@@ -283,14 +283,14 @@ class pynn_Backend(Backend):
 
     def compile(self, scaffold, compile_args={}):
         # creates neuron populations and synapses
-        simulator = compile_args['backend'] if 'backend' in compile_args else 'brian'
+        simulator = compile_args.get('backend', 'brian')
 
-        self.report_all = compile_args['record'] == 'all' if 'record' in compile_args else False
-        self.show_plots = compile_args['show_plots'] if 'show_plots' in compile_args else False
-        self.verbose = compile_args['verbose'] if 'verbose' in compile_args else False
-        self.collect_metrics = compile_args['collect_metrics'] if 'collect_metrics' in compile_args else False
-        self.return_potentials = compile_args['return_potentials'] if 'return_potentials' in compile_args else False
-        self.scale_factor = compile_args['scale_factor'] if 'scale_factor' in compile_args else 1.0
+        self.report_all = compile_args.get('record', False) == 'all'
+        self.show_plots = compile_args.get('show_plots', False)
+        self.verbose = compile_args.get('verbose', False)
+        self.collect_metrics = compile_args.get('collect_metrics', False)
+        self.return_potentials = compile_args.get('return_potentials', False)
+        self.scale_factor = compile_args.get('scale_factor', 1.0)
 
         if self.collect_metrics:
             start = timer()
@@ -443,10 +443,7 @@ class pynn_Backend(Backend):
 
             self.property_values[neuron_type]['v_rest'].append(self.defaults['v_rest'])
 
-            if 'potential' in neuron_props:
-                self.initial_potentials[neuron_type].append(neuron_props['potential'])
-            else:
-                self.initial_potentials[neuron_type].append(self.defaults['v_rest'])
+            self.initial_potentials[neuron_type].append(neuron_props.get('potential', self.defaults['v_rest']))
 
             self.property_values[neuron_type]['i_offset'].append(self.defaults['i_offset'])
 
@@ -458,7 +455,7 @@ class pynn_Backend(Backend):
         # Create neurons
         for brick in self.fugu_scaffold.circuit.nodes:
             brick = self.fugu_scaffold.circuit.nodes[brick]
-            is_input = brick['layer'] == 'input' if 'layer' in brick else False
+            is_input = brick.get('layer', False) == 'input'
             for neuron in self.brick_neurons[brick['tag']]:
                 if is_input:
                     input_type = self.input_neuron_type_names[0]

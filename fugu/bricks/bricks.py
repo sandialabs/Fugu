@@ -125,7 +125,8 @@ class InputBrick(Brick):
 
 class CompoundBrick(Brick):
     """
-    Abstract Base Class definition of a Brick class
+    Abstract Base Class definition of a CompoundBrick class.
+    A CompoundBrick is brick that contains other bricks.
     """
 
     brick_id = 0
