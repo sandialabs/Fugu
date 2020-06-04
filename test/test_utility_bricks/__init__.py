@@ -1,8 +1,2 @@
-from .test_adder_brick import SnnAdderTests, DsAdderTests
-from .test_adder_brick import PynnSpinnakerAdderTests, PynnBrianAdderTests
 from .test_temporal_adder_brick import SnnTemporalAdderTests, DsTemporalAdderTests
 from .test_temporal_adder_brick import PynnSpinnakerTemporalAdderTests, PynnBrianTemporalAdderTests
-from .test_register_brick import SnnRegisterTests, DsRegisterTests
-from .test_register_brick import PynnSpinnakerRegisterTests, PynnBrianRegisterTests
-from .test_max_brick import SnnMaxTests, DsMaxTests
-from .test_max_brick import PynnSpinnakerMaxTests, PynnBrianMaxTests

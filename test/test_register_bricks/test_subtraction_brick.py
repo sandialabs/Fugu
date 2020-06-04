@@ -9,9 +9,7 @@ from fugu.backends import ds_Backend, snn_Backend, pynn_Backend
 from ..base import BrickTest
 
 
-class AdderBrickTests(BrickTest):
-    scale_factor = 0.5
-
+class SubtractionBrickTests(BrickTest):
     # Base class overrides
     def build_scaffold(self, input_values):
         scaffold = Scaffold()
@@ -20,27 +18,29 @@ class AdderBrickTests(BrickTest):
         vector_1 = BRICKS.Vector_Input(converted_input[0], coding='Raster', name='Input1')
         vector_2 = BRICKS.Vector_Input(converted_input[1], coding='Raster', name='Input2')
 
-        adder_brick = BRICKS.Adder(name="Adder")
+        subtraction_brick = BRICKS.Subtraction(name="Subtraction")
 
         scaffold.add_brick(vector_1, 'input')
         scaffold.add_brick(vector_2, 'input')
-        scaffold.add_brick(adder_brick, input_nodes=[(0, 0), (1, 0)], output=True)
+        scaffold.add_brick(subtraction_brick, input_nodes=[(0, 0), (1, 0)], output=True)
 
         scaffold.lay_bricks()
         return scaffold
 
     def calculate_max_timesteps(self, input_values):
-        return 4
+        return 10
 
     def check_spike_output(self, spikes, expected, scaffold):
         answer = 0
         graph_names = list(scaffold.graph.nodes.data('name'))
         for row in spikes.itertuples():
             node_name = graph_names[int(row.neuron_number)][0]
-            brick_tag, neuron_name = node_name.split(":")
+            tags = node_name.split(":")
+            brick_tag = tags[0]
+            neuron_name = tags[-1]
             if self.debug:
                 print(node_name, row.time)
-            if 'S' in neuron_name and 'Adder' in brick_tag:
+            if 'S' in neuron_name and 'Subtraction' in brick_tag:
                 bit_position = scaffold.graph.nodes[node_name]['bit_position']
                 answer += 2 ** bit_position
 
@@ -55,42 +55,39 @@ class AdderBrickTests(BrickTest):
         return converted_inputs
 
     # Tests
-    def test_adder_1(self):
-        self.basic_test([10, 7], 17)
+    def test_subtraction_1(self):
+        self.basic_test([10, 7], 3)
 
-    def test_adder_2(self):
-        self.basic_test([10, 8], 18)
+    def test_subtraction_2(self):
+        self.basic_test([10, 8], 2)
 
-    def test_adder_3(self):
-        self.basic_test([6, 8], 14)
+    def test_subtraction_3(self):
+        self.basic_test([9, 9], 0)
 
-    def test_adder_4(self):
-        self.basic_test([9, 9], 18)
-
-    def test_adder_5(self):
-        self.basic_test([1, 9], 10)
+    def test_subtraction_4(self):
+        self.basic_test([23, 2], 21)
 
 
-class SnnAdderTests(AdderBrickTests, unittest.TestCase):
+class SnnSubtractionTests(SubtractionBrickTests, unittest.TestCase):
     @classmethod
     def setUpClass(self):
         self.backend = snn_Backend()
 
 
-class DsAdderTests(AdderBrickTests, unittest.TestCase):
+class DsSubtractionTests(SubtractionBrickTests, unittest.TestCase):
     @classmethod
     def setUpClass(self):
         self.backend = ds_Backend()
 
 
-class PynnSpinnakerAdderTests(AdderBrickTests, unittest.TestCase):
+class PynnSpinnakerSubtractionTests(SubtractionBrickTests, unittest.TestCase):
     @classmethod
     def setUpClass(self):
         self.backend = pynn_Backend()
         self.backend_args['backend'] = 'spinnaker'
 
 
-class PynnBrianAdderTests(AdderBrickTests, unittest.TestCase):
+class PynnBrianSubtractionTests(SubtractionBrickTests, unittest.TestCase):
     @classmethod
     def setUpClass(self):
         self.backend = pynn_Backend()

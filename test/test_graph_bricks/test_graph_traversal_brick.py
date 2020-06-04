@@ -15,6 +15,7 @@ from ..base import BrickTest
 
 DEBUG_REGISTERS = True
 
+
 class GraphTraversalBrickTests(BrickTest):
     def build_scaffold(self, input_values):
         graph, source_vertex, return_pred, use_edge_references = input_values
