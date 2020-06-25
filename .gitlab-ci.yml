@@ -1,0 +1,19 @@
+variables:
+  http_proxy: "http://wwwproxy.sandia.gov:80/"
+  https_proxy: "http://wwwproxy.sandia.gov:80/"
+  no_proxy: "127.0.0.1,localhost,.sandia.gov"
+
+main_tests:
+    image: python:3.6
+    script:
+        - cd fugu
+        - python setup.py install
+        - python setup.py test --test-suite test.test_suites.ds_suite 
+        - python setup.py test --test-suite test.test_suites.snn_suite 
+
+pynn_tests:
+    image: python:2.7
+    script:
+        - cd fugu
+        - python setup.py install
+        - python setup.py test --test-suite test.test_suites.pynn_brian_suite
