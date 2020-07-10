@@ -13,18 +13,21 @@ import fugu
 from fugu import Scaffold 
 #from fugu import Brick, Spike_Input, PRN
 from fugu import bricks
+#from fugu.bricks.input_bricks import Vector_Input
+from fugu.backends import snn_Backend
 
 class basic_AND(fugu.Brick):
     def __init__(self, name=None):
-        super(fugu.Brick, self).__init__()
+        super(basic_AND, self).__init__()
         #The brick hasn't been built yet.
-        self.is_built = False
+        #self.is_built = False
         #Leave for compatibility, D represents the depth of the circuit.  Needs to be updated.
         self.metadata = {'D':1}  
         #We just store the name passed at construction.
         self.name = name
         #For this example, we'll let any input coding work even though the answer might not make sense.
         self.supported_codings = fugu.input_coding_types
+        
     def build(self,
              graph,
              metadata,
@@ -97,6 +100,14 @@ scaffold.summary(verbose=1)
 print()
 #print('----------------------')
 #print('Results:', end='\n\n')
-result = scaffold.evaluate(backend='ds', max_runtime=10, record_all=True)
+#result = scaffold.evaluate(backend='ds', max_runtime=10, record_all=True)
+
+backend = snn_Backend()
+backend_args = {}
+backend_args['record'] = 'all'
+#backend_args = {}
+backend.compile(scaffold, backend_args)
+
+result = backend.run(10)
 print(result)
 #scaffold.summary(verbose=1)

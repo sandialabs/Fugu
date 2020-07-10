@@ -8,7 +8,7 @@ print("---Importing Scaffold---")
 from fugu.scaffold import Scaffold
 print("---Importing Bricks---")
 from fugu.bricks import Vector_Input, Register, Max
-from fugu.backends import ds_Backend
+from fugu.backends import ds_Backend, snn_Backend
 
 MAX_RUNTIME = 605
 
@@ -31,7 +31,8 @@ scaffold.lay_bricks()
 
 scaffold.summary(verbose=2)
 
-backend = ds_Backend()
+#backend = ds_Backend()
+backend = snn_Backend()
 backend_args = {}
 backend_args['record'] = 'all'
 backend.compile(scaffold, backend_args)

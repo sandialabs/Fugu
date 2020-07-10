@@ -1,10 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""
-Created on Wed Jun 19 14:46:55 2019
 
-@author: smusuva
-"""
+
 import abc
 import sys
 
@@ -59,7 +56,7 @@ class Brick(ABC):
         self.is_built = False
         self.supported_codings = []
         Brick.brick_id += 1
-
+        
     def generate_neuron_name(self, neuron_name):
         """
         Adds the brick_tag to a neuron's name
