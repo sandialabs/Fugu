@@ -18,7 +18,7 @@ from fugu.backends import snn_Backend
 
 class basic_AND(fugu.Brick):
     def __init__(self, name=None):
-        super(basic_AND, self).__init__()
+        super().__init__()
         #The brick hasn't been built yet.
         #self.is_built = False
         #Leave for compatibility, D represents the depth of the circuit.  Needs to be updated.
