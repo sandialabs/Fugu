@@ -46,6 +46,8 @@ class BrickTest(ABC):
             scaffold.summary(verbose=2)
 
         timesteps = self.calculate_max_timesteps(initial_values)
+        if self.debug:
+            print("Running for {} timesteps".format(timesteps))
 
         self.backend.compile(scaffold, self.backend_args)
 

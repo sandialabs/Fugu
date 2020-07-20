@@ -6,6 +6,7 @@ from .bricks import Brick, CompoundBrick, input_coding_types
 class Register(Brick):
     '''
     Brick that stores the binary encoding of an non-negative integer.
+    This brick also provides simple controls such as "recall", "clear", and "set"
     '''
     def __init__(self, max_size, initial_value=0, name=None, output_coding='Undefined'):
         super(Register, self).__init__("Register")
