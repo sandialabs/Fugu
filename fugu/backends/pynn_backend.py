@@ -291,6 +291,7 @@ class pynn_Backend(Backend):
         self.collect_metrics = compile_args.get('collect_metrics', False)
         self.return_potentials = compile_args.get('return_potentials', False)
         self.scale_factor = compile_args.get('scale_factor', 1.0)
+        self.single_fire = compile_args.get('single_fire', False)
 
         if self.collect_metrics:
             start = timer()
@@ -416,9 +417,12 @@ class pynn_Backend(Backend):
 
             if self.backend == BRIAN_BACKEND:
                 self.property_values[neuron_type]['v_reset'].append(self.defaults['v_rest'])
-                self.property_values[neuron_type]['tau_refrac'].append(self.defaults['min_delay'])
                 self.property_values[neuron_type]['tau_syn_E'].append(self.defaults['tau_syn_E'])
                 self.property_values[neuron_type]['tau_syn_I'].append(self.defaults['tau_syn_I'])
+                if self.single_fire:
+                    self.property_values[neuron_type]['tau_refrac'].append(self.defaults['tau_m'])
+                else:
+                    self.property_values[neuron_type]['tau_refrac'].append(self.defaults['min_delay'])
 
                 if 'decay' in neuron_props:
                     decay = neuron_props['decay']
@@ -477,10 +481,10 @@ class pynn_Backend(Backend):
             is_inhib = False
             if 'weight' in values:
                 weight = values['weight']
-                if self.backend == SPINNAKER_BACKEND:
-                    weight = abs(weight)
                 if values['weight'] < 0:
                     is_inhib = True
+                if self.backend == SPINNAKER_BACKEND:
+                    weight = abs(weight)
             if 'delay' in values:
                 if self.backend == BRIAN_BACKEND:
                     delay = values['delay'] - 1
@@ -599,16 +603,17 @@ class pynn_Backend(Backend):
                     pynn_index = self.neuron_index_map[neuron]
                     if neuron_type not in main_voltage:
                         main_voltage[neuron_type] = {}
-                    if pynn_index < len(data[0]):
-                        voltage = data[0][pynn_index]
-                        main_voltage[neuron_type][pynn_index] = voltage
-                        potentials = potentials.append(
-                                                  {
-                                                    'neuron_number': pynn_index,
-                                                    'potential': voltage,
-                                                    },
-                                                  ignore_index=True,
-                                                  )
+                    voltage = []
+                    for step in data[0]:
+                        voltage.append(step[pynn_index].magnitude.item(0))
+                    main_voltage[neuron_type][pynn_index] = voltage
+                    potentials = potentials.append(
+                                              {
+                                                'neuron_number': pynn_index,
+                                                'potential': voltage,
+                                                },
+                                              ignore_index=True,
+                                              )
 
         spikes = {}
         for neuron in self.main_neurons:
@@ -666,7 +671,8 @@ class pynn_Backend(Backend):
             spike_result = spike_result.append(mini_df, sort=False)
 
         if self.return_potentials:
-            return spike_result, potentials
+            #return spike_result, potentials
+            return spike_result
         else:
             return spike_result
 

@@ -16,7 +16,7 @@ class PRN(Brick):
     Generates spikes randomly (a uniform random [0,1] draw is compared against a threshold).
     """
 
-    def __init__(self, probability=0.5, steps=None, shape=(1,), name=None, output_coding='Undefined'):
+    def __init__(self, probability=0.5, steps=None, shape=(1,), name="PRN", output_coding='Undefined'):
         '''
         Constructor for this brick.
         Arguments:
@@ -25,7 +25,7 @@ class PRN(Brick):
             + shape - shape of the neurons in the brick
             + output_coding - Desired output coding for the brick
         '''
-        super(PRN, self).__init__("PRN")
+        super(PRN, self).__init__(name)
         self.is_built = False
         self.metadata = {}
         self.probability = probability
@@ -66,7 +66,7 @@ class Threshold(Brick):
     Class to handle Threshold Brick. Inherits from Brick
     """
 
-    def __init__(self, threshold, decay=0.0, p=1.0, name=None, output_coding=None):
+    def __init__(self, threshold, decay=0.0, p=1.0, name="Threshold", output_coding=None):
         '''
         Construtor for this brick.
         Arguments:
@@ -76,7 +76,7 @@ class Threshold(Brick):
             + name - Name of the brick.  If not specified, a default will be used.  Name should be unique.
             + output_coding - Force a return of this output coding.  Default is 'unary-L'
         '''
-        super(Threshold, self).__init__("Threshold")
+        super(Threshold, self).__init__(name)
         self.is_built = False
         self.metadata = {}
         self.name = name

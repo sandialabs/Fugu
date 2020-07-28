@@ -44,6 +44,7 @@ class ds_Backend(Backend):
         if record == 'all':
             for neuron in self.ds_graph.nodes:
                 self.ds_graph.nodes[neuron]['record'] = ['spikes']
+
         for neuron in self.ds_graph.nodes:
             if 'potential' not in self.ds_graph.nodes[neuron]:
                 self.ds_graph.nodes[neuron]['potential'] = 0.0

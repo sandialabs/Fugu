@@ -8,7 +8,7 @@ class LIS(Brick):
     This brick calculates the length of the longest common subsequence for a given sequence of numbers
 
     '''
-    def __init__(self, sequence_length, name=None, output_coding='temporal-L'):
+    def __init__(self, sequence_length, name="LIS", output_coding='temporal-L'):
         '''
         Construtor for this brick.
         Arguments:
@@ -16,7 +16,7 @@ class LIS(Brick):
             + name - Name of the brick.  If not specified, a default will be used.  Name should be unique.
             + output_coding - Output coding type, default is 'temporal-L'
         '''
-        super(LIS, self).__init__("LIS")
+        super(LIS, self).__init__(name)
         self.is_built = False
         self.name = name
         self.supported_codings = input_coding_types

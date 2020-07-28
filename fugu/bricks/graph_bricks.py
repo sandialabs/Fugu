@@ -3,7 +3,8 @@
 import math
 import networkx as nx
 
-from .bricks import Brick, input_coding_types
+from .bricks import Brick, CompoundBrick, input_coding_types
+from .register_bricks import Register, Max
 
 
 class SimpleGraphTraversal(Brick):
@@ -17,10 +18,9 @@ class SimpleGraphTraversal(Brick):
           self,
           target_graph,
           target_node=None,
-          name=None,
+          name="SimpleGraphTraversal",
           store_parent_info=False,
           output_coding='temporal-L',
-          ignore_edge_weights=False,
           ):
         """
         Construtor for this brick.
@@ -31,7 +31,7 @@ class SimpleGraphTraversal(Brick):
                 If not specified, a default will be used. Name should be unique.
             + output_coding - Output coding type, default is 'temporal-L'
         """
-        super(SimpleGraphTraversal, self).__init__("GraphTraversal")
+        super(SimpleGraphTraversal, self).__init__(name)
         self.is_built = False
         self.name = name
         self.supported_codings = input_coding_types
@@ -41,9 +41,6 @@ class SimpleGraphTraversal(Brick):
         self.metadata = {'D': None}
 
         self.store_parent_info = store_parent_info
-
-        # whether or not to ignore edge weights of the original graph
-        self.ignore_edge_weights = ignore_edge_weights
 
     def build(self, graph, metadata, control_nodes, input_lists, input_codings):
         """
@@ -99,7 +96,7 @@ class SimpleGraphTraversal(Brick):
         for node in self.target_graph.nodes:
             node_name = self.generate_neuron_name(str(node))
             graph.add_node(node_name, index=(node,), threshold=1.0, decay=0.0, potential=0.0, is_vertex=True)
-            graph.add_edge(node_name, node_name, weight=-1000, delay=1)
+            graph.add_edge(node_name, node_name, weight=-10000, delay=1)
             if self.target_node:
                 if node == self.target_node:
                     output_node_list.append(node_name)
@@ -113,7 +110,7 @@ class SimpleGraphTraversal(Brick):
             node_name = self.generate_neuron_name(str(node))
             for neighbor in self.target_graph.neighbors(node):
                 # Need to scale up the delays for timing issues
-                if not self.ignore_edge_weights and 'weight' in self.target_graph.edges[node, neighbor]:
+                if 'weight' in self.target_graph.edges[node, neighbor]:
                     delay = 2 * self.target_graph.edges[node, neighbor]['weight']
                 else:
                     delay = 2
@@ -132,16 +129,16 @@ class SimpleGraphTraversal(Brick):
                             to_vertex=neighbor,
                             is_edge_reference=True,
                             )
-                    graph.add_edge(neighbor_name, reference_name, weight=-1000, delay=1.0)
+                    graph.add_edge(neighbor_name, reference_name, weight=-10000, delay=1.0)
                     if node == self.target_node:
-                        weight = -1000
+                        weight = -10000
                     else:
                         weight = 1.1
                     graph.add_edge(node_name, reference_name, weight=weight, delay=delay - 1.0)
                     graph.add_edge(reference_name, neighbor_name, weight=weight, delay=1.0)
                 else:
                     if node == self.target_node:
-                        graph.add_edge(node_name, neighbor_name, weight=-1000, delay=delay)
+                        graph.add_edge(node_name, neighbor_name, weight=-10000, delay=delay)
                     else:
                         graph.add_edge(node_name, neighbor_name, weight=1.1, delay=delay)
 
@@ -168,7 +165,7 @@ class SimpleGraphTraversal(Brick):
                  )
 
 
-class RegisterGraphTraversal(Brick):
+class RegisterGraphTraversal(CompoundBrick):
     """
     This brick traverses a graph (using breadth first search) given a starting vertex.
     This brick can also be used to solve single source shortest path using edge delays.
@@ -179,10 +176,9 @@ class RegisterGraphTraversal(Brick):
           self,
           target_graph,
           target_node=None,
-          name=None,
+          name="RegisterGraphTraversal",
           store_parent_info=False,
           output_coding='temporal-L',
-          ignore_edge_weights=False,
           ):
         """
         Construtor for this brick.
@@ -193,19 +189,20 @@ class RegisterGraphTraversal(Brick):
                 If not specified, a default will be used. Name should be unique.
             + output_coding - Output coding type, default is 'temporal-L'
         """
-        super(GraphTraversal, self).__init__("GraphTraversal")
+        super(RegisterGraphTraversal, self).__init__(name)
         self.is_built = False
         self.name = name
         self.supported_codings = input_coding_types
         self.target_node = target_node
-        self.target_graph = target_graph
+        self.target_graph = nx.DiGraph()
+        for u,v, data in target_graph.edges(data=True):
+            self.target_graph.add_edge(u, v, **data)
         self.output_codings = [output_coding]
         self.metadata = {'D': None}
 
         self.store_parent_info = store_parent_info
-
-        # whether or not to ignore edge weights of the original graph
-        self.ignore_edge_weights = ignore_edge_weights
+        self.register_size = int(math.log(len(target_graph.nodes()), 2)) + 1
+        self.node_indices = {} # map node name to node index
 
     def build(self, graph, metadata, control_nodes, input_lists, input_codings):
         """
@@ -256,6 +253,97 @@ class RegisterGraphTraversal(Brick):
 
         output_node_list = []
 
+        id_base = "NodeID_{}"
+        parent_base = "ParentID_{}"
+        node_index = 0
+        node_id_registers = {} # map node to its id register output nodes (so we can feed them into max circuits)
+        node_parent_registers = {}
+        for node in self.target_graph.nodes:
+            node_index += 1
+            self.node_indices[node] = node_index
+
+            node_name = self.generate_neuron_name(str(node_index))
+            graph.add_node(node_name, index=(node_index,), threshold=1.0, decay=0.0, potential=0.0, is_vertex=True, node=node)
+            graph.add_edge(node_name, node_name, weight=-10000, delay=1)
+            if self.target_node:
+                if node == self.target_node:
+                    output_node_list.append(node_name)
+                    graph.add_edge(node_name, complete_name, weight=1.0, delay=2.0)
+            else:
+                output_node_list.append(node_name)
+                graph.add_edge(node_name, complete_name, weight=1.0, delay=2.0)
+
+            if self.store_parent_info:
+                graph, _, _, id_register_output, _ = self.build_child(
+                        Register(self.register_size, initial_value=node_index, name=id_base.format(node), register_label=node),
+                        graph,
+                        {}, #meta data
+                        {}, #control
+                        [[], [node_name], [], []], # input: input value, recall, clear, set
+                        input_codings,
+                        )
+                node_id_registers[node] = id_register_output[-1]
+
+        max_circuit_time = 0
+        recall_time = 0
+        set_time = 0
+        clear_time = 0
+        for node in self.target_graph.nodes:
+            node_name = self.generate_neuron_name(str(self.node_indices[node]))
+            if self.store_parent_info:
+                # Create max_circuit
+                max_inputs = []
+                for in_neighbor, _ in self.target_graph.in_edges(node):
+                    max_inputs.append(node_id_registers[in_neighbor])
+                # Feed output of node id registers for neighbors into max circuit
+
+                graph, metadata, max_controls, max_circuit_output, _ = self.build_child(
+                        Max(default_size=self.register_size, name="Max_{}".format(node)),
+                        graph,
+                        {},
+                        {},
+                        max_inputs,
+                        input_codings,
+                        )
+                max_circuit_time = metadata['max_time']
+
+                # Create parent id register
+                # Feed output of max circuit to set parent id register
+                graph, metadata, _, parent_id_register, _ = self.build_child(
+                        Register(self.register_size, name=parent_base.format(node), register_label=node, single_set=True),
+                        graph,
+                        {}, #meta data
+                        {}, #control
+                        [max_circuit_output[0], [node_name], [], [max_controls[0]['complete']]], # input: input value, recall, clear, set
+                        input_codings,
+                        )
+                node_parent_registers[node] = parent_id_register[-1]
+                recall_time = metadata['recall_time']
+                set_time = metadata['set_time']
+                clear_time = metadata['clear_time']
+
+                self.metadata['timescale_factor'] = max_circuit_time + recall_time + set_time + clear_time
+            else:
+                self.metadata['timescale_factor'] = 2
+
+            # Handle outgoing edges
+            for neighbor in self.target_graph.neighbors(node):
+                # Need to scale up the delays for timing issues, need to calculate how long max circuit takes
+                #   i.e. need to figure out how long a major timestep takes
+                if 'weight' in self.target_graph.edges[node, neighbor]:
+                    if max_circuit_time > 2:
+                        delay = self.target_graph.edges[node, neighbor]['weight'] * (self.metadata['timescale_factor'])
+                    else:
+                        delay = 2 * self.target_graph.edges[node, neighbor]['weight']
+                else:
+                    delay = self.metadata['timescale_factor'] if self.metadata['timescale_factor'] > 2 else 2
+
+                neighbor_name = self.generate_neuron_name(str(self.node_indices[neighbor]))
+                if node == self.target_node:
+                    graph.add_edge(node_name, neighbor_name, weight=-10000, delay=delay)
+                else:
+                    graph.add_edge(node_name, neighbor_name, weight=1.1, delay=delay)
+
         for input_list in input_lists:
             for input_neuron in input_list:
                 index = graph.nodes[input_neuron]['index']
@@ -263,11 +351,14 @@ class RegisterGraphTraversal(Brick):
                     index = index[0]
                 if type(index) is not int:
                     raise TypeError("Neuron index should be Tuple or Int.")
-                graph.add_edge(input_neuron, self.generate_neuron_name(str(index)), weight=2.0, delay=1)
+                graph.add_edge(input_neuron, self.generate_neuron_name(str(self.node_indices[index])), weight=2.0, delay=1)
 
         self.is_built = True
 
-        output_lists = [complete_node_list, output_node_list, edge_reference_names]
+        output_lists = [complete_node_list, output_node_list]
+        if self.store_parent_info:
+            for node in self.target_graph.nodes:
+                output_lists.append(node_parent_registers[node])
 
         return (
                  graph,
@@ -285,7 +376,7 @@ class FlowAugmentingPath(Brick):
     def __init__(
           self,
           flow_graph,
-          name=None,
+          name="FlowAugmentingPath",
           output_coding='temporal-L',
           ):
         """
@@ -296,7 +387,7 @@ class FlowAugmentingPath(Brick):
                 If not specified, a default will be used. Name should be unique.
             + output_coding - Output coding type, default is 'temporal-L'
         """
-        super(FlowAugmentingPath, self).__init__("FlowAugmentingPath")
+        super(FlowAugmentingPath, self).__init__(name)
         self.is_built = False
         self.name = name
         self.supported_codings = input_coding_types

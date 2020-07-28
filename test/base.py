@@ -32,6 +32,8 @@ class BrickTest(ABC):
         if self.debug:
             scaffold.summary(verbose=2)
         self.backend.compile(scaffold, self.backend_args)
+        if self.debug:
+            print(">>>>> Running circuit for {} timesteps".format(timesteps))
         return self.backend.run(timesteps)
 
     def basic_test(self, input_values, expected_output):
@@ -54,6 +56,8 @@ class BrickTest(ABC):
         before_results = self.backend.run(timesteps)
 
         for properties, output in zip(new_properties, expected_outputs):
+            if self.debug:
+                print(">>>> Property test {}".format(properties))
             self.backend.reset()
 
             self.backend.set_properties(properties)
