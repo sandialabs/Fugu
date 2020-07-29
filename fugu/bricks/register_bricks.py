@@ -264,7 +264,7 @@ class Register(Brick):
                         clear_control_name,
                         clear_name,
                         weight=1.0,
-                        delay=2.0,
+                        delay=1.0,
                         )
                 graph.add_edge(
                         clear_control_name,

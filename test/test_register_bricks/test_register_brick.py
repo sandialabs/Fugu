@@ -90,10 +90,6 @@ class RegisterBrickTests(BrickTest):
 
     #@unittest.skip('')
     def test_register_set(self):
-        self.debug = True
-        #self.backend_args['return_potentials'] = True
-        #self.backend_args['record'] = 'all'
-        #self.backend_args['verbose'] = True
         self.basic_test([5, 3, 'set:19'], 19)
 
 

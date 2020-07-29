@@ -33,12 +33,15 @@ from .test_graph_bricks import PynnSpinnakerRegisterGraphTraversalTests, PynnBri
 loader = unittest.TestLoader()
 
 debug_suite = unittest.TestSuite()
-debug_suite.addTest(loader.loadTestsFromTestCase(SnnRegisterGraphTraversalTests))
-debug_suite.addTest(loader.loadTestsFromTestCase(SnnRegisterTests))
-debug_suite.addTest(loader.loadTestsFromTestCase(DsRegisterGraphTraversalTests))
-debug_suite.addTest(loader.loadTestsFromTestCase(DsRegisterTests))
+#debug_suite.addTest(loader.loadTestsFromTestCase(SnnSimpleGraphTraversalTests))
+debug_suite.addTest(loader.loadTestsFromTestCase(DsSimpleGraphTraversalTests))
+#debug_suite.addTest(loader.loadTestsFromTestCase(SnnRegisterGraphTraversalTests))
+#debug_suite.addTest(loader.loadTestsFromTestCase(SnnRegisterTests))
+#debug_suite.addTest(loader.loadTestsFromTestCase(DsRegisterGraphTraversalTests))
+#debug_suite.addTest(loader.loadTestsFromTestCase(DsRegisterTests))
 
 debug2_suite = unittest.TestSuite()
+#debug2_suite.addTest(loader.loadTestsFromTestCase(PynnBrianSimpleGraphTraversalTests))
 #debug2_suite.addTest(loader.loadTestsFromTestCase(PynnBrianRegisterGraphTraversalTests))
 #debug2_suite.addTest(loader.loadTestsFromTestCase(PynnBrianRegisterTests))
 

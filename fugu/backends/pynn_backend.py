@@ -637,15 +637,34 @@ class pynn_Backend(Backend):
         if self.show_plots and self.return_potentials:
             from pyNN.utility.plotting import Figure, Panel
             import matplotlib.pyplot as plt
+            x_values = range(n_steps + 1)
+            set_count = 0
+            set_data = {}
+
+            slot_count = 0
+            slot_data = {}
             for neuron_type in main_data:
-                labels = []
                 for neuron in self.neuron_index_map:
-                    if self.neuron_type_map[neuron] == neuron_type:
-                        labels.append(neuron)
-                segment = main_data[neuron_type].segments[-1]
-                vm = segment.analogsignals[0]
-                plt.plot(vm.times, vm)
-            plt.legend()
+                    if 'set' in neuron:
+                        set_count += 1
+                        set_data[neuron] = main_voltage[neuron_type][self.neuron_index_map[neuron]]
+                    if 'slot' in neuron:
+                        slot_count += 1
+                        slot_data[neuron] = main_voltage[neuron_type][self.neuron_index_map[neuron]]
+
+            index = 0
+            set_fig, set_axs = plt.subplots(set_count, 1, sharex=True)
+            for neuron in set_data:
+                set_axs[index].plot(x_values, set_data[neuron], label=neuron)
+                set_axs[index].legend()
+                index += 1
+
+            index = 0
+            slot_fig, slot_axs = plt.subplots(slot_count, 1, sharex=True)
+            for neuron in slot_data:
+                slot_axs[index].plot(x_values, slot_data[neuron], label=neuron)
+                slot_axs[index].legend()
+                index += 1
             plt.show()
 
         for neuron in self.input_neurons:
@@ -671,8 +690,7 @@ class pynn_Backend(Backend):
             spike_result = spike_result.append(mini_df, sort=False)
 
         if self.return_potentials:
-            #return spike_result, potentials
-            return spike_result
+            return spike_result, potentials
         else:
             return spike_result
 

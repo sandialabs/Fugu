@@ -20,7 +20,7 @@ class SimpleGraphTraversalBrickTests(BrickTest):
         input_brick = BRICKS.Vector_Input(self.convert_input((graph, source_vertex)), coding='Raster', name='Input')
         traversal_brick = BRICKS.SimpleGraphTraversal(
                                   graph,
-                                  name="SimpleGraphTraversal",
+                                  name="SGT",
                                   store_parent_info=return_pred)
 
         scaffold.add_brick(input_brick, 'input')
@@ -41,7 +41,7 @@ class SimpleGraphTraversalBrickTests(BrickTest):
             spikes = spikes[1]
 
         for node in scaffold.circuit.nodes:
-            if scaffold.circuit.nodes[node]['name'] == 'SimpleGraphTraversal':
+            if scaffold.circuit.nodes[node]['name'] == 'SGT':
                 traversal_brick = scaffold.circuit.nodes[node]['brick']
 
         graph = traversal_brick.target_graph
@@ -49,7 +49,7 @@ class SimpleGraphTraversalBrickTests(BrickTest):
 
         predecessors = {v: -1 for v in graph.nodes}
         distance_table = {v: -1 for v in graph.nodes}
-        start_time = 0.0
+        start_time = 1.0
 
         names = list(scaffold.graph.nodes.data('name'))
 
@@ -76,8 +76,6 @@ class SimpleGraphTraversalBrickTests(BrickTest):
         for v in distance_table:
             if distance_table[v] > -1:
                 distance_table[v] -= start_time
-                if return_path:
-                    distance_table[v] -= 1
                 distance_table[v] /= 2.0
                 if self.debug:
                     print(distance_table[v])
@@ -87,7 +85,10 @@ class SimpleGraphTraversalBrickTests(BrickTest):
             v_dist = distance_table[v]
             edge_data = graph.get_edge_data(u, v)
             edge_weight = edge_data['weight'] if 'weight' in edge_data else 1
-            self.assertTrue(abs(u_dist - v_dist) <= edge_weight)
+            if self.debug:
+                print(u, v, u_dist, v_dist, edge_weight, edge_data)
+            if u_dist > -1 and v_dist > -1:
+                self.assertTrue(v_dist - u_dist <= edge_weight)
 
         if return_path:
             for u in predecessors:
@@ -107,7 +108,7 @@ class SimpleGraphTraversalBrickTests(BrickTest):
 
                     if self.debug:
                         print(u, v, u_dist, v_dist, edge_weight)
-                    self.assertTrue(abs(u_dist - v_dist) <= edge_weight)
+                    self.assertTrue(v_dist - u_dist <= edge_weight)
 
     def convert_input(self, input_values):
         graph, search_key = input_values

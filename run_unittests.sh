@@ -2,19 +2,19 @@
 #echo $1
 ds_tests() {
     echo "Running tests using DS backend"
-    python3 -m unittest -fv test.test_suites.ds_suite
+    python3 -m unittest -f test.test_suites.ds_suite
     echo '>>>---<<<'
 }
 
 snn_tests() {
     echo "Running tests using SNN backend"
-    python3 -m unittest -fv test.test_suites.snn_suite
+    python3 -m unittest -f test.test_suites.snn_suite
     echo '>>>---<<<'
 }
 
 pynn_brian_tests() {
     echo "Running tests using Pynn-Brian backend"
-    python2 -m unittest -fv test.test_suites.pynn_brian_suite
+    python2 -m unittest -f test.test_suites.pynn_brian_suite
     echo '>>>---<<<'
 }
 
