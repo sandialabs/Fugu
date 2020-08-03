@@ -6,11 +6,21 @@ variables:
 stages:
     - test
 
+cache:
+    key: ${CI_COMMIT_REF_SLUG}
+    paths:
+        - .cache/pip
+
+before_script:
+    - python3 -V
+    - python2 -V
+    - pip3 install -r requirements3.txt
+    - pip2 install -r requirements2.txt
+
 main_tests:
     image: python:3.6
     stage: test
     script:
-        - pip install .
         - python3 -m unittest -f test.test_suites.ds_suite
         - python3 -m unittest -f test.test_suites.snn_suite
     tags:
@@ -20,7 +30,6 @@ pynn_tests:
     image: python:2.7
     stage: test
     script:
-        - pip install .
-        - python setup.py test --test-suite test.test_suites.pynn_brian_suite
+        - python2 -m unittest -f test.test_suites.pynn_brian_suite
     tags:
         - docker
