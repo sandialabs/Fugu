@@ -3,15 +3,24 @@ variables:
   https_proxy: "http://wwwproxy.sandia.gov:80/"
   no_proxy: "127.0.0.1,localhost,.sandia.gov"
 
+stages:
+    - test
+
 main_tests:
     image: python:3.6
+    stage: test
     script:
         - pip install .
-        - python setup.py test --test-suite test.test_suites.ds_suite 
-        - python setup.py test --test-suite test.test_suites.snn_suite 
+        - python3 -m unittest -f test.test_suites.ds_suite
+        - python3 -m unittest -f test.test_suites.snn_suite
+    tags:
+        - docker
 
 pynn_tests:
     image: python:2.7
+    stage: test
     script:
         - pip install .
         - python setup.py test --test-suite test.test_suites.pynn_brian_suite
+    tags:
+        - docker
