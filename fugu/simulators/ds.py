@@ -52,8 +52,8 @@ def remove_delay(graph, verbose=0):
                 if old_delay > 1:
                     to_add_neuron = graph.number_of_nodes()
                     graph.add_node(to_add_neuron)
-                    graph.node[to_add_neuron]['potential'] = 0.0
-                    graph.node[to_add_neuron]['threshold'] = 0.5
+                    graph.nodes[to_add_neuron]['potential'] = 0.0
+                    graph.nodes[to_add_neuron]['threshold'] = 0.5
                     graph.add_edge(from_neuron, to_add_neuron, weight=1.0, delay=1)
                     graph.add_edge(
                             to_add_neuron,
@@ -72,7 +72,7 @@ def restore_delay(graph):
     while not done:
         edges_list = list(graph.edges())
         for edge in edges_list:
-            if graph.out_degree(edge[1]) == 1 and graph[edge[0]][edge[1]]['weight'] > graph.node[edge[1]]['threshold']:
+            if graph.out_degree(edge[1]) == 1 and graph[edge[0]][edge[1]]['weight'] > graph.nodes[edge[1]]['threshold']:
                 target_neuron = list(graph.neighbors(edge[1]))[0]
                 first_edge = graph[edge[0]][edge[1]].copy()
                 next_edge = graph[edge[1]][target_neuron].copy()
