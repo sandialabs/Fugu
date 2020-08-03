@@ -15,7 +15,7 @@ main_tests:
     image: python:3.6
     stage: test
     script:
-        - pip -V
+        - pip install --upgrade pip 
         - pip install -r requirements3.txt
         - python3 -m unittest -f test.test_suites.ds_suite
         - python3 -m unittest -f test.test_suites.snn_suite
@@ -26,8 +26,9 @@ pynn_tests:
     image: python:2.7
     stage: test
     script:
-        - pip -V
+        - pip install --upgrade pip 
         - pip install -r requirements2.txt
+        - pip install brian
         - python2 -m unittest -f test.test_suites.pynn_brian_suite
     tags:
         - docker
