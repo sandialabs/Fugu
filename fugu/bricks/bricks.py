@@ -40,7 +40,7 @@ def generate_brick_tag(brick_name):
     """
     Function that generates a unique brick tag
     """
-    return "{}{}".format(brick_name, Brick.brick_id)
+    return "{}-{}".format(brick_name, Brick.brick_id)
 
 
 class Brick(ABC):
@@ -50,9 +50,9 @@ class Brick(ABC):
 
     brick_id = 0
 
-    def __init__(self, tag="Brick"):
-        self.brick_tag = generate_brick_tag(tag)
-        self.name = "Empty Brick"
+    def __init__(self, name="Brick"):
+        self.brick_tag = generate_brick_tag(name)
+        self.name = name 
         self.is_built = False
         self.supported_codings = []
         Brick.brick_id += 1
@@ -93,9 +93,9 @@ class InputBrick(Brick):
     Abstract Base class for handling inputs inherited from Brick
     """
 
-    def __init__(self, tag="InputBrick"):
-        super(InputBrick, self).__init__(tag)
-        self.name = "Input Brick"
+    def __init__(self, name="InputBrick"):
+        super(InputBrick, self).__init__(name)
+        self.name = name 
         self.streaming = False
 
     @abstractmethod
@@ -128,9 +128,9 @@ class CompoundBrick(Brick):
 
     brick_id = 0
 
-    def __init__(self, tag="CompoundBrick"):
-        super(CompoundBrick, self).__init__(tag)
-        self.name = "Compound Brick"
+    def __init__(self, name="CompoundBrick"):
+        super(CompoundBrick, self).__init__(name)
+        self.name = name 
         self.children = {}
 
     def build_child(self, brick, graph, metadata, control_nodes, input_lists, input_codings):

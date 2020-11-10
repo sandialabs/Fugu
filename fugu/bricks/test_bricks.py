@@ -12,13 +12,13 @@ class InstantDecay(Brick):
     A brick used to test neurons that have instant decay.
     """
 
-    def __init__(self, num_inputs, name=None):
+    def __init__(self, num_inputs, name="InstantDecay"):
         '''
         Construtor for this brick.
         Arguments:
             + name - Name of the brick.  If not specified, a default will be used.  Name should be unique.
         '''
-        super(InstantDecay, self).__init__("InstantDecay")
+        super(InstantDecay, self).__init__(name)
         self.is_built = False
         self.metadata = {'D': 1}
         self.name = name
@@ -100,13 +100,13 @@ class SynapseProperties(Brick):
     A brick used to test neurons that have instant decay.
     """
 
-    def __init__(self, weights, name=None):
+    def __init__(self, weights, name="SynapseProperties"):
         '''
         Construtor for this brick.
         Arguments:
             + name - Name of the brick.  If not specified, a default will be used.  Name should be unique.
         '''
-        super(SynapseProperties, self).__init__("SynapseProperties")
+        super(SynapseProperties, self).__init__(name)
         self.is_built = False
         self.metadata = {'D': 1}
         self.name = name
@@ -205,14 +205,14 @@ class SumOfMaxes(CompoundBrick):
     A brick that computes the max of N sets of values and reports the sum of those maxes.
     """
 
-    def __init__(self, set_sizes=[5, 5], name=None):
+    def __init__(self, set_sizes=[5, 5], name="SumOfMaxes"):
         '''
         Construtor for this brick.
         Arguments:
             + set_sizes - Number of inputs for each max brick
             + name - Name of the brick.  If not specified, a default will be used.  Name should be unique.
         '''
-        super(SumOfMaxes, self).__init__("SumOfMaxes")
+        super(SumOfMaxes, self).__init__(name)
         self.is_built = False
         self.metadata = {'D': 1}
         self.name = name

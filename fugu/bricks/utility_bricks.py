@@ -8,14 +8,14 @@ class Dot(Brick):
     Class to handle the Dot brick. Inherits from Brick
     """
 
-    def __init__(self, weights, name=None):
+    def __init__(self, weights, name="Dot"):
         '''
         Construtor for this brick.
         Arguments:
             + weights - Vector against which the input is dotted.
             + name - Name of the brick.  If not specified, a default will be used.  Name should be unique.
         '''
-        super(Dot, self).__init__("Dot")
+        super(Dot, self).__init__(name)
         self.is_built = False
         self.metadata = {'D': 1}
         self.name = name
@@ -109,13 +109,13 @@ class Copy(Brick):
     Class to handle Copy Brick. Inherits from Brick
     """
 
-    def __init__(self, name=None):
+    def __init__(self, name="Copy"):
         '''
         Construtor for this brick.
         Arguments:
             + name - Name of the brick.  If not specified, a default will be used.  Name should be unique.
         '''
-        super(Copy, self).__init__("Copy")
+        super(Copy, self).__init__(name)
         self.is_built = False
         self.metadata = {'D': 1}
         self.name = name
@@ -203,8 +203,8 @@ class Concatenate(Brick):
     Arguments:
         + name - Name of the brick.  If not specified, a default will be used.  Name should be unique.
     '''
-    def __init__(self, name=None, coding=None):
-        super(Concatenate, self).__init__("Concatenate")
+    def __init__(self, name="Concatenate", coding=None):
+        super(Concatenate, self).__init__(name)
         self.is_built = False
         self.metadata = {'D': 0}
         self.name = name
@@ -288,8 +288,8 @@ class AND_OR(Brick):
         + mode - Either 'And' or 'Or'; determines the operation
         + name - Name of the brick.  If not specified, a default will be used.  Name should be unique.
     '''
-    def __init__(self, mode='AND', name=None):   # A change here
-        super(AND_OR, self).__init__("AND_OR")
+    def __init__(self, mode='AND', name="AND_OR"):   # A change here
+        super(AND_OR, self).__init__(name)
         # The brick hasn't been built yet.
         self.is_built = False
         # Leave for compatibility, D represents the depth of the circuit.  Needs to be updated.
@@ -371,13 +371,13 @@ class ParityCheck(Brick):
     # email: smusuva@sandia.gov
     # last updated: April 8, 2019'''
 
-    def __init__(self, name=None):
+    def __init__(self, name="ParityCheck"):
         '''
         Construtor for this brick.
         Arguments:
             + name - Name of the brick.  If not specified, a default will be used.  Name should be unique.
         '''
-        super(ParityCheck, self).__init__("ParityCheck")
+        super(ParityCheck, self).__init__(name)
         self.is_built = False
         self.metadata = {'D': 1}
         self.name = name
@@ -615,7 +615,7 @@ class TemporalAdder(Brick):
     More specifically, consider you have three neurons u, v, and w that first spike at times t_u, t_v, and t_w.
     Assuming v spikes before w (so t_v < t_w), we want t_u = t_w + t_v, i.e. u fires t_v timesteps after w fires.
     '''
-    def __init__(self, number_of_elements, design='default', name=None, output_coding='temporal-L'):
+    def __init__(self, number_of_elements, design='default', name="TemporalAdder", output_coding='temporal-L'):
         '''
         Construtor for this brick.
         Arguments:
@@ -623,7 +623,7 @@ class TemporalAdder(Brick):
             + name - Name of the brick.  If not specified, a default will be used.  Name should be unique.
             + output_coding - Output coding type, default is 'temporal-L'
         '''
-        super(TemporalAdder, self).__init__("TemporalAdder")
+        super(TemporalAdder, self).__init__(name)
         self.is_built = False
         self.name = name
         self.supported_codings = input_coding_types

@@ -45,7 +45,7 @@ class InputSource:
     """
 
     def __init__(self):
-        self.name = "Empty Source"
+        self.name = "InputSource"
 
     @abstractmethod
     def connect(self, graph, metadata, source):
@@ -151,7 +151,7 @@ class Vector_Input(InputBrick):
           time_dimension=False,
           coding='Undefined',
           batchable=True,
-          name=None,
+          name="VectorInput",
           ):
         """
         Construtor for this brick.
@@ -162,7 +162,7 @@ class Vector_Input(InputBrick):
             + batchable - True if input should represent static data; currently True is the only supported mode.
             + name - Name of the brick.  If not specified, a default will be used.  Name should be unique.
         """
-        super(Vector_Input, self).__init__("VectorInput")
+        super(Vector_Input, self).__init__(name)
         self.vector = np.array(spikes)
         self.coding = coding
         self.time_dimension = time_dimension

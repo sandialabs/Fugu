@@ -18,6 +18,13 @@ pynn_brian_tests() {
     echo '>>>---<<<'
 }
 
+debug_tests() {
+    echo "Running debug tests using various backends"
+    python3 -m unittest -fv test.test_suites.debug_suite
+    python2 -m unittest -fv test.test_suites.debug2_suite
+    echo '>>>---<<<'
+}
+
 case $1 in 
     "ds")
         ds_tests
@@ -33,6 +40,10 @@ case $1 in
 
     "brian")
         pynn_brian_tests
+        ;;
+
+    "debug")
+        debug_tests
         ;;
 
     *)

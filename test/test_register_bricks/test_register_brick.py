@@ -40,7 +40,7 @@ class RegisterBrickTests(BrickTest):
         return scaffold
 
     def calculate_max_timesteps(self, input_values):
-        return 10
+        return 12
 
     def check_spike_output(self, spikes, expected, scaffold):
         value = 0
@@ -70,9 +70,9 @@ class RegisterBrickTests(BrickTest):
             inputs['clear'] = np.array([[0]])
             inputs['set'] = np.array([[0]])
         elif action == 'clear':
-            inputs['recall'] = np.array([[0, 0, 1]])
-            inputs['clear'] = np.array([[1, 0, 0]])
-            inputs['set'] = np.array([[0, 0, 0]])
+            inputs['recall'] = np.array([[0, 0, 0, 1]])
+            inputs['clear'] = np.array([[1, 0, 0, 0]])
+            inputs['set'] = np.array([[0, 0, 0, 0]])
         elif action == 'set':
             inputs['recall'] = np.array([[0, 0, 0, 0, 0, 1]])
             inputs['clear'] = np.array([[0, 0, 0, 0, 0, 0]])
@@ -80,12 +80,15 @@ class RegisterBrickTests(BrickTest):
 
         return inputs
 
+    #@unittest.skip('')
     def test_register_recall(self):
         self.basic_test([5, 22, 'recall'], 22)
 
+    #@unittest.skip('')
     def test_register_clear(self):
         self.basic_test([5, 17, 'clear'], 0)
 
+    #@unittest.skip('')
     def test_register_set(self):
         self.basic_test([5, 3, 'set:19'], 19)
 
