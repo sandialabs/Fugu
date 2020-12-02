@@ -628,7 +628,7 @@ class pynn_Backend(Backend):
                     print("spiketimes  {}".format(spiketrain))
 
                 if spiketrain.any() or len(np.array(spiketrain)) > 0:
-                    neuron_number = self.fugu_scaffold.graph.node[neuron]['neuron_number']
+                    neuron_number = self.fugu_scaffold.graph.nodes[neuron]['neuron_number']
                     for time in np.array(spiketrain):
                         if time not in spikes:
                             spikes[time] = set()
@@ -679,7 +679,7 @@ class pynn_Backend(Backend):
                     for time in np.array(spiketrain):
                         if time not in spikes:
                             spikes[time] = set()
-                        spikes[time].add(self.fugu_scaffold.graph.node[neuron]['neuron_number'])
+                        spikes[time].add(self.fugu_scaffold.graph.nodes[neuron]['neuron_number'])
 
         spike_result = pd.DataFrame({'time': [], 'neuron_number': []})
         for time in spikes:
