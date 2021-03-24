@@ -12,4 +12,4 @@ package_list = find_packages()
 setup(name='fugu',
       version='0.1',
       description='A python library for computational neural graphs',
-      install_requires=package_list)
+      packages=package_list)
