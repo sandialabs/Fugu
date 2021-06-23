@@ -167,7 +167,7 @@ class Threshold(Brick):
             # for input_neuron in [input_n for input_n in input_lists[0] if graph.nodes[input_n]['index']==-2]:
             #    begin_neuron = input_neuron
 
-            for input_neuron in [input_n for input_n in input_lists[0] if graph.nodes[input_n]['index'] is not -2]:
+            for input_neuron in [input_n for input_n in input_lists[0] if graph.nodes[input_n]['index'] != -2]:
                 index = graph.nodes[input_neuron]['index']
                 self.indices.append(index)
                 threshold_neuron_name = self.generate_neuron_name("{}".format(index))
