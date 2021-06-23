@@ -26,7 +26,7 @@ def check_type(neuron_type, check_type):
         return False
     else:
         str_check = str_type[-check_type]
-        return str_check is '1'
+        return str_check == '1'
 
 
 def set_types(types):
@@ -161,9 +161,9 @@ def separate_types(graph, batch_size=1000):
 
 
 def initialize_neuron_states(graph, neuron_list, neuron_type, mode='cpu'):
-    if mode is 'cpu':
+    if mode == 'cpu':
         torch.set_default_tensor_type(torch.FloatTensor)
-    elif mode is 'cuda':
+    elif mode == 'cuda':
         torch.set_default_tensor_type(torch.cuda.FloatTensor)
     states = dict()
     states['type'] = neuron_type
@@ -183,9 +183,9 @@ def initialize_neuron_states(graph, neuron_list, neuron_type, mode='cpu'):
 
 def get_neuron_tensors(graph, batch_size=1000, verbose=0, mode='cpu'):
     neuron_tensors = dict()
-    if mode is 'cpu':
+    if mode == 'cpu':
         torch.set_default_tensor_type(torch.FloatTensor)
-    elif mode is 'cuda':
+    elif mode == 'cuda':
         torch.set_default_tensor_type(torch.cuda.FloatTensor)
     else:
         print("Invalid Mode")
@@ -196,9 +196,9 @@ def get_neuron_tensors(graph, batch_size=1000, verbose=0, mode='cpu'):
         graph = remove_delay(graph, verbose=verbose)
     for i, neuron_group in enumerate(separate_types(graph, batch_size=batch_size)):
         neuron_tensors[i] = initialize_neuron_states(graph, neuron_group[2], neuron_group[1], mode=mode)
-        if mode is 'cpu':
+        if mode == 'cpu':
             neuron_tensors[i]['index'] = torch.tensor(neuron_group[2], dtype=torch.long)
-        elif mode is 'cuda':
+        elif mode == 'cuda':
             neuron_tensors[i]['index'] = torch.tensor(neuron_group[2], dtype=torch.long)
         weights = torch.zeros((len(graph.nodes()), len(neuron_group[2])))
         for j, neuron in enumerate(neuron_group[2]):
@@ -304,9 +304,9 @@ def run_simulation(
 
 
 def get_injection_tensor_from_initial_walkers(initial_dictionary, graph, num_neurons, mode='cpu'):
-    if mode is 'cpu':
+    if mode == 'cpu':
         torch.set_default_tensor_type(torch.FloatTensor)
-    elif mode is 'cuda':
+    elif mode == 'cuda':
         torch.set_default_tensor_type(torch.cuda.FloatTensor)
     else:
         print("Invalid mode")
