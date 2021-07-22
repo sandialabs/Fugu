@@ -1,6 +1,6 @@
 variables:
-  http_proxy: "http://wwwproxy.sandia.gov:80/"
-  https_proxy: "http://wwwproxy.sandia.gov:80/"
+  http_proxy: "http://user:nopass@proxy.sandia.gov:80/"
+  https_proxy: "http://user:nopass@proxy.sandia.gov:80/"
   no_proxy: "127.0.0.1,localhost,.sandia.gov"
 
 stages:

@@ -249,8 +249,13 @@ class Vector_Input(InputBrick):
         complete_node = self.generate_neuron_name("complete")
         begin_node = self.generate_neuron_name("begin")
         vector_size = len(self.vector) * len(self.vector.shape)
-        graph.add_node(complete_node, index=-1, threshold=0.0, decay=0.0, p=1.0, potential=0.1)
         graph.add_node(begin_node, index=-1, threshold=0.0, decay=0.0, p=1.0, potential=0.1)
+        time_length = self.vector.shape[-1]
+        if time_length == 1:
+            graph.add_node(complete_node, index=-1, threshold=0.0, decay=0.0, p=1.0, potential=0.1)
+        else:
+            graph.add_node(complete_node, index=-1, threshold=0.5, decay=0.0, p=1.0, potential=0.0)
+            graph.add_edge(begin_node, complete_node, weight=1.0, delay = time_length-1)
 
         output_lists = [[]]
         self.index_map = np.ndindex(self.vector.shape[:-1])

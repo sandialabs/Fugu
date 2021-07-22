@@ -8,6 +8,16 @@ cd Fugu
 pip install --upgrade .
 ```
 
+An alternative way to install for development (using anaconda environments, python3)
+```
+conda create -n fugu anaconda
+conda activate fugu
+git clone git@gitlab.sandia.gov:nerl/Fugu.git
+cd Fugu
+pip install -r requirements3.txt
+pip install -e .
+```
+
 # Fugu Notes
 
 Please see the provided example(s). 
