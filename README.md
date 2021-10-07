@@ -12,7 +12,7 @@ An alternative way to install for development (using anaconda environments, pyth
 ```
 conda create -n fugu anaconda
 conda activate fugu
-git clone git@gitlab.sandia.gov:nerl/Fugu.git
+git clone git@cee-gitlab.sandia.gov:nerl/Fugu.git
 cd Fugu
 pip install -r requirements3.txt
 pip install -e .
