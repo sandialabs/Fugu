@@ -3,7 +3,7 @@ A python library for computational neural graphs.
 
 # Install
 ```
-git clone https://gitlab.sandia.gov/nerl/Fugu.git 
+git clone https://cee-gitlab.sandia.gov/nerl/Fugu.git
 cd Fugu
 pip install --upgrade .
 ```
