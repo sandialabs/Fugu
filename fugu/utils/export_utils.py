@@ -12,16 +12,18 @@ def results_df_from_dict(results_dictionary, key, value):
         df2[key] = extended_keys
         df2[value] = store
         df = df.append(df2, ignore_index=True, sort=False)
-#        df = df.astype({value: int})
     return df
 
-def fill_results_from_graph(results_df, scaffold, fields = ['time', 'neuron_number', 'name', 'brick'], unmatched_fields=['time']):
+def fill_results_from_graph(results_df,
+                            scaffold,
+                            fields = ['neuron_number', 'name', 'brick'],
+                            ):
     field_values = {'name':deque()}
     if 'name' in fields:
         fields.remove('name')
     for node in scaffold.graph.nodes:
         field_values['name'].append(node)
-        for field in [field for field in fields if field not in unmatched_fields ]:
+        for field in fields:
             if field not in field_values:
                 field_values[field] = deque()
             if field in scaffold.graph.nodes[node]:
@@ -52,7 +54,7 @@ def set_circuit_position(scaffold):
                     if scaffold.circuit.nodes[bricks]['layer'] == 'input':
                         input_layer.append(node)
     max_degree = max([degree[n] for n in scaffold.circuit.nodes()])
-    
+
     i = 70*max_degree*len(input_layer)
     for node in input_layer:
         pos[node] = (0, i)
@@ -70,8 +72,8 @@ def set_circuit_position(scaffold):
                 j_val[edge[0]] = y + 35 + 70*(edge0_d/2 - 1)
             pos[edge[1]] = x + 250, j_val[edge[0]]
             j_val[edge[0]] = j_val[edge[0]] - 70
-                
-            
+
+
     if len(scaffold.circuit.nodes()) > len(pos):
         print("Error! Not all nodes in circuit assigned positions. Unassigned nodes:")
         for n in scaffold.circuit.nodes():
@@ -85,14 +87,14 @@ def set_position(scaffold):
     total_height = 20*scaffold.graph.number_of_nodes()
     pos = {}
     sorted_nodes_by_brick = {}
-        
+
     for node in scaffold.graph.nodes():
         brick = scaffold.graph.nodes[node]['brick']
         if brick in sorted_nodes_by_brick.keys():
             sorted_nodes_by_brick[brick].append(node)
         else:
             sorted_nodes_by_brick[brick] = [node]
-    
+
     num_cols = {}
     total_cols = 0
     for brick in sorted_nodes_by_brick:
@@ -126,18 +128,31 @@ def set_position(scaffold):
         print("Error! Not all nodes assigned positions. Unassigned nodes:")
         for n in scaffold.graph.nodes():
             if n not in pos.keys():
-                print(n)       
+                print(n)
     return pos
 
-def generate_gexf(graph, result, scaffold, filename='fugu.gexf'):
+
+def generate_gexf(scaffold, filename='fugu.gexf', result=None):
+    """ Exports a scaffold to gexf.
+
+    Exports a scaffold to a file using Graph Exchange XML Format (GEXF).
+
+    This is largely a simple wrapper around NetworkX's `networkx.write_gexf`
+    with the addition that neuron states can be embedded into the graph/node
+    properties.
+
+
+    """
+    if not scaffold.is_built:
+        raise ValueError("Scaffold should be built before exporting to gexf.")
     result = fill_results_from_graph(result, scaffold, fields=['time', 'neuron_number', 'name'])
     t_dict = results_dict(result,scaffold)
-    
+    graph = scaffold.graph
     max_t = int(np.max(np.array(result['time'])))
     G = nx.DiGraph(mode='dynamic')
     G.update(graph)
     for n in G.nodes():
-        G.nodes[n]['spiked'] = []  
+        G.nodes[n]['spiked'] = []
         if 'index' in G.nodes[n]:
             G.nodes[n]['index'] = str(G.nodes[n]['index'])
     for node in G.nodes():
@@ -149,6 +164,6 @@ def generate_gexf(graph, result, scaffold, filename='fugu.gexf'):
                     G.nodes[node]['spiked'].append(('did not spike', t, t+1))
             else:
                 G.nodes[node]['spiked'].append(('did not spike', t, t+1))
-    
+
     nx.write_gexf(G, filename)
     return
