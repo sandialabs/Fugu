@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-
 import abc
 import sys
 
@@ -13,27 +12,27 @@ else:
     ABC = abc.ABCMeta('ABC', (), {'__slots__': ()})
 
 default_brick_metadata = {
-                           'input_shape': [()],
-                           'output_shape': [()],
-                           'D': 0,
-                           'layer': 'output',
-                           'input_coding': 'unknown',
-                           'output_coding': 'unknown',
-                           }
+    'input_shape': [()],
+    'output_shape': [()],
+    'D': 0,
+    'layer': 'output',
+    'input_coding': 'unknown',
+    'output_coding': 'unknown',
+}
 
 input_coding_types = [
-                       'current',
-                       'unary-B',
-                       'unary-L',
-                       'binary-B',
-                       'binary-L',
-                       'temporal-B',
-                       'temporal-L',
-                       'Raster',
-                       'Population',
-                       'Rate',
-                       'Undefined',
-                       ]
+    'current',
+    'unary-B',
+    'unary-L',
+    'binary-B',
+    'binary-L',
+    'temporal-B',
+    'temporal-L',
+    'Raster',
+    'Population',
+    'Rate',
+    'Undefined',
+]
 
 
 def generate_brick_tag(brick_name):
@@ -52,11 +51,11 @@ class Brick(ABC):
 
     def __init__(self, name="Brick"):
         self.brick_tag = generate_brick_tag(name)
-        self.name = name 
+        self.name = name
         self.is_built = False
         self.supported_codings = []
         Brick.brick_id += 1
-        
+
     def generate_neuron_name(self, neuron_name):
         """
         Adds the brick_tag to a neuron's name
@@ -64,7 +63,8 @@ class Brick(ABC):
         return "{}:{}".format(self.brick_tag, neuron_name)
 
     @abstractmethod
-    def build(self, graph, metadata, control_nodes, input_lists, input_codings):
+    def build(self, graph, metadata, control_nodes, input_lists,
+              input_codings):
         """
         Build the computational graph of the brick. Method must be defined in any class inheriting from Brick.
 
@@ -92,10 +92,9 @@ class InputBrick(Brick):
     """
     Abstract Base class for handling inputs inherited from Brick
     """
-
     def __init__(self, name="InputBrick"):
         super(InputBrick, self).__init__(name)
-        self.name = name 
+        self.name = name
         self.streaming = False
 
     @abstractmethod
@@ -130,16 +129,19 @@ class CompoundBrick(Brick):
 
     def __init__(self, name="CompoundBrick"):
         super(CompoundBrick, self).__init__(name)
-        self.name = name 
+        self.name = name
         self.children = {}
 
-    def build_child(self, brick, graph, metadata, control_nodes, input_lists, input_codings):
+    def build_child(self, brick, graph, metadata, control_nodes, input_lists,
+                    input_codings):
         brick.brick_tag = self.brick_tag + ":" + brick.brick_tag
         self.children[brick.brick_tag] = brick
-        return brick.build(graph, metadata, control_nodes, input_lists, input_codings)
+        return brick.build(graph, metadata, control_nodes, input_lists,
+                           input_codings)
 
     @abstractmethod
-    def build(self, graph, metadata, control_nodes, input_lists, input_codings):
+    def build(self, graph, metadata, control_nodes, input_lists,
+              input_codings):
         """
         Build the computational graph of the brick. Method must be defined in any class inheriting from Brick.
 

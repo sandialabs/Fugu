@@ -9,15 +9,15 @@ from .bricks import Brick
 from .scaffold import Scaffold
 
 input_coding_types = [
-                       'current',
-                       'unary-B',
-                       'unary-L',
-                       'binary-B',
-                       'binary-L',
-                       'temporal-B',
-                       'temporal-L',
-                       'Raster',
-                       'Population',
-                       'Rate',
-                       'Undefined',
-                       ]
+    'current',
+    'unary-B',
+    'unary-L',
+    'binary-B',
+    'binary-L',
+    'temporal-B',
+    'temporal-L',
+    'Raster',
+    'Population',
+    'Rate',
+    'Undefined',
+]

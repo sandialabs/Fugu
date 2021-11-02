@@ -2,8 +2,10 @@
 print("---Importing modules---")
 print("---Importing fugu---")
 import fugu
+
 print("---Importing Scaffold---")
 from fugu import Scaffold
+
 print("---Importing Bricks---")
 from fugu.bricks import Flow_Augmenting_Path, Vector_Input
 
@@ -23,18 +25,20 @@ graph.add_edge(2, 4, capacity=5, flow=0)
 graph.add_edge(3, 't', capacity=5, flow=0)
 graph.add_edge(4, 't', capacity=1, flow=0)
 
-brick_properties = {} 
-brick_properties['Augmenting'] = {'flow':{}} 
+brick_properties = {}
+brick_properties['Augmenting'] = {'flow': {}}
 for edge in graph.edges():
-    brick_properties['Augmenting']['flow'][edge] = 0 
+    brick_properties['Augmenting']['flow'][edge] = 0
 
 MAX_RUNTIME = len(graph.edges()) + 10
 
 scaffold = Scaffold()
 
-input_brick = Vector_Input([[0,1]], coding='Raster', name='Input0', time_dimension=True)
+input_brick = Vector_Input([[0, 1]],
+                           coding='Raster',
+                           name='Input0',
+                           time_dimension=True)
 FAP_brick = Flow_Augmenting_Path(graph, name='Augmenting')
-
 
 scaffold.add_brick(input_brick, 'input')
 scaffold.add_brick(FAP_brick, output=True)
@@ -42,30 +46,30 @@ scaffold.lay_bricks()
 
 pynn_args = {}
 pynn_args['backend'] = 'brian'
-pynn_args['verbose'] = False 
+pynn_args['verbose'] = False
 pynn_args['show_plots'] = False
 pynn_args['return_potentials'] = True
 
 print("---Running evaluation---")
-min_residual = 9 # max capacity
+min_residual = 9  # max capacity
 
 while min_residual > 0:
     print("--->Iteration")
     min_residual = 9
     result = scaffold.evaluate(
-                        brick_properties=brick_properties,
-                        backend='pynn',
-                        max_runtime=MAX_RUNTIME,
-                        record_all=True,
-                        backend_args=pynn_args,
-                        )
+        brick_properties=brick_properties,
+        backend='pynn',
+        max_runtime=MAX_RUNTIME,
+        record_all=True,
+        backend_args=pynn_args,
+    )
 
     scaffold.summary(verbose=2)
     spikes, potentials = result
 
     graph_names = list(scaffold.graph.nodes.data('name'))
 
-    path_edges = [] # list of edges from s to t
+    path_edges = []  # list of edges from s to t
 
     if debug:
         print("---spike_times---")
@@ -116,7 +120,8 @@ for row in potentials.itertuples():
     if 'edge' in neuron_props:
         if neuron_props['neuron_type'] == 'capacity':
             if debug:
-                print(neuron_name, row.potential, neuron_props['potential'], neuron_props['threshold'])
+                print(neuron_name, row.potential, neuron_props['potential'],
+                      neuron_props['threshold'])
             flow_value = neuron_props['potential'] - len(graph.edges()) - 1
             if neuron_props['edge'][1] == 't':
                 max_flow += flow_value

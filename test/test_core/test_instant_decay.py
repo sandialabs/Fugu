@@ -15,12 +15,13 @@ class InstantDecayTests(BrickTest):
         scaffold = Scaffold()
 
         vector_brick = BRICKS.Vector_Input(
-                                self.convert_input(input_times),
-                                coding='Raster',
-                                name='InputBrick',
-                                time_dimension=True,
-                                )
-        decay_brick = BRICKS.InstantDecay(len(input_times), name="InstantDecay")
+            self.convert_input(input_times),
+            coding='Raster',
+            name='InputBrick',
+            time_dimension=True,
+        )
+        decay_brick = BRICKS.InstantDecay(len(input_times),
+                                          name="InstantDecay")
 
         scaffold.add_brick(vector_brick, 'input')
         scaffold.add_brick(decay_brick, input_nodes=[(0, 0)], output=True)

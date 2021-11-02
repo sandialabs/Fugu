@@ -11,7 +11,6 @@ class InstantDecay(Brick):
     """
     A brick used to test neurons that have instant decay.
     """
-
     def __init__(self, num_inputs, name="InstantDecay"):
         '''
         Construtor for this brick.
@@ -24,7 +23,8 @@ class InstantDecay(Brick):
         self.name = name
         self.num_inputs = num_inputs
 
-    def build(self, graph, metadata, control_nodes, input_lists, input_codings):
+    def build(self, graph, metadata, control_nodes, input_lists,
+              input_codings):
         """
         Build Dot brick.
 
@@ -48,58 +48,59 @@ class InstantDecay(Brick):
         num_inputs = sum([len(in_list) for in_list in input_lists])
         if num_inputs != self.num_inputs:
             raise ValueError(
-                    "Input length does not match expected number. Expected: {}, Found: {}".format(
-                                                                                             self.num_inputs,
-                                                                                             num_inputs,
-                                                                                             )
-                    )
+                "Input length does not match expected number. Expected: {}, Found: {}"
+                .format(
+                    self.num_inputs,
+                    num_inputs,
+                ))
 
         graph.add_node(
-                self.generate_neuron_name("begin"),
-                threshold=0.5,
-                potential=1.0,
-                decay=0.0,
-                index=-1,
-                p=1.0,
-                )
+            self.generate_neuron_name("begin"),
+            threshold=0.5,
+            potential=1.0,
+            decay=0.0,
+            index=-1,
+            p=1.0,
+        )
         complete_name = self.generate_neuron_name("complete")
         graph.add_node(
-                complete_name,
-                threshold=0.5,
-                potential=0.0,
-                decay=0.0,
-                index=-1,
-                p=1.0,
-                )
+            complete_name,
+            threshold=0.5,
+            potential=0.0,
+            decay=0.0,
+            index=-1,
+            p=1.0,
+        )
 
         main_name = self.generate_neuron_name("main")
         graph.add_node(
-                main_name,
-                threshold=self.num_inputs - 0.01,
-                potential=0.0,
-                decay=1.0,
-                index=0,
-                )
+            main_name,
+            threshold=self.num_inputs - 0.01,
+            potential=0.0,
+            decay=1.0,
+            index=0,
+        )
         graph.add_edge(main_name, complete_name, weight=1.0, delay=1.0)
 
         for input_list in input_lists:
             for input_neuron in input_list:
                 graph.add_edge(
-                        input_neuron,
-                        main_name,
-                        weight=1.0,
-                        delay=1.0,
-                        )
+                    input_neuron,
+                    main_name,
+                    weight=1.0,
+                    delay=1.0,
+                )
 
         self.is_built = True
-        return (graph, metadata, [{'complete': complete_name}], [[main_name]], input_codings)
+        return (graph, metadata, [{
+            'complete': complete_name
+        }], [[main_name]], input_codings)
 
 
 class SynapseProperties(Brick):
     """
     A brick used to test neurons that have instant decay.
     """
-
     def __init__(self, weights, name="SynapseProperties"):
         '''
         Construtor for this brick.
@@ -116,10 +117,11 @@ class SynapseProperties(Brick):
         if 'weights' in properties:
             weights = properties['weights']
             if len(weights) != len(self.weights):
-                raise ValueError("# of new weights ({}) != # of old weights ({})".format(
-                                                                                    len(weights),
-                                                                                    len(self.weights),
-                                                                                    ))
+                raise ValueError(
+                    "# of new weights ({}) != # of old weights ({})".format(
+                        len(weights),
+                        len(self.weights),
+                    ))
             else:
                 synapse_props = {}
                 main_name = self.generate_neuron_name("main")
@@ -128,7 +130,8 @@ class SynapseProperties(Brick):
                     synapse_props[(main_name, name)] = {'weight': weight}
                 return {}, synapse_props
 
-    def build(self, graph, metadata, control_nodes, input_lists, input_codings):
+    def build(self, graph, metadata, control_nodes, input_lists,
+              input_codings):
         """
         Build Dot brick.
 
@@ -151,60 +154,61 @@ class SynapseProperties(Brick):
 
         begin_name = self.generate_neuron_name("begin")
         graph.add_node(
-                begin_name,
-                threshold=0.5,
-                potential=1.0,
-                decay=0.0,
-                index=-1,
-                p=1.0,
-                )
+            begin_name,
+            threshold=0.5,
+            potential=1.0,
+            decay=0.0,
+            index=-1,
+            p=1.0,
+        )
         complete_name = self.generate_neuron_name("complete")
         graph.add_node(
-                complete_name,
-                threshold=0.5,
-                potential=0.0,
-                decay=0.0,
-                index=-1,
-                p=1.0,
-                )
+            complete_name,
+            threshold=0.5,
+            potential=0.0,
+            decay=0.0,
+            index=-1,
+            p=1.0,
+        )
 
         main_name = self.generate_neuron_name("main")
         graph.add_node(
-                main_name,
-                threshold=0.5,
-                potential=1.0,
-                decay=0.0,
-                index=-1,
-                p=1.0,
-                )
+            main_name,
+            threshold=0.5,
+            potential=1.0,
+            decay=0.0,
+            index=-1,
+            p=1.0,
+        )
 
         output_list = []
         for index, weight in enumerate(self.weights):
             name = self.generate_neuron_name("{}".format(index))
             graph.add_node(
-                    name,
-                    threshold=1.0,
-                    potential=0.1,
-                    decay=1.0,
-                    index=-1,
-                    )
+                name,
+                threshold=1.0,
+                potential=0.1,
+                decay=1.0,
+                index=-1,
+            )
             graph.add_edge(
-                    main_name,
-                    name,
-                    weight=weight,
-                    delay=1.0,
-                    )
+                main_name,
+                name,
+                weight=weight,
+                delay=1.0,
+            )
             output_list.append(name)
 
         self.is_built = True
-        return (graph, metadata, [{'complete': complete_name}], [output_list], input_codings)
+        return (graph, metadata, [{
+            'complete': complete_name
+        }], [output_list], input_codings)
 
 
 class SumOfMaxes(CompoundBrick):
     """
     A brick that computes the max of N sets of values and reports the sum of those maxes.
     """
-
     def __init__(self, set_sizes=[5, 5], name="SumOfMaxes"):
         '''
         Construtor for this brick.
@@ -219,7 +223,8 @@ class SumOfMaxes(CompoundBrick):
 
         self.set_sizes = set_sizes
 
-    def build(self, graph, metadata, control_nodes, input_lists, input_codings):
+    def build(self, graph, metadata, control_nodes, input_lists,
+              input_codings):
         """
         Build SumOfMaxes brick.
 
@@ -242,30 +247,30 @@ class SumOfMaxes(CompoundBrick):
 
         if len(input_lists) != sum(self.set_sizes):
             raise ValueError(
-                    "Received an incorrect ammount of input values. Expected {}, got {}".format(
-                                                                                           sum(self.set_sizes),
-                                                                                           len(input_lists),
-                                                                                           )
-                    )
+                "Received an incorrect ammount of input values. Expected {}, got {}"
+                .format(
+                    sum(self.set_sizes),
+                    len(input_lists),
+                ))
 
         begin_name = self.generate_neuron_name("begin")
         graph.add_node(
-                begin_name,
-                threshold=0.5,
-                potential=1.0,
-                decay=0.0,
-                index=-1,
-                p=1.0,
-                )
+            begin_name,
+            threshold=0.5,
+            potential=1.0,
+            decay=0.0,
+            index=-1,
+            p=1.0,
+        )
         complete_name = self.generate_neuron_name("complete")
         graph.add_node(
-                complete_name,
-                threshold=0.5,
-                potential=0.0,
-                decay=0.0,
-                index=-1,
-                p=1.0,
-                )
+            complete_name,
+            threshold=0.5,
+            potential=0.0,
+            decay=0.0,
+            index=-1,
+            p=1.0,
+        )
 
         max_base = "Max{}"
         index = 0
@@ -285,26 +290,28 @@ class SumOfMaxes(CompoundBrick):
                 index += 1
 
             graph, _, _, child_output, _ = self.build_child(
-                                                  Max(default_size=default_max_size, name="Set{}".format(i)),
-                                                  graph,
-                                                  {},
-                                                  {},
-                                                  max_inputs,
-                                                  input_codings,
-                                                  )
+                Max(default_size=default_max_size, name="Set{}".format(i)),
+                graph,
+                {},
+                {},
+                max_inputs,
+                input_codings,
+            )
             output_register = child_output[0]
             addition_inputs.append(output_register)
             if len(output_register) > addition_size:
                 addition_size = len(output_register)
 
         graph, _, _, child_output, _ = self.build_child(
-                                              Addition(register_size=addition_size + 1),
-                                              graph,
-                                              {},
-                                              {},
-                                              addition_inputs,
-                                              input_codings,
-                                              )
+            Addition(register_size=addition_size + 1),
+            graph,
+            {},
+            {},
+            addition_inputs,
+            input_codings,
+        )
 
         self.is_built = True
-        return (graph, metadata, [{'complete': complete_name}], child_output, input_codings)
+        return (graph, metadata, [{
+            'complete': complete_name
+        }], child_output, input_codings)

@@ -13,11 +13,14 @@ from ..neuron.neuron import Neuron
 
 class Synapse:
     def __init__(self, pre_neuron, post_neuron, delay=0, weight=1.0):
-        if not isinstance(pre_neuron, Neuron) or not isinstance(post_neuron, Neuron):
-            raise TypeError('Pre and Post Synanptic neurons must be of type Neuron')
+        if not isinstance(pre_neuron, Neuron) or not isinstance(
+                post_neuron, Neuron):
+            raise TypeError(
+                'Pre and Post Synanptic neurons must be of type Neuron')
 
         if type(delay) != int:
-            raise TypeError('delay must be an int - encode number of time steps')
+            raise TypeError(
+                'delay must be an int - encode number of time steps')
 
         self._d = delay
         self._w = weight
@@ -59,11 +62,11 @@ class Synapse:
 
     def show_params(self):
         print("Synapse {0} -> {1}:\n delay  : {2}\n weight : {3}".format(
-                                                                    self._pre,
-                                                                    self._post,
-                                                                    self._d,
-                                                                    self._w,
-                                                                    ))
+            self._pre,
+            self._post,
+            self._d,
+            self._w,
+        ))
 
     def __str__(self):
         return "Synapse {0}({1}, {2})".format(self.name, self._d, self._w)

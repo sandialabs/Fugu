@@ -4,8 +4,10 @@ import numpy as np
 print("---Importing modules---")
 print("---Importing fugu---")
 import fugu
+
 print("---Importing Scaffold---")
 from fugu import Scaffold
+
 print("---Importing Bricks---")
 from fugu.bricks import Threshold, Vector_Input, Copy, Dot
 
@@ -37,15 +39,18 @@ for parameters, answer in test_cases:
 
     scaffold = Scaffold()
 
-    scaffold.add_brick(Vector_Input(np.array([1]), coding='Raster', name='input1'), 'input' )
-    scaffold.add_brick(Vector_Input(np.array([0]), coding='Raster', name='input2'), 'input' )
-    scaffold.add_brick(Dot([parameters[1]], name='ADotOperator'), (0,0)) #don't know why i need two vector inputs
-    scaffold.add_brick(Threshold(parameters[2], 
-                                 p=parameters[3], 
+    scaffold.add_brick(
+        Vector_Input(np.array([1]), coding='Raster', name='input1'), 'input')
+    scaffold.add_brick(
+        Vector_Input(np.array([0]), coding='Raster', name='input2'), 'input')
+    scaffold.add_brick(Dot([parameters[1]], name='ADotOperator'),
+                       (0, 0))  #don't know why i need two vector inputs
+    scaffold.add_brick(Threshold(parameters[2],
+                                 p=parameters[3],
                                  decay=parameters[4],
                                  name='Thresh',
-                                 output_coding=parameters[0]),
-                       (2,0), output=True)
+                                 output_coding=parameters[0]), (2, 0),
+                       output=True)
 
     scaffold.lay_bricks()
 
@@ -53,7 +58,7 @@ for parameters, answer in test_cases:
 
     pynn_args = {}
     pynn_args['backend'] = 'brian'
-    pynn_args['verbose'] = False 
+    pynn_args['verbose'] = False
     pynn_args['show_plots'] = False
 
     #result = scaffold.evaluate(backend='pynn',max_runtime=MAX_RUNTIME, record_all=True, backend_args=pynn_args)
@@ -61,7 +66,9 @@ for parameters, answer in test_cases:
     hits = 0.0
     print("---Running {} evaluations---".format(TRIALS))
     for i in range(TRIALS):
-        result = scaffold.evaluate(backend='ds',max_runtime=MAX_RUNTIME, record_all=True)
+        result = scaffold.evaluate(backend='ds',
+                                   max_runtime=MAX_RUNTIME,
+                                   record_all=True)
         evaluations += 1.0
 
         graph_names = list(scaffold.graph.nodes.data('name'))
@@ -75,8 +82,10 @@ for parameters, answer in test_cases:
     results.append(hits / evaluations)
 
 print("---Final results---")
-print("Input coding, input value, threshold, p, decay, expected spike rate,actual spike rate, within {}%?".format(TOLERANCE * 100))
+print(
+    "Input coding, input value, threshold, p, decay, expected spike rate,actual spike rate, within {}%?"
+    .format(TOLERANCE * 100))
 for (params, answer), result in zip(test_cases, results):
-    print("{}, {}, {}, {}, {}, {}, {}, {}".format(params[0], params[1], params[2], params[3], params[4], 
-                                                  answer, result, 
-                                                  abs(result - answer) < TOLERANCE))
+    print("{}, {}, {}, {}, {}, {}, {}, {}".format(
+        params[0], params[1], params[2], params[3], params[4], answer, result,
+        abs(result - answer) < TOLERANCE))

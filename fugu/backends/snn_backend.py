@@ -11,11 +11,9 @@ from ..utils.misc import CalculateSpikeTimes
 
 
 class snn_Backend(Backend):
-
     def _build_network(self):
         self.nn = snn.NeuralNetwork()
         neuron_dict = {}
-
         '''
         Add Neurons
         '''
@@ -26,9 +24,11 @@ class snn_Backend(Backend):
         for node, vals in self.fugu_circuit.nodes.data():
             if 'layer' in vals:
                 if vals['layer'] == 'input':
-                    for neuron in self.fugu_circuit.nodes[node]['output_lists'][0]:
+                    for neuron in self.fugu_circuit.nodes[node][
+                            'output_lists'][0]:
                         rc = True if self.record == 'all' else False
-                        neuron_dict[neuron] = snn.InputNeuron(neuron, record=rc)
+                        neuron_dict[neuron] = snn.InputNeuron(neuron,
+                                                              record=rc)
                         self.nn.add_neuron(neuron_dict[neuron])
                 if vals['layer'] == 'output':
                     for olist in self.fugu_circuit.nodes[node]['output_lists']:
@@ -44,14 +44,14 @@ class snn_Backend(Backend):
                             if 'decay' in props:
                                 lk = 1.0 - props['decay']
                             neuron_dict[neuron] = snn.LIFNeuron(
-                                                        neuron,
-                                                        threshold=th,
-                                                        reset_voltage=rv,
-                                                        leakage_constant=lk,
-                                                        voltage=vol,
-                                                        p=prob,
-                                                        record=True,
-                                                        )
+                                neuron,
+                                threshold=th,
+                                reset_voltage=rv,
+                                leakage_constant=lk,
+                                voltage=vol,
+                                p=prob,
+                                record=True,
+                            )
                             self.nn.add_neuron(neuron_dict[neuron])
         # add other neurons from self.fugu_graph to spiking neural network
         # parse through the self.fugu_graph and if a neuron is not present in spiking neural network, add to it.
@@ -68,16 +68,15 @@ class snn_Backend(Backend):
                     lk = 1.0 - props['decay']
                 rc = True if self.record == 'all' else False
                 neuron_dict[neuron] = snn.LIFNeuron(
-                                            neuron,
-                                            threshold=th,
-                                            reset_voltage=rv,
-                                            leakage_constant=lk,
-                                            voltage=vol,
-                                            p=prob,
-                                            record=rc,
-                                            )
+                    neuron,
+                    threshold=th,
+                    reset_voltage=rv,
+                    leakage_constant=lk,
+                    voltage=vol,
+                    p=prob,
+                    record=rc,
+                )
                 self.nn.add_neuron(neuron_dict[neuron])
-
         '''
         Add Synapses
         '''
@@ -85,7 +84,10 @@ class snn_Backend(Backend):
         for n1, n2, props in self.fugu_graph.edges.data():
             delay = int(props.get('delay', 1))
             wt = props.get('weight', 1.0)
-            syn = snn.Synapse(neuron_dict[n1], neuron_dict[n2], delay=delay, weight=wt)
+            syn = snn.Synapse(neuron_dict[n1],
+                              neuron_dict[n2],
+                              delay=delay,
+                              weight=wt)
             self.nn.add_synapse(syn)
 
         del neuron_dict
@@ -121,9 +123,10 @@ class snn_Backend(Backend):
     def run(self, n_steps=10, return_potentials=False):
         # runs circuit for n_steps then returns data
         # if not None raise error
-
         ''' Run the Simulator '''
-        output = self.nn.run(n_steps=n_steps, debug_mode=self.debug_mode, record_potentials=return_potentials)
+        output = self.nn.run(n_steps=n_steps,
+                             debug_mode=self.debug_mode,
+                             record_potentials=return_potentials)
 
         if return_potentials:
             df, final_potentials = output
@@ -176,7 +179,8 @@ class snn_Backend(Backend):
             if brick != 'compile_args':
                 brick_tag = self.name_to_tag[brick]
                 brick_id = self.brick_to_number[brick_tag]
-                changes = self.fugu_circuit.nodes[brick_id]['brick'].set_properties(properties[brick])
+                changes = self.fugu_circuit.nodes[brick_id][
+                    'brick'].set_properties(properties[brick])
                 if changes:
                     neuron_props, synapse_props = changes
                     for neuron_name in self.nn.nrns:
@@ -187,15 +191,19 @@ class snn_Backend(Backend):
                                 if prop == 'threshold':
                                     self.nn.nrns[neuron_name].threshold = value
                                 elif prop == 'decay':
-                                    self.nn.nrns[neuron_name].leakage_constant = value
+                                    self.nn.nrns[
+                                        neuron_name].leakage_constant = value
                                 elif prop == 'potential':
                                     self.nn.nrns[neuron_name].voltage = value
                                 elif prop == 'p':
                                     self.nn.nrns[neuron_name].p = value
 
                     for synapse in self.nn.synps:
-                        pre, post = self.nn.synps[synapse].pre_neuron.name, self.nn.synps[synapse].post_neuron.name
-                        weight, delay = self.nn.synps[synapse].weight, self.nn.synps[synapse].delay
+                        pre, post = self.nn.synps[
+                            synapse].pre_neuron.name, self.nn.synps[
+                                synapse].post_neuron.name
+                        weight, delay = self.nn.synps[
+                            synapse].weight, self.nn.synps[synapse].delay
                         if (pre, post) in synapse_props:
                             new_props = synapse_props[(pre, post)]
                             if 'weight' in new_props:
@@ -221,7 +229,8 @@ class snn_Backend(Backend):
             if 'layer' in vals:
                 if vals['layer'] == 'input':
                     initial_spikes = {}
-                    for neuron in self.fugu_circuit.nodes[node]['output_lists'][0]:
+                    for neuron in self.fugu_circuit.nodes[node][
+                            'output_lists'][0]:
                         initial_spikes[neuron] = []
                     for timestep in initial_spike_data:
                         spike_list = initial_spike_data[timestep]
@@ -229,10 +238,12 @@ class snn_Backend(Backend):
                             if neuron in initial_spikes:
                                 initial_spikes[neuron].append(1)
                         for neuron in initial_spikes:
-                            if(len(initial_spikes[neuron]) < timestep+1):
+                            if (len(initial_spikes[neuron]) < timestep + 1):
                                 initial_spikes[neuron].append(0)
 
-                    for neuron in self.fugu_circuit.nodes[node]['output_lists'][0]:
+                    for neuron in self.fugu_circuit.nodes[node][
+                            'output_lists'][0]:
                         if self.debug_mode:
                             print(neuron, initial_spikes[neuron])
-                        self.nn.update_input_neuron(neuron, initial_spikes[neuron])
+                        self.nn.update_input_neuron(neuron,
+                                                    initial_spikes[neuron])

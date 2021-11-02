@@ -7,12 +7,14 @@ from fugu.backends import ds_Backend, snn_Backend
 
 print("Without time dimension")
 no_time = Scaffold()
-spike_times = [0,1,0,1]
+spike_times = [0, 1, 0, 1]
 vector_1 = Vector_Input(spike_times, coding='Raster', name='input1')
 dot_brick = Dot([1.0, 1.0, 1.0, 1.0], name='Dot')
 no_time.add_brick(vector_1, 'input')
-no_time.add_brick(dot_brick, input_nodes=(0,0))
-no_time.add_brick(Threshold(3.0, name='Thresh', output_coding='temporal-L'), input_nodes=(1,0), output=True)
+no_time.add_brick(dot_brick, input_nodes=(0, 0))
+no_time.add_brick(Threshold(3.0, name='Thresh', output_coding='temporal-L'),
+                  input_nodes=(1, 0),
+                  output=True)
 
 no_time.lay_bricks()
 graph_names = list(no_time.graph.nodes.data('name'))

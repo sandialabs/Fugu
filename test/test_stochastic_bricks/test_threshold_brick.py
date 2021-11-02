@@ -27,7 +27,9 @@ class ThresholdBrickTests(BrickTest):
                                            decay=decay_value,
                                            name='Thresh',
                                            output_coding=coding)
-        vector = BRICKS.Vector_Input(np.array([1]), coding='Raster', name='input1')
+        vector = BRICKS.Vector_Input(np.array([1]),
+                                     coding='Raster',
+                                     name='input1')
         dot_brick = BRICKS.Dot([weight], name='ADotOperator')
 
         scaffold.add_brick(vector, 'input')
@@ -54,7 +56,8 @@ class ThresholdBrickTests(BrickTest):
             spikes = self.backend.run(5)
             self.update_hit_count(spikes, scaffold)
 
-        AssertValuesAreClose(expected, self.hits / float(self.num_trials), self.tolerance)
+        AssertValuesAreClose(expected, self.hits / float(self.num_trials),
+                             self.tolerance)
 
     def test_thresh_current_no_spikes(self):
         scaffold = self.build_scaffold(['current', 1.0, 1, 1, 0])

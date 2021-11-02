@@ -19,9 +19,14 @@ class MaxBrickTests(BrickTest):
 
         max_brick = BRICKS.Max(name='Max')
         for i, value in enumerate(converted_input):
-            vector_brick = BRICKS.Vector_Input(value, coding='Raster', name='Input{}'.format(i))
+            vector_brick = BRICKS.Vector_Input(value,
+                                               coding='Raster',
+                                               name='Input{}'.format(i))
             scaffold.add_brick(vector_brick, 'input')
-        scaffold.add_brick(max_brick, input_nodes=[(i, 0) for i in range(len(converted_input))], output=True)
+        scaffold.add_brick(max_brick,
+                           input_nodes=[(i, 0)
+                                        for i in range(len(converted_input))],
+                           output=True)
 
         scaffold.lay_bricks()
         if self.debug:
@@ -36,12 +41,13 @@ class MaxBrickTests(BrickTest):
         value = 0
         graph_names = list(scaffold.graph.nodes.data('name'))
         for row in spikes.sort_values('time').itertuples():
-            brick_tag, neuron_name = graph_names[int(row.neuron_number)][0].split(":")
+            brick_tag, neuron_name = graph_names[int(
+                row.neuron_number)][0].split(":")
             if self.debug:
                 print(neuron_name, row.time)
             if 'M' in neuron_name and 'Max' not in neuron_name:
                 index = int(neuron_name.split('_')[1])
-                value += (2 ** index)
+                value += (2**index)
 
         self.assertEqual(expected, value)
 

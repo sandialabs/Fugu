@@ -19,11 +19,11 @@ class VectorInputTests(BrickTest):
         scaffold = Scaffold()
 
         vector_brick = BRICKS.Vector_Input(
-                                input_spikes,
-                                coding='Raster',
-                                name=self.brick_name,
-                                time_dimension=use_time,
-                                )
+            input_spikes,
+            coding='Raster',
+            name=self.brick_name,
+            time_dimension=use_time,
+        )
 
         scaffold.add_brick(vector_brick, input_nodes=['input'])
 

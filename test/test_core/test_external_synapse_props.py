@@ -19,7 +19,9 @@ class ChangeSynapseExternalPropertyTests(BrickTest):
                                            decay=0,
                                            name='Test',
                                            output_coding='temporal-L')
-        vector = BRICKS.Vector_Input(np.array([1]), coding='Raster', name='input1')
+        vector = BRICKS.Vector_Input(np.array([1]),
+                                     coding='Raster',
+                                     name='input1')
         dot_brick = BRICKS.Dot([input_values[0]], name='ADotOperator')
 
         scaffold.add_brick(vector, 'input')
@@ -51,7 +53,8 @@ class ChangeSynapseExternalPropertyTests(BrickTest):
             processed.add((neuron_name, row.time))
 
         test_brick_tag = scaffold.name_to_tag["Test"]
-        test_brick = scaffold.circuit.nodes[scaffold.brick_to_number[test_brick_tag]]['brick']
+        test_brick = scaffold.circuit.nodes[
+            scaffold.brick_to_number[test_brick_tag]]['brick']
         for entry in before_expected:
             converted = (test_brick.generate_neuron_name(entry[0]), entry[1])
             if self.debug:
@@ -77,26 +80,30 @@ class ChangeSynapseExternalPropertyTests(BrickTest):
         self.run_property_test([0.5], [props], [[[], [('Main', 1.0)]]])
 
 
-class SnnChangeSynapseExternalPropertyTests(ChangeSynapseExternalPropertyTests, unittest.TestCase):
+class SnnChangeSynapseExternalPropertyTests(ChangeSynapseExternalPropertyTests,
+                                            unittest.TestCase):
     @classmethod
     def setUpClass(self):
         self.backend = snn_Backend()
 
 
-class DsChangeSynapseExternalPropertyTests(ChangeSynapseExternalPropertyTests, unittest.TestCase):
+class DsChangeSynapseExternalPropertyTests(ChangeSynapseExternalPropertyTests,
+                                           unittest.TestCase):
     @classmethod
     def setUpClass(self):
         self.backend = ds_Backend()
 
 
-class PynnSpinnakerChangeSynapseExternalPropertyTests(ChangeSynapseExternalPropertyTests, unittest.TestCase):
+class PynnSpinnakerChangeSynapseExternalPropertyTests(
+        ChangeSynapseExternalPropertyTests, unittest.TestCase):
     @classmethod
     def setUpClass(self):
         self.backend = pynn_Backend()
         self.backend_args['backend'] = 'spinnaker'
 
 
-class PynnBrianChangeSynapseExternalPropertyTests(ChangeSynapseExternalPropertyTests, unittest.TestCase):
+class PynnBrianChangeSynapseExternalPropertyTests(
+        ChangeSynapseExternalPropertyTests, unittest.TestCase):
     @classmethod
     def setUpClass(self):
         self.backend = pynn_Backend()

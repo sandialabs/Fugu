@@ -6,44 +6,48 @@ import random
 
 print("Importing fugu")
 import fugu
+
 print("Importing Scaffold")
 from fugu import Scaffold
+
 print("Importing Bricks")
 from fugu.bricks import Breadth_First_Search, Shortest_Path, Vector_Input
 
 MAX_RUNTIME = 100
 
+
 def create_graph(size, p, seed):
     G = fast_gnp_random_graph(size, p, seed=seed)
     random.seed(seed)
-    for (u,v) in G.edges():
-        G.edges[u,v]['weight'] = random.randint(1,10)
+    for (u, v) in G.edges():
+        G.edges[u, v]['weight'] = random.randint(1, 10)
     return G
+
 
 # Build test cases
 #   test case = graph, start node, bfs tree, shortest distances to every other node
 #       note: calculate the bfs and shortest path stuff later using networkx
 test_cases = []
 weird_case = nx.DiGraph()
-weird_case.add_edge(0,1,weight=1)
-weird_case.add_edge(1,2,weight=1)
-weird_case.add_edge(2,3,weight=1)
-weird_case.add_edge(3,4,weight=1)
-weird_case.add_edge(4,5,weight=1)
-weird_case.add_edge(5,6,weight=1)
-weird_case.add_edge(6,7,weight=1)
-weird_case.add_edge(7,8,weight=1)
-weird_case.add_edge(8,9,weight=1)
-weird_case.add_edge(0,10,weight=10)
-weird_case.add_edge(1,11,weight=9)
-weird_case.add_edge(2,12,weight=8)
-weird_case.add_edge(3,13,weight=7)
-weird_case.add_edge(4,14,weight=6)
-weird_case.add_edge(5,15,weight=5)
-weird_case.add_edge(6,16,weight=4)
-weird_case.add_edge(7,17,weight=3)
-weird_case.add_edge(8,18,weight=2)
-weird_case.add_edge(9,19,weight=1)
+weird_case.add_edge(0, 1, weight=1)
+weird_case.add_edge(1, 2, weight=1)
+weird_case.add_edge(2, 3, weight=1)
+weird_case.add_edge(3, 4, weight=1)
+weird_case.add_edge(4, 5, weight=1)
+weird_case.add_edge(5, 6, weight=1)
+weird_case.add_edge(6, 7, weight=1)
+weird_case.add_edge(7, 8, weight=1)
+weird_case.add_edge(8, 9, weight=1)
+weird_case.add_edge(0, 10, weight=10)
+weird_case.add_edge(1, 11, weight=9)
+weird_case.add_edge(2, 12, weight=8)
+weird_case.add_edge(3, 13, weight=7)
+weird_case.add_edge(4, 14, weight=6)
+weird_case.add_edge(5, 15, weight=5)
+weird_case.add_edge(6, 16, weight=4)
+weird_case.add_edge(7, 17, weight=3)
+weird_case.add_edge(8, 18, weight=2)
+weird_case.add_edge(9, 19, weight=1)
 
 test_cases.append((weird_case, 0))
 test_cases.append((create_graph(10, 0.2, 3), 2))
@@ -64,7 +68,9 @@ for test_case in test_cases:
     spikes = [0] * test_case[1]
     spikes.append(1)
 
-    bfs_brick = Breadth_First_Search(test_case[0], name="BFS", store_edge_references=True)
+    bfs_brick = Breadth_First_Search(test_case[0],
+                                     name="BFS",
+                                     store_edge_references=True)
     bfs_input = Vector_Input(spikes, coding='Raster', name='BFSInput')
     bfs_scaffold.add_brick(bfs_input, 'input')
     bfs_scaffold.add_brick(bfs_brick, output=True)
@@ -87,11 +93,14 @@ for test_case in test_cases:
 
     print("---Running BFS---")
 
-    bfs_result = bfs_scaffold.evaluate(backend='pynn',max_runtime=MAX_RUNTIME, record_all=True, backend_args=pynn_args)
+    bfs_result = bfs_scaffold.evaluate(backend='pynn',
+                                       max_runtime=MAX_RUNTIME,
+                                       record_all=True,
+                                       backend_args=pynn_args)
     #bfs_result = bfs_scaffold.evaluate(backend='ds',max_runtime=MAX_RUNTIME, record_all=True)
 
     print("---Interpreting Spikes for BFS---")
-    bfs_pred = {v:-1 for v in test_case[0].nodes}
+    bfs_pred = {v: -1 for v in test_case[0].nodes}
     bfs_names = list(bfs_scaffold.graph.nodes.data('name'))
     for row in bfs_result.itertuples():
         neuron_name = bfs_names[int(row.neuron_number)][0]
@@ -101,7 +110,8 @@ for test_case in test_cases:
         if 'is_edge_reference' in neuron_props:
             u = neuron_props['from_vertex']
             v = neuron_props['to_vertex']
-            bfs_pred[v] = u if u < bfs_pred[v] or bfs_pred[v] < 0 else bfs_pred[v]
+            bfs_pred[
+                v] = u if u < bfs_pred[v] or bfs_pred[v] < 0 else bfs_pred[v]
 
     final_bfs = set()
     for v in bfs_pred:
@@ -111,11 +121,13 @@ for test_case in test_cases:
 
     print("---Running SSSP---")
     #sssp_result = sssp_scaffold.evaluate(backend='pynn',max_runtime=MAX_RUNTIME, record_all=True, backend_args=pynn_args)
-    sssp_result = sssp_scaffold.evaluate(backend='ds',max_runtime=MAX_RUNTIME, record_all=True)
+    sssp_result = sssp_scaffold.evaluate(backend='ds',
+                                         max_runtime=MAX_RUNTIME,
+                                         record_all=True)
 
     print("---Interpreting Spikes for SSSP---")
-    sssp_pred = {v:-1 for v in test_case[0].nodes}
-    sssp_table = {v:-1 for v in test_case[0].nodes}
+    sssp_pred = {v: -1 for v in test_case[0].nodes}
+    sssp_table = {v: -1 for v in test_case[0].nodes}
     sssp_start_time = 0.0
 
     sssp_names = list(sssp_scaffold.graph.nodes.data('name'))
@@ -132,7 +144,8 @@ for test_case in test_cases:
         if 'is_edge_reference' in neuron_props:
             u = neuron_props['from_vertex']
             v = neuron_props['to_vertex']
-            sssp_pred[v] = u if u < sssp_pred[v] or sssp_pred[v] < 0 else sssp_pred[v]
+            sssp_pred[v] = u if u < sssp_pred[v] or sssp_pred[
+                v] < 0 else sssp_pred[v]
 
     for v in sssp_table:
         if sssp_table[v] > -1:
@@ -150,7 +163,8 @@ case_index = 0
 print("Case ID, BFS, SSSP-Pred, SSSP-Dist")
 for test_case, bfs_pred, sssp_table in zip(test_cases, bfs_preds, sssp_tables):
     bfs_pred_pass = True
-    expected_bfs_preds = list(nx.bfs_predecessors(test_case[0],source=test_case[1]))
+    expected_bfs_preds = list(
+        nx.bfs_predecessors(test_case[0], source=test_case[1]))
     #print("expected bfs:")
     #print(expected_bfs_preds)
     #print("actual:")
@@ -165,7 +179,8 @@ for test_case, bfs_pred, sssp_table in zip(test_cases, bfs_preds, sssp_tables):
 
     sssp_pred_pass = True
     sssp_dist_pass = True
-    expected_tables = nx.dijkstra_predecessor_and_distance(test_case[0], test_case[1])
+    expected_tables = nx.dijkstra_predecessor_and_distance(
+        test_case[0], test_case[1])
 
     #print("expected sssp (pred):")
     #print(expected_tables[0])
@@ -175,7 +190,7 @@ for test_case, bfs_pred, sssp_table in zip(test_cases, bfs_preds, sssp_tables):
     if len(expected_tables[0].keys()) - 1 != len(sssp_table[0]):
         sssp_pass = False
     else:
-        for v in expected_tables[0]: 
+        for v in expected_tables[0]:
             pred = expected_tables[0][v]
             if len(pred) > 0:
                 if (v, pred[0]) not in sssp_table[0]:
@@ -201,5 +216,6 @@ for test_case, bfs_pred, sssp_table in zip(test_cases, bfs_preds, sssp_tables):
             sssp_dist_pass = False
             break
 
-    print("{}, {}, {}, {}".format(case_index, bfs_pred_pass, sssp_pred_pass, sssp_dist_pass))
+    print("{}, {}, {}, {}".format(case_index, bfs_pred_pass, sssp_pred_pass,
+                                  sssp_dist_pass))
     case_index += 1

@@ -15,14 +15,20 @@ class AdditionBrickTests(BrickTest):
         scaffold = Scaffold()
 
         converted_input = self.convert_input(input_values)
-        vector_1 = BRICKS.Vector_Input(converted_input[0], coding='Raster', name='Input1')
-        vector_2 = BRICKS.Vector_Input(converted_input[1], coding='Raster', name='Input2')
+        vector_1 = BRICKS.Vector_Input(converted_input[0],
+                                       coding='Raster',
+                                       name='Input1')
+        vector_2 = BRICKS.Vector_Input(converted_input[1],
+                                       coding='Raster',
+                                       name='Input2')
 
         addition_brick = BRICKS.Addition(register_size=5, name="Addition")
 
         scaffold.add_brick(vector_1, 'input')
         scaffold.add_brick(vector_2, 'input')
-        scaffold.add_brick(addition_brick, input_nodes=[(0, 0), (1, 0)], output=True)
+        scaffold.add_brick(addition_brick,
+                           input_nodes=[(0, 0), (1, 0)],
+                           output=True)
 
         scaffold.lay_bricks()
         return scaffold
@@ -40,7 +46,7 @@ class AdditionBrickTests(BrickTest):
                 print(node_name, row.time)
             if 'S' in neuron_name and 'Addition' in brick_tag:
                 bit_position = scaffold.graph.nodes[node_name]['bit_position']
-                answer += 2 ** bit_position
+                answer += 2**bit_position
 
         self.assertEqual(expected, answer)
 

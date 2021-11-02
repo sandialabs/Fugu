@@ -6,7 +6,6 @@ import fugu
 from fugu import Scaffold
 from fugu.bricks import TemporalAdder, Vector_Input
 
-
 print("Building test sequences")
 test_cases = []
 
@@ -14,7 +13,7 @@ test_cases = []
 #test_cases.append(([10, 8],18))
 #test_cases.append(([6, 8],14))
 #test_cases.append(([9, 9],18))
-test_cases.append(([1, 9],10))
+test_cases.append(([1, 9], 10))
 
 results = []
 
@@ -32,8 +31,11 @@ for spike_times, answer in test_cases:
     time_vector[0][spike_times[0] * 2] = 1
     time_vector[1][spike_times[1] * 2] = 1
 
-    scaffold.add_brick(Vector_Input(np.array(time_vector), coding='Raster', name='Input', time_dimension=True), 'input')
-
+    scaffold.add_brick(
+        Vector_Input(np.array(time_vector),
+                     coding='Raster',
+                     name='Input',
+                     time_dimension=True), 'input')
 
     #scaffold.add_brick(Vector_Input(np.array([[0,0,1]]), coding='Raster', name='Input0', time_dimension = time_dim), 'input' )
     #scaffold.add_brick(Vector_Input(np.array([[0, 10]]), coding='Raster', name='Input1', time_dimension = time_dim), 'input' )
@@ -51,7 +53,10 @@ for spike_times, answer in test_cases:
 
     #max_time = (answer+4) * 2
     max_time = 1000
-    result = scaffold.evaluate(backend='pynn',max_runtime=max_time, record_all=True, backend_args=pynn_args)
+    result = scaffold.evaluate(backend='pynn',
+                               max_runtime=max_time,
+                               record_all=True,
+                               backend_args=pynn_args)
     #result = scaffold.evaluate(backend='ds', max_runtime=max_time, record_all=True)
     #result = scaffold.evaluate(backend='snn', max_runtime=max_time, record_all=True)
 

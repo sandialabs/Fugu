@@ -28,8 +28,14 @@ class Neuron(ABC):
 
 
 class LIFNeuron(Neuron):
-    def __init__(self, name=None, threshold=0.0, reset_voltage=0.0, leakage_constant=1.0,
-                 voltage=0.0, p=1.0, record=False):
+    def __init__(self,
+                 name=None,
+                 threshold=0.0,
+                 reset_voltage=0.0,
+                 leakage_constant=1.0,
+                 voltage=0.0,
+                 p=1.0,
+                 record=False):
         super(LIFNeuron, self).__init__()
         self.name = name
         self._T = threshold
@@ -48,6 +54,7 @@ class LIFNeuron(Neuron):
                 if len(s._hist) > 0:
                     input_v += s._hist[0]
 
+
 #        self.v = (self._m * self.v) + input_v
         self.v = self.v + input_v
 
@@ -65,28 +72,29 @@ class LIFNeuron(Neuron):
         self.spike_hist.append(self.spike)
 
     def show_state(self):
-        print("Neuron {0}: {1} volts, spike = {2}".format(self.name, self.v, self.spike))
+        print("Neuron {0}: {1} volts, spike = {2}".format(
+            self.name, self.v, self.spike))
 
     def show_params(self):
-        print(
-          "Neuron '{0}':\n"
-          "Threshold\t  :{1:2} volts,\n"
-          "Reset voltage\t  :{2:1} volts,\n"
-          "Leakage Constant :{3}\n".format(
-                                      self.name,
-                                      self._T,
-                                      self._R,
-                                      self._m,
-                                      )
-          )
+        print("Neuron '{0}':\n"
+              "Threshold\t  :{1:2} volts,\n"
+              "Reset voltage\t  :{2:1} volts,\n"
+              "Leakage Constant :{3}\n".format(
+                  self.name,
+                  self._T,
+                  self._R,
+                  self._m,
+              ))
 
     def show_presynapses(self):
         if len(self.presyn) == 0:
             print("Neuron {0} receives no external input".format(self.name))
         elif len(self.presyn) == 1:
-            print("{0} receives input via synapse: {1}".format(self.__repr__(), self.presyn))
+            print("{0} receives input via synapse: {1}".format(
+                self.__repr__(), self.presyn))
         else:
-            print("{0} receives input via synapses: {1}".format(self.__repr__(), self.presyn))
+            print("{0} receives input via synapses: {1}".format(
+                self.__repr__(), self.presyn))
 
     @property
     def threshold(self):
@@ -117,7 +125,8 @@ class LIFNeuron(Neuron):
         return self.v
 
     def __str__(self):
-        return "LIFNeuron {0}({1}, {2}, {3})".format(self.name, self._T, self._R, self._m)
+        return "LIFNeuron {0}({1}, {2}, {3})".format(self.name, self._T,
+                                                     self._R, self._m)
 
     def __repr__(self):
         return "LIFNeuron {0}".format(self.name)
@@ -125,7 +134,6 @@ class LIFNeuron(Neuron):
 
 class InputNeuron(Neuron):
     '''Input Neuron. Inherits from class Neuron'''
-
     def __init__(self, name=None, threshold=0.1, voltage=0.0, record=False):
         super(InputNeuron, self).__init__()
         self.name = name
@@ -134,6 +142,7 @@ class InputNeuron(Neuron):
         # self.spike = spike
         self._it = None
         self.record = record
+
 
 #    def _create_iterator(self, input_iterable):
 #        '''Create an iterable from the input'''

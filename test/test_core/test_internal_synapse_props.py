@@ -14,7 +14,9 @@ class ChangeSynapseInternalPropertyTests(BrickTest):
     def build_scaffold(self, input_values):
         scaffold = Scaffold()
 
-        scaffold.add_brick(BRICKS.SynapseProperties(weights=input_values, name='Test'), output=True)
+        scaffold.add_brick(BRICKS.SynapseProperties(weights=input_values,
+                                                    name='Test'),
+                           output=True)
 
         scaffold.lay_bricks()
         return scaffold
@@ -41,7 +43,8 @@ class ChangeSynapseInternalPropertyTests(BrickTest):
             processed.add((neuron_name, row.time))
 
         test_brick_tag = scaffold.name_to_tag["Test"]
-        test_brick = scaffold.circuit.nodes[scaffold.brick_to_number[test_brick_tag]]['brick']
+        test_brick = scaffold.circuit.nodes[
+            scaffold.brick_to_number[test_brick_tag]]['brick']
         for entry in before_expected:
             converted = (test_brick.generate_neuron_name(entry[0]), entry[1])
             if self.debug:
@@ -65,39 +68,43 @@ class ChangeSynapseInternalPropertyTests(BrickTest):
         props['Test']['weights'] = [1.1, 1.1, 0.9, 2.1]
 
         self.run_property_test(
-               [0.5, 0.1, 0.3, 0.4],
-               [props],
-               [[
-                 [],
-                 [
-                   ('0', 1.0),
-                   ('1', 1.0),
-                   ('3', 1.0),
-                 ],
-               ]],
-               )
+            [0.5, 0.1, 0.3, 0.4],
+            [props],
+            [[
+                [],
+                [
+                    ('0', 1.0),
+                    ('1', 1.0),
+                    ('3', 1.0),
+                ],
+            ]],
+        )
 
 
-class SnnChangeSynapseInternalPropertyTests(ChangeSynapseInternalPropertyTests, unittest.TestCase):
+class SnnChangeSynapseInternalPropertyTests(ChangeSynapseInternalPropertyTests,
+                                            unittest.TestCase):
     @classmethod
     def setUpClass(self):
         self.backend = snn_Backend()
 
 
-class DsChangeSynapseInternalPropertyTests(ChangeSynapseInternalPropertyTests, unittest.TestCase):
+class DsChangeSynapseInternalPropertyTests(ChangeSynapseInternalPropertyTests,
+                                           unittest.TestCase):
     @classmethod
     def setUpClass(self):
         self.backend = ds_Backend()
 
 
-class PynnSpinnakerChangeSynapseInternalPropertyTests(ChangeSynapseInternalPropertyTests, unittest.TestCase):
+class PynnSpinnakerChangeSynapseInternalPropertyTests(
+        ChangeSynapseInternalPropertyTests, unittest.TestCase):
     @classmethod
     def setUpClass(self):
         self.backend = pynn_Backend()
         self.backend_args['backend'] = 'spinnaker'
 
 
-class PynnBrianChangeSynapseInternalPropertyTests(ChangeSynapseInternalPropertyTests, unittest.TestCase):
+class PynnBrianChangeSynapseInternalPropertyTests(
+        ChangeSynapseInternalPropertyTests, unittest.TestCase):
     @classmethod
     def setUpClass(self):
         self.backend = pynn_Backend()

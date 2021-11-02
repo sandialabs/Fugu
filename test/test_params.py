@@ -7,7 +7,8 @@ from fugu.backends import ds_Backend, snn_Backend
 
 no_time = Scaffold()
 
-no_time.add_brick(SynapseProperties(weights=[0.5, 0.5, 0.5, 0.5], name='Test'), output=True)
+no_time.add_brick(SynapseProperties(weights=[0.5, 0.5, 0.5, 0.5], name='Test'),
+                  output=True)
 
 no_time.lay_bricks()
 no_time.summary(verbose=2)

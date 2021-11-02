@@ -19,18 +19,33 @@ class RegisterBrickTests(BrickTest):
 
         converted_input = self.convert_input(action)
 
-        value_brick = BRICKS.Vector_Input(converted_input['value'], coding='Raster', name='Value')
+        value_brick = BRICKS.Vector_Input(converted_input['value'],
+                                          coding='Raster',
+                                          name='Value')
         scaffold.add_brick(value_brick, 'input')
-        recall_brick = BRICKS.Vector_Input(converted_input['recall'], coding='Raster', name='Recall', time_dimension=True)
+        recall_brick = BRICKS.Vector_Input(converted_input['recall'],
+                                           coding='Raster',
+                                           name='Recall',
+                                           time_dimension=True)
         scaffold.add_brick(recall_brick, 'input')
-        clear_brick = BRICKS.Vector_Input(converted_input['clear'], coding='Raster', name='Clear', time_dimension=True)
+        clear_brick = BRICKS.Vector_Input(converted_input['clear'],
+                                          coding='Raster',
+                                          name='Clear',
+                                          time_dimension=True)
         scaffold.add_brick(clear_brick, 'input')
-        set_brick = BRICKS.Vector_Input(converted_input['set'], coding='Raster', name='Set', time_dimension=True)
+        set_brick = BRICKS.Vector_Input(converted_input['set'],
+                                        coding='Raster',
+                                        name='Set',
+                                        time_dimension=True)
         scaffold.add_brick(set_brick, 'input')
 
-        register_brick = BRICKS.Register(register_size, initial_value=initial_value, name='Register')
+        register_brick = BRICKS.Register(register_size,
+                                         initial_value=initial_value,
+                                         name='Register')
 
-        scaffold.add_brick(register_brick, input_nodes=[(0, 0), (1, 0), (2, 0), (3, 0)], output=True)
+        scaffold.add_brick(register_brick,
+                           input_nodes=[(0, 0), (1, 0), (2, 0), (3, 0)],
+                           output=True)
 
         scaffold.lay_bricks()
 
@@ -51,7 +66,7 @@ class RegisterBrickTests(BrickTest):
                 print(neuron_name, row.time)
             if "Register" in neuron_name and 'output' in neuron_name:
                 index = int(neuron_name.split('_')[-1])
-                value += (2 ** index)
+                value += (2**index)
 
         self.assertEqual(expected, value)
 

@@ -17,11 +17,12 @@ class RegisterGraphTraversalBrickTests(BrickTest):
     def build_scaffold(self, input_values):
         graph, source_vertex, return_pred = input_values
         scaffold = Scaffold()
-        input_brick = BRICKS.Vector_Input(self.convert_input((graph, source_vertex)), coding='Raster', name='Input')
+        input_brick = BRICKS.Vector_Input(self.convert_input(
+            (graph, source_vertex)),
+                                          coding='Raster',
+                                          name='Input')
         traversal_brick = BRICKS.RegisterGraphTraversal(
-                                  graph,
-                                  name="RGT",
-                                  store_parent_info=return_pred)
+            graph, name="RGT", store_parent_info=return_pred)
 
         scaffold.add_brick(input_brick, 'input')
         scaffold.add_brick(traversal_brick, input_nodes=[(0, 0)], output=True)
@@ -45,7 +46,8 @@ class RegisterGraphTraversalBrickTests(BrickTest):
         for node in scaffold.circuit.nodes:
             if scaffold.circuit.nodes[node]['name'] == 'RGT':
                 traversal_brick = scaffold.circuit.nodes[node]['brick']
-                time_scale_factor = traversal_brick.metadata['timescale_factor']
+                time_scale_factor = traversal_brick.metadata[
+                    'timescale_factor']
 
         graph = traversal_brick.target_graph
         return_path = traversal_brick.store_parent_info
@@ -82,9 +84,9 @@ class RegisterGraphTraversalBrickTests(BrickTest):
                 node = neuron_props['label']
                 position = neuron_props['bit_position']
                 if predecessors_indices[node] < 0:
-                    predecessors_indices[node] = 2 ** position
+                    predecessors_indices[node] = 2**position
                 else:
-                    predecessors_indices[node] += 2 ** position
+                    predecessors_indices[node] += 2**position
 
         if nx.is_strongly_connected(graph):
             if self.debug:
@@ -94,13 +96,16 @@ class RegisterGraphTraversalBrickTests(BrickTest):
         if return_path:
             for node in predecessors_indices:
                 if self.debug:
-                    print('node: {}, pred_index: {}'.format(node, predecessors_indices[node]))
+                    print('node: {}, pred_index: {}'.format(
+                        node, predecessors_indices[node]))
                 pred_index = predecessors_indices[node]
                 if pred_index > -1:
                     predecessors[node] = index_to_node[pred_index]
             if self.debug:
                 for node in predecessors:
-                    print("u {}, u index {}, pred {}, pred index {}".format(node, node_indices[node], predecessors[node], predecessors_indices[node]))
+                    print("u {}, u index {}, pred {}, pred index {}".format(
+                        node, node_indices[node], predecessors[node],
+                        predecessors_indices[node]))
 
         for v in distance_table:
             if distance_table[v] > -1:
@@ -129,7 +134,8 @@ class RegisterGraphTraversalBrickTests(BrickTest):
 
                     edge_data = graph.get_edge_data(v, u)
                     if edge_data:
-                        edge_weight = edge_data['weight'] if 'weight' in edge_data else 1
+                        edge_weight = edge_data[
+                            'weight'] if 'weight' in edge_data else 1
                     else:
                         edge_weight = 1
 
@@ -162,8 +168,12 @@ class RegisterGraphTraversalBrickTests(BrickTest):
         properties = []
         source_keys = [1, 5, 7]
         for key in source_keys:
-            properties.append({'Input': {'spike_vector': self.convert_input((graph, key))}})
-        self.run_property_test((graph, 1, False), properties, ["" for key in source_keys])
+            properties.append(
+                {'Input': {
+                    'spike_vector': self.convert_input((graph, key))
+                }})
+        self.run_property_test((graph, 1, False), properties,
+                               ["" for key in source_keys])
 
     #@unittest.skip('')
     def test_bfs_multi_run_store_parents(self):
@@ -171,8 +181,12 @@ class RegisterGraphTraversalBrickTests(BrickTest):
         properties = []
         source_keys = [1, 5, 1]
         for key in source_keys:
-            properties.append({'Input': {'spike_vector': self.convert_input((graph, key))}})
-        self.run_property_test((graph, 1, True), properties, ["" for key in source_keys])
+            properties.append(
+                {'Input': {
+                    'spike_vector': self.convert_input((graph, key))
+                }})
+        self.run_property_test((graph, 1, True), properties,
+                               ["" for key in source_keys])
 
     #@unittest.skip('')
     def test_sssp_random_gnp_distances(self):
@@ -190,8 +204,12 @@ class RegisterGraphTraversalBrickTests(BrickTest):
         properties = []
         source_keys = [1, 5, 7]
         for key in source_keys:
-            properties.append({'Input': {'spike_vector': self.convert_input((graph, key))}})
-        self.run_property_test((graph, 1, False), properties, ["" for key in source_keys])
+            properties.append(
+                {'Input': {
+                    'spike_vector': self.convert_input((graph, key))
+                }})
+        self.run_property_test((graph, 1, False), properties,
+                               ["" for key in source_keys])
 
     #@unittest.skip('')
     def test_sssp_multi_run_store_parents(self):
@@ -199,8 +217,12 @@ class RegisterGraphTraversalBrickTests(BrickTest):
         properties = []
         source_keys = [1, 5, 1]
         for key in source_keys:
-            properties.append({'Input': {'spike_vector': self.convert_input((graph, key))}})
-        self.run_property_test((graph, 1, True), properties, ["" for key in source_keys])
+            properties.append(
+                {'Input': {
+                    'spike_vector': self.convert_input((graph, key))
+                }})
+        self.run_property_test((graph, 1, True), properties,
+                               ["" for key in source_keys])
 
     #@unittest.skip('')
     def test_sssp_race_condition(self):
@@ -227,28 +249,33 @@ class RegisterGraphTraversalBrickTests(BrickTest):
         self.basic_test((graph, 0, True), "")
 
 
-class SnnRegisterGraphTraversalTests(RegisterGraphTraversalBrickTests, unittest.TestCase):
+class SnnRegisterGraphTraversalTests(RegisterGraphTraversalBrickTests,
+                                     unittest.TestCase):
     @classmethod
     def setUpClass(self):
         self.backend = snn_Backend()
 
 
-class DsRegisterGraphTraversalTests(RegisterGraphTraversalBrickTests, unittest.TestCase):
+class DsRegisterGraphTraversalTests(RegisterGraphTraversalBrickTests,
+                                    unittest.TestCase):
     @classmethod
     def setUpClass(self):
         self.backend = ds_Backend()
 
 
-class PynnSpinnakerRegisterGraphTraversalTests(RegisterGraphTraversalBrickTests, unittest.TestCase):
+class PynnSpinnakerRegisterGraphTraversalTests(
+        RegisterGraphTraversalBrickTests, unittest.TestCase):
     @classmethod
     def setUpClass(self):
         self.backend = pynn_Backend()
         self.backend_args['backend'] = 'spinnaker'
 
 
-class PynnBrianRegisterGraphTraversalTests(RegisterGraphTraversalBrickTests, unittest.TestCase):
+class PynnBrianRegisterGraphTraversalTests(RegisterGraphTraversalBrickTests,
+                                           unittest.TestCase):
     @classmethod
     def setUpClass(self):
         self.backend = pynn_Backend()
         self.backend_args['backend'] = 'brian'
-        self.backend_args['single_fire'] = True # this is kinda hacky but necessary because pynn-brian is wonky
+        self.backend_args[
+            'single_fire'] = True  # this is kinda hacky but necessary because pynn-brian is wonky

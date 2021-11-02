@@ -17,12 +17,18 @@ class TemporalAdderBrickTests(BrickTest):
         scaffold = Scaffold()
 
         converted_input = self.convert_input(input_values)
-        vector_brick = BRICKS.Vector_Input(converted_input, coding='Raster', name='Input', time_dimension=True)
+        vector_brick = BRICKS.Vector_Input(converted_input,
+                                           coding='Raster',
+                                           name='Input',
+                                           time_dimension=True)
 
-        temporal_adder_brick = BRICKS.TemporalAdder(len(input_values), name="TemporalAdder")
+        temporal_adder_brick = BRICKS.TemporalAdder(len(input_values),
+                                                    name="TemporalAdder")
 
         scaffold.add_brick(vector_brick, 'input')
-        scaffold.add_brick(temporal_adder_brick, input_nodes=(0, 0), output=True)
+        scaffold.add_brick(temporal_adder_brick,
+                           input_nodes=(0, 0),
+                           output=True)
 
         scaffold.lay_bricks()
         return scaffold
@@ -42,7 +48,8 @@ class TemporalAdderBrickTests(BrickTest):
         self.assertEqual(expected, answer)
 
     def convert_input(self, input_values):
-        time_vector = [[0] * (2 * (max(input_values) + 1)) for i in input_values]
+        time_vector = [[0] * (2 * (max(input_values) + 1))
+                       for i in input_values]
         time_vector[0][input_values[0] * 2] = 1
         time_vector[1][input_values[1] * 2] = 1
         return np.array(time_vector)
@@ -76,7 +83,8 @@ class DsTemporalAdderTests(TemporalAdderBrickTests, unittest.TestCase):
         self.backend = ds_Backend()
 
 
-class PynnSpinnakerTemporalAdderTests(TemporalAdderBrickTests, unittest.TestCase):
+class PynnSpinnakerTemporalAdderTests(TemporalAdderBrickTests,
+                                      unittest.TestCase):
     @classmethod
     def setUpClass(self):
         self.backend = pynn_Backend()

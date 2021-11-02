@@ -15,7 +15,10 @@ class LISBrickTests(BrickTest):
         scaffold = Scaffold()
 
         spike_sequence = self.convert_input(input_values)
-        input_brick = BRICKS.Vector_Input(spike_sequence, coding='Raster', name='LISInput', time_dimension=True)
+        input_brick = BRICKS.Vector_Input(spike_sequence,
+                                          coding='Raster',
+                                          name='LISInput',
+                                          time_dimension=True)
         lis_brick = BRICKS.LIS(len(input_values), name='LIS')
 
         scaffold.add_brick(input_brick, 'input')

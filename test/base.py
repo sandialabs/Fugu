@@ -42,7 +42,8 @@ class BrickTest(ABC):
         spikes = self.run_scaffold(scaffold, timesteps)
         self.check_spike_output(spikes, expected_output, scaffold)
 
-    def run_property_test(self, initial_values, new_properties, expected_outputs):
+    def run_property_test(self, initial_values, new_properties,
+                          expected_outputs):
         scaffold = self.build_scaffold(initial_values)
         if self.debug:
             scaffold.summary(verbose=2)
@@ -64,7 +65,8 @@ class BrickTest(ABC):
 
             after_results = self.backend.run(timesteps)
 
-            self.check_spike_output([before_results, after_results], output, scaffold)
+            self.check_spike_output([before_results, after_results], output,
+                                    scaffold)
 
     def tearDown(self):
         self.backend.cleanup()

@@ -5,7 +5,8 @@ from networkx.generators.random_graphs import fast_gnp_random_graph
 
 def AssertValuesAreClose(value1, value2, tolerance=0.0001):
     if abs(value1 - value2) > tolerance:
-        raise AssertionError('Values {} and {} are not close'.format(value1, value2))
+        raise AssertionError('Values {} and {} are not close'.format(
+            value1, value2))
 
 
 def create_graph(size, p, seed):
