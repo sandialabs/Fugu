@@ -2,6 +2,19 @@ from collections import deque
 
 
 def CalculateSpikeTimes(circuit, main_key='timestep'):
+    """
+    Function that determines the initial spikes for the input layer of a fugu circuit.
+
+    Arguments:
+        + circuit - Fugu circuit
+        + main_key - Whether to use timestep or neuron name as the dictionary key
+
+    Returns:
+        + Dictionary of when certain neurons spike (keyed by either timestep or neuron name)
+
+    Exceptions:
+        + Raises ValueError if main_key is not 'timestep' or 'neuron_name'
+    """
     initial_spikes = {}
     input_nodes = [
         node for node in circuit.nodes
@@ -31,8 +44,6 @@ def CalculateSpikeTimes(circuit, main_key='timestep'):
                         initial_spikes[neuron] = []
                     initial_spikes[neuron].append(timestep)
     else:
-        raise ValueError(
-            "main_key argument must be 'timestep' or 'neuron_name', not {}".
-            format(main_key))
+        raise ValueError("main_key argument must be 'timestep' or 'neuron_name', not {}".format(main_key))
 
     return initial_spikes
