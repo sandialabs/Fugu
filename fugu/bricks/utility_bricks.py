@@ -699,6 +699,7 @@ class TemporalAdder(Brick):
             + control_nodes - dictionary of lists of auxillary networkx nodes.
                 Expected keys:
                     'complete' - A list of neurons that fire when the brick is done
+                    'begin' - A neurons that first when the brick begins processing (for temporal coded inputs)
             + input_lists - list of nodes that will contain input
             + input_coding - list of input coding formats.  All coding types supported
 
@@ -790,7 +791,8 @@ class TemporalAdder(Brick):
 
         self.is_built = True
 
-        # Remember, bricks can have more than one output, so we need a list of list of output neurons
+        # Remember, bricks can have more than one output, so we need a list of
+        # list of output neurons
         output_lists = [[output_name]]
 
         return (

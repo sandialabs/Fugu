@@ -20,7 +20,7 @@ pip install -e .
 
 # Fugu Notes
 
-Please see the provided example(s). 
+Please see the provided example(s).
 
 ## Scaffold
 
@@ -57,12 +57,12 @@ A tuple (graph, dimensionality, complete_node, output_lists, output_codings)
 - output_codings: A list of types of codings.  See input_coding_types
 
 ### Details on `control_nodes`
-We've seen through experience that it can be extremely helpful to have neurons relay control 
-information between bricks.  These neurons should be included in the `control_nodes`.  Regular 
+We've seen through experience that it can be extremely helpful to have neurons relay control
+information between bricks.  These neurons should be included in the `control_nodes`.  Regular
 rules apply to these neurons (e.g. naming must be globally unique and indices are locally unique).
 
-`control_nodes` is a *list* of *dictionaries*.  Each entry in the list corresponds with 
-an input (if calling `Brick.build`) or an output (if returning from `Brick.build`). 
+`control_nodes` is a *list* of *dictionaries*.  Each entry in the list corresponds with
+an input (if calling `Brick.build`) or an output (if returning from `Brick.build`).
 
 | Key | Required | Description |
 | ------ | ------ | ------ |
@@ -76,9 +76,8 @@ For now, you can check:
 - This README.md
 - docs.md
 - Ipython notebook examples
-- For details on ds, check the README.md of the ds_simulator package
 
-To build the documentation, use pydocmd https://pypi.org/project/pydoc-markdown/ with a command similar to 
+To build the documentation, use pydocmd https://pypi.org/project/pydoc-markdown/ with a command similar to
 `pydocmd simple fugu++ > docs.md`
 
 ## Dependencies
@@ -87,6 +86,3 @@ To build the documentation, use pydocmd https://pypi.org/project/pydoc-markdown/
 - Scipy
 - NetworkX
 - Pandas
-- Pytorch (for DS)
-
-

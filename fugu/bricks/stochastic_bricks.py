@@ -41,6 +41,25 @@ class PRN(Brick):
 
     def build(self, graph, metadata, control_nodes, input_lists,
               input_codings):
+        """
+        Build Register brick.
+
+        Arguments:
+            + graph - networkx graph to define connections of the computational graph
+            + metadata - dictionary to define the shapes and parameters of the brick
+            + control_nodes - dictionary of lists of auxillary networkx nodes.
+                Expected keys:
+                    'complete' - A list of neurons that fire when the brick is done
+            + input_lists - list of nodes that will contain input
+            + input_coding - list of input coding formats.  All coding types supported
+
+        Returns:
+            + graph of a computational elements and connections
+            + dictionary of output parameters (shape, coding, layers, depth, etc)
+            + dictionary of control nodes ('complete')
+            + list of output
+            + list of coding formats of output
+        """
         if len(input_lists) == 0:
             raise ValueError("PRN brick requires at least 1 input.")
         # Driver Neuron

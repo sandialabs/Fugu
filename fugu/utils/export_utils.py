@@ -154,7 +154,10 @@ def generate_gexf(scaffold, filename='fugu.gexf', result=None):
     with the addition that neuron states can be embedded into the graph/node
     properties.
 
-
+    Arguments:
+      + scaffold - Scaffold to export
+      + filename - Name of file to save gexf (Default: fugu.gexf)
+      + result - Optional Pandas DataFrame containing spike times (Default: None)
     """
     if not scaffold.is_built:
         raise ValueError("Scaffold should be built before exporting to gexf.")

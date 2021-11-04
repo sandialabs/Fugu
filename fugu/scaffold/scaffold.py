@@ -348,7 +348,14 @@ class Scaffold:
         return built_graph
 
     def summary(self, verbose=0):
-        """Display a summary of the scaffold."""
+        """Display a summary of the scaffold.
+
+           Prints information about the scaffold.
+
+           Arguments:
+             + verbose - verbosity level can be 0, 1 or >1 (Default: 0)
+
+        """
 
         print("Scaffold is built: {}".format(self.is_built))
         print("-------------------------------------------------------")
