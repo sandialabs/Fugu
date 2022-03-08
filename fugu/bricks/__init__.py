@@ -14,3 +14,4 @@ from .graph_bricks import SimpleGraphTraversal, RegisterGraphTraversal, FlowAugm
 from .utility_bricks import Dot, Copy, Concatenate, AND_OR, ParityCheck, TemporalAdder
 from .register_bricks import Register, Max, Addition, Subtraction
 from .test_bricks import InstantDecay, SynapseProperties, SumOfMaxes
+from .streaming_binary_bricks import GreaterThan, StreamingAdder, Inverter, TemporalShift

@@ -251,6 +251,7 @@ class Vector_Input(InputBrick):
         vector_size = len(self.vector) * len(self.vector.shape)
         graph.add_node(begin_node, index=-1, threshold=0.0, decay=0.0, p=1.0, potential=0.1)
         time_length = self.vector.shape[-1]
+        
         if time_length == 1:
             graph.add_node(complete_node, index=-1, threshold=0.0, decay=0.0, p=1.0, potential=0.1)
         else:
