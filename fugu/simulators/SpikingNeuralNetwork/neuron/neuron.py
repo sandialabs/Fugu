@@ -1,14 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""
-Created on Tue Dec 18 10:13:24 2018
 
-@author: smusuva
-"""
 import numpy as np
 import numbers
 import sys
 import abc
+
 if sys.version_info >= (3, 4):
     ABC = abc.ABC
 else:
