@@ -97,7 +97,6 @@ for test_case in test_cases:
                                        max_runtime=MAX_RUNTIME,
                                        record_all=True,
                                        backend_args=pynn_args)
-    #bfs_result = bfs_scaffold.evaluate(backend='ds',max_runtime=MAX_RUNTIME, record_all=True)
 
     print("---Interpreting Spikes for BFS---")
     bfs_pred = {v: -1 for v in test_case[0].nodes}
