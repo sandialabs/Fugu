@@ -13,8 +13,27 @@ else:
 
 
 class Neuron(ABC):
+    """
+    Abstract Base Class for Neurons. This class defines the minimum set of 
+    properties of a Neuron. 
+    """
     @abc.abstractmethod
     def __init__(self, name=None, spike=False):
+        """
+        Constructor for a Base Neuron class
+
+        Parameters
+        ----------
+        name : String, optional
+            Neuron name as a string. The default is None.
+        spike : Bool, optional
+            Spike state of the Neuron. The default is False.
+
+        Returns
+        -------
+        None.
+
+        """
         self.name = name
         self.spike = False
         self.spike_hist = []
@@ -25,6 +44,13 @@ class Neuron(ABC):
 
 
 class LIFNeuron(Neuron):
+    """
+    Leaky Integrate and Fire neuron class. LIFNeurons inherit from base Neuron 
+    class. LIFNeurons inetgrate the incoming signals (weighted sum of spikes 
+    from pre-synapses). The leak-rate detemines the time evolution of the 
+    menbrane Voltage. If the voltage exceeds a threshold, the neurons spikes 
+    (with probability p) and resets to its reset-voltage. 
+    """
     def __init__(self,
                  name=None,
                  threshold=0.0,
@@ -33,6 +59,35 @@ class LIFNeuron(Neuron):
                  voltage=0.0,
                  p=1.0,
                  record=False):
+        """
+        Constructor for LIFNeurons. Inherits from Neuron Base Class
+
+        Parameters
+        ----------
+        name : String, optional
+            Straing name of a neuron. The default is None.
+        threshold : Double, optional
+            Threshold value above while the neuron spikes. The default is 0.0.
+        reset_voltage : Double, optional
+            The voltage to which the neuron resets after spiking. The default is 0.0.
+        leakage_constant : Double, optional
+            The rate at which the neuron voltage decays. The leakage with rate 
+            m is calculated as m*v. A rate of m=1 indicates no leak. For 
+            realistic models, 0<= m <=1. The default is 1.0.
+        voltage : Double, optional
+            Internal voltage of the neuron. The default is 0.0.
+        p : Double, optional
+            Probability of spiking if voltage exceeds threshold. 
+            p=1 indicates a deterministic neuron. The default is 1.0.
+        record : Bool, optional
+            Indicates if a neuron spike state should be sensed with probes. 
+            The default is False.
+
+        Returns
+        -------
+        None.
+
+        """
         super(LIFNeuron, self).__init__()
         self.name = name
         self._T = threshold
@@ -41,9 +96,23 @@ class LIFNeuron(Neuron):
         self.v = voltage
         self.presyn = set()
         self.record = record
+        if (p < 0) or (p > 1):
+            raise ValueError('Probability p must be in the interval [0,1].')
         self.prob = p
 
     def update_state(self):
+        """
+        updates the time evolution of the states for one time step. The input 
+        signals are integrated and accumulates with the internal voltage. If 
+        the internal voltage exceeds the threshold, the neuron spikes and resets.
+        Otherwise, the neruon leaks at a fixed rate down to its reset value. The
+        neuron spikes with probability p if it exceeds the threshold.
+
+        Returns
+        -------
+        None.
+
+        """
         '''Update the states for one time step'''
         input_v = 0.0
         if self.presyn:
@@ -69,10 +138,26 @@ class LIFNeuron(Neuron):
         self.spike_hist.append(self.spike)
 
     def show_state(self):
+        """
+        Display the voltage and spike state of a neuron.
+
+        Returns
+        -------
+        None.
+
+        """
         print("Neuron {0}: {1} volts, spike = {2}".format(
             self.name, self.v, self.spike))
 
     def show_params(self):
+        """
+        Display the parameters of a neuron (name, threshold, reset, leak)
+
+        Returns
+        -------
+        None.
+
+        """
         print("Neuron '{0}':\n"
               "Threshold\t  :{1:2} volts,\n"
               "Reset voltage\t  :{2:1} volts,\n"
@@ -84,6 +169,14 @@ class LIFNeuron(Neuron):
               ))
 
     def show_presynapses(self):
+        """
+        Display the synapses the feed into the neuron.
+
+        Returns
+        -------
+        None.
+
+        """
         if len(self.presyn) == 0:
             print("Neuron {0} receives no external input".format(self.name))
         elif len(self.presyn) == 1:
@@ -130,28 +223,76 @@ class LIFNeuron(Neuron):
 
 
 class InputNeuron(Neuron):
-    '''Input Neuron. Inherits from class Neuron'''
+    """Input Neuron. Inherits from class Neuron.
+    Input Neurons can read inputs and convert them to spike streams"""
     def __init__(self, name=None, threshold=0.1, voltage=0.0, record=False):
+        """
+        Constructor for Input Neuron. 
+
+        Parameters
+        ----------
+        name : String, optional
+            Input neuron name. The default is None.
+        threshold : Double, optional
+            Threashold value above which the neuron spikes. The default is 0.1.
+        voltage : Double, optional
+            Membrane voltage. The default is 0.0.
+        record : Bool, optional
+            Indicates if a neuron spike state should be sensed with probes. 
+            The default is False.
+
+        Returns
+        -------
+        None.
+
+        """
         super(InputNeuron, self).__init__()
         self.name = name
         self._T = threshold
         self.v = voltage
-        # self.spike = spike
         self._it = None
         self.record = record
 
 
-#    def _create_iterator(self, input_iterable):
-#        '''Create an iterable from the input'''
-#            self._it = iter(input_iterable)
-
     def connect_to_input(self, in_stream):
+        """
+        Enables a neuron to read in an input stream of data.
+
+        Parameters
+        ----------
+        in_stream : interable data streams of ints or floats.
+            input data (any interable stream such as lists, arrays, etc.).
+
+        Raises
+        ------
+        TypeError
+            if in_stream is not iterable.
+
+        Returns
+        -------
+        None.
+
+        """
         if not hasattr(in_stream, '__iter__'):
             raise TypeError('{in_stream} must be iterable'.format(**locals()))
         else:
             self._it = iter(in_stream)
 
     def update_state(self):
+        """
+        Updates the neuron states. The neuron spikes if the input value in 
+        the current iteration is above the threshold and resets.
+
+        Raises
+        ------
+        TypeError
+            if the input data is not int or float.
+
+        Returns
+        -------
+        None.
+
+        """
         try:
             n = next(self._it)
             if not isinstance(n, numbers.Real):
@@ -186,3 +327,38 @@ class InputNeuron(Neuron):
 
     def __repr__(self):
         return 'InputNeuron {self.name}'.format(**locals())
+
+if __name__ == "__main__":
+    print("Testing LIF Neuron:")
+    print("Trying to set probability > 1")
+    try:
+        n1 = LIFNeuron('n1', 0.5, 0, 0.6, 0,p=1.2)
+    except:
+        print('Raises type error since probability was greater than 1')
+    
+    n1 = LIFNeuron('n1',threshold=1.2, reset_voltage=0.0, leakage_constant=0.6, 
+                   voltage=1, p=1)
+    print("Neuron with intial v = 1; leakage_constant=0.6:")
+    print("Timestep 0:")
+    n1.show_state()
+    print("Timestep 1:")
+    n1.update_state()
+    n1.show_state()
+    print()
+    
+    # Input Neuron
+    print("Testing Input Neuron")
+    n0 = InputNeuron('n0',threshold=0.1)
+    try:
+        n0.connect_to_input(2)
+    except:
+        print("Raises TypeError because input is not iterable")
+    ip = [5, 4, 0, 1]
+    n0.connect_to_input(ip)
+    print(f"Input Neuron Spikes for 7 time steps with input stream {ip}:")
+    for i, _ in enumerate(range(7)):
+        n0.update_state()
+        print(f"Time {i}: {n0.spike}")
+    
+    
+            
