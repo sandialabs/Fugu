@@ -14,7 +14,7 @@ class Synapse:
     time-steps.   
     """
     
-    def __init__(self, pre_neuron, post_neuron, delay=0, weight=1.0):
+    def __init__(self, pre_neuron, post_neuron, delay=1, weight=1.0):
         """
         
         Parameters
@@ -24,7 +24,7 @@ class Synapse:
         post_neuron : Neuron
             Neuron that receives the signals from the synapse
         delay : non-negative Int, optional
-            Number of time steps needed to relay the scaled spike. The default is 0.
+            Number of time steps needed to relay the scaled spike. The default is 1.
         weight : double, optional
             Scaling value for incoming spike. The default is 1.0.
 
@@ -35,7 +35,10 @@ class Synapse:
         
         TypeError
             if delay is not of type Int.
-
+        
+        ValueError
+            if delay is less than 1 
+        
         Returns
         -------
         None.
@@ -51,6 +54,10 @@ class Synapse:
         if type(delay) != int:
             raise TypeError(
                 'delay must be an int - encode number of time steps')
+        
+        if delay < 1:
+            raise ValueError(
+                'delay must be a strictly positive (>0) int value')
 
         self._d = delay
         self._w = weight
@@ -140,30 +147,39 @@ class Synapse:
         return self._d
 
     @delay.setter
-    def delay(self, new_delay=0.0):
+    def delay(self, new_delay=1.0):
         """
         Setter for synaptic delay.
 
         Parameters
         ----------
         new_delay : Int, optional
-            Sets the synaptic delay to a new value. The default is 0.0.
+            Sets the synaptic delay to a new value. The default is 1.0.
 
         Returns
         -------
         None.
 
         """
+        
+        if type(new_delay) != int:
+            raise TypeError(
+                'delay must be an int - encode number of time steps')
+        
+        if new_delay < 1:
+            raise ValueError(
+                'delay must be a strictly positive (>0) int value')
+            
         self._d = new_delay
 
-    def set_params(self, new_delay=0.0, new_weight=1.0):
+    def set_params(self, new_delay=1.0, new_weight=1.0):
         """
         Sets delay and weight of a synapse
 
         Parameters
         ----------
         new_delay : Int, optional
-            Set delay to new value. The default is 0.0.
+            Set delay to new value. The default is 1.0.
         new_weight : Double, optional
             Set weight to new value. The default is 1.0.
 
@@ -172,8 +188,8 @@ class Synapse:
         None.
 
         """
-        self.weight = new_weight
-        self.delay = new_delay
+        self.weight(new_weight)
+        self.delay(new_delay)
 
     def show_params(self):
         """
@@ -215,3 +231,28 @@ class Synapse:
             self._hist.append(0.0)
 
         self._hist.popleft()
+
+if __name__ == '__main__':
+    n1 = Neuron('n1')
+    n2 = Neuron('n2')
+    s = Synapse(n1, n2, delay=1, weight=1.0)
+    
+    try:
+        s.delay(0)
+    except:
+        print('Raised Value error Exception since delay is < 1')
+    
+    try:
+        s.delay(2.5)
+    except:
+        print('Raised type error since delay was a float')
+    
+    print(f'Synapse parameters: {s.show_params()}')
+    try:
+        s.set_params(new_delay=-1)
+    except: 
+        print('Raised Value error Exception since delay is < 1')
+        
+
+    s.set_params(2, 2.0)
+    s.show_params()
