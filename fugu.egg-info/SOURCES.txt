@@ -4,14 +4,13 @@ fugu/__init__.py
 fugu.egg-info/PKG-INFO
 fugu.egg-info/SOURCES.txt
 fugu.egg-info/dependency_links.txt
+fugu.egg-info/requires.txt
 fugu.egg-info/top_level.txt
 fugu/backends/__init__.py
 fugu/backends/backend.py
-fugu/backends/ds_backend.py
 fugu/backends/loihi_backend.py
 fugu/backends/pynn_backend.py
 fugu/backends/snn_backend.py
-fugu/backends/sushi_chef.py
 fugu/bricks/__init__.py
 fugu/bricks/application_bricks.py
 fugu/bricks/bricks.py
@@ -24,7 +23,6 @@ fugu/bricks/utility_bricks.py
 fugu/scaffold/__init__.py
 fugu/scaffold/scaffold.py
 fugu/simulators/__init__.py
-fugu/simulators/ds.py
 fugu/simulators/SpikingNeuralNetwork/__init__.py
 fugu/simulators/SpikingNeuralNetwork/neuralnetwork/__init__.py
 fugu/simulators/SpikingNeuralNetwork/neuralnetwork/neuralnetwork.py
@@ -34,7 +32,6 @@ fugu/simulators/SpikingNeuralNetwork/synapse/__init__.py
 fugu/simulators/SpikingNeuralNetwork/synapse/synapse.py
 fugu/utils/__init__.py
 fugu/utils/export_utils.py
-fugu/utils/fugu_vis.py
 fugu/utils/misc.py
 test/__init__.py
 test/base.py

@@ -4,14 +4,14 @@ import networkx as nx
 import numpy as np
 from warnings import warn
 
-from ..backends import Backend, snn_Backend, pynn_Backend
+from ..backends import Backend, snn_Backend, ds_Backend, pynn_Backend
 from ..utils.export_utils import results_df_from_dict
 
 
 class Scaffold:
     """Class to handle a scaffold of bricks"""
 
-    supported_backends = ['snn', 'ds_legacy', 'snn_legacy', 'pynn']
+    supported_backends = ['ds', 'snn', 'ds_legacy', 'snn_legacy', 'pynn']
 
     def __init__(self):
         self.circuit = nx.DiGraph()

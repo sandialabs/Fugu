@@ -3,8 +3,8 @@
 
 from collections import deque
 import numpy as np
-#from ..neuron.neuron import Neuron
-from fugu.simulators.SpikingNeuralNetwork import Neuron
+from ..neuron.neuron import Neuron
+
 
 class Synapse:
     """
@@ -172,7 +172,7 @@ class Synapse:
             
         self._d = new_delay
 
-    def set_params(self, new_delay=1, new_weight=1.0):
+    def set_params(self, new_delay=1.0, new_weight=1.0):
         """
         Sets delay and weight of a synapse
 
@@ -188,9 +188,8 @@ class Synapse:
         None.
 
         """
-        self.delay = new_delay
-        self.weight = new_weight
-        
+        self.weight(new_weight)
+        self.delay(new_delay)
 
     def show_params(self):
         """
@@ -234,9 +233,8 @@ class Synapse:
         self._hist.popleft()
 
 if __name__ == '__main__':
-    from fugu.simulators.SpikingNeuralNetwork.neuron import LIFNeuron
-    n1 = LIFNeuron('n1')
-    n2 = LIFNeuron('n2')
+    n1 = Neuron('n1')
+    n2 = Neuron('n2')
     s = Synapse(n1, n2, delay=1, weight=1.0)
     
     try:
