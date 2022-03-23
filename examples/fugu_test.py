@@ -5,15 +5,18 @@ Created on Thu May 30 13:02:07 2019
 
 @author: smusuva
 """
+print("---Importing modules---")
 from __future__ import print_function
-
 import numpy as np
 
+print("---Importing fugu---")
 import fugu
 from fugu import Scaffold
-#from fugu import Brick, Spike_Input, PRN
+
+print("---Importing Bricks---")
 from fugu import bricks
-#from fugu.bricks.input_bricks import Vector_Input
+
+print("---Importing Backend---")
 from fugu.backends import snn_Backend
 
 
@@ -85,6 +88,8 @@ class basic_AND(fugu.Brick):
             'complete': new_complete_node_name
         }], output_lists, output_codings)
 
+    
+print("---Building Scaffold---")
 
 scaffold = Scaffold()
 scaffold.add_brick(
@@ -93,22 +98,16 @@ scaffold.add_brick(
 scaffold.add_brick(
     bricks.Vector_Input(np.array([1]), coding='Raster', name='Input1'),
     'input')
-#scaffold.add_brick(basic_AND(name='AND'), [(1,0), (1,0)], output=True)
 scaffold.add_brick(basic_AND(name='AND'), [0, 1], output=True)
-#scaffold.add_brick(bricks.PRN(probability=0.75,shape=(10,2),steps=5), output=True)
 scaffold.lay_bricks()
 scaffold.summary(verbose=1)
-print()
-#print('----------------------')
-#print('Results:', end='\n\n')
-#result = scaffold.evaluate(backend='ds', max_runtime=10, record_all=True)
+
+print("---Running evaluation---")
 
 backend = snn_Backend()
 backend_args = {}
 backend_args['record'] = 'all'
-#backend_args = {}
 backend.compile(scaffold, backend_args)
 
 result = backend.run(10)
 print(result)
-#scaffold.summary(verbose=1)

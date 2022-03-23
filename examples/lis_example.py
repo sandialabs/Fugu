@@ -9,6 +9,9 @@ from fugu import Scaffold
 print("---Importing Bricks---")
 from fugu.bricks import LIS, Vector_Input
 
+print("---Importing Backend---")
+from fugu.backends import snn_Backend
+
 MAX_RUNTIME = 500
 print("---Building test test cases---")
 test_cases = []
@@ -41,15 +44,7 @@ for sequence, answer in test_cases:
     spike_times = [[0] * (max_time + 1) for i in range(num_in_sequence)]
     for i, time in enumerate(sequence):
         spike_times[i][time] = 1
-    #print(spike_times)
-    #for time in sequence:
-    #spike_times.append([0] * time)
-    #spike_times[-1].append(1)
 
-    #print(spike_times)
-    #for i, spike_array in enumerate(spike_times):
-    #print("i, spike_array {} {}".format(i, spike_array))
-    #scaffold.add_brick(Vector_Input(spike_array, coding='Raster', name='Input{}'.format(i)), 'input')
 
     scaffold.add_brick(
         Vector_Input(spike_times,
@@ -57,10 +52,14 @@ for sequence, answer in test_cases:
                      name='Input0',
                      time_dimension=True), 'input')
 
-    scaffold.add_brick(LIS_brick, output=True)
+    scaffold.add_brick(LIS_brick, input_nodes=[-1], output=True)
     scaffold.lay_bricks()
-
-    #scaffold.summary(verbose=2)
+    
+    backend = snn_Backend()
+    backend_args = {}
+    backend_args['record'] = 'all'
+    
+    backend.compile(scaffold, backend_args)
 
     pynn_args = {}
     pynn_args['backend'] = 'brian'
@@ -69,18 +68,14 @@ for sequence, answer in test_cases:
 
     print("---Running evaluation---")
 
-    result = scaffold.evaluate(backend='pynn',
-                               max_runtime=MAX_RUNTIME,
-                               record_all=True,
-                               backend_args=pynn_args)
-    #result = scaffold.evaluate(backend='ds',max_runtime=MAX_RUNTIME, record_all=True)
-
+    result = backend.run(MAX_RUNTIME )
+    
     graph_names = list(scaffold.graph.nodes.data('name'))
     print("---Finished evaluation:---")
     lis = 0
     for row in result.itertuples():
         neuron_name = graph_names[int(row.neuron_number)][0]
-        #print(neuron_name, row.time)
+
         if "Main" in neuron_name:
             level = int(neuron_name.split("_")[1])
             if level > lis:
