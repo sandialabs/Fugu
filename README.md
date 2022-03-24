@@ -5,6 +5,7 @@ A python library for computational neural graphs.
 ```
 git clone https://cee-gitlab.sandia.gov/nerl/Fugu.git
 cd Fugu
+pip install -r requirements.txt
 pip install --upgrade .
 ```
 
@@ -74,13 +75,13 @@ Documentation is currently spread across several files.  We are working on inclu
 
 For now, you can check:
 - This README.md
+- api.md
 - docs.md
 - Ipython notebook examples
 
-To build the documentation, use pydocmd https://pypi.org/project/pydoc-markdown/ with a command similar to
-`pydocmd simple fugu++ > docs.md`
 
 ## Dependencies
+A full list of dependencies is listed in requirements.txt.  The high level dependencies are:
 
 - Numpy
 - Scipy
