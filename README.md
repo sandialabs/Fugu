@@ -18,10 +18,16 @@ cd Fugu
 pip install -r requirements.txt
 pip install -e .
 ```
+# Documentation
+Documentation is currently spread across several files.  We are working on including docstrings on all the classes and methods.
 
-# Fugu Notes
+For now, you can check:
+- This README.md
+- api.md
+- docs.md
+- Ipython notebooks and examples
 
-Please see the provided example(s).
+# Basic concepts
 
 ## Scaffold
 
@@ -70,14 +76,7 @@ an input (if calling `Brick.build`) or an output (if returning from `Brick.build
 | 'complete' | All Inputs/Outputs | A neuron that fires when a brick is done processing. |
 | 'begin' | Temporally-coded Inputs/Outputs | A neuron that fires when a brick begins providing output. |
 
-## Documentation
-Documentation is currently spread across several files.  We are working on including docstrings on all the classes and methods.
 
-For now, you can check:
-- This README.md
-- api.md
-- docs.md
-- Ipython notebook examples
 
 
 ## Dependencies
