@@ -1,10 +1,5 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""
-Created on Mon Jun 24 14:16:57 2019
-
-@author: smusuva
-"""
 
 from .bricks import Brick
 from .input_bricks import InputBrick, Vector_Input, Spike_Input

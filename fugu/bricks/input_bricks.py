@@ -1,10 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""
-Created on Wed Jun 19 14:46:55 2019
 
-@author: smusuva
-"""
 from .bricks import InputBrick, input_coding_types
 
 import numpy as np
