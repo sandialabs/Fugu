@@ -1,10 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-"""
-Created on Thu May 30 13:02:07 2019
 
-@author: smusuva
-"""
 print("---Importing modules---")
 from __future__ import print_function
 import numpy as np
