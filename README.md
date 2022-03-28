@@ -23,9 +23,8 @@ Documentation is currently spread across several files.  We are working on inclu
 
 For now, you can check:
 - This README.md
-- api.md
-- docs.md
-- Ipython notebooks and examples
+- The docs folder
+- The examples folder
 
 # Basic concepts
 
