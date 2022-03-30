@@ -4,8 +4,6 @@ import networkx as nx
 import numpy as np
 from warnings import warn
 
-from ..backends import Backend, snn_Backend, pynn_Backend
-from ..utils.export_utils import results_df_from_dict
 
 
 class Scaffold:
