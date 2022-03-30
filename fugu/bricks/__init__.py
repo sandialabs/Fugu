@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from .bricks import Brick
-from .input_bricks import InputBrick, Vector_Input, Spike_Input
+from .input_bricks import InputBrick, Vector_Input
 from .stochastic_bricks import PRN, Threshold
 from .application_bricks import LIS
 from .graph_bricks import SimpleGraphTraversal, RegisterGraphTraversal, FlowAugmentingPath
