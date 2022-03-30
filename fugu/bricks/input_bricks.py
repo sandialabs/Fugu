@@ -306,7 +306,3 @@ class Vector_Input(InputBrick):
         )
 
 
-class Spike_Input(Vector_Input):
-    def __init__(self, input_spikes, *args, **kwargs):
-        super().__init__(input_spikes, *args, **kwargs)
-        warn("Spike_Input is deprecated.  Use Vector_Input instead.")
