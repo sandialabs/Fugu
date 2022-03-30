@@ -121,7 +121,6 @@ class LIFNeuron(Neuron):
                     input_v += s._hist[0]
 
 
-#        self.v = (self._m * self.v) + input_v
         self.v = self.v + input_v
 
         if self.v > self._T:
