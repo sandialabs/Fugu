@@ -14,10 +14,10 @@ class LIS(Brick):
                  output_coding='temporal-L'):
         '''
         Construtor for this brick.
-        Arguments:
-            + sequence_length - size of the sequence
-            + name - Name of the brick.  If not specified, a default will be used.  Name should be unique.
-            + output_coding - Output coding type, default is 'temporal-L'
+        Args:
+            sequence_length: sequence_length - size of the sequence
+            name: Name of the brick.  If not specified, a default will be used.  Name should be unique.
+            output_coding: Output coding type, default is 'temporal-L'
         '''
         super(LIS, self).__init__(name)
         self.is_built = False
