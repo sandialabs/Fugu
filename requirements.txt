@@ -9,3 +9,4 @@ python-dateutil==2.8.1
 pytz==2020.1
 scipy==1.5.1
 six==1.15.0
+furo==2021.11.16
