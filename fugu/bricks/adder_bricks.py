@@ -1,3 +1,5 @@
+from .bricks import Brick
+
 class streaming_adder(Brick):
     
     """
