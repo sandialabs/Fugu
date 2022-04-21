@@ -1,4 +1,3 @@
-
 #############
 Fugu
 #############
@@ -10,9 +9,9 @@ What is Fugu?
 Fugu is a high-level framework specifically designed for developing spiking circuits in terms of computation graphs. Accordingly, with a base leaky-integrate-and fire (LIF) neuron model at its core, neural circuits are built as *bricks*. These foundational computations are then combined and composed as scaffolds to construct larger computations. This allows us to describe the streaming binary arithmetic circuits in terms of neural features common to most NMC architectures rather than platform specific designs. In addition to architectural abstraction, the compositionality
 concept of Fugu not only facilitates a hierarchical approach to functionality development but also enables adding pre and post processing operations to overarching neural circuits.  
 Such properties position Fugu to help explore under what parameterization or scale a neural approach may offer an advantage. For example, prior work has analyzed neural algorithms for computational kernels like sorting, optimization, and graph analytics identifying different regions in which a
-neural advantage exists accounting for neural circuit setup, timing, or other factors
+neural advantage exists accounting for neural circuit setup, timing, or other factors.
 
-Think of Fugu as a framework to ease the process of coding and deploying algorithms on spiking neuromorphic systems (think the neuromorphic comparative of CUDA for GPUs.) It is a managed IR between higher-level coding environments and low-level neuromorphic hardware and their compilers.  Fugu's front end is written in Python, and it leverages NetworkX library to construct and manage the Fugu generated neural circuit.  Fugu has 3 components whih provide connection between API and compiler output during compilation.  
+Think of Fugu as a framework to ease the process of coding and deploying algorithms on spiking neuromorphic systems.  It is a managed IR between higher-level coding environments and low-level neuromorphic hardware and their compilers.  Fugu's front end is written in Python, and it leverages NetworkX library to construct and manage the Fugu generated neural circuit.  Fugu has 3 components whih provide connection between API and compiler output during compilation.  
 1. A library of spiking neural algorithm (SNA) modules
 2. a collections of algorithms for linking SNA modules
 3. combined application graph output
@@ -133,10 +132,7 @@ The Scaffold object is a graph that contains bricks at each node.  In reality, t
 *************
 Backend
 *************
-A backend generates platform-specific code from the platform-independent network graph (Scaffold.graph)
-Included in Fugu today is a basic reference simulator ds
-The backend handles inputs (represented by input bricks)
-Hardware platform backends can be developed by hardware partners (though we provide a few as well)
+A backend generates platform-specific code from the platform-independent network graph (Scaffold.graph). Included in Fugu today is a backend to a basic reference simulator SNN and a backend that targets Intel's Loihi platform. 
 
 *************
 Get Started 
@@ -151,7 +147,3 @@ Get Started
 4. Fugu in publication
    - We have a folder with recent publications to familiarize you with some possible use cases.
 
-
-The name...
-~~~~~~~~~~~
-FUGU was inspired by the Japanese word for pufferfish, replete with spikes.  Fugu is considered a culinary delicacy due to its low level of neurotoxin tetrodoxin or TTX (a valuable tool in electrophysiology for studying neuronal action potentials).  One of our team members has eaten     
