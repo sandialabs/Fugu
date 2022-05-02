@@ -41,7 +41,7 @@ extensions = [
     'sphinx.ext.autosummary',
     'sphinx.ext.napoleon',
     'sphinx.ext.githubpages',
-    'sphinx_rts_theme',
+    'sphinx_rtd_theme',
 ]
 
 
