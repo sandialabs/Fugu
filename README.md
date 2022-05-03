@@ -32,33 +32,32 @@ For now, you can check:
 
 The `Scaffold` object is a graph that contains bricks at each node.  In reality, the Scaffold is only responsible for the organization of bricks.  All functionality is held in the bricks themselves.
 
-### Scaffold.add_brick(self, brick_function, input_nodes=[-1], dimensionality = default_brick_dimensionality, name=None)
 
 ## Bricks
 
 Each `Brick` represents one computational function.  Bricks are attached to a Scaffold.  Bricks have certain key properties:
 
-- dimensionality:  A dictionary containing information such as the input and output sizes, circuit depth (if defined), and the types of codings.
-- self.supported_codings:  A list of supported codings for this brick. A complete list of codings is avialable at input_coding_types .   
+- metadata:  A dictionary containing information such as the input and output sizes, circuit depth (if defined), and the types of codings.
+- upported_codings:  A list of supported codings for this brick. A complete list of codings is avialable at input_coding_types .   
 - is_built:  A simple boolean saying whether or not the brick as been built
 - name: A string representing the brick
 
-### Brick.build(self, graph, dimensionality, complete_node, input_lists, input_codings)
+### Brick.build(self, graph, metadata, complete_node, input_lists, input_codings)
 
 This function forms the section of the graph corresponding to the brick.
 
 Input parameters:
 - graph: graph that is being built
-- dimensionality: dictionary containing relevant dimensionality information
+- metadata: dictionary containing relevant dimensionality information
 - control_nodes: A list of dictionaries of neurons that transmit control signals. A 'done' signal (Generally one from each input) is included in `control_nodes[i]['complete']`.
 - input_lists: A list of lists of input neurons.  Each neuron is marked with a local index used for encodings.
 - input_codings: A list of types of input codings.  See input_coding_types
 
 Output:
-A tuple (graph, dimensionality, complete_node, output_lists, output_codings)
+A tuple (graph, metadata, complete_node, output_lists, output_codings)
 - graph: Graph that is being built
-- dimensionality: Dictionary containing relevant dimensionality information
-- complete_node: A list of neurons that transmists a 'done' signal (Generally one for each output)
+- metadata: Dictionary containing relevant metadata information
+- control_nodes: A dictionary of lists of neurons that transmists control information (see below) 
 - output_lists: A list of lists of output neurons.  Each neuron is marked with a local index used for encodings.
 - output_codings: A list of types of codings.  See input_coding_types
 
