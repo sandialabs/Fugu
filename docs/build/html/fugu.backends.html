@@ -81,12 +81,10 @@
               
             
             
-              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+              <p class="caption" role="heading"><span class="caption-text">API Docs</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="index.html">Welcome to Fugu’s documentation!</a></li>
-<li class="toctree-l1"><a class="reference internal" href="index.html#modules">Modules</a></li>
-<li class="toctree-l1"><a class="reference internal" href="index.html#indices-and-tables">Indices and tables</a></li>
-<li class="toctree-l1"><a class="reference internal" href="introduction.html">Fugu</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fugu/index.html">The Fugu Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples/index.html">Examples API</a></li>
 </ul>
 
             
@@ -156,17 +154,131 @@
 <section id="submodules">
 <h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
 </section>
-<section id="fugu-backends-backend-module">
-<h2>fugu.backends.backend module<a class="headerlink" href="#fugu-backends-backend-module" title="Permalink to this headline">¶</a></h2>
+<section id="module-fugu.backends.backend">
+<span id="fugu-backends-backend-module"></span><h2>fugu.backends.backend module<a class="headerlink" href="#module-fugu.backends.backend" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="fugu.backends.backend.Backend">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">fugu.backends.backend.</span></span><span class="sig-name descname"><span class="pre">Backend</span></span><a class="headerlink" href="#fugu.backends.backend.Backend" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">abc.ABC</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="fugu.backends.backend.Backend.compile">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">compile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scaffold</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compile_args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fugu.backends.backend.Backend.compile" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fugu.backends.backend.Backend.run">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_steps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_potential</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fugu.backends.backend.Backend.run" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fugu.backends.backend.Backend.cleanup">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">cleanup</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#fugu.backends.backend.Backend.cleanup" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fugu.backends.backend.Backend.reset">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">reset</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#fugu.backends.backend.Backend.reset" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fugu.backends.backend.Backend.set_properties">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">set_properties</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">properties</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fugu.backends.backend.Backend.set_properties" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fugu.backends.backend.Backend.set_input_spikes">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">set_input_spikes</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#fugu.backends.backend.Backend.set_input_spikes" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
 </section>
-<section id="fugu-backends-loihi-backend-module">
-<h2>fugu.backends.loihi_backend module<a class="headerlink" href="#fugu-backends-loihi-backend-module" title="Permalink to this headline">¶</a></h2>
+<section id="module-fugu.backends.loihi_backend">
+<span id="fugu-backends-loihi-backend-module"></span><h2>fugu.backends.loihi_backend module<a class="headerlink" href="#module-fugu.backends.loihi_backend" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="fugu.backends.loihi_backend.loihi_Backend">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">fugu.backends.loihi_backend.</span></span><span class="sig-name descname"><span class="pre">loihi_Backend</span></span><a class="headerlink" href="#fugu.backends.loihi_backend.loihi_Backend" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#fugu.backends.backend.Backend" title="fugu.backends.backend.Backend"><code class="xref py py-class docutils literal notranslate"><span class="pre">fugu.backends.backend.Backend</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="fugu.backends.loihi_backend.loihi_Backend.setCoreID">
+<span class="sig-name descname"><span class="pre">setCoreID</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">p</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fugu.backends.loihi_backend.loihi_Backend.setCoreID" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fugu.backends.loihi_backend.loihi_Backend.compile">
+<span class="sig-name descname"><span class="pre">compile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scaffold</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compile_args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fugu.backends.loihi_backend.loihi_Backend.compile" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fugu.backends.loihi_backend.loihi_Backend.run">
+<span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_steps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_potentials</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fugu.backends.loihi_backend.loihi_Backend.run" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fugu.backends.loihi_backend.loihi_Backend.cleanup">
+<span class="sig-name descname"><span class="pre">cleanup</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#fugu.backends.loihi_backend.loihi_Backend.cleanup" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fugu.backends.loihi_backend.loihi_Backend.reset">
+<span class="sig-name descname"><span class="pre">reset</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#fugu.backends.loihi_backend.loihi_Backend.reset" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fugu.backends.loihi_backend.loihi_Backend.set_properties">
+<span class="sig-name descname"><span class="pre">set_properties</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">properties</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fugu.backends.loihi_backend.loihi_Backend.set_properties" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fugu.backends.loihi_backend.loihi_Backend.set_input_spikes">
+<span class="sig-name descname"><span class="pre">set_input_spikes</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#fugu.backends.loihi_backend.loihi_Backend.set_input_spikes" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
 </section>
-<section id="fugu-backends-snn-backend-module">
-<h2>fugu.backends.snn_backend module<a class="headerlink" href="#fugu-backends-snn-backend-module" title="Permalink to this headline">¶</a></h2>
+<section id="module-fugu.backends.snn_backend">
+<span id="fugu-backends-snn-backend-module"></span><h2>fugu.backends.snn_backend module<a class="headerlink" href="#module-fugu.backends.snn_backend" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="fugu.backends.snn_backend.snn_Backend">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">fugu.backends.snn_backend.</span></span><span class="sig-name descname"><span class="pre">snn_Backend</span></span><a class="headerlink" href="#fugu.backends.snn_backend.snn_Backend" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#fugu.backends.backend.Backend" title="fugu.backends.backend.Backend"><code class="xref py py-class docutils literal notranslate"><span class="pre">fugu.backends.backend.Backend</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="fugu.backends.snn_backend.snn_Backend.compile">
+<span class="sig-name descname"><span class="pre">compile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scaffold</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compile_args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fugu.backends.snn_backend.snn_Backend.compile" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fugu.backends.snn_backend.snn_Backend.run">
+<span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_steps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_potentials</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fugu.backends.snn_backend.snn_Backend.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Run the Simulator</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fugu.backends.snn_backend.snn_Backend.cleanup">
+<span class="sig-name descname"><span class="pre">cleanup</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#fugu.backends.snn_backend.snn_Backend.cleanup" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fugu.backends.snn_backend.snn_Backend.reset">
+<span class="sig-name descname"><span class="pre">reset</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#fugu.backends.snn_backend.snn_Backend.reset" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fugu.backends.snn_backend.snn_Backend.set_properties">
+<span class="sig-name descname"><span class="pre">set_properties</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">properties</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fugu.backends.snn_backend.snn_Backend.set_properties" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fugu.backends.snn_backend.snn_Backend.set_input_spikes">
+<span class="sig-name descname"><span class="pre">set_input_spikes</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#fugu.backends.snn_backend.snn_Backend.set_input_spikes" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
 </section>
-<section id="module-contents">
-<h2>Module contents<a class="headerlink" href="#module-contents" title="Permalink to this headline">¶</a></h2>
+<section id="module-fugu.backends">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-fugu.backends" title="Permalink to this headline">¶</a></h2>
 </section>
 </section>
 

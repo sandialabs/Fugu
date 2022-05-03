@@ -81,12 +81,10 @@
               
             
             
-              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+              <p class="caption" role="heading"><span class="caption-text">API Docs</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="index.html">Welcome to Fugu’s documentation!</a></li>
-<li class="toctree-l1"><a class="reference internal" href="index.html#modules">Modules</a></li>
-<li class="toctree-l1"><a class="reference internal" href="index.html#indices-and-tables">Indices and tables</a></li>
-<li class="toctree-l1"><a class="reference internal" href="introduction.html">Fugu</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fugu/index.html">The Fugu Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples/index.html">Examples API</a></li>
 </ul>
 
             
@@ -156,11 +154,69 @@
 <section id="submodules">
 <h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
 </section>
-<section id="fugu-simulators-spikingneuralnetwork-neuralnetwork-neuralnetwork-module">
-<h2>fugu.simulators.SpikingNeuralNetwork.neuralnetwork.neuralnetwork module<a class="headerlink" href="#fugu-simulators-spikingneuralnetwork-neuralnetwork-neuralnetwork-module" title="Permalink to this headline">¶</a></h2>
+<section id="module-fugu.simulators.SpikingNeuralNetwork.neuralnetwork.neuralnetwork">
+<span id="fugu-simulators-spikingneuralnetwork-neuralnetwork-neuralnetwork-module"></span><h2>fugu.simulators.SpikingNeuralNetwork.neuralnetwork.neuralnetwork module<a class="headerlink" href="#module-fugu.simulators.SpikingNeuralNetwork.neuralnetwork.neuralnetwork" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="fugu.simulators.SpikingNeuralNetwork.neuralnetwork.neuralnetwork.NeuralNetwork">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">fugu.simulators.SpikingNeuralNetwork.neuralnetwork.neuralnetwork.</span></span><span class="sig-name descname"><span class="pre">NeuralNetwork</span></span><a class="headerlink" href="#fugu.simulators.SpikingNeuralNetwork.neuralnetwork.neuralnetwork.NeuralNetwork" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="fugu.simulators.SpikingNeuralNetwork.neuralnetwork.neuralnetwork.NeuralNetwork.add_neuron">
+<span class="sig-name descname"><span class="pre">add_neuron</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">new_neuron</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fugu.simulators.SpikingNeuralNetwork.neuralnetwork.neuralnetwork.NeuralNetwork.add_neuron" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add a neuron to the network. If a string is passed, a default LIFNeuron is created with that name.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fugu.simulators.SpikingNeuralNetwork.neuralnetwork.neuralnetwork.NeuralNetwork.add_multiple_neurons">
+<span class="sig-name descname"><span class="pre">add_multiple_neurons</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">neuron_iterable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fugu.simulators.SpikingNeuralNetwork.neuralnetwork.neuralnetwork.NeuralNetwork.add_multiple_neurons" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add Neurons from an iterable such as a list</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fugu.simulators.SpikingNeuralNetwork.neuralnetwork.neuralnetwork.NeuralNetwork.list_neurons">
+<span class="sig-name descname"><span class="pre">list_neurons</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#fugu.simulators.SpikingNeuralNetwork.neuralnetwork.neuralnetwork.NeuralNetwork.list_neurons" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fugu.simulators.SpikingNeuralNetwork.neuralnetwork.neuralnetwork.NeuralNetwork.add_synapse">
+<span class="sig-name descname"><span class="pre">add_synapse</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">new_synapse</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fugu.simulators.SpikingNeuralNetwork.neuralnetwork.neuralnetwork.NeuralNetwork.add_synapse" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add synapse to a network. If a tuple is provided, a new Synapse object is created and added</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fugu.simulators.SpikingNeuralNetwork.neuralnetwork.neuralnetwork.NeuralNetwork.add_multiple_synapses">
+<span class="sig-name descname"><span class="pre">add_multiple_synapses</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">synapse_iterable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fugu.simulators.SpikingNeuralNetwork.neuralnetwork.neuralnetwork.NeuralNetwork.add_multiple_synapses" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add synapses from an iterable containing synapses</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fugu.simulators.SpikingNeuralNetwork.neuralnetwork.neuralnetwork.NeuralNetwork.update_input_neuron">
+<span class="sig-name descname"><span class="pre">update_input_neuron</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">neuron_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_values</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fugu.simulators.SpikingNeuralNetwork.neuralnetwork.neuralnetwork.NeuralNetwork.update_input_neuron" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fugu.simulators.SpikingNeuralNetwork.neuralnetwork.neuralnetwork.NeuralNetwork.update_network">
+<span class="sig-name descname"><span class="pre">update_network</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">new_synapse</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fugu.simulators.SpikingNeuralNetwork.neuralnetwork.neuralnetwork.NeuralNetwork.update_network" title="Permalink to this definition">¶</a></dt>
+<dd><p>build the connection map from the Synapses and Neuron information contained in them</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fugu.simulators.SpikingNeuralNetwork.neuralnetwork.neuralnetwork.NeuralNetwork.step">
+<span class="sig-name descname"><span class="pre">step</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#fugu.simulators.SpikingNeuralNetwork.neuralnetwork.neuralnetwork.NeuralNetwork.step" title="Permalink to this definition">¶</a></dt>
+<dd><p>Evolve the network over one time step</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fugu.simulators.SpikingNeuralNetwork.neuralnetwork.neuralnetwork.NeuralNetwork.run">
+<span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_steps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">debug_mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">record_potentials</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fugu.simulators.SpikingNeuralNetwork.neuralnetwork.neuralnetwork.NeuralNetwork.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Iterate the network evolution for n_steps number of times and return results as a pandas dataFrame</p>
+</dd></dl>
+
+</dd></dl>
+
 </section>
-<section id="module-contents">
-<h2>Module contents<a class="headerlink" href="#module-contents" title="Permalink to this headline">¶</a></h2>
+<section id="module-fugu.simulators.SpikingNeuralNetwork.neuralnetwork">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-fugu.simulators.SpikingNeuralNetwork.neuralnetwork" title="Permalink to this headline">¶</a></h2>
 </section>
 </section>
 

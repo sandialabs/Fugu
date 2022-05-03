@@ -81,12 +81,10 @@
               
             
             
-              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+              <p class="caption" role="heading"><span class="caption-text">API Docs</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="index.html">Welcome to Fugu’s documentation!</a></li>
-<li class="toctree-l1"><a class="reference internal" href="index.html#modules">Modules</a></li>
-<li class="toctree-l1"><a class="reference internal" href="index.html#indices-and-tables">Indices and tables</a></li>
-<li class="toctree-l1"><a class="reference internal" href="introduction.html">Fugu</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fugu/index.html">The Fugu Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples/index.html">Examples API</a></li>
 </ul>
 
             
@@ -156,11 +154,131 @@
 <section id="submodules">
 <h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
 </section>
-<section id="fugu-scaffold-scaffold-module">
-<h2>fugu.scaffold.scaffold module<a class="headerlink" href="#fugu-scaffold-scaffold-module" title="Permalink to this headline">¶</a></h2>
+<section id="module-fugu.scaffold.scaffold">
+<span id="fugu-scaffold-scaffold-module"></span><h2>fugu.scaffold.scaffold module<a class="headerlink" href="#module-fugu.scaffold.scaffold" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="fugu.scaffold.scaffold.Scaffold">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">fugu.scaffold.scaffold.</span></span><span class="sig-name descname"><span class="pre">Scaffold</span></span><a class="headerlink" href="#fugu.scaffold.scaffold.Scaffold" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Class to handle a scaffold of bricks</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="fugu.scaffold.scaffold.Scaffold.supported_backends">
+<span class="sig-name descname"><span class="pre">supported_backends</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">['snn',</span> <span class="pre">'ds_legacy',</span> <span class="pre">'snn_legacy',</span> <span class="pre">'pynn']</span></em><a class="headerlink" href="#fugu.scaffold.scaffold.Scaffold.supported_backends" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fugu.scaffold.scaffold.Scaffold.add_brick">
+<span class="sig-name descname"><span class="pre">add_brick</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">brick_function</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_nodes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metadata</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fugu.scaffold.scaffold.Scaffold.add_brick" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add a brick to the scaffold.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>brick</strong> (<em>+ brick_function - object of type</em>) – </p></li>
+<li><p><strong>(</strong><strong>Default</strong> (<em>+ output - bool flag to indicate if a brick is an output brick</em>) – [])</p></li>
+<li><p><strong>(</strong><strong>Default</strong> – None)</p></li>
+<li><p><strong>(</strong><strong>Default</strong> – none)</p></li>
+<li><p><strong>(</strong><strong>Default</strong> – False)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p>None</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+<dl class="simple">
+<dt>Exceptions:</dt><dd><ul class="simple">
+<li><p>Raises ValueError if node name is already used.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fugu.scaffold.scaffold.Scaffold.resolve_timing">
+<span class="sig-name descname"><span class="pre">resolve_timing</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#fugu.scaffold.scaffold.Scaffold.resolve_timing" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fugu.scaffold.scaffold.Scaffold.get_weight">
+<span class="sig-name descname"><span class="pre">get_weight</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fugu.scaffold.scaffold.Scaffold.get_weight" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fugu.scaffold.scaffold.Scaffold.all_nodes_built">
+<span class="sig-name descname"><span class="pre">all_nodes_built</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fugu.scaffold.scaffold.Scaffold.all_nodes_built" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if all nodes are built.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>(</strong><strong>Default</strong> (<em>+ verbose - int to indicate level of verbosity</em>) – 0 to indicate no messages)</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p>bool with True if all nodes are built, Fase otherwise</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fugu.scaffold.scaffold.Scaffold.all_in_neighbors_built">
+<span class="sig-name descname"><span class="pre">all_in_neighbors_built</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fugu.scaffold.scaffold.Scaffold.all_in_neighbors_built" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if all neighbors of a node are built.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>checked</strong> (<em>+ node - node whose neighbors are</em>) – </p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p>bool - indicates if all neighbors are built.</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fugu.scaffold.scaffold.Scaffold.lay_bricks">
+<span class="sig-name descname"><span class="pre">lay_bricks</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fugu.scaffold.scaffold.Scaffold.lay_bricks" title="Permalink to this definition">¶</a></dt>
+<dd><p>Build a computational graph that can be used by the backend.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>(</strong><strong>Default</strong> (<em>+ verbose - int value to specify level of verbosity</em>) – 0 to indicate None)</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>networkX diGraph</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fugu.scaffold.scaffold.Scaffold.summary">
+<span class="sig-name descname"><span class="pre">summary</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fugu.scaffold.scaffold.Scaffold.summary" title="Permalink to this definition">¶</a></dt>
+<dd><p>Display a summary of the scaffold.</p>
+<p>Prints information about the scaffold.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>0</strong> (<em>+ verbose - verbosity level can be</em>) – <ol class="arabic simple" start="0">
+<li></li>
+</ol>
+</p></li>
+<li><p><strong>(</strong><strong>Default</strong> (<em>1</em><em> or </em><em>&gt;1</em>) – <ol class="arabic simple" start="0">
+<li></li>
+</ol>
+</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
 </section>
-<section id="module-contents">
-<h2>Module contents<a class="headerlink" href="#module-contents" title="Permalink to this headline">¶</a></h2>
+<section id="module-fugu.scaffold">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-fugu.scaffold" title="Permalink to this headline">¶</a></h2>
 </section>
 </section>
 

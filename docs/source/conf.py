@@ -1,23 +1,7 @@
-# Configuration file for the Sphinx documentation builder.
-#
-# This file only contains a selection of the most common options. For a full
-# list see the documentation:
-# https://www.sphinx-doc.org/en/master/usage/configuration.html
-
-# -- Path setup --------------------------------------------------------------
-
-# If extensions (or modules to document with autodoc) are in another directory,
-# add these directories to sys.path here. If the directory is relative to the
-# documentation root, use os.path.abspath to make it absolute, like shown here.
-#
-# import os
-# import sys
-# sys.path.insert(0, os.path.abspath('.'))
 import os
 import sys
-for x in os.walk('../../fugu'):
-    sys.path.insert(0, x[0])
 
+# from sphinx.ext.apidoc import main as sphinx_apidoc
 
 # -- Project information -----------------------------------------------------
 
@@ -28,31 +12,81 @@ author = 'Sandia National Labs'
 # The full version, including alpha/beta/rc tags
 release = '.01'
 
+# -- Path setup --------------------------------------------------------------
+
+# If extensions (or modules to document with autodoc) are in another directory,
+# add these directories to sys.path here. If the directory is relative to the
+# documentation root, use os.path.abspath to make it absolute, like shown here.
+#
+
+# sys.path.insert(0, os.path.abspath('../../examples'))
+# sys.path.insert(0, os.path.abspath('../../fugu'))
+
+for x in os.walk('../../fugu'):
+    sys.path.insert(0, x[0])
+
+for x in os.walk('../../examples'):
+    sys.path.insert(0, x[0])
+
+sys.path.insert(0, os.path.abspath('../..'))
+
+# Enable todo items
+todo_include_todos = True
 
 # -- General configuration ---------------------------------------------------
 
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-import sphinx_rtd_theme
+
+##import mock
+##
+##MOCK_MODULES = ['numpy', 'scipy', 'sklearn', 'decorator', 'future', 'greenlet', 'msgpack', 'networkx', 'pandas', 'python', 'pytz', 'six', 'furo', 'sphinx', 'sphinx_rtd_theme']
+##for mod_name in MOCK_MODULES:
+##    sys.modules[mod_name] = mock.Mock()
 
 extensions = [
     'sphinx.ext.autodoc',
+    'sphinx.ext.autodoc.mock',
     'sphinx.ext.autosummary',
     'sphinx.ext.napoleon',
     'sphinx.ext.githubpages',
     'sphinx_rtd_theme'
 ]
 
+autosummary_generate = True
 
+
+# Set up autodocs options
+autoclass_content = "both"
+autodoc_member_order = 'bysource'
+autodoc_default_options = {
+    'members': True,
+    'autosummary': True,
+    'member-order': 'bysource',
+    'show-inheritance': True,
+    'undoc-members': True
+}
+
+autodoc_mock_imports = ["nxsdk", 'numpy', 'scipy', 'sklearn', 'decorator', 'future', 'greenlet', 'msgpack', 'networkx', 'pandas', 'python', 'pytz', 'six', 'furo', 'sphinx', 'sphinx_rtd_theme']
 ### From flexpart
 source_suffix = ['.rst', '.md', '.txt']
+
+# The master toctree document.
 master_doc = 'index'
 
+# -- General configuration -----------------------------------------------------
+
+# If your documentation needs a minimal Sphinx version, state it here.
+needs_sphinx = '3.4'
 
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
+
+# List of patterns, relative to source directory, that match files and
+# directories to ignore when looking for source files.
+exclude_patterns = ['_build', '_fugu_root', '.fugu-env']
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.

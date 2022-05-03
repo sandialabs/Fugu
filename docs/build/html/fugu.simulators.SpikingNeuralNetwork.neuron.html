@@ -81,12 +81,10 @@
               
             
             
-              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+              <p class="caption" role="heading"><span class="caption-text">API Docs</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="index.html">Welcome to Fugu’s documentation!</a></li>
-<li class="toctree-l1"><a class="reference internal" href="index.html#modules">Modules</a></li>
-<li class="toctree-l1"><a class="reference internal" href="index.html#indices-and-tables">Indices and tables</a></li>
-<li class="toctree-l1"><a class="reference internal" href="introduction.html">Fugu</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fugu/index.html">The Fugu Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples/index.html">Examples API</a></li>
 </ul>
 
             
@@ -156,11 +154,202 @@
 <section id="submodules">
 <h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
 </section>
-<section id="fugu-simulators-spikingneuralnetwork-neuron-neuron-module">
-<h2>fugu.simulators.SpikingNeuralNetwork.neuron.neuron module<a class="headerlink" href="#fugu-simulators-spikingneuralnetwork-neuron-neuron-module" title="Permalink to this headline">¶</a></h2>
+<section id="module-fugu.simulators.SpikingNeuralNetwork.neuron.neuron">
+<span id="fugu-simulators-spikingneuralnetwork-neuron-neuron-module"></span><h2>fugu.simulators.SpikingNeuralNetwork.neuron.neuron module<a class="headerlink" href="#module-fugu.simulators.SpikingNeuralNetwork.neuron.neuron" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="fugu.simulators.SpikingNeuralNetwork.neuron.neuron.Neuron">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">fugu.simulators.SpikingNeuralNetwork.neuron.neuron.</span></span><span class="sig-name descname"><span class="pre">Neuron</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spike</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fugu.simulators.SpikingNeuralNetwork.neuron.neuron.Neuron" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">abc.ABC</span></code></p>
+<p>Abstract Base Class for Neurons. This class defines the minimum set of
+properties of a Neuron.</p>
+<p>Constructor for a Base Neuron class</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> (<em>String</em><em>, </em><em>optional</em>) – Neuron name as a string. The default is None.</p></li>
+<li><p><strong>spike</strong> (<em>Bool</em><em>, </em><em>optional</em>) – Spike state of the Neuron. The default is False.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>None.</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="fugu.simulators.SpikingNeuralNetwork.neuron.neuron.Neuron.update_state">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">update_state</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#fugu.simulators.SpikingNeuralNetwork.neuron.neuron.Neuron.update_state" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update the time evolution of the neuron state</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="fugu.simulators.SpikingNeuralNetwork.neuron.neuron.LIFNeuron">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">fugu.simulators.SpikingNeuralNetwork.neuron.neuron.</span></span><span class="sig-name descname"><span class="pre">LIFNeuron</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reset_voltage</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">leakage_constant</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">voltage</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">record</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fugu.simulators.SpikingNeuralNetwork.neuron.neuron.LIFNeuron" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#fugu.simulators.SpikingNeuralNetwork.neuron.neuron.Neuron" title="fugu.simulators.SpikingNeuralNetwork.neuron.neuron.Neuron"><code class="xref py py-class docutils literal notranslate"><span class="pre">fugu.simulators.SpikingNeuralNetwork.neuron.neuron.Neuron</span></code></a></p>
+<p>Leaky Integrate and Fire neuron class. LIFNeurons inherit from base Neuron
+class. LIFNeurons inetgrate the incoming signals (weighted sum of spikes
+from pre-synapses). The leak-rate detemines the time evolution of the
+menbrane Voltage. If the voltage exceeds a threshold, the neurons spikes
+(with probability p) and resets to its reset-voltage.</p>
+<p>Constructor for LIFNeurons. Inherits from Neuron Base Class</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> (<em>String</em><em>, </em><em>optional</em>) – Straing name of a neuron. The default is None.</p></li>
+<li><p><strong>threshold</strong> (<em>Double</em><em>, </em><em>optional</em>) – Threshold value above while the neuron spikes. The default is 0.0.</p></li>
+<li><p><strong>reset_voltage</strong> (<em>Double</em><em>, </em><em>optional</em>) – The voltage to which the neuron resets after spiking. The default is 0.0.</p></li>
+<li><p><strong>leakage_constant</strong> (<em>Double</em><em>, </em><em>optional</em>) – The rate at which the neuron voltage decays. The leakage with rate
+m is calculated as m*v. A rate of m=1 indicates no leak. For
+realistic models, 0&lt;= m &lt;=1. The default is 1.0.</p></li>
+<li><p><strong>voltage</strong> (<em>Double</em><em>, </em><em>optional</em>) – Internal voltage of the neuron. The default is 0.0.</p></li>
+<li><p><strong>p</strong> (<em>Double</em><em>, </em><em>optional</em>) – Probability of spiking if voltage exceeds threshold.
+p=1 indicates a deterministic neuron. The default is 1.0.</p></li>
+<li><p><strong>record</strong> (<em>Bool</em><em>, </em><em>optional</em>) – Indicates if a neuron spike state should be sensed with probes.
+The default is False.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>None.</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="fugu.simulators.SpikingNeuralNetwork.neuron.neuron.LIFNeuron.update_state">
+<span class="sig-name descname"><span class="pre">update_state</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#fugu.simulators.SpikingNeuralNetwork.neuron.neuron.LIFNeuron.update_state" title="Permalink to this definition">¶</a></dt>
+<dd><p>updates the time evolution of the states for one time step. The input
+signals are integrated and accumulates with the internal voltage. If
+the internal voltage exceeds the threshold, the neuron spikes and resets.
+Otherwise, the neruon leaks at a fixed rate down to its reset value. The
+neuron spikes with probability p if it exceeds the threshold.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>None.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fugu.simulators.SpikingNeuralNetwork.neuron.neuron.LIFNeuron.show_state">
+<span class="sig-name descname"><span class="pre">show_state</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#fugu.simulators.SpikingNeuralNetwork.neuron.neuron.LIFNeuron.show_state" title="Permalink to this definition">¶</a></dt>
+<dd><p>Display the voltage and spike state of a neuron.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>None.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fugu.simulators.SpikingNeuralNetwork.neuron.neuron.LIFNeuron.show_params">
+<span class="sig-name descname"><span class="pre">show_params</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#fugu.simulators.SpikingNeuralNetwork.neuron.neuron.LIFNeuron.show_params" title="Permalink to this definition">¶</a></dt>
+<dd><p>Display the parameters of a neuron (name, threshold, reset, leak)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>None.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fugu.simulators.SpikingNeuralNetwork.neuron.neuron.LIFNeuron.show_presynapses">
+<span class="sig-name descname"><span class="pre">show_presynapses</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#fugu.simulators.SpikingNeuralNetwork.neuron.neuron.LIFNeuron.show_presynapses" title="Permalink to this definition">¶</a></dt>
+<dd><p>Display the synapses the feed into the neuron.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>None.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="fugu.simulators.SpikingNeuralNetwork.neuron.neuron.LIFNeuron.threshold">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">threshold</span></span><a class="headerlink" href="#fugu.simulators.SpikingNeuralNetwork.neuron.neuron.LIFNeuron.threshold" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="fugu.simulators.SpikingNeuralNetwork.neuron.neuron.LIFNeuron.reset_voltage">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">reset_voltage</span></span><a class="headerlink" href="#fugu.simulators.SpikingNeuralNetwork.neuron.neuron.LIFNeuron.reset_voltage" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="fugu.simulators.SpikingNeuralNetwork.neuron.neuron.LIFNeuron.leakage_constant">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">leakage_constant</span></span><a class="headerlink" href="#fugu.simulators.SpikingNeuralNetwork.neuron.neuron.LIFNeuron.leakage_constant" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="fugu.simulators.SpikingNeuralNetwork.neuron.neuron.LIFNeuron.voltage">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">voltage</span></span><a class="headerlink" href="#fugu.simulators.SpikingNeuralNetwork.neuron.neuron.LIFNeuron.voltage" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="fugu.simulators.SpikingNeuralNetwork.neuron.neuron.InputNeuron">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">fugu.simulators.SpikingNeuralNetwork.neuron.neuron.</span></span><span class="sig-name descname"><span class="pre">InputNeuron</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">voltage</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">record</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fugu.simulators.SpikingNeuralNetwork.neuron.neuron.InputNeuron" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#fugu.simulators.SpikingNeuralNetwork.neuron.neuron.Neuron" title="fugu.simulators.SpikingNeuralNetwork.neuron.neuron.Neuron"><code class="xref py py-class docutils literal notranslate"><span class="pre">fugu.simulators.SpikingNeuralNetwork.neuron.neuron.Neuron</span></code></a></p>
+<p>Input Neuron. Inherits from class Neuron.
+Input Neurons can read inputs and convert them to spike streams</p>
+<p>Constructor for Input Neuron.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> (<em>String</em><em>, </em><em>optional</em>) – Input neuron name. The default is None.</p></li>
+<li><p><strong>threshold</strong> (<em>Double</em><em>, </em><em>optional</em>) – Threashold value above which the neuron spikes. The default is 0.1.</p></li>
+<li><p><strong>voltage</strong> (<em>Double</em><em>, </em><em>optional</em>) – Membrane voltage. The default is 0.0.</p></li>
+<li><p><strong>record</strong> (<em>Bool</em><em>, </em><em>optional</em>) – Indicates if a neuron spike state should be sensed with probes.
+The default is False.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>None.</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="fugu.simulators.SpikingNeuralNetwork.neuron.neuron.InputNeuron.connect_to_input">
+<span class="sig-name descname"><span class="pre">connect_to_input</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">in_stream</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fugu.simulators.SpikingNeuralNetwork.neuron.neuron.InputNeuron.connect_to_input" title="Permalink to this definition">¶</a></dt>
+<dd><p>Enables a neuron to read in an input stream of data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>in_stream</strong> (<em>interable data streams of ints</em><em> or </em><em>floats.</em>) – input data (any interable stream such as lists, arrays, etc.).</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>TypeError</strong> – if in_stream is not iterable.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>None.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fugu.simulators.SpikingNeuralNetwork.neuron.neuron.InputNeuron.update_state">
+<span class="sig-name descname"><span class="pre">update_state</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#fugu.simulators.SpikingNeuralNetwork.neuron.neuron.InputNeuron.update_state" title="Permalink to this definition">¶</a></dt>
+<dd><p>Updates the neuron states. The neuron spikes if the input value in
+the current iteration is above the threshold and resets.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><strong>TypeError</strong> – if the input data is not int or float.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>None.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="fugu.simulators.SpikingNeuralNetwork.neuron.neuron.InputNeuron.threshold">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">threshold</span></span><a class="headerlink" href="#fugu.simulators.SpikingNeuralNetwork.neuron.neuron.InputNeuron.threshold" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="fugu.simulators.SpikingNeuralNetwork.neuron.neuron.InputNeuron.voltage">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">voltage</span></span><a class="headerlink" href="#fugu.simulators.SpikingNeuralNetwork.neuron.neuron.InputNeuron.voltage" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
 </section>
-<section id="module-contents">
-<h2>Module contents<a class="headerlink" href="#module-contents" title="Permalink to this headline">¶</a></h2>
+<section id="module-fugu.simulators.SpikingNeuralNetwork.neuron">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-fugu.simulators.SpikingNeuralNetwork.neuron" title="Permalink to this headline">¶</a></h2>
 </section>
 </section>
 

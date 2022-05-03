@@ -81,12 +81,10 @@
               
             
             
-              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+              <p class="caption" role="heading"><span class="caption-text">API Docs</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="index.html">Welcome to Fugu’s documentation!</a></li>
-<li class="toctree-l1"><a class="reference internal" href="index.html#modules">Modules</a></li>
-<li class="toctree-l1"><a class="reference internal" href="index.html#indices-and-tables">Indices and tables</a></li>
-<li class="toctree-l1"><a class="reference internal" href="introduction.html">Fugu</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fugu/index.html">The Fugu Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples/index.html">Examples API</a></li>
 </ul>
 
             
@@ -156,14 +154,89 @@
 <section id="submodules">
 <h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
 </section>
-<section id="fugu-utils-export-utils-module">
-<h2>fugu.utils.export_utils module<a class="headerlink" href="#fugu-utils-export-utils-module" title="Permalink to this headline">¶</a></h2>
+<section id="module-fugu.utils.export_utils">
+<span id="fugu-utils-export-utils-module"></span><h2>fugu.utils.export_utils module<a class="headerlink" href="#module-fugu.utils.export_utils" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="fugu.utils.export_utils.results_df_from_dict">
+<span class="sig-prename descclassname"><span class="pre">fugu.utils.export_utils.</span></span><span class="sig-name descname"><span class="pre">results_df_from_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">results_dictionary</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">key</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fugu.utils.export_utils.results_df_from_dict" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="fugu.utils.export_utils.fill_results_from_graph">
+<span class="sig-prename descclassname"><span class="pre">fugu.utils.export_utils.</span></span><span class="sig-name descname"><span class="pre">fill_results_from_graph</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">results_df</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scaffold</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fields</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">['neuron_number',</span> <span class="pre">'name',</span> <span class="pre">'brick']</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fugu.utils.export_utils.fill_results_from_graph" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="fugu.utils.export_utils.get_spiked_info">
+<span class="sig-prename descclassname"><span class="pre">fugu.utils.export_utils.</span></span><span class="sig-name descname"><span class="pre">get_spiked_info</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">result</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scaffold</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fugu.utils.export_utils.get_spiked_info" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="fugu.utils.export_utils.results_dict">
+<span class="sig-prename descclassname"><span class="pre">fugu.utils.export_utils.</span></span><span class="sig-name descname"><span class="pre">results_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">result</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scaffold</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fugu.utils.export_utils.results_dict" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="fugu.utils.export_utils.set_circuit_position">
+<span class="sig-prename descclassname"><span class="pre">fugu.utils.export_utils.</span></span><span class="sig-name descname"><span class="pre">set_circuit_position</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scaffold</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fugu.utils.export_utils.set_circuit_position" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="fugu.utils.export_utils.set_position">
+<span class="sig-prename descclassname"><span class="pre">fugu.utils.export_utils.</span></span><span class="sig-name descname"><span class="pre">set_position</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scaffold</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fugu.utils.export_utils.set_position" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="fugu.utils.export_utils.generate_gexf">
+<span class="sig-prename descclassname"><span class="pre">fugu.utils.export_utils.</span></span><span class="sig-name descname"><span class="pre">generate_gexf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scaffold</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'fugu.gexf'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">result</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fugu.utils.export_utils.generate_gexf" title="Permalink to this definition">¶</a></dt>
+<dd><p>Exports a scaffold to gexf.</p>
+<p>Exports a scaffold to a file using Graph Exchange XML Format (GEXF).</p>
+<p>This is largely a simple wrapper around NetworkX’s <cite>networkx.write_gexf</cite>
+with the addition that neuron states can be embedded into the graph/node
+properties.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>export</strong> (<em>+ scaffold - Scaffold to</em>) – </p></li>
+<li><p><strong>(</strong><strong>Default</strong> (<em>+ result - Optional Pandas DataFrame containing spike times</em>) – fugu.gexf)</p></li>
+<li><p><strong>(</strong><strong>Default</strong> – None)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
 </section>
-<section id="fugu-utils-misc-module">
-<h2>fugu.utils.misc module<a class="headerlink" href="#fugu-utils-misc-module" title="Permalink to this headline">¶</a></h2>
+<section id="module-fugu.utils.misc">
+<span id="fugu-utils-misc-module"></span><h2>fugu.utils.misc module<a class="headerlink" href="#module-fugu.utils.misc" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="fugu.utils.misc.CalculateSpikeTimes">
+<span class="sig-prename descclassname"><span class="pre">fugu.utils.misc.</span></span><span class="sig-name descname"><span class="pre">CalculateSpikeTimes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">circuit</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">main_key</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'timestep'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fugu.utils.misc.CalculateSpikeTimes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function that determines the initial spikes for the input layer of a fugu circuit.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>circuit</strong> (<em>+ circuit - Fugu</em>) – </p></li>
+<li><p><strong>key</strong> (<em>+ main_key - Whether to use timestep</em><em> or </em><em>neuron name as the dictionary</em>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p>Dictionary of when certain neurons spike (keyed by either timestep or neuron name)</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+<dl class="simple">
+<dt>Exceptions:</dt><dd><ul class="simple">
+<li><p>Raises ValueError if main_key is not ‘timestep’ or ‘neuron_name’</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
 </section>
-<section id="module-contents">
-<h2>Module contents<a class="headerlink" href="#module-contents" title="Permalink to this headline">¶</a></h2>
+<section id="module-fugu.utils">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-fugu.utils" title="Permalink to this headline">¶</a></h2>
 </section>
 </section>
 

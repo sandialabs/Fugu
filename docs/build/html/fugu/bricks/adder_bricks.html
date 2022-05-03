@@ -1,0 +1,335 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Adder Bricks &mdash; Fugu .01 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Application Bricks" href="application_bricks.html" />
+    <link rel="prev" title="Bricks" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> Fugu
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption" role="heading"><span class="caption-text">API Docs</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">The Fugu Module</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../backends/index.html">Fugu Backends</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="index.html">Bricks</a><ul class="current">
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Adder Bricks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="application_bricks.html">Application Bricks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="bricks.html">Bricks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="graph_bricks.html">Graph Bricks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="input_bricks.html">Input Bricks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="register_bricks.html">Register Bricks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="stochastic_bricks.html">Stochastic Bricks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="test_bricks.html">Test Bricks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="utility_bricks.html">Utility Bricks</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../scaffold/scaffold.html">Scaffold</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../simulators/index.html">Simulators</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../utils/index.html">Utilities</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../examples/index.html">Examples API</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Fugu</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../index.html">The Fugu Module</a> &raquo;</li>
+        
+          <li><a href="index.html">Bricks</a> &raquo;</li>
+        
+      <li>Adder Bricks</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../../_sources/fugu/bricks/adder_bricks.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <section id="module-fugu.bricks.adder_bricks">
+<span id="adder-bricks"></span><h1>Adder Bricks<a class="headerlink" href="#module-fugu.bricks.adder_bricks" title="Permalink to this headline">¶</a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="fugu.bricks.adder_bricks.streaming_adder">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">fugu.bricks.adder_bricks.</span></span><span class="sig-name descname"><span class="pre">streaming_adder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fugu.bricks.adder_bricks.streaming_adder" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="bricks.html#fugu.bricks.bricks.Brick" title="fugu.bricks.bricks.Brick"><code class="xref py py-class docutils literal notranslate"><span class="pre">fugu.bricks.bricks.Brick</span></code></a></p>
+<p>streaming adder function.
+Brad Aimone
+<a class="reference external" href="mailto:jbaimon&#37;&#52;&#48;sandia&#46;gov">jbaimon<span>&#64;</span>sandia<span>&#46;</span>gov</a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="fugu.bricks.adder_bricks.streaming_adder.build">
+<span class="sig-name descname"><span class="pre">build</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dimensionality</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">control_nodes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_lists</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_codings</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fugu.bricks.adder_bricks.streaming_adder.build" title="Permalink to this definition">¶</a></dt>
+<dd><p>Build streaming adder brick.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>graph</strong> (<em>+ graph - networkx graph to define connections of the computational</em>) – </p></li>
+<li><p><strong>brick</strong> (<em>+ dimensionality - dictionary to define the shapes and parameters of the</em>) – </p></li>
+<li><p><strong>keys</strong> (<em>+ control_nodes - dictionary of lists of auxillary networkx nodes.  Excpected</em>) – ‘complete’ - A list of neurons that fire when the brick is done</p></li>
+<li><p><strong>input</strong> (<em>+ input_lists - list of nodes that will contain</em>) – </p></li>
+<li><p><strong>formats</strong> (<em>+ input_coding - list of input coding</em>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p>graph of a computational elements and connections</p></li>
+<li><p>dictionary of output parameters (shape, coding, layers, depth, etc)</p></li>
+<li><p>dictionary of control nodes (‘complete’)</p></li>
+<li><p>list of output</p></li>
+<li><p>list of coding formats of output</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="fugu.bricks.adder_bricks.temporal_shift">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">fugu.bricks.adder_bricks.</span></span><span class="sig-name descname"><span class="pre">temporal_shift</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shift_length</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fugu.bricks.adder_bricks.temporal_shift" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="bricks.html#fugu.bricks.bricks.Brick" title="fugu.bricks.bricks.Brick"><code class="xref py py-class docutils literal notranslate"><span class="pre">fugu.bricks.bricks.Brick</span></code></a></p>
+<p>temporal shift function.
+Brad Aimone
+<a class="reference external" href="mailto:jbaimon&#37;&#52;&#48;sandia&#46;gov">jbaimon<span>&#64;</span>sandia<span>&#46;</span>gov</a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="fugu.bricks.adder_bricks.temporal_shift.build">
+<span class="sig-name descname"><span class="pre">build</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dimensionality</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">control_nodes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_lists</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_codings</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fugu.bricks.adder_bricks.temporal_shift.build" title="Permalink to this definition">¶</a></dt>
+<dd><p>Build bit shift brick.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>graph</strong> (<em>+ graph - networkx graph to define connections of the computational</em>) – </p></li>
+<li><p><strong>brick</strong> (<em>+ dimensionality - dictionary to define the shapes and parameters of the</em>) – </p></li>
+<li><p><strong>keys</strong> (<em>+ control_nodes - dictionary of lists of auxillary networkx nodes.  Excpected</em>) – ‘complete’ - A list of neurons that fire when the brick is done</p></li>
+<li><p><strong>input</strong> (<em>+ input_lists - list of nodes that will contain</em>) – </p></li>
+<li><p><strong>formats</strong> (<em>+ input_coding - list of input coding</em>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p>graph of a computational elements and connections</p></li>
+<li><p>dictionary of output parameters (shape, coding, layers, depth, etc)</p></li>
+<li><p>dictionary of control nodes (‘complete’)</p></li>
+<li><p>list of output</p></li>
+<li><p>list of coding formats of output</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="fugu.bricks.adder_bricks.streaming_scalar_multiplier">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">fugu.bricks.adder_bricks.</span></span><span class="sig-name descname"><span class="pre">streaming_scalar_multiplier</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shift_length</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fugu.bricks.adder_bricks.streaming_scalar_multiplier" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="bricks.html#fugu.bricks.bricks.Brick" title="fugu.bricks.bricks.Brick"><code class="xref py py-class docutils literal notranslate"><span class="pre">fugu.bricks.bricks.Brick</span></code></a></p>
+<p>streaming scalar multiplier function.
+Brad Aimone
+<a class="reference external" href="mailto:jbaimon&#37;&#52;&#48;sandia&#46;gov">jbaimon<span>&#64;</span>sandia<span>&#46;</span>gov</a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="fugu.bricks.adder_bricks.streaming_scalar_multiplier.build">
+<span class="sig-name descname"><span class="pre">build</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dimensionality</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">control_nodes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_lists</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_codings</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.125</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fugu.bricks.adder_bricks.streaming_scalar_multiplier.build" title="Permalink to this definition">¶</a></dt>
+<dd><p>Build the computational graph of the brick. Method must be defined in any class inheriting from Brick.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>graph</strong> (<em>+ graph - networkx</em>) – </p></li>
+<li><p><strong>properties</strong> (<em>+ metadata - A dictionary of shapes and</em>) – </p></li>
+<li><p><strong>nodes.</strong> (<em>+ control_nodes - list of dictionary of auxillary</em>) – <dl>
+<dt>Acceptable keys include:</dt><dd><p>’complete’ - A list of neurons that fire when the brick is done
+‘begin’ - A list of neurons that fire when the brick begins computation</p>
+<blockquote>
+<div><p>(used for temporal processing)</p>
+</div></blockquote>
+</dd>
+</dl>
+</p></li>
+<li><p><strong>neurons</strong> (<em>+ input_lists - list of lists of nodes for input</em>) – </p></li>
+<li><p><strong>types</strong> (<em>+ input_codings - list of input coding</em>) – </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="application_bricks.html" class="btn btn-neutral float-right" title="Application Bricks" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="index.html" class="btn btn-neutral float-left" title="Bricks" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2022, Sandia National Labs
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

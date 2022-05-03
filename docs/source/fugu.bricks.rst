@@ -4,12 +4,20 @@ fugu.bricks package
 Submodules
 ----------
 
+fugu.bricks.adder\_bricks module
+--------------------------------
+
+.. automodule:: fugu.bricks.adder_bricks
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 fugu.bricks.application\_bricks module
 --------------------------------------
 
 .. automodule:: fugu.bricks.application_bricks
    :members:
-
+   :undoc-members:
    :show-inheritance:
 
 fugu.bricks.bricks module
