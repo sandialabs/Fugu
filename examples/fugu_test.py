@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 
 print("---Importing modules---")
-from __future__ import print_function
 import numpy as np
 
 print("---Importing fugu---")
