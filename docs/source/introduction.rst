@@ -16,35 +16,16 @@ Think of Fugu as a framework to ease the process of coding and deploying algorit
 2. a collections of algorithms for linking SNA modules
 3. combined application graph output
 
-Fugu IS
-~~~~~~~~~~~ 
-Fugu is a linking framework
-+ It is “easy” to build spiking circuits for a single computation
-+ It is hard to do application-level computation on neuromorphic
-+ We provide a mechanism to combine small computational kernels (Bricks) into large computational graphs 
-Fugu is a spec
-+ For the Bricks to transfer information, we need to agree on data formatting
-+ For computation to be consistent, we need to agree on neuron behavior (lowest common denominator*)
-+ For this to be useful, we need a hardware independent intermediate representation
 
-Fugu IS NOT
-~~~~~~~~~~~ 
-Fugu includes but is NOT a simulator
-+ We include a reference simulator *ds* which can quickly run small-medium sized spiking networks
-+ ds instantiates the fugu neuron model (discrete time, point synapses)
-+ Fugu is designed to support a variety of backends including hardware platforms
-Fugu includes but is NOT a spiking algorithm
-+ We are working to build fugu Bricks for many useful kernels
-+ We are hoping that the community will help contribute 
-Fugu includes but is NOT a graph utility
-+ NetworkX provides (nearly) all of our graph functionality
-+ Node and edge properties are inherent in NetworkX and only become meaningful when interpreted by a backend
+Fugu is a linking framework with a goal of being “easy” to build spiking circuits for a single computation. We provide a mechanism to combine small computational kernels (Bricks) into large computational graphs, but also Fugu provides some specifications: For the Bricks to transfer information, we need to agree on data formatting. For computation to be consistent, we need to agree on neuron behavior (lowest common denominator). For this to be useful, we need a hardware independent intermediate representation.
+
+Fugu includes but is not a simulator: We include a reference simulator *snn* which can quickly run small sized spiking networks. We hope to provide a more comprehensive and efficient simulator in the future.  Fugu is designed to support a variety of backends including hardware platforms. We are working to build fugu Bricks for many useful kernels; We are hoping that the community will help contribute. 
 
 
 ===========
 API
 ===========
-Fugu's API provides compatability with C++ and Python.  The user defines a computational graph, termed *scaffold*.  Within each scaffold nodes, called *bricks* are the component SNAs.  Edges between *bricks* defines the flow of information.  
+Fugu's API provides works with Python.  The user defines a computational graph, termed *scaffold*.  Within each scaffold nodes, called *bricks* are the component SNAs.  Edges between *bricks* defines the flow of information.  
 
 Example
 ~~~~~~~~~~~
@@ -144,6 +125,5 @@ Get Started
    - Walk through our Jupyter Notebook examples as a first step into the world of Fugu.  These can be found in the examples folder, in a folder labeled notebooks.  We've outlined how we translate common algorithms and problems into Fugu brick formation.  
 3. Documentation
    - We have documented many of the applicable python files for your reference in our docs page.
-4. Fugu in publication
-   - We have a folder with recent publications to familiarize you with some possible use cases.
+
 
