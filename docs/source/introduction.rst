@@ -40,26 +40,12 @@ The scaffold is a graphical representation of of the desired Fugu algorithm
   :width: 400
   :alt: Simple 4 function pseudocode 
 
-*************
-Workflow for Fugu algorithm
-*************
-.. image:: source/scaffoldmetadata.png
-  :width: 400
-  :alt: Scaffold Metadata 
-
-.. image:: source/scaffoldcircuit.png
-  :width: 400
-  :alt: Control flow for Scaffold.circuit  
-
 User Types
 ===========
 We forsee 3 user types: 
 1. User: This person develops algorithms and applications using Fugu, but may not fully understand spiking neural networks or neuromorphic hardware.  Users should be expected to understand python and combine Fugu’s tools and functions.
 2. Extenders: This person creates new spiking neural networks or adapts existing neural algorithms to the Fugu framework.  At this level, coders will need to be familiar with spiking neural networks and NetworkX, but should not need to be concerned with details of the implementations behind Fugu and the target hardware.
 3. Developers:  This person helps develop the Fugu framework  itself and provides backends to software and hardware platforms for execution.  For this, it is necessary to be familiar with the entire stack, from python through spiking neural networks and the intricacies of a particular hardware platform.
-.. image:: source/component.png
-  :width: 400
-  :alt: Fugu workflow  
 
 *************
 Bricks Basics
