@@ -17,7 +17,9 @@ class NeuralNetwork:
         self._nrn_count = 0
 
     def add_neuron(self, new_neuron=None):
-        '''Add a neuron to the network. If a string is passed, a default LIFNeuron is created with that name.'''
+        """
+        Add a neuron to the network. If a string is passed, a default LIFNeuron is created with that name.
+        """
         if not new_neuron:
             self._nrn_count += 1
             neuron = LIFNeuron(str(self._nrn_count))
@@ -33,7 +35,9 @@ class NeuralNetwork:
         self.nrns[neuron.name] = neuron
 
     def add_multiple_neurons(self, neuron_iterable=None):
-        '''Add Neurons from an iterable such as a list'''
+        """
+        Add Neurons from an iterable such as a list
+        """
         if not neuron_iterable:
             self.add_neuron()
 
@@ -50,7 +54,9 @@ class NeuralNetwork:
         print("\b\b}")
 
     def add_synapse(self, new_synapse=None):
-        '''Add synapse to a network. If a tuple is provided, a new Synapse object is created and added'''
+        """
+        Add synapse to a network. If a tuple is provided, a new Synapse object is created and added
+        """
         if not new_synapse:
             raise TypeError("Needs synapse object with pre and post neurons")
         elif type(new_synapse) == tuple and len(new_synapse) >= 2 and len(
@@ -73,7 +79,9 @@ class NeuralNetwork:
                       tmpsyn, ))
 
     def add_multiple_synapses(self, synapse_iterable=None):
-        '''Add synapses from an iterable containing synapses'''
+        """
+        Add synapses from an iterable containing synapses
+        """
         if not isinstance(synapse_iterable, Iterable):
             raise TypeError("{0} is not iterable".format(synapse_iterable))
 
@@ -94,11 +102,15 @@ class NeuralNetwork:
 
     # Will be called automatically if a synapse is added
     def update_network(self, new_synapse):
-        '''build the connection map from the Synapses and Neuron information contained in them'''
+        """
+        build the connection map from the Synapses and Neuron information contained in them
+        """
         new_synapse._post.presyn.add(new_synapse)
 
     def step(self):
-        '''Evolve the network over one time step'''
+        """
+        Evolve the network over one time step
+        """
         for n in self.nrns:
             self.nrns[n].update_state()
 
@@ -106,7 +118,15 @@ class NeuralNetwork:
             self.synps[s].update_state()
 
     def run(self, n_steps=1, debug_mode=False, record_potentials=False):
-        '''Iterate the network evolution for n_steps number of times and return results as a pandas dataFrame'''
+        """
+        Iterate the network evolution for n_steps number of times and return results as a pandas dataFrame
+        Args:
+            n_steps: number fo time steps to iterate network
+            debug_mode (bool): auto false
+            record_potentials (bool): auto False
+        Returns:
+            df: iteration of network evolution in pandas dataFrame
+        """
 
         tempdct = defaultdict(list)
         nrn_list = []

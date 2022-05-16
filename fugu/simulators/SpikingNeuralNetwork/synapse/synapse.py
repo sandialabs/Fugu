@@ -17,31 +17,19 @@ class Synapse:
     def __init__(self, pre_neuron, post_neuron, delay=1, weight=1.0):
         """
         
-        Parameters
-        ----------
-        pre_neuron : Neuron
-           Neuron that provides input to the synapse
-        post_neuron : Neuron
-            Neuron that receives the signals from the synapse
-        delay : non-negative Int, optional
-            Number of time steps needed to relay the scaled spike. The default is 1.
-        weight : double, optional
-            Scaling value for incoming spike. The default is 1.0.
+        Parameters:
+            pre_neuron (any): Neuron that provides input to the synapse
+            post_neuron (any): Neuron that receives the signals from the synapse
+        delay (int) : non-negative Int, optional.  Number of time steps needed to relay the scaled spike. The default is 1.
+        weight (double): optional.  Scaling value for incoming spike. The default is 1.0.
 
-        Raises
-        ------
-        TypeError
-            if pre and post neurons are not of type neurons.
+        Raises:
+            TypeError: if pre and post neurons are not of type neurons.=
+            TypeError: if delay is not of type Int
+            ValueError: if delay is less than 1
         
-        TypeError
-            if delay is not of type Int.
-        
-        ValueError
-            if delay is less than 1 
-        
-        Returns
-        -------
-        None.
+        Returns:
+            none
 
         """
         
@@ -69,10 +57,9 @@ class Synapse:
     def get_key(self):
         """
         
-        Returns
-        -------
-        Tuple
-            Pre and post neuron of the synapse.
+        Returns:
+            self._pre (tuple): Pre neuron of the synapse
+            self._post (tuple) post neuron of synapse
 
         """
         return (self._pre, self._post)
@@ -82,10 +69,8 @@ class Synapse:
         """
         Getter for pre_neuron.
         
-        Returns
-        -------
-        Neuron
-            Pre-synaptic neuron
+        Returns:
+            self._pre: Neuron Pre-synaptic neuron
 
         """
         return self._pre
@@ -95,10 +80,8 @@ class Synapse:
         """
         Getter for post_neuron.
 
-        Returns
-        -------
-        Neuron
-            post-synaptic neuron
+        Returns:
+            Neuron: post-synaptic neuron
 
         """
         return self._post
@@ -108,10 +91,8 @@ class Synapse:
         """
         Getter for synaptic weight
 
-        Returns
-        -------
-        Double
-            scaling weight of the synapse.
+        Returns:
+            self._w (double): scaling weight of the synapse.
 
         """
         return self._w
@@ -121,15 +102,10 @@ class Synapse:
         """
         Setter for synaptic weight
 
-        Parameters
-        ----------
-        new_weight : Double, optional
-            Sets the synaptic weight to a new value. The default is 1.0.
-
-        Returns
-        -------
-        None.
-
+        Parameters:
+            new_weight (float): Double, optional.  Sets the synaptic weight to a new value. The default is 1.0.
+        Returns:
+            none
         """
         self._w = new_weight
 
@@ -138,10 +114,8 @@ class Synapse:
         """
         Getter for synaptic delay (in time steps)
 
-        Returns
-        -------
-        Int
-            Delay in time steps.
+        Returns:
+            self._d (int): delay in time steps
 
         """
         return self._d
@@ -151,15 +125,11 @@ class Synapse:
         """
         Setter for synaptic delay.
 
-        Parameters
-        ----------
-        new_delay : Int, optional
-            Sets the synaptic delay to a new value. The default is 1.0.
+        Parameters:
+            new_delay (int): optional Sets the synaptic delay to a new value. The default is 1.0.
 
-        Returns
-        -------
-        None.
-
+        Returns:
+            None
         """
         
         if type(new_delay) != int:
@@ -176,17 +146,12 @@ class Synapse:
         """
         Sets delay and weight of a synapse
 
-        Parameters
-        ----------
-        new_delay : Int, optional
-            Set delay to new value. The default is 1.0.
-        new_weight : Double, optional
-            Set weight to new value. The default is 1.0.
+        Parameters:
+            new_delay (int): optional Set delay to new value. The default is 1.0.
+            new_weight (Double): optional. Set weight to new value. The default is 1.0.
 
-        Returns
-        -------
-        None.
-
+        Returns:
+            None
         """
         self.delay = new_delay
         self.weight = new_weight
@@ -197,10 +162,8 @@ class Synapse:
         Display the information of the synapse (pre-synaptic neuron, post-synaptic neuron,
         delay, and weight).
 
-        Returns
-        -------
-        None.
-
+        Returns:
+            None
         """
         print("Synapse {0} -> {1}:\n delay  : {2}\n weight : {3}".format(
             self._pre,
@@ -220,10 +183,8 @@ class Synapse:
         updates the time evolution of the states for one time step. The spike information is 
         sent through a queue of length given by the delay and scaled by the weight value.
 
-        Returns
-        -------
-        None.
-
+        Returns:
+            None
         """
         
         if self._pre.spike:

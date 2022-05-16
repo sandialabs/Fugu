@@ -8,12 +8,12 @@ class Dot(Brick):
     Class to handle the Dot brick. Inherits from Brick
     """
     def __init__(self, weights, name="Dot"):
-        '''
+        """
         Construtor for this brick.
-        Arguments:
-            + weights - Vector against which the input is dotted.
-            + name - Name of the brick.  If not specified, a default will be used.  Name should be unique.
-        '''
+        Args:
+            weights (any): Vector against which the input is dotted.
+            name (str): Name of the brick.  If not specified, a default will be used.  Name should be unique.
+        """
         super(Dot, self).__init__(name)
         self.is_built = False
         self.metadata = {'D': 1}
@@ -44,21 +44,21 @@ class Dot(Brick):
         """
         Build Dot brick.
 
-        Arguments:
-            + graph - networkx graph to define connections of the computational graph
-            + metadata - dictionary to define the shapes and parameters of the brick
-            + control_nodes - list of dictionary of auxillary nodes.
+        Args:
+            graph (any): networkx graph to define connections of the computational graph
+            metadata (dict): dictionary to define the shapes and parameters of the brick
+            control_nodes (list): list of dictionary of auxillary nodes.
                 Expected keys:
                     'complete' - A list of neurons that fire when the brick is done
-            + input_lists - list of nodes that will contain input
-            + input_coding - list of input coding formats.  ('Raster', 'Undefined' supported)
+            input_lists (list): list of nodes that will contain input
+            input_coding (list): list of input coding formats.  ('Raster', 'Undefined' supported)
 
         Returns:
-            + graph of a computational elements and connections
-            + dictionary of output parameters (shape, coding, layers, depth, etc)
-            + list dictionary of control nodes ('complete')
-            + list of output edges
-            + list of coding formats of output ('current')
+            graph: graph of a computational elements and connections
+            metadata: dictionary of output parameters (shape, coding, layers, depth, etc)
+            complete_name: list dictionary of control nodes ('complete')
+            output_list (list[dict[str, int]]): list of output edges
+            output_codings (list[str]): list of coding formats of output ('current')
         """
 
         output_list = []
@@ -114,11 +114,11 @@ class Copy(Brick):
     Class to handle Copy Brick. Inherits from Brick
     """
     def __init__(self, name="Copy"):
-        '''
+        """
         Construtor for this brick.
-        Arguments:
-            + name - Name of the brick.  If not specified, a default will be used.  Name should be unique.
-        '''
+        Args:
+            name (str): Name of the brick.  If not specified, a default will be used.  Name should be unique.
+        """
         super(Copy, self).__init__(name)
         self.is_built = False
         self.metadata = {'D': 1}
@@ -139,21 +139,21 @@ class Copy(Brick):
         """
         Build Copy brick.
 
-        Arguments:
-            + graph - networkx graph to define connections of the computational graph
-            + metadata - dictionary to define the shapes and parameters of the brick
-            + control_nodes - list of dictionaries of auxillary nodes.
+        Args:
+            graph: networkx graph to define connections of the computational graph
+            metadata (dict): dictionary to define the shapes and parameters of the brick
+            control_nodes (list): list of dictionaries of auxillary nodes.
                 Expected keys:
                     'complete' - A list of neurons that fire when the brick is done
-            + input_lists - list of nodes that will contain input
-            + input_coding - list of input coding formats
+            input_lists (list): list of nodes that will contain input
+            input_coding (list): list of input coding formats
 
         Returns:
-            + graph of a computational elements and connections
-            + dictionary of output parameters (shape, coding, layers, depth, etc)
-            + list of dictionaries of control nodes ('complete')
-            + list of output
-            + list of coding formats of output
+            graph: graph of a computational elements and connections
+            self.metadata (dict): dictionary of output parameters (shape, coding, layers, depth, etc)
+            complete: list dictionary of control nodes ('complete')
+            output_lists (list[list]): list of output
+            output_codings (list): list of coding formats of output
         """
         num_copies = 2
         if type(metadata) is list:
@@ -208,14 +208,16 @@ class Copy(Brick):
 
 
 class Concatenate(Brick):
-    '''
+    """
     Brick that concatenates multiple inputs into a single vector.
     All codings are supported except 'current'; first coding is used if not specified.
 
-    Arguments:
-        + name - Name of the brick.  If not specified, a default will be used.  Name should be unique.
-    '''
+    """
     def __init__(self, name="Concatenate", coding=None):
+        """
+        Args:
+            name (str): Name of the brick.  If not specified, a default will be used.  Name should be unique.
+        """
         super(Concatenate, self).__init__(name)
         self.is_built = False
         self.metadata = {'D': 0}
@@ -231,21 +233,21 @@ class Concatenate(Brick):
         """
         Build concatenate brick.
 
-        Arguments:
-            + graph - networkx graph to define connections of the computational graph
-            + metadata - dictionary to define the shapes and parameters of the brick
-            + control_nodes - dictionary of lists of auxillary networkx nodes.
+        Args:
+            graph: networkx graph to define connections of the computational graph
+            metadata (dict): dictionary to define the shapes and parameters of the brick
+            control_nodes (list): dictionary of lists of auxillary networkx nodes.
                 Expected keys:
                     'complete' - A list of neurons that fire when the brick is done
-            + input_lists - list of nodes that will contain input
-            + input_coding - list of input coding formats.  All codings are allowed except 'current'.
+            input_lists (list): list of nodes that will contain input
+            input_coding (list): list of input coding formats.  All codings are allowed except 'current'.
 
         Returns:
-            + graph of a computational elements and connections
-            + dictionary of output parameters (shape, coding, layers, depth, etc)
-            + dictionary of control nodes ('complete')
-            + list of output (1 output)
-            + list of coding formats of output (Coding matches input coding)
+            graph of a computational elements and connections
+            self.metadata (dict[str, int]): dictionary (dict[str, int]) of output parameters (shape, coding, layers, depth, etc)
+            dictionary of control nodes ('complete')
+            output_list: list of lists of output (1 output)
+            output_codings (list): list of coding formats of output (Coding matches input coding)
         """
         # Keep the same coding as input 0 for the output
         # This is an arbitrary decision at this point.
@@ -299,15 +301,17 @@ class Concatenate(Brick):
 
 
 class AND_OR(Brick):
-    '''
+    """
     Brick for performing a logical AND/OR.
     Operation is performed entry-wise, matching based on index.  All codings are supported.
 
-    Arguments:
-        + mode - Either 'And' or 'Or'; determines the operation
-        + name - Name of the brick.  If not specified, a default will be used.  Name should be unique.
-    '''
+    """
     def __init__(self, mode='AND', name="AND_OR"):  # A change here
+        """
+        Args:
+            mode (str): Either 'And' or 'Or'; determines the operation
+            name (str): Name of the brick.  If not specified, a default will be used.  Name should be unique.
+        """
         super(AND_OR, self).__init__(name)
         # The brick hasn't been built yet.
         self.is_built = False
@@ -323,22 +327,33 @@ class AND_OR(Brick):
               input_codings):
         """
         Build AND_OR brick.
-
-        Arguments:
-            + graph - networkx graph to define connections of the computational graph
-            + metadata - dictionary to define the shapes and parameters of the brick
-            + control_nodes - dictionary of lists of auxillary networkx nodes.
+        Args:
+            graph: networkx graph to define connections of the computational graph
+            metadata (dict): dictionary to define the shapes and parameters of the brick
+            control_nodes (list): dictionary of lists of auxillary networkx nodes.
                 Expected keys:
                     'complete' - A list of neurons that fire when the brick is done
-            + input_lists - list of nodes that will contain input
-            + input_coding - list of input coding formats.  All codings are allowed.
+            input_lists (list): list of nodes that will contain input
+            input_coding (list): list of input coding formats.  All codings are allowed.
 
         Returns:
-            + graph of a computational elements and connections
-            + dictionary of output parameters (shape, coding, layers, depth, etc)
-            + dictionary of control nodes ('complete')
-            + list of output (1 output)
-            + list of coding formats of output (Coding matches input coding)
+            graph of a computational elements and connections
+            dictionary of output parameters (shape, coding, layers, depth, etc)
+            dictionary of control nodes ('complete')
+            list of output (1 output)
+            list of coding formats of output (Coding matches input coding)
+        Examples:
+            All bricks should provide a neuron that spikes when the brick has completed processing.
+            We just put in a basic relay neuron that will spike when it receives any spike from its
+            single input, which is the complete_node from the first input.
+            All nodes we add to the graph should have basic neuron parameters (threshold, decay)
+            Reasonable defaults will be filled-in, but these defaults may depend on the execution platform.
+            Additionally, nodes should have a field called 'index' which is a local index used to reference the
+            position of the node.  This can be used by downstream   A simple example might be
+            a 3-bit binary representation will add 3 nodes to the graph with indices 0,1,2
+        Raises:
+            ValueError: If != 2 inputs.  Only 2 inputs are supported.  Error if unsupported mode.
+
         """
         # Expect two inputs
         if len(input_codings) != 2:
@@ -351,15 +366,6 @@ class AND_OR(Brick):
         # Generally, your brick will impart some coding, but that isn't the case here.
         output_codings = [input_codings[0]]
 
-        # All bricks should provide a neuron that spikes when the brick has completed processing.
-        # We just put in a basic relay neuron that will spike when it recieves any spike from its
-        # single input, which is the complete_node from the first input.
-        # All nodes we add to the graph should have basic neuron parameters (threshold, decay)
-        # Reasonable defaults will be filled-in, but these defaults may depend on the execution platform.
-        # Additionally, nodes should have a field called 'index' which is a local index used to reference the
-        # position of the node.  This can be used by downstream   A simple example might be
-        # a 3-bit binary representation will add 3 nodes to the graph with indices 0,1,2
-        # We do have to do some work to establish best practices here.
         complete_node_name = self.generate_neuron_name('complete')
         graph.add_node(complete_node_name,
                        index=-1,
@@ -406,21 +412,21 @@ class AND_OR(Brick):
 
 
 class ParityCheck(Brick):
-    '''
+    """
     Brick to compute the parity of a 4 bit input.
     The output spikes after 2 time steps if the input has odd parity
-    '''
+    """
 
     # author: Srideep Musuvathy
     # email: smusuva@sandia.gov
     # last updated: April 8, 2019'''
 
     def __init__(self, name="ParityCheck"):
-        '''
+        """
         Construtor for this brick.
-        Arguments:
-            + name - Name of the brick.  If not specified, a default will be used.  Name should be unique.
-        '''
+        Args:
+            name (str): Name of the brick.  If not specified, a default will be used.  Name should be unique.
+        """
         super(ParityCheck, self).__init__(name)
         self.is_built = False
         self.metadata = {'D': 1}
@@ -432,21 +438,25 @@ class ParityCheck(Brick):
         """
         Build Parity brick.
 
-        Arguments:
-            + graph - networkx graph to define connections of the computational graph
-            + metadata - dictionary to define the shapes and parameters of the brick
-            + control_nodes - dictionary of lists of auxillary networkx nodes.
+        Args:
+            graph: networkx graph to define connections of the computational graph
+            metadata (dict): dictionary to define the shapes and parameters of the brick
+            control_nodes (list): dictionary of lists of auxillary networkx nodes.
                 Expected keys:
                     'complete' - A list of neurons that fire when the brick is done
-            + input_lists - list of nodes that will contain input
-            + input_coding - list of input coding formats
-
+            input_lists (list): list of nodes that will contain input
+            input_coding (list): list of input coding formats
         Returns:
-            + graph of a computational elements and connections
-            + dictionary of output parameters (shape, coding, layers, depth, etc)
-            + dictionary of control nodes ('complete')
-            + list of output
-            + list of coding formats of output
+            graph: graph of a computational elements and connections
+            self.metadata (dict): dictionary of output parameters (shape, coding, layers, depth, etc).  dict[str, int] = {'D': 1}
+            complete_node (str): dictionary of control nodes ('complete')
+            output_lists (list[list[str]]): list of output
+            output_codings (list): list of coding formats of output
+        Example:
+            add 4 hidden nodes with thresholds <=1, >=1, <=3, >=3.
+            since the thresholds only compute >=, the <=1, <=3 computations are performed by negating
+            the threshold weights and the inputs (via the weights on incomming edges)
+            first hidden node and connect edges from input layer
         """
 
         if len(input_codings) != 1:
@@ -470,11 +480,7 @@ class ParityCheck(Brick):
                        delay=2)
         complete_node = complete_node_name
 
-        # add 4 hidden nodes with thresholds <=1, >=1, <=3, >=3.
-        # since the thresholds only compute >=, the <=1, <=3 computations are performed by negating
-        # the threshold weights and the inputs (via the weights on incomming edges)
 
-        # first hidden node and connect edges from input layer
         h_00 = self.generate_neuron_name('h_00')
         graph.add_node(
             h_00,
@@ -659,24 +665,25 @@ class ParityCheck(Brick):
 
 
 class TemporalAdder(Brick):
-    '''
+    """
     Brick that "adds" spike times together:
 
     More specifically, consider you have three neurons u, v, and w that first spike at times t_u, t_v, and t_w.
     Assuming v spikes before w (so t_v < t_w), we want t_u = t_w + t_v, i.e. u fires t_v timesteps after w fires.
-    '''
+    """
     def __init__(self,
                  number_of_elements,
                  design='default',
                  name="TemporalAdder",
                  output_coding='temporal-L'):
-        '''
+        """
         Construtor for this brick.
-        Arguments:
-            + number_of_elements - number of signals you want to add together
-            + name - Name of the brick.  If not specified, a default will be used.  Name should be unique.
-            + output_coding - Output coding type, default is 'temporal-L'
-        '''
+        Args:
+            number_of_elements (any): number of signals you want to add together
+            design (str): default
+            name (str): Name of the brick.  If not specified, a default will be used.  Name should be unique.
+            output_coding (str): Output coding type, default is 'temporal-L'
+        """
         super(TemporalAdder, self).__init__(name)
         self.is_built = False
         self.name = name
@@ -693,22 +700,25 @@ class TemporalAdder(Brick):
         """
         Build Adder brick.
 
-        Arguments:
-            + graph - networkx graph to define connections of the computational graph
-            + metadata - dictionary to define the shapes and parameters of the brick
-            + control_nodes - dictionary of lists of auxillary networkx nodes.
+        Args:
+            graph: networkx graph to define connections of the computational graph
+            metadata: dictionary to define the shapes and parameters of the brick
+            control_nodes: dictionary of lists of auxillary networkx nodes.
                 Expected keys:
                     'complete' - A list of neurons that fire when the brick is done
                     'begin' - A neurons that first when the brick begins processing (for temporal coded inputs)
-            + input_lists - list of nodes that will contain input
-            + input_coding - list of input coding formats.  All coding types supported
+            input_lists: list of nodes that will contain input
+            input_coding: list of input coding formats.  All coding types supported
 
         Returns:
-            + graph of a computational elements and connections
-            + dictionary of output parameters (shape, coding, layers, depth, etc)
-            + dictionary of control nodes ('complete')
-            + list of output
-            + list of coding formats of output
+            graph: graph of a computational elements and connections
+            self.metadata: dictionary of output parameters (shape, coding, layers, depth, etc)
+            complete_node_list: dictionary of control nodes ('complete')
+            output_lists: list of output
+            self.output_coings: list of coding formats of output
+        Raises:
+            ValueError: incorrect number or format of inputs
+
         """
 
         if len(input_lists) < 2:

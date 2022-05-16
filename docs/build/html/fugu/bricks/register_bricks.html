@@ -188,26 +188,27 @@ This brick also provides simple controls such as “recall”, “clear”, and 
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>graph</strong> (<em>+ graph - networkx graph to define connections of the computational</em>) – </p></li>
-<li><p><strong>brick</strong> (<em>+ metadata - dictionary to define the shapes and parameters of the</em>) – </p></li>
-<li><p><strong>nodes.</strong> (<em>+ control_nodes - dictionary of lists of auxillary networkx</em>) – <dl class="simple">
-<dt>Expected keys:</dt><dd><p>’complete’ - A list of neurons that fire when the brick is done</p>
-</dd>
-</dl>
+<li><p><strong>graph</strong> – networkx graph to define connections of the computational graph</p></li>
+<li><p><strong>metadata</strong> (<em>dict</em>) – dictionary to define the shapes and parameters of the brick</p></li>
+<li><p><strong>control_nodes</strong> (<em>dict</em>) – <p>dictionary of lists of auxillary networkx nodes.
+Expected keys:</p>
+<blockquote>
+<div><p>’complete’ - A list of neurons that fire when the brick is done</p>
+</div></blockquote>
 </p></li>
-<li><p><strong>input</strong> (<em>+ input_lists - list of nodes that will contain</em>) – </p></li>
-<li><p><strong>supported</strong> (<em>+ input_coding - list of input coding formats.  All coding types</em>) – </p></li>
+<li><p><strong>input_lists</strong> (<em>list</em>) – list of nodes that will contain input</p></li>
+<li><p><strong>input_coding</strong> (<em>list</em>) – list of input coding formats.  All coding types supported</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p><ul class="simple">
-<li><p>graph of a computational elements and connections</p></li>
-<li><p>dictionary of output parameters (shape, coding, layers, depth, etc)</p></li>
-<li><p>dictionary of control nodes (‘complete’)</p></li>
-<li><p>list of output</p></li>
-<li><p>list of coding formats of output</p></li>
-</ul>
-</p>
+<dd class="field-even"><p>graph of a computational elements and connections
+begin: dictionary of output parameters (shape, coding, layers, depth, etc)
+complete: dictionary of control nodes (‘complete’)
+output_lists (list): list of output
+self.output_codings (list): list of coding formats of output</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>graph</p>
 </dd>
 </dl>
 </dd></dl>
@@ -226,26 +227,27 @@ This brick also provides simple controls such as “recall”, “clear”, and 
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>graph</strong> (<em>+ graph - networkx graph to define connections of the computational</em>) – </p></li>
-<li><p><strong>brick</strong> (<em>+ metadata - dictionary to define the shapes and parameters of the</em>) – </p></li>
-<li><p><strong>nodes.</strong> (<em>+ control_nodes - dictionary of lists of auxillary networkx</em>) – <dl class="simple">
-<dt>Expected keys:</dt><dd><p>’complete’ - A list of neurons that fire when the brick is done</p>
-</dd>
-</dl>
+<li><p><strong>graph</strong> – networkx graph to define connections of the computational graph</p></li>
+<li><p><strong>metadata</strong> (<em>dict</em>) – dictionary to define the shapes and parameters of the brick</p></li>
+<li><p><strong>control_nodes</strong> (<em>dict</em>) – <p>dictionary of lists of auxillary networkx nodes.
+Expected keys:</p>
+<blockquote>
+<div><p>’complete’ - A list of neurons that fire when the brick is done</p>
+</div></blockquote>
 </p></li>
-<li><p><strong>input</strong> (<em>+ input_lists - list of nodes that will contain</em>) – </p></li>
-<li><p><strong>supported</strong> (<em>+ input_coding - list of input coding formats.  All coding types</em>) – </p></li>
+<li><p><strong>input_lists</strong> (<em>list</em>) – list of nodes that will contain input</p></li>
+<li><p><strong>input_coding</strong> (<em>list</em>) – list of input coding formats.  All coding types supported</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p><ul class="simple">
-<li><p>graph of a computational elements and connections</p></li>
-<li><p>dictionary of output parameters (shape, coding, layers, depth, etc)</p></li>
-<li><p>dictionary of control nodes (‘complete’)</p></li>
-<li><p>list of output</p></li>
-<li><p>list of coding formats of output</p></li>
-</ul>
-</p>
+<dd class="field-even"><p>graph of a computational elements and connections
+begin: dictionary of output parameters (shape, coding, layers, depth, etc)
+complete: dictionary of control nodes (‘complete’)
+output_lists: list of output
+self.output_codings: list of coding formats of output</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>graph</p>
 </dd>
 </dl>
 </dd></dl>
@@ -260,30 +262,36 @@ This brick also provides simple controls such as “recall”, “clear”, and 
 <dl class="py method">
 <dt class="sig sig-object py" id="fugu.bricks.register_bricks.Addition.build">
 <span class="sig-name descname"><span class="pre">build</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metadata</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">control_nodes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_lists</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_codings</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fugu.bricks.register_bricks.Addition.build" title="Permalink to this definition">¶</a></dt>
-<dd><p>Build Addition brick.</p>
+<dd><p>Build Addition brick.
+:param graph: networkx graph to define connections of the computational graph
+:param metadata: dictionary to define the shapes and parameters of the brick
+:type metadata: dict
+:param control_nodes: dictionary of lists of auxillary networkx nodes.</p>
+<blockquote>
+<div><dl class="simple">
+<dt>Expected keys:</dt><dd><p>‘complete’ - A list of neurons that fire when the brick is done</p>
+</dd>
+</dl>
+</div></blockquote>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>graph</strong> (<em>+ graph - networkx graph to define connections of the computational</em>) – </p></li>
-<li><p><strong>brick</strong> (<em>+ metadata - dictionary to define the shapes and parameters of the</em>) – </p></li>
-<li><p><strong>nodes.</strong> (<em>+ control_nodes - dictionary of lists of auxillary networkx</em>) – <dl class="simple">
-<dt>Expected keys:</dt><dd><p>’complete’ - A list of neurons that fire when the brick is done</p>
-</dd>
-</dl>
-</p></li>
-<li><p><strong>input</strong> (<em>+ input_lists - list of nodes that will contain</em>) – </p></li>
-<li><p><strong>supported</strong> (<em>+ input_coding - list of input coding formats.  All coding types</em>) – </p></li>
+<li><p><strong>input_lists</strong> (<em>list</em>) – list of nodes that will contain input</p></li>
+<li><p><strong>input_coding</strong> (<em>list</em>) – list of input coding formats.  All coding types supported</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p><ul class="simple">
-<li><p>graph of a computational elements and connections</p></li>
-<li><p>dictionary of output parameters (shape, coding, layers, depth, etc)</p></li>
-<li><p>dictionary of control nodes (‘complete’)</p></li>
-<li><p>list of output</p></li>
-<li><p>list of coding formats of output</p></li>
-</ul>
-</p>
+<dd class="field-even"><p>graph of a computational elements and connections
+begin (dict): dictionary of output parameters (shape, coding, layers, depth, etc)
+complete (dict): dictionary of control nodes (‘complete’)
+output_lists (list): list of output
+self.output_codings (list): list of coding formats of output</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>graph</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>ValueError</strong> – Too many inputs! {} can only support two inputs, received: {}</p>
 </dd>
 </dl>
 </dd></dl>
@@ -299,30 +307,32 @@ The brick subtracts the second (Y) input from the first (X), i.e. this brick ret
 <dl class="py method">
 <dt class="sig sig-object py" id="fugu.bricks.register_bricks.Subtraction.build">
 <span class="sig-name descname"><span class="pre">build</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metadata</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">control_nodes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_lists</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_codings</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fugu.bricks.register_bricks.Subtraction.build" title="Permalink to this definition">¶</a></dt>
-<dd><p>Build Subtraction brick.</p>
+<dd><p>Build Subtraction brick.
+:param graph: networkx graph to define connections of the computational graph
+:param metadata: dictionary to define the shapes and parameters of the brick
+:param control_nodes: dictionary of lists of auxillary networkx nodes.</p>
+<blockquote>
+<div><dl class="simple">
+<dt>Expected keys:</dt><dd><p>‘complete’ - A list of neurons that fire when the brick is done</p>
+</dd>
+</dl>
+</div></blockquote>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>graph</strong> (<em>+ graph - networkx graph to define connections of the computational</em>) – </p></li>
-<li><p><strong>brick</strong> (<em>+ metadata - dictionary to define the shapes and parameters of the</em>) – </p></li>
-<li><p><strong>nodes.</strong> (<em>+ control_nodes - dictionary of lists of auxillary networkx</em>) – <dl class="simple">
-<dt>Expected keys:</dt><dd><p>’complete’ - A list of neurons that fire when the brick is done</p>
-</dd>
-</dl>
-</p></li>
-<li><p><strong>input</strong> (<em>+ input_lists - list of nodes that will contain</em>) – </p></li>
-<li><p><strong>supported</strong> (<em>+ input_coding - list of input coding formats.  All coding types</em>) – </p></li>
+<li><p><strong>input_lists</strong> – list of nodes that will contain input</p></li>
+<li><p><strong>input_coding</strong> – list of input coding formats.  All coding types supported</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p><ul class="simple">
-<li><p>graph of a computational elements and connections</p></li>
-<li><p>dictionary of output parameters (shape, coding, layers, depth, etc)</p></li>
-<li><p>dictionary of control nodes (‘complete’)</p></li>
-<li><p>list of output</p></li>
-<li><p>list of coding formats of output</p></li>
-</ul>
-</p>
+<dd class="field-even"><p>graph of a computational elements and connections
+complete: dictionary of control nodes (‘complete’)
+begin: dictionary of output parameters (shape, coding, layers, depth, etc)
+output_lists (list): list of output
+self.output_codings (list): list of coding formats of output</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>graph</p>
 </dd>
 </dl>
 </dd></dl>

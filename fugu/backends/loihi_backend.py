@@ -58,8 +58,10 @@ class loihi_Backend(Backend):
                 useDiscreteVTh = 1
                 break
 
-        # Analyze connections.
-        # Determine best delay buffer depth.
+        """
+        Analyze connections.
+        Determine best delay buffer depth.
+        """
         delayBuffer = 8
         avgDelay = 0
         for n1, n2, edge in G.edges.data():
@@ -98,23 +100,28 @@ class loihi_Backend(Backend):
 
         # Add all other neurons ...
 
-        # General note about fixed point: bit positions are zero-based and start from least-significant bit.
-        # Position and power are different things. The value in a particular bit position may have
-        # a power different than the position number. The difference is usually the exponent, an amount of shift
-        # to position bits within the word. It is important to understand the distinction between
-        # position, power, exponent and shift when reasoning about fixed-point numbers.
+        """
+        Note:
+        * General note about fixed point: bit positions are zero-based and start from least-significant bit.
+        * Position and power are different things. The value in a particular bit position may have
+        * a power different than the position number. The difference is usually the exponent, an amount of shift
+        * to position bits within the word. It is important to understand the distinction between
+        * position, power, exponent and shift when reasoning about fixed-point numbers.
 
-        # The main register for voltage is 24 bits wide. It is a signed value, so it has 23 significant bits.
-        # The 23rd bit is at position 22 (zero-based). However, the maximum bit position for weight is 20
-        # (MSB in position 7, plus max exponent 7, plus built-in shift of 6). To allow full range for weight,
-        # we assign power 1 to bit position 20. This leaves 2 extra bits of headroom, so V can vary between (-8,8).
-        # This is sufficient for summing any amount of weight, since threshold should not exceed (-1,1).
+        * The main register for voltage is 24 bits wide. It is a signed value, so it has 23 significant bits.
+        * The 23rd bit is at position 22 (zero-based). However, the maximum bit position for weight is 20
+        * (MSB in position 7, plus max exponent 7, plus built-in shift of 6). To allow full range for weight,
+        * we assign power 1 to bit position 20. This leaves 2 extra bits of headroom, so V can vary between (-8,8).
+        * This is sufficient for summing any amount of weight, since threshold should not exceed (-1,1).
+        """
         self.defaultScale = 1 << 20
         minScale = 1 << 6
 
-        # The following are prototypes that are used repeatedly when building the network.
-        # Here we set common parameter values that don't change. Later, we set other
-        # parameters to more specific values.
+        """
+        The following are prototypes that are used repeatedly when building the network.
+        Here we set common parameter values that don't change. Later, we set other
+        parameters to more specific values.
+        """
 
         # Regular neuron
         compProto = nx.CompartmentPrototype()
@@ -124,11 +131,13 @@ class loihi_Backend(Backend):
         # Regular connections
         connProto = nx.ConnectionPrototype(numDelayBits=numDelayBits)
 
-        # Poisson spike generator for probabilistic neurons
-        # The configuration below tries to neutralize Loihi's quirky adjustments to the RNG
-        # by adding and upshifting so we get numbers in [0,255]. However, it turns out
-        # that the actual range is [1,256]. This is convenient, if a bit surprising,
-        # because it allows us to cover the full range of probability values exactly.
+        """
+        Poisson spike generator for probabilistic neurons
+        The configuration below tries to neutralize Loihi's quirky adjustments to the RNG
+        by adding and upshifting so we get numbers in [0,255]. However, it turns out
+        that the actual range is [1,256]. This is convenient, if a bit surprising,
+        because it allows us to cover the full range of probability values exactly.
+        """
         poissonCompProto = nx.CompartmentPrototype()
         poissonCompProto.useDiscreteVTh = 1  # TODO: check if all probabilities are the same
         poissonCompProto.functionalState = nx.COMPARTMENT_FUNCTIONAL_STATE.IDLE  # Enable spontaneous spiking.
@@ -178,9 +187,12 @@ class loihi_Backend(Backend):
                             "WARNING: threshold exceeds available precision: ",
                             n)
 
-            #   Compensate for weight magnitude
-            #   As long as firing threshold can be represented, we don't care by how much it might
-            #   be exceeded. Thus we don't worry about the sum of weights, only individual weights.
+            """
+            maxWeight
+            * Compensate for weight magnitude
+            As long as firing threshold can be represented, we don't care by how much it might
+            be exceeded. Thus we don't worry about the sum of weights, only individual weights.
+            """
             maxWeight = node.get('maxWeight', 1.0)
             if maxWeight > 1.0:
                 bits = math.floor(math.log2(maxWeight * scale))
@@ -193,7 +205,10 @@ class loihi_Backend(Backend):
                             "WARNING: at least one incoming weight exceeds available precision: ",
                             n)
 
-            #   Compensate for large bias values
+            """
+            bias 
+            * Compensate for large bias values
+            """
             bias = round(node.get('bias', 0.0) * scale)
             if bias:
                 # bias is signed 13-bit (12 significant bits), with up to 7 bits of shift
@@ -210,9 +225,13 @@ class loihi_Backend(Backend):
                     if scale < minScale:
                         print("WARNING: bias exceeds available precision: ", n)
                 if biasExp > 0: bias = bias >> biasExp
-                # Set neuron to evaluate internal dynamics.
-                # This option makes it act as if it just fired a spike.
+                """
+                if biasExp > 0 
+                * Set neuron to evaluate internal dynamics.
+                * This option makes it act as if it just fired a spike.
+                """
                 # (How is this different than FIRED_LAST_TIME_STEP?)
+
                 functionalState = nx.COMPARTMENT_FUNCTIONAL_STATE.IDLE
             else:
                 biasExp = 0
@@ -237,12 +256,16 @@ class loihi_Backend(Backend):
                 compProto.compartmentJoinOperation = nx.COMPARTMENT_JOIN_OPERATION.SKIP  # default
                 compProto.stackIn = 0  #nx.COMPARTMENT_INPUT_MODE.UNASSIGNED  # default
                 node['cx'] = self.net.createCompartment(compProto)
-            else:  # Probabilistic firing
-                # Create an arrangement of 3 neurons which implements the defined Fugu behavior.
-                # The approach is to AND a spike from the main neuron with a Poisson spike from an
-                # auxiliary neuron. Unfortunately, the aux neuron must be on a separate
-                # core, so we must also create a relay neuron that participates in the
-                # multi-compartment neuron.
+            else:
+                """
+                Probabilistic firing
+                Create an arrangement of 3 neurons which implements the defined Fugu behavior.
+                The approach is to AND a spike from the main neuron with a Poisson spike from an
+                auxiliary neuron. Unfortunately, the aux neuron must be on a separate
+                core, so we must also create a relay neuron that participates in the
+                multi-compartment neuron.
+                Main output neuron is cx
+                """
 
                 # Main output neuron
                 compProto.compartmentJoinOperation = nx.COMPARTMENT_JOIN_OPERATION.AND
@@ -250,8 +273,10 @@ class loihi_Backend(Backend):
                 cx = self.net.createCompartment(compProto)
                 node['cx'] = cx
 
-                # Poisson spike generator
-                # The threshold is determined by the spike probability.
+                """
+                Poisson spike generator
+                The threshold is determined by the spike probability.
+                """
                 poissonCompProto.vThMant = round((1 - P) * 256)
                 self.setCoreID(poissonCompProto)
                 cxp = self.net.createCompartment(poissonCompProto)
@@ -263,8 +288,11 @@ class loihi_Backend(Backend):
                 cx.inputCompartmentId0 = cxr.nodeId
                 cxp.connect(cxr, prototype=relayConnProto)
 
-            # Add probes to neuron based on graph information.
+
             if 'outputs' in node:
+            """
+            Add probes to neuron based on graph information.
+            """
                 for v, vdict in node['outputs'].items():
                     if '$pikes' in node:
                         continue  # This is an input, so can't be probed.
@@ -278,7 +306,7 @@ class loihi_Backend(Backend):
                         vdict['probe'] = node['cx'].probe(
                             [nx.ProbeParameter.COMPARTMENT_CURRENT])[0]
 
-        # Add probes to output neurons based on circuit information.
+        """Add probes to output neurons based on circuit information."""
         self.outputs = []
         for node, vals in self.fugu_circuit.nodes.data():
             if vals.get('layer') != 'output': continue
@@ -365,9 +393,12 @@ class loihi_Backend(Backend):
         if self.recordInGraph:
             for n, node in self.fugu_graph.nodes.data():
                 if not 'outputs' in node: continue
-                if '$pikes' in node:  # This is an input that also got selected as an output.
-                    # All this does is report back to the user exactly those spikes that were specified as input.
-                    # This is mainly for convenience while visualizing the run.
+                if '$pikes' in node:
+                    """
+                    This is an input that also got selected as an output.
+                    All this does is report back to the user exactly those spikes that were specified as input.
+                    This is mainly for convenience while visualizing the run.
+                    """
                     outputs = node['outputs']
                     if not 'spike' in outputs: outputs['spike'] = {}
                     vdict = outputs['spike']
@@ -446,8 +477,11 @@ class loihi_Backend(Backend):
         pass  # since run() must called anyway, there is nothing to do here
 
     def set_properties(self, properties={}):
-        # Set properties for specific neurons and synapses
-        # properties = dictionary of properties for bricks
+        """
+        Set properties for specific neurons and synapses
+        Args:
+            properties (dict): dictionary of properties for bricks
+        """
         for brick in properties:
             if brick != 'compile_args':
                 brick_id = self.brick_to_number[brick]

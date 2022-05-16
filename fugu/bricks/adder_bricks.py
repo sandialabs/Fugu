@@ -20,19 +20,19 @@ class streaming_adder(Brick):
         """
         Build streaming adder brick. 
 
-        Arguments:
-            + graph - networkx graph to define connections of the computational graph
-            + dimensionality - dictionary to define the shapes and parameters of the brick
-            + control_nodes - dictionary of lists of auxillary networkx nodes.  Excpected keys: 'complete' - A list of neurons that fire when the brick is done
-            + input_lists - list of nodes that will contain input
-            + input_coding - list of input coding formats
+        Args:
+            graph: networkx graph to define connections of the computational graph
+            dimensionality (dict): dictionary to define the shapes and parameters of the brick
+            control_nodes (dict): dictionary of lists of auxillary networkx nodes.  Excpected keys: 'complete' - A list of neurons that fire when the brick is done
+            input_lists (list): list of nodes that will contain input
+            input_coding (list): list of input coding formats
 
         Returns:
-            + graph of a computational elements and connections
-            + dictionary of output parameters (shape, coding, layers, depth, etc)
-            + dictionary of control nodes ('complete')
-            + list of output
-            + list of coding formats of output
+            graph: graph of a computational elements and connections
+            self.dimensionality: dictionary of output parameters (shape, coding, layers, depth, etc)
+            complete: dictionary of control nodes ('complete')
+            output_list: list of output
+            output_codings: list of coding formats of output
         """
         
         if len(input_codings) != 2:
@@ -111,19 +111,19 @@ class temporal_shift(Brick):
         """
         Build bit shift brick. 
 
-        Arguments:
-            + graph - networkx graph to define connections of the computational graph
-            + dimensionality - dictionary to define the shapes and parameters of the brick
-            + control_nodes - dictionary of lists of auxillary networkx nodes.  Excpected keys: 'complete' - A list of neurons that fire when the brick is done
-            + input_lists - list of nodes that will contain input
-            + input_coding - list of input coding formats
+        Args:
+            graph: networkx graph to define connections of the computational graph
+            dimensionality (dict): dictionary to define the shapes and parameters of the brick
+            control_nodes (dict): dictionary of lists of auxillary networkx nodes.  Excpected keys: 'complete' - A list of neurons that fire when the brick is done
+            input_lists (dict): list of nodes that will contain input
+            input_coding (dict): list of input coding formats
 
         Returns:
-            + graph of a computational elements and connections
-            + dictionary of output parameters (shape, coding, layers, depth, etc)
-            + dictionary of control nodes ('complete')
-            + list of output
-            + list of coding formats of output
+            graph: graph of a computational elements and connections
+            self.dimensionality: dictionary of output parameters (shape, coding, layers, depth, etc)
+            dictionary of control nodes ('complete')
+            output_lists: list of output
+            output_codings: list of coding formats of output
         """
         
         if len(input_codings) != 1:

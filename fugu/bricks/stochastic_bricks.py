@@ -17,14 +17,14 @@ class PRN(Brick):
                  shape=(1, ),
                  name="PRN",
                  output_coding='Undefined'):
-        '''
+        """
         Constructor for this brick.
-        Arguments:
-            + probability - Probability of a spike at any timestep
-            + steps - Number of timesteps to produce spikes. None provides un-ending output.
-            + shape - shape of the neurons in the brick
-            + output_coding - Desired output coding for the brick
-        '''
+        Args:
+            probability: Probability of a spike at any timestep
+            steps: Number of timesteps to produce spikes. None provides un-ending output.
+            shape: shape of the neurons in the brick
+            output_coding: Desired output coding for the brick
+        """
         super(PRN, self).__init__(name)
         self.is_built = False
         self.metadata = {}
@@ -40,21 +40,23 @@ class PRN(Brick):
         """
         Build Register brick.
 
-        Arguments:
-            + graph - networkx graph to define connections of the computational graph
-            + metadata - dictionary to define the shapes and parameters of the brick
-            + control_nodes - dictionary of lists of auxillary networkx nodes.
+        Args:
+            graph: networkx graph to define connections of the computational graph
+            metadata (dict): dictionary to define the shapes and parameters of the brick
+            control_nodes (dict): dictionary of lists of auxillary networkx nodes.
                 Expected keys:
                     'complete' - A list of neurons that fire when the brick is done
-            + input_lists - list of nodes that will contain input
-            + input_coding - list of input coding formats.  All coding types supported
+            input_lists (list): list of nodes that will contain input
+            input_coding (list): list of input coding formats.  All coding types supported
 
         Returns:
-            + graph of a computational elements and connections
-            + dictionary of output parameters (shape, coding, layers, depth, etc)
-            + dictionary of control nodes ('complete')
-            + list of output
-            + list of coding formats of output
+            graph: graph of a computational elements and connections
+            self.metadata: dictionary of output parameters (shape, coding, layers, depth, etc)
+            complete (str): dictionary of control nodes ('complete')
+            output_list (list): list of output
+            self.output_coding (list): list of coding formats of output
+        Raises:
+              ValueError: PRN brick requires at least 1 input
         """
         if len(input_lists) == 0:
             raise ValueError("PRN brick requires at least 1 input.")
@@ -104,15 +106,15 @@ class Threshold(Brick):
                  p=1.0,
                  name="Threshold",
                  output_coding=None):
-        '''
+        """
         Construtor for this brick.
-        Arguments:
-            + threshold - Threshold value.  For input coding 'current', float.  For 'temporal-L', int.
-            + decay - Decay value for threshold neuron ('current' input only)
-            + p - Probability of firing when exceeding threshold ('current' input only)
-            + name - Name of the brick.  If not specified, a default will be used.  Name should be unique.
-            + output_coding - Force a return of this output coding.  Default is 'unary-L'
-        '''
+        Args:
+            threshold: Threshold value.  For input coding 'current', float.  For 'temporal-L', int.
+            decay (float): Decay value for threshold neuron ('current' input only)
+            p (float): Probability of firing when exceeding threshold ('current' input only)
+            name (str): Name of the brick.  If not specified, a default will be used.  Name should be unique.
+            output_coding: Force a return of this output coding.  Default is 'unary-L'
+        """
         super(Threshold, self).__init__(name)
         self.is_built = False
         self.metadata = {}
@@ -144,23 +146,22 @@ class Threshold(Brick):
               input_codings):
         """
         Build Threshold brick.
-
-        Arguments:
-            + graph - networkx graph to define connections of the computational graph
-            + metadata - dictionary to define the shapes and parameters of the brick
-            + control_nodes - list of dictionary of auxillary nodes.
+        Args:
+            graph: networkx graph to define connections of the computational graph
+            metadata (dict): dictionary to define the shapes and parameters of the brick
+            control_nodes (list): list of dictionary of auxillary nodes.
                   Expected keys:
                       'complete' - A neurons that fire when the brick is done
                       'begin' - A neurons that first when the brick begins processing (for temporal coded inputs)
-            + input_lists - list of nodes that will contain input
-            + input_coding - list of input coding formats
+            input_lists (list): list of nodes that will contain input
+            input_coding (list): list of input coding formats
 
         Returns:
-            + graph of a computational elements and connections
-            + dictionary of output parameters (shape, coding, layers, depth, etc)
-            + list dictionary of control nodes ('complete')
-            + list of output
-            + list of coding formats of output
+            graph: graph of a computational elements and connections
+            self.metadata (dict): dictionary of output parameters (shape, coding, layers, depth, etc)
+            new_complete_node: list dictionary of control nodes ('complete')
+            output_lists (list[list[str]]): list of output
+            output_codings (list[str]): list of coding formats of output
         """
 
         if len(input_codings) != 1:

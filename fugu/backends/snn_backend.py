@@ -14,13 +14,13 @@ class snn_Backend(Backend):
     def _build_network(self):
         self.nn = snn.NeuralNetwork()
         neuron_dict = {}
-        '''
+        """"
         Add Neurons
-        '''
-        # Add in input and output neurons. Use the fugu_circuit information to identify input and output layers
-        # For input nodes, create input neurons and identity and associate the appropriate inputs to it
-        # for output neurons, obtain neuron properties from fugu_graph and create LIFNeurons
-        # Add neurons to spiking neural network
+        * Add in input and output neurons. Use the fugu_circuit information to identify input and output layers
+        * For input nodes, create input neurons and identity and associate the appropriate inputs to it
+        * for output neurons, obtain neuron properties from fugu_graph and create LIFNeurons
+        * Add neurons to spiking neural network
+        """
         for node, vals in self.fugu_circuit.nodes.data():
             if 'layer' in vals:
                 if vals['layer'] == 'input':
@@ -56,6 +56,10 @@ class snn_Backend(Backend):
         # add other neurons from self.fugu_graph to spiking neural network
         # parse through the self.fugu_graph and if a neuron is not present in spiking neural network, add to it.
         for neuron, props in self.fugu_graph.nodes.data():
+            """
+            Add Synapses
+            * add synapses from self.fugu_graph edge information
+            """
             if neuron not in neuron_dict.keys():
                 th = props.get('threshold', 0.0)
                 rv = props.get('reset_voltage', 0.0)
@@ -77,10 +81,7 @@ class snn_Backend(Backend):
                     record=rc,
                 )
                 self.nn.add_neuron(neuron_dict[neuron])
-        '''
-        Add Synapses
-        '''
-        # add synapses from self.fugu_graph edge information
+
         for n1, n2, props in self.fugu_graph.edges.data():
             delay = int(props.get('delay', 1))
             wt = props.get('weight', 1.0)
@@ -121,9 +122,14 @@ class snn_Backend(Backend):
         self._build_network()
 
     def run(self, n_steps=10, return_potentials=False):
-        # runs circuit for n_steps then returns data
-        # if not None raise error
-        ''' Run the Simulator '''
+        """
+        Runs the Simulator
+        * runs circuit for n_steps then returns data
+        * if not None raise error
+        Returns:
+        bool: True if ds format is required and converst neuron names to numbers and returns dictionary, False returns dataframe
+
+        """
         output = self.nn.run(n_steps=n_steps,
                              debug_mode=self.debug_mode,
                              record_potentials=return_potentials)
@@ -137,8 +143,7 @@ class snn_Backend(Backend):
             print(df)
 
         res = {}
-        # if ds format is required, convert neuron names to numbers and return dictionary
-        # else return dataframe
+
         if self.ds_format:
             numerical_cols = {}
             for c in df.columns:
@@ -173,8 +178,10 @@ class snn_Backend(Backend):
         self._build_network()
 
     def set_properties(self, properties={}):
-        # Set properties for specific neurons and synapses
-        # properties = dictionary of properties for bricks
+        """Set properties for specific neurons and synapses
+        Args:
+            properties: dictionary of properties for bricks
+        """
         for brick in properties:
             if brick != 'compile_args':
                 brick_tag = self.name_to_tag[brick]
@@ -222,7 +229,9 @@ class snn_Backend(Backend):
         self.set_input_spikes()
 
     def set_input_spikes(self):
-        # Get new initial spike times
+        """
+        Get new initial spike times
+        """
         initial_spike_data = CalculateSpikeTimes(self.fugu_circuit)
 
         for node, vals in self.fugu_circuit.nodes.data():

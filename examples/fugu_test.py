@@ -19,9 +19,11 @@ from fugu.backends import snn_Backend
 class basic_AND(fugu.Brick):
     def __init__(self, name=None):
         super().__init__()
+        """
         #The brick hasn't been built yet.
         #self.is_built = False
         #Leave for compatibility, D represents the depth of the circuit.  Needs to be updated.
+        """
         self.metadata = {'D': 1}
         #We just store the name passed at construction.
         self.name = name
@@ -30,23 +32,25 @@ class basic_AND(fugu.Brick):
 
     def build(self, graph, metadata, control_nodes, input_lists,
               input_codings):
+        """
+        Generally, your brick will impart some coding, but that isn't the case here.
+        All bricks should provide a neuron that spikes when the brick has completed processing.
+        We just put in a basic relay neuron that will spike when it receives any spike from its
+        single input, which is the complete_node from the first input.
+        All nodes we add to the graph should have basic neuron parameters (threshold, decay)
+        Reasonable defaults will be filled-in, but these defaults may depend on the execution platform.
+        Additionally, nodes should have a field called 'index' which is a local index used to reference the
+        position of the node.  This can be used by downstream bricks.  A simple example might be
+        a 3-bit binary representation will add 3 nodes to the graph with indices 0,1,2
+        We do have to do some work to establish best practices here.
+        """
         #Expect two inputs
         if len(input_codings) != 2:
             raise ValueError('Only two inputs supported.')
-        #Keep the same coding as input 0 for the output
-        #This is an arbitrary decision at this point.
-        #Generally, your brick will impart some coding, but that isn't the case here.
+        # Keep the same coding as input 0 for the output
         output_codings = [input_codings[0]]
+        # This is an arbitrary decision at this point.
 
-        #All bricks should provide a neuron that spikes when the brick has completed processing.
-        #We just put in a basic relay neuron that will spike when it receives any spike from its
-        #single input, which is the complete_node from the first input.
-        #All nodes we add to the graph should have basic neuron parameters (threshold, decay)
-        #Reasonable defaults will be filled-in, but these defaults may depend on the execution platform.
-        #Additionally, nodes should have a field called 'index' which is a local index used to reference the
-        #position of the node.  This can be used by downstream bricks.  A simple example might be
-        #a 3-bit binary representation will add 3 nodes to the graph with indices 0,1,2
-        #We do have to do some work to establish best practices here.
         new_complete_node_name = self.name + '_complete'
         graph.add_node(new_complete_node_name,
                        index=-1,

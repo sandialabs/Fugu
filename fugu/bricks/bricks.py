@@ -68,16 +68,16 @@ class Brick(ABC):
         """
         Build the computational graph of the brick. Method must be defined in any class inheriting from Brick.
 
-        Arguments:
-            + graph - networkx graph
-            + metadata - A dictionary of shapes and properties
-            + control_nodes - list of dictionary of auxillary nodes.
+        Args:
+            graph (graph):  networkx graph
+            metadata (dictionary): A dictionary of shapes and properties
+            control_nodes (list): list of dictionary of auxillary nodes.
                 Acceptable keys include:
                     'complete' - A list of neurons that fire when the brick is done
                     'begin' - A list of neurons that fire when the brick begins computation
                                 (used for temporal processing)
-            + input_lists - list of lists of nodes for input neurons
-            + input_codings - list of input coding types (as strings)
+            input_lists (list): list of lists of nodes for input neurons
+            input_codings (list): list of input coding types (as strings)
         """
         pass
 
@@ -110,8 +110,8 @@ class InputBrick(Brick):
         """
         Abstract method to get input values. InputBricks must implement this method
 
-        Arguments:
-            + t - type of input (Default: None)
+        Args:
+            t: type of input (Default: None)
         """
         pass
 
@@ -145,16 +145,16 @@ class CompoundBrick(Brick):
         """
         Build the computational graph of the brick. Method must be defined in any class inheriting from Brick.
 
-        Arguments:
-            + graph - networkx graph
-            + metadata - A dictionary of shapes and properties
-            + control_nodes - list of dictionary of auxillary nodes.
+        Args:
+            graph: networkx graph
+            metadata: A dictionary of shapes and properties
+            control_nodes (list): list of dictionary of auxillary nodes.
                 Acceptable keys include:
                     'complete' - A list of neurons that fire when the brick is done
                     'begin' - A list of neurons that fire when the brick begins computation
                                 (used for temporal processing)
-            + input_lists - list of lists of nodes for input neurons
-            + input_codings - list of input coding types (as strings)
+            input_lists (list): list of lists of nodes for input neurons
+            input_codings (list): list of input coding types (as strings)
         """
         pass
 

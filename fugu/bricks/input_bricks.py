@@ -36,8 +36,8 @@ input_coding_types = [
 class InputSource:
     """
     Base class for handling various input sources/streams.
-
-    Example: Converted output (as a stream of 0's and 1's) from a DVI camera
+    Example:
+        Converted output (as a stream of 0's and 1's) from a DVI camera
     """
     def __init__(self):
         self.name = "InputSource"
@@ -48,6 +48,10 @@ class InputSource:
         Abstract method that tells the scaffold how it should connect the source to the circuit.
         This is accomplished by using a "source" dictionary argument when you create neurons/synapses.
         The "source" dictionary will contain whatever information the backends will need.
+        Args:
+            graph: networkx graph to define connections of the computational graph
+                * If the graph has edge weights, this brick will solve the single source shortest paths problem
+            metadata (dict): dictionary to define the shapes and parameters of the brick
 
         Example 1:
             Suppose the source was a motion detector (connected to hardware by a usb).
@@ -138,6 +142,13 @@ class InputSource:
 class Vector_Input(InputBrick):
     """
     Class to handle a vector of spiking input. Inherits from InputBrick
+    Construtor for this brick.
+        Args:
+            spikes (array): A numpy array of which neurons should spike at which times
+            time_dimension: Time dimesion is included as dimension -1
+            coding: Coding type to be represented.
+            batchable: True if input should represent static data; currently True is the only supported mode.
+            name (str): Name of the brick.  If not specified, a default will be used.  Name should be unique.
     """
     def __init__(
         self,
@@ -147,15 +158,7 @@ class Vector_Input(InputBrick):
         batchable=True,
         name="VectorInput",
     ):
-        """
-        Construtor for this brick.
-        Arguments:
-            + spikes - A numpy array of which neurons should spike at which times
-            + time_dimension - Time dimesion is included as dimension -1
-            + coding - Coding type to be represented.
-            + batchable - True if input should represent static data; currently True is the only supported mode.
-            + name - Name of the brick.  If not specified, a default will be used.  Name should be unique.
-        """
+
         super(Vector_Input, self).__init__(name)
         self.vector = np.array(spikes)
         self.coding = coding
@@ -225,21 +228,22 @@ class Vector_Input(InputBrick):
         """
         Build spike input brick.
 
-        Arguments:
-            + graph - networkx graph to define connections of the computational graph
-            + metadata - dictionary to define the shapes and parameters of the brick
-            + control_nodes - list of dictionary of auxillary nodes.
+        Args:
+            graph: networkx graph to define connections of the computational graph
+            metadata: dictionary to define the shapes and parameters of the brick
+            control_nodes: list of dictionary of auxillary nodes.
                 Expected keys:
                     'complete' - A list of neurons that fire when the brick is done
-            + input_lists - list of nodes that will contain input
-            + input_coding - list of input coding formats
+            input_lists: list of nodes that will contain input
+            input_coding: list of input coding formats
 
         Returns:
-            + graph of a computational elements and connections
-            + dictionary of output parameters (shape, coding, layers, depth, etc)
-            + list of dictionary of control nodes ('complete')
-            + list of output
-            + list of coding formats of output
+            graph: graph of a computational elements and connections
+            output_shape, output_coding, layer, D: dictionary of output parameters (shape, coding, layers, depth, etc)
+            complete_node, begin_node: list of dictionary of control nodes ('complete')
+            output_lists (list): list of output
+            output_codings (list): list of coding formats of output
+
         """
 
         if not self.time_dimension:

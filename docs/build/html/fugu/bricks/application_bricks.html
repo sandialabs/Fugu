@@ -179,7 +179,16 @@
 <dt class="sig sig-object py" id="fugu.bricks.application_bricks.LIS">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">fugu.bricks.application_bricks.</span></span><span class="sig-name descname"><span class="pre">LIS</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sequence_length</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'LIS'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_coding</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'temporal-L'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fugu.bricks.application_bricks.LIS" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="bricks.html#fugu.bricks.bricks.Brick" title="fugu.bricks.bricks.Brick"><code class="xref py py-class docutils literal notranslate"><span class="pre">fugu.bricks.bricks.Brick</span></code></a></p>
-<p>This brick calculates the length of the longest common subsequence for a given sequence of numbers</p>
+<p>This brick calculates the length of the longest common subsequence for a given sequence of numbers
+Construtor for this brick.</p>
+<blockquote>
+<div><dl class="simple">
+<dt>Args:</dt><dd><p>sequence_length: sequence_length - size of the sequence
+name: Name of the brick.  If not specified, a default will be used.  Name should be unique.
+output_coding: Output coding type, default is ‘temporal-L’</p>
+</dd>
+</dl>
+</div></blockquote>
 <dl class="py method">
 <dt class="sig sig-object py" id="fugu.bricks.application_bricks.LIS.build">
 <span class="sig-name descname"><span class="pre">build</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metadata</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">control_nodes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_lists</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_codings</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fugu.bricks.application_bricks.LIS.build" title="Permalink to this definition">¶</a></dt>
@@ -187,26 +196,27 @@
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>graph</strong> (<em>+ graph - networkx graph to define connections of the computational</em>) – </p></li>
-<li><p><strong>brick</strong> (<em>+ metadata - dictionary to define the shapes and properties of the</em>) – </p></li>
-<li><p><strong>nodes.</strong> (<em>+ control_nodes - dictionary of lists of auxillary networkx</em>) – <dl class="simple">
-<dt>Expected keys:</dt><dd><p>’complete’ - A list of neurons that fire when the brick is done</p>
-</dd>
-</dl>
+<li><p><strong>graph</strong> – networkx graph to define connections of the computational graph</p></li>
+<li><p><strong>metadata</strong> (<em>dict</em>) – dictionary to define the shapes and properties of the brick</p></li>
+<li><p><strong>control_nodes</strong> (<em>dict</em>) – <p>dictionary of lists of auxillary networkx nodes.
+Expected keys:</p>
+<blockquote>
+<div><p>’complete’ - A list of neurons that fire when the brick is done</p>
+</div></blockquote>
 </p></li>
-<li><p><strong>input</strong> (<em>+ input_lists - list of nodes that will contain</em>) – </p></li>
-<li><p><strong>supported</strong> (<em>+ input_coding - list of input coding formats.  All coding types</em>) – </p></li>
+<li><p><strong>input_lists</strong> (<em>list</em>) – list of nodes that will contain input</p></li>
+<li><p><strong>input_coding</strong> (<em>list</em>) – list of input coding formats.  All coding types supported</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p><ul class="simple">
-<li><p>graph of a computational elements and connections</p></li>
-<li><p>dictionary of output properties (shape, coding, layers, depth, etc)</p></li>
-<li><p>dictionary of control nodes (‘complete’)</p></li>
-<li><p>list of output</p></li>
-<li><p>list of coding formats of output</p></li>
-</ul>
-</p>
+<dd class="field-even"><p>graph of a computational elements and connections
+self.metadata.complete: dictionary of output properties (shape, coding, layers, depth, etc)
+self.metadata.begin: dictionary of control nodes (‘complete’)
+output_list (list): list of output
+self.output_codings: list of coding formats of output</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>graph</p>
 </dd>
 </dl>
 </dd></dl>

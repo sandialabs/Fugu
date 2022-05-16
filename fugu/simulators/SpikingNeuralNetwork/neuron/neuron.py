@@ -22,17 +22,12 @@ class Neuron(ABC):
         """
         Constructor for a Base Neuron class
 
-        Parameters
-        ----------
-        name : String, optional
-            Neuron name as a string. The default is None.
-        spike : Bool, optional
-            Spike state of the Neuron. The default is False.
+        Parameters:
+            name (any): String, optional.  Neuron name as a string. The default is None.
+            spike (bool): Bool, optional.  Spike state of the Neuron. The default is False.
 
-        Returns
-        -------
-        None.
-
+        Returns:
+            None
         """
         self.name = name
         self.spike = False
@@ -40,7 +35,9 @@ class Neuron(ABC):
 
     @abc.abstractmethod
     def update_state(self):
-        '''Update the time evolution of the neuron state'''
+        """
+        Update the time evolution of the neuron state
+        """
 
 
 class LIFNeuron(Neuron):
@@ -62,30 +59,21 @@ class LIFNeuron(Neuron):
         """
         Constructor for LIFNeurons. Inherits from Neuron Base Class
 
-        Parameters
-        ----------
-        name : String, optional
-            Straing name of a neuron. The default is None.
-        threshold : Double, optional
-            Threshold value above while the neuron spikes. The default is 0.0.
-        reset_voltage : Double, optional
-            The voltage to which the neuron resets after spiking. The default is 0.0.
-        leakage_constant : Double, optional
-            The rate at which the neuron voltage decays. The leakage with rate 
-            m is calculated as m*v. A rate of m=1 indicates no leak. For 
-            realistic models, 0<= m <=1. The default is 1.0.
-        voltage : Double, optional
-            Internal voltage of the neuron. The default is 0.0.
-        p : Double, optional
-            Probability of spiking if voltage exceeds threshold. 
-            p=1 indicates a deterministic neuron. The default is 1.0.
-        record : Bool, optional
-            Indicates if a neuron spike state should be sensed with probes. 
-            The default is False.
+        Parameters:
+            name (any): String, optional.  String name of a neuron. The default is None.
+            threshold : Double, optional.  Threshold value above while the neuron spikes. The default is 0.0.
+            reset_voltage : Double, optional.  The voltage to which the neuron resets after spiking. The default is 0.0.
+            leakage_constant : Double, optional
+                The rate at which the neuron voltage decays. The leakage with rate
+                m is calculated as m*v. A rate of m=1 indicates no leak. For
+                realistic models, 0<= m <=1. The default is 1.0.
+            voltage : Double, optional.  Internal voltage of the neuron. The default is 0.0.
+            p (double): optional.  Probability of spiking if voltage exceeds threshold.
+                p=1 indicates a deterministic neuron. The default is 1.0.
+            record (bool): optional.  Indicates if a neuron spike state should be sensed with probes. Default is False.
 
-        Returns
-        -------
-        None.
+        Returns:
+            none
 
         """
         super(LIFNeuron, self).__init__()
@@ -102,15 +90,14 @@ class LIFNeuron(Neuron):
 
     def update_state(self):
         """
-        updates the time evolution of the states for one time step. The input 
-        signals are integrated and accumulates with the internal voltage. If 
-        the internal voltage exceeds the threshold, the neuron spikes and resets.
-        Otherwise, the neruon leaks at a fixed rate down to its reset value. The
-        neuron spikes with probability p if it exceeds the threshold.
+        Updates the time evolution of the states for one time step.
+        The input signals are integrated and accumulates with the internal voltage.
+        If the internal voltage exceeds the threshold, the neuron spikes and resets.
+        Otherwise, the neruon leaks at a fixed rate down to its reset value.
+        The neuron spikes with probability p if it exceeds the threshold.
 
-        Returns
-        -------
-        None.
+        Returns:
+            None
 
         """
         '''Update the states for one time step'''
@@ -139,11 +126,8 @@ class LIFNeuron(Neuron):
     def show_state(self):
         """
         Display the voltage and spike state of a neuron.
-
-        Returns
-        -------
-        None.
-
+        Return:
+            none
         """
         print("Neuron {0}: {1} volts, spike = {2}".format(
             self.name, self.v, self.spike))
@@ -152,9 +136,8 @@ class LIFNeuron(Neuron):
         """
         Display the parameters of a neuron (name, threshold, reset, leak)
 
-        Returns
-        -------
-        None.
+        Returns:
+            none
 
         """
         print("Neuron '{0}':\n"
@@ -171,9 +154,8 @@ class LIFNeuron(Neuron):
         """
         Display the synapses the feed into the neuron.
 
-        Returns
-        -------
-        None.
+        Returns:
+            none
 
         """
         if len(self.presyn) == 0:
@@ -222,27 +204,23 @@ class LIFNeuron(Neuron):
 
 
 class InputNeuron(Neuron):
-    """Input Neuron. Inherits from class Neuron.
-    Input Neurons can read inputs and convert them to spike streams"""
+    """
+    Input Neuron. Inherits from class Neuron.
+    Input Neurons can read inputs and convert them to spike streams
+    """
     def __init__(self, name=None, threshold=0.1, voltage=0.0, record=False):
         """
         Constructor for Input Neuron. 
 
-        Parameters
-        ----------
-        name : String, optional
-            Input neuron name. The default is None.
-        threshold : Double, optional
-            Threashold value above which the neuron spikes. The default is 0.1.
-        voltage : Double, optional
-            Membrane voltage. The default is 0.0.
-        record : Bool, optional
-            Indicates if a neuron spike state should be sensed with probes. 
+        Parameters:
+            name : String, optional. Input neuron name. The default is None.
+        threshold (double): optional. Threashold value above which the neuron spikes. The default is 0.1.
+        voltage (double): optional. Membrane voltage. The default is 0.0.
+        record (bool): optional. Indicates if a neuron spike state should be sensed with probes.
             The default is False.
 
-        Returns
-        -------
-        None.
+        Returns:
+            none
 
         """
         super(InputNeuron, self).__init__()
@@ -257,20 +235,12 @@ class InputNeuron(Neuron):
         """
         Enables a neuron to read in an input stream of data.
 
-        Parameters
-        ----------
-        in_stream : interable data streams of ints or floats.
-            input data (any interable stream such as lists, arrays, etc.).
-
-        Raises
-        ------
-        TypeError
-            if in_stream is not iterable.
-
-        Returns
-        -------
-        None.
-
+        Parameters:
+            in_stream (any): interable data streams of ints or floats. input data (any interable stream such as lists, arrays, etc.).
+        Raises:
+            TypeError: if in_stream is not iterable.
+        Returns:
+            None
         """
         if not hasattr(in_stream, '__iter__'):
             raise TypeError('{in_stream} must be iterable'.format(**locals()))
@@ -282,15 +252,10 @@ class InputNeuron(Neuron):
         Updates the neuron states. The neuron spikes if the input value in 
         the current iteration is above the threshold and resets.
 
-        Raises
-        ------
-        TypeError
-            if the input data is not int or float.
-
-        Returns
-        -------
-        None.
-
+        Raises:
+            TypeError: if the input data is not int or float.
+        Returns:
+            None
         """
         try:
             n = next(self._it)

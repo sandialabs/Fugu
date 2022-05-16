@@ -7,7 +7,9 @@ from warnings import warn
 
 
 class Scaffold:
-    """Class to handle a scaffold of bricks"""
+    """
+    Class to handle a scaffold of bricks
+    """
 
     supported_backends = ['snn', 'ds_legacy', 'snn_legacy', 'pynn']
 
@@ -31,19 +33,19 @@ class Scaffold:
         """
         Add a brick to the scaffold.
 
-        Arguments:
-            + brick_function - object of type brick
-            + input_nodes - list of node numbers (Default: [])
-            + dimesionality -  dictionary of shapes and parameters of the brick (Default: None)
-            + name - string of the brick's name (Default: none)
-            + output - bool flag to indicate if a brick is an output brick (Default: False)
+        Args:
+            brick_function (obj): object of type brick
+            input_nodes (list): list of node numbers (Default: [])
+            dimesionality :  dictionary of shapes and parameters of the brick (Default: None)
+            name (any): string of the brick's name (Default: none)
+            output (bool): bool flag to indicate if a brick is an output brick (Default: False)
 
         Returns:
-            + None
+            None
 
-        Exceptions:
-            + Raises ValueError if node name is already used.
-            """
+        Raises:
+            ValueError: Raises if node name is already used.
+        """
 
         if name is None and brick_function.name is not None:
             name = brick_function.name
@@ -213,10 +215,10 @@ class Scaffold:
         """
         Check if all nodes are built.
 
-        Arguments:
-            + verbose - int to indicate level of verbosity (Default: 0 to indicate no messages)
+        Args:
+            verbose (int) indicate level of verbosity (Default: 0 to indicate no messages)
         Returns:
-            + bool with True if all nodes are built, Fase otherwise
+            b (bool): bool with True if all nodes are built, Fase otherwise
             """
 
         b = True
@@ -233,12 +235,12 @@ class Scaffold:
         """
         Check if all neighbors of a node are built.
 
-        Arguments:
-            + node - node whose neighbors are checked
+        Args:
+            node (any): node whose neighbors are checked
 
         Returns:
-            + bool - indicates if all neighbors are built.
-            """
+            built_graph (bool): indicates if all neighbors are built.
+        """
 
         in_neighbors = [edge[0] for edge in self.circuit.in_edges(nbunch=node)]
         b = True
@@ -259,11 +261,11 @@ class Scaffold:
         """
         Build a computational graph that can be used by the backend.
 
-        Arguments:
-            + verbose - int value to specify level of verbosity (Default: 0 to indicate None)
+        Args:
+            verbose (int): value to specify level of verbosity (Default: 0 to indicate None)
 
         Returns:
-            networkX diGraph
+            built_graph: networkX diGraph
         """
         built_graph = nx.DiGraph()
         # Handle Input Nodes
@@ -346,13 +348,11 @@ class Scaffold:
         return built_graph
 
     def summary(self, verbose=0):
-        """Display a summary of the scaffold.
-
-           Prints information about the scaffold.
-
-           Arguments:
-             + verbose - verbosity level can be 0, 1 or >1 (Default: 0)
-
+        """
+        Display a summary of the scaffold.
+        Prints information about the scaffold.
+        Args:
+             verbose (int): verbosity level can be 0, 1 or >1 (Default: 0)
         """
 
         print("Scaffold is built: {}".format(self.is_built))

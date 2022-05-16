@@ -4,10 +4,10 @@ from .bricks import Brick, CompoundBrick, input_coding_types
 
 
 class Register(Brick):
-    '''
+    """
     Brick that stores the binary encoding of an non-negative integer.
     This brick also provides simple controls such as "recall", "clear", and "set"
-    '''
+    """
     def __init__(self,
                  max_size,
                  initial_value=0,
@@ -34,21 +34,21 @@ class Register(Brick):
         """
         Build Register brick.
 
-        Arguments:
-            + graph - networkx graph to define connections of the computational graph
-            + metadata - dictionary to define the shapes and parameters of the brick
-            + control_nodes - dictionary of lists of auxillary networkx nodes.
+        Args:
+            graph: networkx graph to define connections of the computational graph
+            metadata (dict): dictionary to define the shapes and parameters of the brick
+            control_nodes (dict): dictionary of lists of auxillary networkx nodes.
                 Expected keys:
                     'complete' - A list of neurons that fire when the brick is done
-            + input_lists - list of nodes that will contain input
-            + input_coding - list of input coding formats.  All coding types supported
+            input_lists (list): list of nodes that will contain input
+            input_coding (list): list of input coding formats.  All coding types supported
 
         Returns:
-            + graph of a computational elements and connections
-            + dictionary of output parameters (shape, coding, layers, depth, etc)
-            + dictionary of control nodes ('complete')
-            + list of output
-            + list of coding formats of output
+            graph: graph of a computational elements and connections
+            begin: dictionary of output parameters (shape, coding, layers, depth, etc)
+            complete: dictionary of control nodes ('complete')
+            output_lists (list): list of output
+            self.output_codings (list): list of coding formats of output
         """
 
         for input_coding in input_codings:
@@ -334,9 +334,9 @@ class Register(Brick):
 
 
 class Max(Brick):
-    '''
+    """
     Brick that calculates the maximum value of a collection of values stored as binary registers.
-    '''
+    """
     def __init__(self, default_size=-1, name="Max", output_coding='Undefined'):
         super(Max, self).__init__(name)
         self.name = name
@@ -352,21 +352,22 @@ class Max(Brick):
         """
         Build Register brick.
 
-        Arguments:
-            + graph - networkx graph to define connections of the computational graph
-            + metadata - dictionary to define the shapes and parameters of the brick
-            + control_nodes - dictionary of lists of auxillary networkx nodes.
+        Args:
+            graph: networkx graph to define connections of the computational graph
+            metadata (dict): dictionary to define the shapes and parameters of the brick
+            control_nodes (dict): dictionary of lists of auxillary networkx nodes.
                 Expected keys:
                     'complete' - A list of neurons that fire when the brick is done
-            + input_lists - list of nodes that will contain input
-            + input_coding - list of input coding formats.  All coding types supported
+            input_lists (list): list of nodes that will contain input
+            input_coding (list): list of input coding formats.  All coding types supported
 
         Returns:
-            + graph of a computational elements and connections
-            + dictionary of output parameters (shape, coding, layers, depth, etc)
-            + dictionary of control nodes ('complete')
-            + list of output
-            + list of coding formats of output
+            graph: graph of a computational elements and connections
+            begin: dictionary of output parameters (shape, coding, layers, depth, etc)
+            complete: dictionary of control nodes ('complete')
+            output_lists: list of output
+            self.output_codings: list of coding formats of output
+
         """
         for input_coding in input_codings:
             if input_coding not in self.supported_codings:
@@ -647,9 +648,9 @@ class Max(Brick):
 
 
 class Addition(Brick):
-    '''
+    """
     Brick that calculates the sum of two values stored as binary
-    '''
+    """
     def __init__(self,
                  register_size=5,
                  name="Addition",
@@ -667,26 +668,28 @@ class Addition(Brick):
               input_codings):
         """
         Build Addition brick.
-
-        Arguments:
-            + graph - networkx graph to define connections of the computational graph
-            + metadata - dictionary to define the shapes and parameters of the brick
-            + control_nodes - dictionary of lists of auxillary networkx nodes.
+        Args:
+            graph : networkx graph to define connections of the computational graph
+            metadata (dict): dictionary to define the shapes and parameters of the brick
+            control_nodes (dict): dictionary of lists of auxillary networkx nodes.
                 Expected keys:
                     'complete' - A list of neurons that fire when the brick is done
-            + input_lists - list of nodes that will contain input
-            + input_coding - list of input coding formats.  All coding types supported
+            input_lists (list): list of nodes that will contain input
+            input_coding (list): list of input coding formats.  All coding types supported
 
         Returns:
-            + graph of a computational elements and connections
-            + dictionary of output parameters (shape, coding, layers, depth, etc)
-            + dictionary of control nodes ('complete')
-            + list of output
-            + list of coding formats of output
+            graph: graph of a computational elements and connections
+            begin (dict): dictionary of output parameters (shape, coding, layers, depth, etc)
+            complete (dict): dictionary of control nodes ('complete')
+            output_lists (list): list of output
+            self.output_codings (list): list of coding formats of output
+        Raises:
+            ValueError: Too many inputs! {} can only support two inputs, received: {}
+
         """
         if len(input_lists) > 2:
             raise ValueError(
-                "Too many inputs! {} can only support two inputs, received: {}"
+                "Too many inputs! only 2 supported.  Unsuppported Input format"
                 .format(
                     self.brick_tag,
                     len(input_lists),
@@ -810,10 +813,10 @@ class Addition(Brick):
 
 
 class Subtraction(CompoundBrick):
-    '''
+    """
     Brick that calculates the difference of two values stored as binary values.
     The brick subtracts the second (Y) input from the first (X), i.e. this brick returns the value of X - Y
-    '''
+    """
     def __init__(self,
                  register_size=5,
                  name="Subtraction",
@@ -831,22 +834,21 @@ class Subtraction(CompoundBrick):
               input_codings):
         """
         Build Subtraction brick.
-
-        Arguments:
-            + graph - networkx graph to define connections of the computational graph
-            + metadata - dictionary to define the shapes and parameters of the brick
-            + control_nodes - dictionary of lists of auxillary networkx nodes.
+        Args:
+            graph: networkx graph to define connections of the computational graph
+            metadata: dictionary to define the shapes and parameters of the brick
+            control_nodes: dictionary of lists of auxillary networkx nodes.
                 Expected keys:
                     'complete' - A list of neurons that fire when the brick is done
-            + input_lists - list of nodes that will contain input
-            + input_coding - list of input coding formats.  All coding types supported
+            input_lists: list of nodes that will contain input
+            input_coding: list of input coding formats.  All coding types supported
 
         Returns:
-            + graph of a computational elements and connections
-            + dictionary of output parameters (shape, coding, layers, depth, etc)
-            + dictionary of control nodes ('complete')
-            + list of output
-            + list of coding formats of output
+            graph: graph of a computational elements and connections
+            complete: dictionary of control nodes ('complete')
+            begin: dictionary of output parameters (shape, coding, layers, depth, etc)
+            output_lists (list): list of output
+            self.output_codings (list): list of coding formats of output
         """
         if len(input_lists) > 2:
             raise ValueError(

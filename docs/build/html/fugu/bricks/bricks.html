@@ -188,7 +188,7 @@
 <p>Abstract Base Class definition of a Brick class</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="fugu.bricks.bricks.Brick.brick_id">
-<span class="sig-name descname"><span class="pre">brick_id</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">8</span></em><a class="headerlink" href="#fugu.bricks.bricks.Brick.brick_id" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">brick_id</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">2</span></em><a class="headerlink" href="#fugu.bricks.bricks.Brick.brick_id" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
@@ -204,19 +204,20 @@
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>graph</strong> (<em>+ graph - networkx</em>) – </p></li>
-<li><p><strong>properties</strong> (<em>+ metadata - A dictionary of shapes and</em>) – </p></li>
-<li><p><strong>nodes.</strong> (<em>+ control_nodes - list of dictionary of auxillary</em>) – <dl>
-<dt>Acceptable keys include:</dt><dd><p>’complete’ - A list of neurons that fire when the brick is done
+<li><p><strong>graph</strong> (<em>graph</em>) – networkx graph</p></li>
+<li><p><strong>metadata</strong> (<em>dictionary</em>) – A dictionary of shapes and properties</p></li>
+<li><p><strong>control_nodes</strong> (<em>list</em>) – <p>list of dictionary of auxillary nodes.
+Acceptable keys include:</p>
+<blockquote>
+<div><p>’complete’ - A list of neurons that fire when the brick is done
 ‘begin’ - A list of neurons that fire when the brick begins computation</p>
 <blockquote>
 <div><p>(used for temporal processing)</p>
 </div></blockquote>
-</dd>
-</dl>
+</div></blockquote>
 </p></li>
-<li><p><strong>neurons</strong> (<em>+ input_lists - list of lists of nodes for input</em>) – </p></li>
-<li><p><strong>types</strong> (<em>+ input_codings - list of input coding</em>) – </p></li>
+<li><p><strong>input_lists</strong> (<em>list</em>) – list of lists of nodes for input neurons</p></li>
+<li><p><strong>input_codings</strong> (<em>list</em>) – list of input coding types (as strings)</p></li>
 </ul>
 </dd>
 </dl>
@@ -241,7 +242,7 @@
 <dd><p>Abstract method to get input values. InputBricks must implement this method</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>(</strong><strong>Default</strong> (<em>+ t - type of input</em>) – None)</p>
+<dd class="field-odd"><p><strong>t</strong> – type of input (Default: None)</p>
 </dd>
 </dl>
 </dd></dl>
@@ -277,19 +278,20 @@ A CompoundBrick is brick that contains other bricks.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>graph</strong> (<em>+ graph - networkx</em>) – </p></li>
-<li><p><strong>properties</strong> (<em>+ metadata - A dictionary of shapes and</em>) – </p></li>
-<li><p><strong>nodes.</strong> (<em>+ control_nodes - list of dictionary of auxillary</em>) – <dl>
-<dt>Acceptable keys include:</dt><dd><p>’complete’ - A list of neurons that fire when the brick is done
+<li><p><strong>graph</strong> – networkx graph</p></li>
+<li><p><strong>metadata</strong> – A dictionary of shapes and properties</p></li>
+<li><p><strong>control_nodes</strong> (<em>list</em>) – <p>list of dictionary of auxillary nodes.
+Acceptable keys include:</p>
+<blockquote>
+<div><p>’complete’ - A list of neurons that fire when the brick is done
 ‘begin’ - A list of neurons that fire when the brick begins computation</p>
 <blockquote>
 <div><p>(used for temporal processing)</p>
 </div></blockquote>
-</dd>
-</dl>
+</div></blockquote>
 </p></li>
-<li><p><strong>neurons</strong> (<em>+ input_lists - list of lists of nodes for input</em>) – </p></li>
-<li><p><strong>types</strong> (<em>+ input_codings - list of input coding</em>) – </p></li>
+<li><p><strong>input_lists</strong> (<em>list</em>) – list of lists of nodes for input neurons</p></li>
+<li><p><strong>input_codings</strong> (<em>list</em>) – list of input coding types (as strings)</p></li>
 </ul>
 </dd>
 </dl>

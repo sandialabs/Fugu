@@ -12,11 +12,11 @@ class InstantDecay(Brick):
     A brick used to test neurons that have instant decay.
     """
     def __init__(self, num_inputs, name="InstantDecay"):
-        '''
+        """
         Construtor for this brick.
-        Arguments:
-            + name - Name of the brick.  If not specified, a default will be used.  Name should be unique.
-        '''
+        Args:
+            name (str): Name of the brick.  If not specified, a default will be used.  Name should be unique.
+        """
         super(InstantDecay, self).__init__(name)
         self.is_built = False
         self.metadata = {'D': 1}
@@ -28,21 +28,21 @@ class InstantDecay(Brick):
         """
         Build Dot brick.
 
-        Arguments:
-            + graph - networkx graph to define connections of the computational graph
-            + metadata - dictionary to define the shapes and parameters of the brick
-            + control_nodes - list of dictionary of auxillary nodes.
+        Args:
+            graph ({add_node, add_edge}): networkx graph to define connections of the computational graph
+            metadata (dict): dictionary to define the shapes and parameters of the brick
+            control_nodes (list): list of dictionary of auxillary nodes.
                 Expected keys:
                     'complete' - A list of neurons that fire when the brick is done
-            + input_lists - list of nodes that will contain input
-            + input_coding - list of input coding formats.  ('Raster', 'Undefined' supported)
+            input_lists (list): list of nodes that will contain input
+            input_coding (list): list of input coding formats.  ('Raster', 'Undefined' supported)
 
         Returns:
-            + graph of a computational elements and connections
-            + dictionary of output parameters (shape, coding, layers, depth, etc)
-            + list dictionary of control nodes ('complete')
-            + list of output edges
-            + list of coding formats of output ('current')
+            graph (any): graph of a computational elements and connections
+            metadata (dict): dictionary of output parameters (shape, coding, layers, depth, etc)
+            complete_name (str): list dictionary of control nodes ('complete')
+            main_name: list of output edges
+            input_codings (list): list of coding formats of output ('current')
         """
 
         num_inputs = sum([len(in_list) for in_list in input_lists])
@@ -102,11 +102,11 @@ class SynapseProperties(Brick):
     A brick used to test neurons that have instant decay.
     """
     def __init__(self, weights, name="SynapseProperties"):
-        '''
+        """
         Construtor for this brick.
-        Arguments:
-            + name - Name of the brick.  If not specified, a default will be used.  Name should be unique.
-        '''
+        Args:
+            name (str): Name of the brick.  If not specified, a default will be used.  Name should be unique.
+        """
         super(SynapseProperties, self).__init__(name)
         self.is_built = False
         self.metadata = {'D': 1}
@@ -134,22 +134,21 @@ class SynapseProperties(Brick):
               input_codings):
         """
         Build Dot brick.
-
-        Arguments:
-            + graph - networkx graph to define connections of the computational graph
-            + metadata - dictionary to define the shapes and parameters of the brick
-            + control_nodes - list of dictionary of auxillary nodes.
+        Args:
+            graph: networkx graph to define connections of the computational graph
+            metadata (dict): dictionary to define the shapes and parameters of the brick
+            control_nodes (list): list of dictionary of auxillary nodes.
                 Expected keys:
                     'complete' - A list of neurons that fire when the brick is done
-            + input_lists - list of nodes that will contain input
-            + input_coding - list of input coding formats.  ('Raster', 'Undefined' supported)
+            input_lists (list): list of nodes that will contain input
+            input_coding (list): list of input coding formats.  ('Raster', 'Undefined' supported)
 
         Returns:
-            + graph of a computational elements and connections
-            + dictionary of output parameters (shape, coding, layers, depth, etc)
-            + list dictionary of control nodes ('complete')
-            + list of output edges
-            + list of coding formats of output ('current')
+            graph: graph of a computational elements and connections
+            metadata (dict): dictionary of output parameters (shape, coding, layers, depth, etc)
+            complete_name (str): list dictionary of control nodes ('complete')
+            output_list (list[str]): list of output edges
+            input_coding (list): list of coding formats of output ('current')
         """
 
         begin_name = self.generate_neuron_name("begin")
@@ -210,12 +209,12 @@ class SumOfMaxes(CompoundBrick):
     A brick that computes the max of N sets of values and reports the sum of those maxes.
     """
     def __init__(self, set_sizes=[5, 5], name="SumOfMaxes"):
-        '''
+        """
         Construtor for this brick.
-        Arguments:
-            + set_sizes - Number of inputs for each max brick
-            + name - Name of the brick.  If not specified, a default will be used.  Name should be unique.
-        '''
+        Args:
+            set_sizes (list[int]): Number of inputs for each max brick
+            name (str): Name of the brick.  If not specified, a default will be used.  Name should be unique.
+        """
         super(SumOfMaxes, self).__init__(name)
         self.is_built = False
         self.metadata = {'D': 1}
@@ -228,21 +227,21 @@ class SumOfMaxes(CompoundBrick):
         """
         Build SumOfMaxes brick.
 
-        Arguments:
-            + graph - networkx graph to define connections of the computational graph
-            + metadata - dictionary to define the shapes and parameters of the brick
-            + control_nodes - list of dictionary of auxillary nodes.
+        Args:
+            graph: networkx graph to define connections of the computational graph
+            metadata (dict): dictionary to define the shapes and parameters of the brick
+            control_nodes (list): list of dictionary of auxillary nodes.
                 Expected keys:
                     'complete' - A list of neurons that fire when the brick is done
-            + input_lists - list of nodes that will contain input
-            + input_coding - list of input coding formats.  ('Raster', 'Undefined' supported)
+            input_lists (list): list of nodes that will contain input
+            input_coding (list): list of input coding formats.  ('Raster', 'Undefined' supported)
 
         Returns:
-            + graph of a computational elements and connections
-            + dictionary of output parameters (shape, coding, layers, depth, etc)
-            + list dictionary of control nodes ('complete')
-            + list of output edges
-            + list of coding formats of output ('current')
+            graph: graph of a computational elements and connections
+            metadata (str): dictionary of output parameters (shape, coding, layers, depth, etc)
+            complete_name (str): list dictionary of control nodes ('complete')
+            child_output (any): list of output edges
+            input_codings (list): list of coding formats of output ('current')
         """
 
         if len(input_lists) != sum(self.set_sizes):

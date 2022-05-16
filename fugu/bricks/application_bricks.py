@@ -4,24 +4,19 @@ from .bricks import Brick, input_coding_types
 
 
 class LIS(Brick):
-    '''
+    """
     This brick calculates the length of the longest common subsequence for a given sequence of numbers
-
-    '''
+    Construtor for this brick.
+        Args:
+            sequence_length: sequence_length - size of the sequence
+            name: Name of the brick.  If not specified, a default will be used.  Name should be unique.
+            output_coding: Output coding type, default is 'temporal-L'
+    """
     def __init__(self,
                  sequence_length,
                  name="LIS",
                  output_coding='temporal-L'):
-        """
 
-        """
-        '''
-        Construtor for this brick.
-        Parameters:
-            sequence_length: sequence_length - size of the sequence
-            name: Name of the brick.  If not specified, a default will be used.  Name should be unique.
-            output_coding: Output coding type, default is 'temporal-L'
-        '''
         super(LIS, self).__init__(name)
         self.is_built = False
         self.name = name
@@ -39,21 +34,21 @@ class LIS(Brick):
         """
         Build LIS brick.
 
-        Arguments:
-            + graph - networkx graph to define connections of the computational graph
-            + metadata - dictionary to define the shapes and properties of the brick
-            + control_nodes - dictionary of lists of auxillary networkx nodes.
+        Args:
+            graph: networkx graph to define connections of the computational graph
+            metadata (dict): dictionary to define the shapes and properties of the brick
+            control_nodes (dict): dictionary of lists of auxillary networkx nodes.
                 Expected keys:
                     'complete' - A list of neurons that fire when the brick is done
-            + input_lists - list of nodes that will contain input
-            + input_coding - list of input coding formats.  All coding types supported
+            input_lists (list): list of nodes that will contain input
+            input_coding (list): list of input coding formats.  All coding types supported
 
         Returns:
-            + graph of a computational elements and connections
-            + dictionary of output properties (shape, coding, layers, depth, etc)
-            + dictionary of control nodes ('complete')
-            + list of output
-            + list of coding formats of output
+            graph: graph of a computational elements and connections
+            self.metadata.complete: dictionary of output properties (shape, coding, layers, depth, etc)
+            self.metadata.begin: dictionary of control nodes ('complete')
+            output_list (list): list of output
+            self.output_codings: list of coding formats of output
         """
 
         if len(input_lists) != 1:
