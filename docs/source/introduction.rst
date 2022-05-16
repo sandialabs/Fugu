@@ -16,7 +16,7 @@ Think of Fugu as a framework to ease the process of coding and deploying algorit
 
 Fugu is a linking framework with a goal of being “easy” to build spiking circuits for a single computation. We provide a mechanism to combine small computational kernels (Bricks) into large computational graphs, but also Fugu provides some specifications: For the Bricks to transfer information, we need to agree on data formatting. For computation to be consistent, we need to agree on neuron behavior (lowest common denominator). For this to be useful, we need a hardware independent intermediate representation.
 
-Fugu includes but is not a simulator: We include a reference simulator *snn* which can quickly run small sized spiking networks. We hope to provide a more comprehensive and efficient simulator in the future.  Fugu is designed to support a variety of backends including hardware platforms. We are working to build fugu Bricks for many useful kernels; We are hoping that the community will help contribute. 
+Fugu includes but is not a simulator: We include a reference simulator *snn* which can quickly run small sized spiking networks. We hope to provide a more comprehensive and efficient simulator in the future.  Fugu is designed to support a variety of backends including hardware platforms. We are working to build Fugu Bricks for many useful kernels; We are hoping that the community will help contribute. 
 
 
 ===========
@@ -27,7 +27,7 @@ Fugu's API provides works with Python.  The user defines a computational graph, 
 Example
 ~~~~~~~~~~~
 Suppose a simple application with 4 operations: 
-1. Function A processes an input
+1. Function A processes an input.
 2. Function B processes the output of A.
 3. Function C processes the output of A. 
 4. Function D combines output of B and C.
@@ -57,7 +57,7 @@ Contains metadata
 
 Each Brick represents one computational function.  Bricks are attached to a Scaffold.  Bricks have certain key properties:
 dimensionality:  A dictionary containing information such as the input and output sizes, circuit depth (if defined), and the types of codings.
-self.supported_codings:  A list of supported codings for this brick. A complete list of codings is avialable at input_coding_types .
+self.supported_codings:  A list of supported codings for this brick. A complete list of codings is avialable at input_coding_types.
 is_built:  A simple boolean saying whether or not the brick as been built
 name: A string representing the brick
 
@@ -86,7 +86,7 @@ Output: a tuple (graph, dimensionality, complete_node, output_lists, output_codi
 
 Control Nodes 
 =====================
-Neurons can be built ot relay control information between bricks.  These should be included in control_nodes.  Control_nodes is a list of dictionaries.  Each entry in the list corresponds with an input (if calling Brick.build) or an output (if returning from Brick.build).
+Neurons can be built to relay control information between bricks.  These should be included in control_nodes.  Control_nodes is a list of dictionaries.  Each entry in the list corresponds with an input (if calling Brick.build) or an output (if returning from Brick.build).
 
 *************
 Scaffolds
@@ -102,7 +102,7 @@ A backend generates platform-specific code from the platform-independent network
 Get Started 
 *************
 1. Installation
-   - we recommend installing Fugu in a conda or virtual environment in Python 3.8.  The requirements can be found in requirements3.txt 
+   - We recommend installing Fugu in a conda or virtual environment in Python 3.8.  The requirements can be found in requirements3.txt 
    - Dependencies include: Numpy, Scipy, NetworkX, Pandas, and Pytorch (for DS)
 2. Jupyter Notebook examples
    - Walk through our Jupyter Notebook examples as a first step into the world of Fugu.  These can be found in the examples folder, in a folder labeled notebooks.  We've outlined how we translate common algorithms and problems into Fugu brick formation.  
