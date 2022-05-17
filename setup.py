@@ -17,7 +17,6 @@ setup(name='fugu',
                   'pytz',
                   'networkx==2.4',
                   'numpy~=1.19.0',
-                  'scipy~=1.5.1',
                   'six==1.15.0',
                   'unittest'        ],
       packages=package_list)
