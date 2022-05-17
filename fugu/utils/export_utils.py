@@ -12,7 +12,7 @@ def results_df_from_dict(results_dictionary, key, value):
         extended_keys = [k] * len(store)
         df2[key] = extended_keys
         df2[value] = store
-        df = df.append(df2, ignore_index=True, sort=False)
+        df = pd.concat([df, df2], ignore_index=True, sort=False)
     return df
 
 
