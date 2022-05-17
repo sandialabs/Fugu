@@ -94,9 +94,9 @@ or
 ```
 conda install Sphinx
 ```
-Navigate to the Fugu/docs folder
+Navigate to the Fugu/docs folder.  Use the sphinx-build html command to generate the html files on your computer.
 ```
 sphinx-build -b html -a source/ build/html 
 ```
 The documentation will be in docs/build/html 
-Open introductionlhtml.  From this page you can you can navigate through the full website.  
+Open introduction.html.  From this page you can you can navigate through the full website.  
