@@ -20,14 +20,14 @@ class basic_AND(fugu.Brick):
     def __init__(self, name=None):
         super().__init__()
         """
-        #The brick hasn't been built yet.
-        #self.is_built = False
-        #Leave for compatibility, D represents the depth of the circuit.  Needs to be updated.
+        The brick hasn't been built yet.
+        self.is_built = False
+        Leave for compatibility, D represents the depth of the circuit.  Needs to be updated.
         """
         self.metadata = {'D': 1}
-        #We just store the name passed at construction.
+        # We just store the name passed at construction.
         self.name = name
-        #For this example, we'll let any input coding work even though the answer might not make sense.
+        # For this example, we'll let any input coding work even though the answer might not make sense.
         self.supported_codings = fugu.input_coding_types
 
     def build(self, graph, metadata, control_nodes, input_lists,
@@ -44,7 +44,7 @@ class basic_AND(fugu.Brick):
         a 3-bit binary representation will add 3 nodes to the graph with indices 0,1,2
         We do have to do some work to establish best practices here.
         """
-        #Expect two inputs
+        # Expect two inputs
         if len(input_codings) != 2:
             raise ValueError('Only two inputs supported.')
         # Keep the same coding as input 0 for the output
@@ -63,7 +63,7 @@ class basic_AND(fugu.Brick):
                        weight=1.0,
                        delay=1)
 
-        #We also, obviously, need to build the computational portion of our graph
+        # We also, obviously, need to build the computational portion of our graph
         and_node_name = self.name + '_0'
         graph.add_node(and_node_name,
                        index=0,

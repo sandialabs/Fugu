@@ -1,0 +1,2 @@
+from .test_temporal_adder_brick import SnnTemporalAdderTests, DsTemporalAdderTests
+from .test_temporal_adder_brick import PynnSpinnakerTemporalAdderTests, PynnBrianTemporalAdderTests

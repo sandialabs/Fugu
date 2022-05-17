@@ -96,7 +96,6 @@ class temporal_shift(Brick):
     temporal shift function. 
     Brad Aimone
     jbaimon@sandia.gov
-    
     """
     
     def __init__(self, name=None, shift_length = 1):

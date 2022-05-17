@@ -14,7 +14,9 @@ else:
 class Backend(ABC):
     @abstractmethod
     def compile(self, scaffold, compile_args={}):
-        "creates neuron populations and synapses"
+        """
+        creates neuron populations and synapses
+        """
         pass
 
     @abstractmethod
@@ -39,8 +41,8 @@ class Backend(ABC):
 
     @abstractmethod
     def set_properties(self, properties={}):
-        Set properties for specific neurons and synapses
         """
+        Set properties for specific neurons and synapses
         Args:
             properties: dictionary of parameter for bricks
 

@@ -1,6 +1,11 @@
 #!/usr/bin/env python
 import numpy as np
 
+"""
+Threshold Brick Example
+Parameters:
+
+"""
 print("---Importing modules---")
 print("---Importing fugu---")
 import fugu

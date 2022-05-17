@@ -386,6 +386,217 @@ output_codings (list): list of coding formats of output</p>
 
 </dd></dl>
 
+<dl class="py class">
+<dt class="sig sig-object py" id="id0">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">fugu.bricks.input_bricks.</span></span><span class="sig-name descname"><span class="pre">InputSource</span></span><a class="headerlink" href="#id0" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Base class for handling various input sources/streams.
+.. rubric:: Example</p>
+<p>Converted output (as a stream of 0’s and 1’s) from a DVI camera</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="id1">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">connect</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metadata</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#id1" title="Permalink to this definition">¶</a></dt>
+<dd><p>Abstract method that tells the scaffold how it should connect the source to the circuit.
+This is accomplished by using a “source” dictionary argument when you create neurons/synapses.
+The “source” dictionary will contain whatever information the backends will need.
+:param graph: networkx graph to define connections of the computational graph</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>If the graph has edge weights, this brick will solve the single source shortest paths problem</p></li>
+</ul>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>metadata</strong> (<em>dict</em>) – dictionary to define the shapes and parameters of the brick</p>
+</dd>
+</dl>
+<dl>
+<dt>Example 1:</dt><dd><p>Suppose the source was a motion detector (connected to hardware by a usb).
+Everytime there is movement detected, we want a specific neuron to fire.
+Then connect might look something like:</p>
+<blockquote>
+<div><dl>
+<dt>connect():</dt><dd><dl>
+<dt>scaffold.graph.add_node(</dt><dd><p>“Sensor”,
+threshold=1.0,
+decay=1.0,
+potential=0.0,
+source={</p>
+<blockquote>
+<div><blockquote>
+<div><p>‘device_type’: ‘usb’,
+‘device_name’: ‘camera’,
+‘device_id’: ‘00:07.0’,</p>
+</div></blockquote>
+<p>},</p>
+</div></blockquote>
+<p>)</p>
+</dd>
+<dt>scaffold.graph.add_edge(</dt><dd><p>“Sensor”,
+some_other_neuron,
+weight=1.0,
+delay=1.0,
+)</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</div></blockquote>
+</dd>
+<dt>Example 2:</dt><dd><p>Suppose the source was a network port receiving TCP packets
+We want to fire specific neurons based on which flag bits are set
+Then connect might look something like:</p>
+<blockquote>
+<div><dl>
+<dt>connect():</dt><dd><dl>
+<dt>scaffold.graph.add_node(</dt><dd><p>“TCPPortA”,
+threshold=1.0,
+decay=1.0,
+potential=0.0,
+source={</p>
+<blockquote>
+<div><blockquote>
+<div><p>‘device_type’: ‘tcp_port’,
+‘device_id’: ‘20’,
+‘flag_bit_id’: 1,  # Look at flag bit #1
+‘flag_fire_value’: 0,  # Fire if flag bit #1 is a 0</p>
+</div></blockquote>
+<p>},</p>
+</div></blockquote>
+<p>)</p>
+</dd>
+<dt>scaffold.graph.add_edge(</dt><dd><p>“TCPPortA”,
+some_other_neuron,
+weight=1.0,
+delay=1.0,
+)</p>
+</dd>
+<dt>scaffold.graph.add_node(</dt><dd><p>“TCPPortB”,
+threshold=1.0,
+decay=1.0,
+potential=0.0,
+source={</p>
+<blockquote>
+<div><blockquote>
+<div><p>‘device_type’: ‘tcp_port’,
+‘device_id’: ‘20’,
+‘flag_bit_id’: 3,  # Look at flag bit #3
+‘flag_fire_value’: 1,  # Fire if flag bit #3 is a 1</p>
+</div></blockquote>
+<p>},</p>
+</div></blockquote>
+<p>)</p>
+</dd>
+<dt>scaffold.graph.add_edge(</dt><dd><p>“TCPPortB”,
+some_other_neuron,
+weight=1.0,
+delay=1.0,
+)</p>
+</dd>
+<dt>scaffold.graph.add_node(</dt><dd><p>“TCPPortC”,
+threshold=1.0,
+decay=1.0,
+potential=0.0,
+source={</p>
+<blockquote>
+<div><blockquote>
+<div><p>‘device_type’: ‘tcp_port’,
+‘device_id’: ‘20’,
+‘flag_bit_id’: 7,  # Look at flag bit #7
+‘flag_fire_value’: 0,  # Fire if flag bit #7 is a 0</p>
+</div></blockquote>
+<p>},</p>
+</div></blockquote>
+<p>)</p>
+</dd>
+<dt>scaffold.graph.add_edge(</dt><dd><p>“TCPPortC”,
+some_other_neuron,
+weight=1.0,
+delay=1.0,
+)</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</div></blockquote>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="id2">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">fugu.bricks.input_bricks.</span></span><span class="sig-name descname"><span class="pre">Vector_Input</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">spikes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_dimension</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coding</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Undefined'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batchable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'VectorInput'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#id2" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="bricks.html#fugu.bricks.bricks.InputBrick" title="fugu.bricks.bricks.InputBrick"><code class="xref py py-class docutils literal notranslate"><span class="pre">fugu.bricks.bricks.InputBrick</span></code></a></p>
+<p>Class to handle a vector of spiking input. Inherits from InputBrick
+Construtor for this brick.</p>
+<blockquote>
+<div><dl class="simple">
+<dt>Args:</dt><dd><p>spikes (array): A numpy array of which neurons should spike at which times
+time_dimension: Time dimesion is included as dimension -1
+coding: Coding type to be represented.
+batchable: True if input should represent static data; currently True is the only supported mode.
+name (str): Name of the brick.  If not specified, a default will be used.  Name should be unique.</p>
+</dd>
+</dl>
+</div></blockquote>
+<dl class="py method">
+<dt class="sig sig-object py" id="id3">
+<span class="sig-name descname"><span class="pre">next</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#id3" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="id4">
+<span class="sig-name descname"><span class="pre">set_properties</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">properties</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#id4" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns an updated version of the graph based on the property values passed.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="id5">
+<span class="sig-name descname"><span class="pre">get_input_value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">t</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#id5" title="Permalink to this definition">¶</a></dt>
+<dd><p>Abstract method to get input values. InputBricks must implement this method</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>t</strong> – type of input (Default: None)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="id6">
+<span class="sig-name descname"><span class="pre">build</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metadata</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">control_nodes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_lists</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_codings</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#id6" title="Permalink to this definition">¶</a></dt>
+<dd><p>Build spike input brick.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>graph</strong> – networkx graph to define connections of the computational graph</p></li>
+<li><p><strong>metadata</strong> – dictionary to define the shapes and parameters of the brick</p></li>
+<li><p><strong>control_nodes</strong> – <p>list of dictionary of auxillary nodes.
+Expected keys:</p>
+<blockquote>
+<div><p>’complete’ - A list of neurons that fire when the brick is done</p>
+</div></blockquote>
+</p></li>
+<li><p><strong>input_lists</strong> – list of nodes that will contain input</p></li>
+<li><p><strong>input_coding</strong> – list of input coding formats</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>graph of a computational elements and connections
+output_shape, output_coding, layer, D: dictionary of output parameters (shape, coding, layers, depth, etc)
+complete_node, begin_node: list of dictionary of control nodes (‘complete’)
+output_lists (list): list of output
+output_codings (list): list of coding formats of output</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>graph</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
 </section>
 
 

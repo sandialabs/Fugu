@@ -242,11 +242,13 @@ class SumOfMaxes(CompoundBrick):
             complete_name (str): list dictionary of control nodes ('complete')
             child_output (any): list of output edges
             input_codings (list): list of coding formats of output ('current')
+        Raises:
+            ValueError: unexpected amount of input
         """
 
         if len(input_lists) != sum(self.set_sizes):
             raise ValueError(
-                "Received an incorrect ammount of input values. Expected {}, got {}"
+                "Received an incorrect amount of input values. Expected {}, got {}"
                 .format(
                     sum(self.set_sizes),
                     len(input_lists),

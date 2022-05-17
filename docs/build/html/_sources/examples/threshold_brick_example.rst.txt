@@ -4,7 +4,7 @@
 Threshold Brick Example
 ***********************
 
-.. automodule:: examples.threshold_brick_example
+.. automodule:: examples.threshold_brick_example.NeuralNetwork
    :members:
    :undoc-members:
    :show-inheritance:
