@@ -9,7 +9,7 @@ pip install -r requirements.txt
 pip install --upgrade .
 ```
 
-An alternative way to install for development (using anaconda environments, python3)
+An alternative way to install for development (using anaconda (or miniconda) environments, python3)
 ```
 conda create -n fugu anaconda
 conda activate fugu
