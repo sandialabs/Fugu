@@ -18,6 +18,8 @@ cd Fugu
 pip install -r requirements.txt
 pip install -e .
 ```
+
+
 # Documentation
 Documentation is currently spread across several files.  We are working on including docstrings on all the classes and methods.
 
@@ -81,9 +83,12 @@ an input (if calling `Brick.build`) or an output (if returning from `Brick.build
 A full list of dependencies is listed in requirements.txt.  The high level dependencies are:
 
 - Numpy
-- Scipy
 - NetworkX
 - Pandas
+
+## A Note on Running Examples
+
+Some of the examples additionally require Jupyter and matplotlib.
 
 ## Documentation
 To generate documentation on your home computer, download sphinx.
