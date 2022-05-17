@@ -87,6 +87,7 @@ A full list of dependencies is listed in requirements.txt.  The high level depen
 
 ## Documentation
 To generate documentation on your home computer, download sphinx.
+>> pip install -U Sphinx >>
 Navigate to the Fugu/docs folder
 >> sphinx-build -b html -a source/ build/html >>
 
