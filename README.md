@@ -99,4 +99,4 @@ Navigate to the Fugu/docs folder.  Use the sphinx-build html command to generate
 sphinx-build -b html -a source/ build/html 
 ```
 The documentation will be in docs/build/html 
-Open introduction.html.  From this page you can you can navigate through the full website.  
+Open introduction.html.  From this page you can you can navigate through the full website, Fugu Module, etc.
