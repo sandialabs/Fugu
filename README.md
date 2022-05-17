@@ -90,6 +90,10 @@ To generate documentation on your home computer, download sphinx.
 ```
 pip install -U Sphinx 
 ```
+or 
+```
+conda install Sphinx
+```
 Navigate to the Fugu/docs folder
 ```
 sphinx-build -b html -a source/ build/html 
