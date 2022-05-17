@@ -2,23 +2,26 @@
 A python library for computational neural graphs.
 
 # Install
+
+## Dependencies
+A full list of dependencies is listed in requirements.txt.  The high level dependencies are:
+
+- Numpy
+- NetworkX
+- Pandas
+
+### A Note on Running Examples
+
+Some of the examples additionally require Jupyter and matplotlib.
+
+
+## Using Pip
 ```
 git clone https://cee-gitlab.sandia.gov/nerl/Fugu.git
 cd Fugu
 pip install -r requirements.txt
 pip install --upgrade .
 ```
-
-An alternative way to install for development (using anaconda (or miniconda) environments, python3)
-```
-conda create -n fugu anaconda
-conda activate fugu
-git clone git@cee-gitlab.sandia.gov:nerl/Fugu.git
-cd Fugu
-pip install -r requirements.txt
-pip install -e .
-```
-
 
 # Documentation
 Documentation is currently spread across several files.  We are working on including docstrings on all the classes and methods.
@@ -79,16 +82,7 @@ an input (if calling `Brick.build`) or an output (if returning from `Brick.build
 
 
 
-## Dependencies
-A full list of dependencies is listed in requirements.txt.  The high level dependencies are:
 
-- Numpy
-- NetworkX
-- Pandas
-
-## A Note on Running Examples
-
-Some of the examples additionally require Jupyter and matplotlib.
 
 ## Documentation
 To generate documentation on your home computer, download sphinx.
