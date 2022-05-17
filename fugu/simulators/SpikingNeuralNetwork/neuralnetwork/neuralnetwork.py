@@ -3,7 +3,8 @@
 
 from __future__ import print_function
 
-from collections import Iterable, defaultdict
+from collections.abc import Iterable
+from collections import defaultdict
 import pandas as pd
 from ..neuron.neuron import Neuron, LIFNeuron
 from ..synapse.synapse import Synapse

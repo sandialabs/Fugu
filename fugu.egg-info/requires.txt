@@ -1,0 +1,10 @@
+decorator
+future
+greenlet
+msgpack
+pandas>1.0.4
+python-dateutil
+pytz
+networkx==2.4
+numpy>=1.19.0
+six==1.15.0
