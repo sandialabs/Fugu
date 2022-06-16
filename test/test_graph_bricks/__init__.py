@@ -1,0 +1,4 @@
+from .test_simple_graph_traversal_brick import SnnSimpleGraphTraversalTests #, DsSimpleGraphTraversalTests
+#from .test_simple_graph_traversal_brick import PynnSpinnakerSimpleGraphTraversalTests, PynnBrianSimpleGraphTraversalTests
+from .test_register_graph_traversal_brick import SnnRegisterGraphTraversalTests #, DsRegisterGraphTraversalTests
+#from .test_register_graph_traversal_brick import PynnSpinnakerRegisterGraphTraversalTests, PynnBrianRegisterGraphTraversalTests
