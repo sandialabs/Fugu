@@ -116,5 +116,5 @@ To build the documentation, use pydocmd https://pypi.org/project/pydoc-markdown/
 - ~~Create backend class to handle backend simulators~~
 - ~~Create installer for fugu~~
 
-Link to Sharepoint for Developing Next Steps:
-https://sandialabs-my.sharepoint.com/:w:/g/personal/iclane_sandia_gov/EY6DUQ8gXApIlc12uiBnKfUBDz_pj5adGUmYBnG6MLt5kQ?e=KC9Lzp
+Link to internal Sharepoint for Development Next Steps:
+- https://sandialabs-my.sharepoint.com/:w:/g/personal/iclane_sandia_gov/EY6DUQ8gXApIlc12uiBnKfUBDz_pj5adGUmYBnG6MLt5kQ?e=KC9Lzp
