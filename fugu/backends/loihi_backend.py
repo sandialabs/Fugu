@@ -29,7 +29,6 @@ class loihi_Backend(Backend):
             core['id']    = self.nextCoreID
             self.nextCoreID += 1
         p.logicalCoreId = core['id']
-        
 
     def _build_network(self):
         self.net = nx.NxNet()
@@ -141,7 +140,7 @@ class loihi_Backend(Backend):
 
             Vreset = node.get('reset_voltage', 0.0)  # Not an actual Loihi parameter. Rather, this is an offset from zero, since zero is always the reset voltage.
             Vinit  = node.get('voltage',       0.0) - Vreset
-            Vspike = node.get('threshold',     0.0) - Vreset
+            Vspike = node.get('threshold',     1.0) - Vreset
             Vdecay = node.get('decay',         0.0)
             P      = node.get('p',             1.0)
             if 'potential'        in node: Vinit  =       node['potential']
@@ -246,14 +245,15 @@ class loihi_Backend(Backend):
                     elif v == 'I':     vdict['probe'] = node['cx'].probe([nx.ProbeParameter.COMPARTMENT_CURRENT])[0]
 
         # Add probes to output neurons based on circuit information.
-        self.outputs = []
+        self.outputs = []  # TODO: could save space by not storing this list, but instead iterating over layers every time.
         for node, vals in self.fugu_circuit.nodes.data():
             if vals.get('layer') != 'output': continue
             for l in vals['output_lists']: self.outputs.extend(l)
         for n in self.outputs:
             node = G.nodes[n]
+            if not 'outputs' in node: node['outputs'] = {}
+            if not 'spike' in node['outputs']: node['outputs']['spike'] = {}
             if '$pikes' in node: continue  # This is an input, so can't be probed.
-            if not 'outputs' in node: node['outputs'] = {'spike':{}}
             vdict = node['outputs']['spike']
             if not 'probe' in vdict:
                 vdict['probe'] = node['cx'].probe([nx.ProbeParameter.SPIKE])[0]
@@ -323,29 +323,23 @@ class loihi_Backend(Backend):
                 if '$pikes' in node:  # This is an input that also got selected as an output.
                     # All this does is report back to the user exactly those spikes that were specified as input.
                     # This is mainly for convenience while visualizing the run.
-                    outputs = node['outputs']
-                    if not 'spike' in outputs: outputs['spike'] = {}
-                    vdict = outputs['spike']
-                    data = []
-                    vdict['data'] = data
+                    vdict = node['outputs']['spike']
+                    vdict['data'] = data = []
                     for s in node['$pikes']: data.append(s-1)
                     continue
                 for v, vdict in node['outputs'].items():
                     if v == 'spike':
-                        data = []
-                        vdict['data'] = data
+                        vdict['data'] = data = []
                         for i, s in enumerate(vdict['probe'].data):
                             if s: data.append(i)
                     elif v == 'V':
-                        data = []
-                        vdict['data'] = data
+                        vdict['data'] = data = []
                         scale  = node.get('scale', self.defaultScale)
                         Vreset = node.get('reset_voltage', 0.0)
                         for V in vdict['probe'].data:
                             data.append(V / scale + Vreset)
                     elif v == 'I':
-                        data = []
-                        vdict['data'] = data
+                        vdict['data'] = data = []
                         scale  = node.get('scale', self.defaultScale)
                         for I in vdict['probe'].data:
                             data.append(I / scale)
