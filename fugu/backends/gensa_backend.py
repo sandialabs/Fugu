@@ -102,7 +102,8 @@ class gensa_Backend(Backend):
         self.record          = compile_args.get('record',        False)
         self.recordInGraph   = compile_args.get('recordInGraph', False)
         self.sst             = compile_args.get('sst',          'sst')
-        self.gna             = compile_args.get('gna',          '/home/frothga/software/local/sst/scratch/src/sst-elements/src/sst/elements/GNA/gna.py')
+        self.gna             = compile_args.get('gna',          'gna.py')
+        if not 'gna' in compile_args: print('WARNING: Path to gna.py should be provided in compile_args. This simulation will probably fail without it.')
         # Wait to write graph file until run(), because we need to know the value of return_potentials first.
 
     def run(self, n_steps=10, return_potentials=False):
