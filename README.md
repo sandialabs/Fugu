@@ -91,6 +91,22 @@ To build the documentation, use pydocmd https://pypi.org/project/pydoc-markdown/
 
 
 ## Known Bugs and todos
+New:
+Jira Kanban Board - available to all members of wg-fugu
+https://jira.sandia.gov/projects/FUGU/summary
+
+Subscribing as a Jira User (required for CEE Jira access)
+
+To subscribe to Jira User, go to Nile, CEE’s shopping cart portal.
+
+    Navigate to Nile.
+    Enter "Jira User" in the search field at the top center of the browser.
+    Follow prompts to add the Jira User service to the cart.
+    Complete the checkout. P/Ts will be required but not be charged but are collected for tracking purposes to better understand the programs at Sandia that are benefiting from CEE Jira.
+    Access to CEE Jira should be available within 24 hours of subscribing. You will have access to any CEE Jira Project that has added you to their project Metagroup (wg-fugu) when you login.
+
+
+
 - Combine and organize documentation
 - ~~Inputs that take both pre-computed values and input spikes will not lay correctly.~~
 - ~~Nodes only accept input from the first output of an input node.~~
@@ -116,5 +132,5 @@ To build the documentation, use pydocmd https://pypi.org/project/pydoc-markdown/
 - ~~Create backend class to handle backend simulators~~
 - ~~Create installer for fugu~~
 
-Link to internal Sharepoint for Development Next Steps:
+Link to internal Sharepoint for Development Next Steps - currently empty - consider using Jira instead:
 - https://sandialabs-my.sharepoint.com/:w:/g/personal/iclane_sandia_gov/EY6DUQ8gXApIlc12uiBnKfUBDz_pj5adGUmYBnG6MLt5kQ?e=KC9Lzp
