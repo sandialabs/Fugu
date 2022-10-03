@@ -95,12 +95,8 @@ New:
 Jira Kanban Board - available to all members of wg-fugu
 https://jira.sandia.gov/projects/FUGU/summary
 
-Step 1: 
-Join https://metagroup.sandia.gov/metagroups/wg-fugu
-Step 2: Subscribe to Jira via Nile.  
-
-Subscribing as a Jira User (required for CEE Jira access)
-To subscribe to Jira User, go to Nile, CEE’s shopping cart portal.
+- Step 1: Join https://metagroup.sandia.gov/metagroups/wg-fugu
+- Step 2: Subscribe to Jira via Nile.  Subscribing as a Jira User (required for CEE Jira access).  To subscribe to Jira User, go to Nile, CEE’s shopping cart portal.
 
     Navigate to Nile.
     Enter "Jira User" in the search field at the top center of the browser.
