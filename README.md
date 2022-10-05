@@ -1,3 +1,12 @@
+#RENAME to main
+NOTE: This branch has been renamed to main.  
+We've kept an old version in case it would break any local branches, but on your next git push type: 
+'''
+$git push origin HEAD   
+'''
+- to have your origin branch renamed on your local machine.  
+
+
 # Fugu
 A python library for computational neural graphs.
 
