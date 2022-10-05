@@ -1,17 +1,22 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
 import unittest
 
-from .test_core import SnnInstantDecayTests, DsInstantDecayTests
-from .test_core import PynnSpinnakerInstantDecayTests, PynnBrianInstantDecayTests
-from .test_core import SnnVectorInputTests, DsVectorInputTests
-from .test_core import PynnSpinnakerVectorInputTests, PynnBrianVectorInputTests
-from .test_core import SnnChangeNeuronPropertyTests, DsChangeNeuronPropertyTests
-from .test_core import PynnSpinnakerChangeNeuronPropertyTests, PynnBrianChangeNeuronPropertyTests
-from .test_core import SnnChangeSynapseInternalPropertyTests, DsChangeSynapseInternalPropertyTests
-from .test_core import PynnSpinnakerChangeSynapseInternalPropertyTests, PynnBrianChangeSynapseInternalPropertyTests
-from .test_core import SnnChangeSynapseExternalPropertyTests, DsChangeSynapseExternalPropertyTests
-from .test_core import PynnSpinnakerChangeSynapseExternalPropertyTests, PynnBrianChangeSynapseExternalPropertyTests
-from .test_core import SnnCompoundBrickTests, DsCompoundBrickTests
-from .test_core import PynnSpinnakerCompoundBrickTests, PynnBrianCompoundBrickTests
+from .test_test_bricks import SnnInstantDecayTests
+from .test_test_bricks import SnnThresholdTests
+# from .test_core import SnnInstantDecayTests, DsInstantDecayTests
+# from .test_core import PynnSpinnakerInstantDecayTests, PynnBrianInstantDecayTests
+# from .test_core import SnnVectorInputTests, DsVectorInputTests
+# from .test_core import PynnSpinnakerVectorInputTests, PynnBrianVectorInputTests
+# from .test_core import SnnChangeNeuronPropertyTests, DsChangeNeuronPropertyTests
+# from .test_core import PynnSpinnakerChangeNeuronPropertyTests, PynnBrianChangeNeuronPropertyTests
+# from .test_core import SnnChangeSynapseInternalPropertyTests, DsChangeSynapseInternalPropertyTests
+# from .test_core import PynnSpinnakerChangeSynapseInternalPropertyTests, PynnBrianChangeSynapseInternalPropertyTests
+# from .test_core import SnnChangeSynapseExternalPropertyTests, DsChangeSynapseExternalPropertyTests
+# from .test_core import PynnSpinnakerChangeSynapseExternalPropertyTests, PynnBrianChangeSynapseExternalPropertyTests
+# from .test_core import SnnCompoundBrickTests, DsCompoundBrickTests
+# from .test_core import PynnSpinnakerCompoundBrickTests, PynnBrianCompoundBrickTests
 from .test_utility_bricks import SnnTemporalAdderTests, DsTemporalAdderTests
 from .test_utility_bricks import PynnSpinnakerTemporalAdderTests, PynnBrianTemporalAdderTests
 from .test_register_bricks import SnnAdditionTests, DsAdditionTests

@@ -1,10 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""
-Created on Wed Jun 19 14:46:55 2019
 
-@author: smusuva
-"""
 from .bricks import InputBrick, input_coding_types
 
 import numpy as np
@@ -14,36 +10,35 @@ from collections import deque
 from warnings import warn
 
 default_brick_metadata = {
-                           'input_shape': [()],
-                           'output_shape': [()],
-                           'D': 0,
-                           'layer': 'output',
-                           'input_coding': 'unknown',
-                           'output_coding': 'unknown',
-                           }
+    'input_shape': [()],
+    'output_shape': [()],
+    'D': 0,
+    'layer': 'output',
+    'input_coding': 'unknown',
+    'output_coding': 'unknown',
+}
 
 input_coding_types = [
-                       'current',
-                       'unary-B',
-                       'unary-L',
-                       'binary-B',
-                       'binary-L',
-                       'temporal-B',
-                       'temporal-L',
-                       'Raster',
-                       'Population',
-                       'Rate',
-                       'Undefined',
-                       ]
+    'current',
+    'unary-B',
+    'unary-L',
+    'binary-B',
+    'binary-L',
+    'temporal-B',
+    'temporal-L',
+    'Raster',
+    'Population',
+    'Rate',
+    'Undefined',
+]
 
 
 class InputSource:
     """
     Base class for handling various input sources/streams.
-
-    Example: Converted output (as a stream of 0's and 1's) from a DVI camera
+    Example:
+        Converted output (as a stream of 0's and 1's) from a DVI camera
     """
-
     def __init__(self):
         self.name = "InputSource"
 
@@ -53,6 +48,10 @@ class InputSource:
         Abstract method that tells the scaffold how it should connect the source to the circuit.
         This is accomplished by using a "source" dictionary argument when you create neurons/synapses.
         The "source" dictionary will contain whatever information the backends will need.
+        Args:
+            graph: networkx graph to define connections of the computational graph
+                * If the graph has edge weights, this brick will solve the single source shortest paths problem
+            metadata (dict): dictionary to define the shapes and parameters of the brick
 
         Example 1:
             Suppose the source was a motion detector (connected to hardware by a usb).
@@ -143,25 +142,23 @@ class InputSource:
 class Vector_Input(InputBrick):
     """
     Class to handle a vector of spiking input. Inherits from InputBrick
+    Construtor for this brick.
+        Args:
+            spikes (array): A numpy array of which neurons should spike at which times
+            time_dimension: Time dimesion is included as dimension -1
+            coding: Coding type to be represented.
+            batchable: True if input should represent static data; currently True is the only supported mode.
+            name (str): Name of the brick.  If not specified, a default will be used.  Name should be unique.
     """
-
     def __init__(
-          self,
-          spikes,
-          time_dimension=False,
-          coding='Undefined',
-          batchable=True,
-          name="VectorInput",
-          ):
-        """
-        Construtor for this brick.
-        Arguments:
-            + spikes - A numpy array of which neurons should spike at which times
-            + time_dimension - Time dimesion is included as dimension -1
-            + coding - Coding type to be represented.
-            + batchable - True if input should represent static data; currently True is the only supported mode.
-            + name - Name of the brick.  If not specified, a default will be used.  Name should be unique.
-        """
+        self,
+        spikes,
+        time_dimension=False,
+        coding='Undefined',
+        batchable=True,
+        name="VectorInput",
+    ):
+
         super(Vector_Input, self).__init__(name)
         self.vector = np.array(spikes)
         self.coding = coding
@@ -190,7 +187,9 @@ class Vector_Input(InputBrick):
                 for dimension in range(len(local_idxs)):
                     idx_to_build.append(local_idxs[dimension][spike])
                 global_idxs.append(tuple(idx_to_build))
-            spiking_neurons = [self.generate_neuron_name(str(idx)) for idx in global_idxs]
+            spiking_neurons = [
+                self.generate_neuron_name(str(idx)) for idx in global_idxs
+            ]
             return spiking_neurons
         else:
             raise StopIteration
@@ -203,44 +202,48 @@ class Vector_Input(InputBrick):
             new_vector = np.expand_dims(new_vector, len(new_vector.shape))
         if new_vector.shape != self.vector.shape:
             raise ValueError(
-                    "Dimensions of new spike vector ({}) does not match expected ({})".format(
-                                                                                         new_vector.shape,
-                                                                                         self.vector.shape,
-                                                                                         ),
-                    )
+                "Dimensions of new spike vector ({}) does not match expected ({})"
+                .format(
+                    new_vector.shape,
+                    self.vector.shape,
+                ), )
         else:
             self.vector = new_vector
             self.current_time = 0
         return None
 
     def get_input_value(self, t=None):
-        warn("get_input_value is deprecated and will be removed from later versions.")
+        warn(
+            "get_input_value is deprecated and will be removed from later versions."
+        )
         warn("Please ensure that your backend is up-to-date.")
         if t is None:
             return self.vector
         else:
             assert type(t) is int
-            return self.vector[..., t: t + 1][..., -1]
+            return self.vector[..., t:t + 1][..., -1]
 
-    def build(self, graph, metadata, control_nodes, input_lists, input_codings):
+    def build(self, graph, metadata, control_nodes, input_lists,
+              input_codings):
         """
         Build spike input brick.
 
-        Arguments:
-            + graph - networkx graph to define connections of the computational graph
-            + metadata - dictionary to define the shapes and parameters of the brick
-            + control_nodes - list of dictionary of auxillary nodes.
+        Args:
+            graph: networkx graph to define connections of the computational graph
+            metadata: dictionary to define the shapes and parameters of the brick
+            control_nodes: list of dictionary of auxillary nodes.
                 Expected keys:
                     'complete' - A list of neurons that fire when the brick is done
-            + input_lists - list of nodes that will contain input
-            + input_coding - list of input coding formats
+            input_lists: list of nodes that will contain input
+            input_coding: list of input coding formats
 
         Returns:
-            + graph of a computational elements and connections
-            + dictionary of output parameters (shape, coding, layers, depth, etc)
-            + list of dictionary of control nodes ('complete')
-            + list of output
-            + list of coding formats of output
+            graph: graph of a computational elements and connections
+            output_shape, output_coding, layer, D: dictionary of output parameters (shape, coding, layers, depth, etc)
+            complete_node, begin_node: list of dictionary of control nodes ('complete')
+            output_lists (list): list of output
+            output_codings (list): list of coding formats of output
+
         """
 
         if not self.time_dimension:
@@ -249,35 +252,61 @@ class Vector_Input(InputBrick):
         complete_node = self.generate_neuron_name("complete")
         begin_node = self.generate_neuron_name("begin")
         vector_size = len(self.vector) * len(self.vector.shape)
-        graph.add_node(begin_node, index=-1, threshold=0.0, decay=0.0, p=1.0, potential=0.1)
+        graph.add_node(begin_node,
+                       index=-1,
+                       threshold=0.0,
+                       decay=0.0,
+                       p=1.0,
+                       potential=0.1)
         time_length = self.vector.shape[-1]
         if time_length == 1:
-            graph.add_node(complete_node, index=-1, threshold=0.0, decay=0.0, p=1.0, potential=0.1)
+            graph.add_node(complete_node,
+                           index=-1,
+                           threshold=0.0,
+                           decay=0.0,
+                           p=1.0,
+                           potential=0.1)
         else:
-            graph.add_node(complete_node, index=-1, threshold=0.5, decay=0.0, p=1.0, potential=0.0)
-            graph.add_edge(begin_node, complete_node, weight=1.0, delay = time_length-1)
+            graph.add_node(complete_node,
+                           index=-1,
+                           threshold=0.5,
+                           decay=0.0,
+                           p=1.0,
+                           potential=0.0)
+            graph.add_edge(begin_node,
+                           complete_node,
+                           weight=1.0,
+                           delay=time_length - 1)
 
         output_lists = [[]]
         self.index_map = np.ndindex(self.vector.shape[:-1])
         for i, index in enumerate(self.index_map):
             neuron_name = self.generate_neuron_name(str(index))
 
-            graph.add_node(neuron_name, index=index, threshold=0.0, decay=0.0, p=1.0)
+            graph.add_node(neuron_name,
+                           index=index,
+                           threshold=0.0,
+                           decay=0.0,
+                           p=1.0)
             output_lists[0].append(neuron_name)
         output_codings = [self.coding]
 
         self.is_built = True
 
         return (
-                 graph,
-                 {'output_shape': [self.vector.shape], 'output_coding': self.coding, 'layer': input, 'D': 0},
-                 [{'complete': complete_node, 'begin': begin_node}],
-                 output_lists,
-                 output_codings,
-                 )
+            graph,
+            {
+                'output_shape': [self.vector.shape],
+                'output_coding': self.coding,
+                'layer': input,
+                'D': 0
+            },
+            [{
+                'complete': complete_node,
+                'begin': begin_node
+            }],
+            output_lists,
+            output_codings,
+        )
 
 
-class Spike_Input(Vector_Input):
-    def __init__(self, input_spikes, *args, **kwargs):
-        super().__init__(input_spikes, *args, **kwargs)
-        warn("Spike_Input is deprecated.  Use Vector_Input instead.")

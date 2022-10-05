@@ -4,7 +4,7 @@ import numpy as np
 import fugu
 import fugu.bricks as BRICKS
 from fugu.scaffold import Scaffold
-from fugu.backends import ds_Backend, snn_Backend, pynn_Backend
+from fugu.backends import snn_Backend
 
 from ..base import BrickTest
 from ..utilities import AssertValuesAreClose

@@ -1,0 +1,393 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Register Bricks &mdash; Fugu .01 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Stochastic Bricks" href="stochastic_bricks.html" />
+    <link rel="prev" title="Input Bricks" href="input_bricks.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> Fugu
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption" role="heading"><span class="caption-text">API Docs</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">The Fugu Module</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../backends/index.html">Fugu Backends</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="index.html">Bricks</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="adder_bricks.html">Adder Bricks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="application_bricks.html">Application Bricks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="bricks.html">Bricks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="graph_bricks.html">Graph Bricks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="input_bricks.html">Input Bricks</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Register Bricks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="stochastic_bricks.html">Stochastic Bricks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="test_bricks.html">Test Bricks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="utility_bricks.html">Utility Bricks</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../scaffold/scaffold.html">Scaffold</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../simulators/index.html">Simulators</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../utils/index.html">Utilities</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../examples/index.html">Examples API</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Fugu</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../index.html">The Fugu Module</a> &raquo;</li>
+        
+          <li><a href="index.html">Bricks</a> &raquo;</li>
+        
+      <li>Register Bricks</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../../_sources/fugu/bricks/register_bricks.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <section id="module-fugu.bricks.register_bricks">
+<span id="register-bricks"></span><h1>Register Bricks<a class="headerlink" href="#module-fugu.bricks.register_bricks" title="Permalink to this headline">¶</a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="fugu.bricks.register_bricks.Register">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">fugu.bricks.register_bricks.</span></span><span class="sig-name descname"><span class="pre">Register</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">max_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initial_value</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Register'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_coding</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Undefined'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">register_label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">single_set</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fugu.bricks.register_bricks.Register" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="bricks.html#fugu.bricks.bricks.Brick" title="fugu.bricks.bricks.Brick"><code class="xref py py-class docutils literal notranslate"><span class="pre">fugu.bricks.bricks.Brick</span></code></a></p>
+<p>Brick that stores the binary encoding of an non-negative integer.
+This brick also provides simple controls such as “recall”, “clear”, and “set”</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="fugu.bricks.register_bricks.Register.build">
+<span class="sig-name descname"><span class="pre">build</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metadata</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">control_nodes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_lists</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_codings</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fugu.bricks.register_bricks.Register.build" title="Permalink to this definition">¶</a></dt>
+<dd><p>Build Register brick.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>graph</strong> – networkx graph to define connections of the computational graph</p></li>
+<li><p><strong>metadata</strong> (<em>dict</em>) – dictionary to define the shapes and parameters of the brick</p></li>
+<li><p><strong>control_nodes</strong> (<em>dict</em>) – <p>dictionary of lists of auxillary networkx nodes.
+Expected keys:</p>
+<blockquote>
+<div><p>’complete’ - A list of neurons that fire when the brick is done</p>
+</div></blockquote>
+</p></li>
+<li><p><strong>input_lists</strong> (<em>list</em>) – list of nodes that will contain input</p></li>
+<li><p><strong>input_coding</strong> (<em>list</em>) – list of input coding formats.  All coding types supported</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>graph of a computational elements and connections
+begin: dictionary of output parameters (shape, coding, layers, depth, etc)
+complete: dictionary of control nodes (‘complete’)
+output_lists (list): list of output
+self.output_codings (list): list of coding formats of output</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>graph</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="fugu.bricks.register_bricks.Max">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">fugu.bricks.register_bricks.</span></span><span class="sig-name descname"><span class="pre">Max</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">default_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-</span> <span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Max'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_coding</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Undefined'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fugu.bricks.register_bricks.Max" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="bricks.html#fugu.bricks.bricks.Brick" title="fugu.bricks.bricks.Brick"><code class="xref py py-class docutils literal notranslate"><span class="pre">fugu.bricks.bricks.Brick</span></code></a></p>
+<p>Brick that calculates the maximum value of a collection of values stored as binary registers.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="fugu.bricks.register_bricks.Max.build">
+<span class="sig-name descname"><span class="pre">build</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metadata</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">control_nodes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_lists</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_codings</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fugu.bricks.register_bricks.Max.build" title="Permalink to this definition">¶</a></dt>
+<dd><p>Build Register brick.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>graph</strong> – networkx graph to define connections of the computational graph</p></li>
+<li><p><strong>metadata</strong> (<em>dict</em>) – dictionary to define the shapes and parameters of the brick</p></li>
+<li><p><strong>control_nodes</strong> (<em>dict</em>) – <p>dictionary of lists of auxillary networkx nodes.
+Expected keys:</p>
+<blockquote>
+<div><p>’complete’ - A list of neurons that fire when the brick is done</p>
+</div></blockquote>
+</p></li>
+<li><p><strong>input_lists</strong> (<em>list</em>) – list of nodes that will contain input</p></li>
+<li><p><strong>input_coding</strong> (<em>list</em>) – list of input coding formats.  All coding types supported</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>graph of a computational elements and connections
+begin: dictionary of output parameters (shape, coding, layers, depth, etc)
+complete: dictionary of control nodes (‘complete’)
+output_lists: list of output
+self.output_codings: list of coding formats of output</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>graph</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="fugu.bricks.register_bricks.Addition">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">fugu.bricks.register_bricks.</span></span><span class="sig-name descname"><span class="pre">Addition</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">register_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Addition'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_coding</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Undefined'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fugu.bricks.register_bricks.Addition" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="bricks.html#fugu.bricks.bricks.Brick" title="fugu.bricks.bricks.Brick"><code class="xref py py-class docutils literal notranslate"><span class="pre">fugu.bricks.bricks.Brick</span></code></a></p>
+<p>Brick that calculates the sum of two values stored as binary</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="fugu.bricks.register_bricks.Addition.build">
+<span class="sig-name descname"><span class="pre">build</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metadata</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">control_nodes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_lists</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_codings</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fugu.bricks.register_bricks.Addition.build" title="Permalink to this definition">¶</a></dt>
+<dd><p>Build Addition brick.
+:param graph: networkx graph to define connections of the computational graph
+:param metadata: dictionary to define the shapes and parameters of the brick
+:type metadata: dict
+:param control_nodes: dictionary of lists of auxillary networkx nodes.</p>
+<blockquote>
+<div><dl class="simple">
+<dt>Expected keys:</dt><dd><p>‘complete’ - A list of neurons that fire when the brick is done</p>
+</dd>
+</dl>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>input_lists</strong> (<em>list</em>) – list of nodes that will contain input</p></li>
+<li><p><strong>input_coding</strong> (<em>list</em>) – list of input coding formats.  All coding types supported</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>graph of a computational elements and connections
+begin (dict): dictionary of output parameters (shape, coding, layers, depth, etc)
+complete (dict): dictionary of control nodes (‘complete’)
+output_lists (list): list of output
+self.output_codings (list): list of coding formats of output</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>graph</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>ValueError</strong> – Too many inputs! {} can only support two inputs, received: {}</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="fugu.bricks.register_bricks.Subtraction">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">fugu.bricks.register_bricks.</span></span><span class="sig-name descname"><span class="pre">Subtraction</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">register_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Subtraction'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_coding</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Undefined'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fugu.bricks.register_bricks.Subtraction" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="bricks.html#fugu.bricks.bricks.CompoundBrick" title="fugu.bricks.bricks.CompoundBrick"><code class="xref py py-class docutils literal notranslate"><span class="pre">fugu.bricks.bricks.CompoundBrick</span></code></a></p>
+<p>Brick that calculates the difference of two values stored as binary values.
+The brick subtracts the second (Y) input from the first (X), i.e. this brick returns the value of X - Y</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="fugu.bricks.register_bricks.Subtraction.build">
+<span class="sig-name descname"><span class="pre">build</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metadata</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">control_nodes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_lists</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_codings</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fugu.bricks.register_bricks.Subtraction.build" title="Permalink to this definition">¶</a></dt>
+<dd><p>Build Subtraction brick.
+:param graph: networkx graph to define connections of the computational graph
+:param metadata: dictionary to define the shapes and parameters of the brick
+:param control_nodes: dictionary of lists of auxillary networkx nodes.</p>
+<blockquote>
+<div><dl class="simple">
+<dt>Expected keys:</dt><dd><p>‘complete’ - A list of neurons that fire when the brick is done</p>
+</dd>
+</dl>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>input_lists</strong> – list of nodes that will contain input</p></li>
+<li><p><strong>input_coding</strong> – list of input coding formats.  All coding types supported</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>graph of a computational elements and connections
+complete: dictionary of control nodes (‘complete’)
+begin: dictionary of output parameters (shape, coding, layers, depth, etc)
+output_lists (list): list of output
+self.output_codings (list): list of coding formats of output</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>graph</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="stochastic_bricks.html" class="btn btn-neutral float-right" title="Stochastic Bricks" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="input_bricks.html" class="btn btn-neutral float-left" title="Input Bricks" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2022, Sandia National Labs
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
