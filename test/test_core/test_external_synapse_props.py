@@ -4,7 +4,7 @@ import numpy as np
 import fugu
 import fugu.bricks as BRICKS
 from fugu.scaffold import Scaffold
-from fugu.backends import ds_Backend, snn_Backend, pynn_Backend
+from fugu.backends import snn_Backend
 
 from ..base import BrickTest
 
@@ -81,23 +81,3 @@ class SnnChangeSynapseExternalPropertyTests(ChangeSynapseExternalPropertyTests, 
     @classmethod
     def setUpClass(self):
         self.backend = snn_Backend()
-
-
-class DsChangeSynapseExternalPropertyTests(ChangeSynapseExternalPropertyTests, unittest.TestCase):
-    @classmethod
-    def setUpClass(self):
-        self.backend = ds_Backend()
-
-
-class PynnSpinnakerChangeSynapseExternalPropertyTests(ChangeSynapseExternalPropertyTests, unittest.TestCase):
-    @classmethod
-    def setUpClass(self):
-        self.backend = pynn_Backend()
-        self.backend_args['backend'] = 'spinnaker'
-
-
-class PynnBrianChangeSynapseExternalPropertyTests(ChangeSynapseExternalPropertyTests, unittest.TestCase):
-    @classmethod
-    def setUpClass(self):
-        self.backend = pynn_Backend()
-        self.backend_args['backend'] = 'brian'

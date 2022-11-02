@@ -7,6 +7,7 @@
 .direnv/
 .envrc
 *.ipynb_checkpoints/
+*.egg-info/
 
 
 # IDEs

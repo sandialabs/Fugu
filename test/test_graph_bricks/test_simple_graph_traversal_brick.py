@@ -6,7 +6,7 @@ import networkx as nx
 
 import fugu.bricks as BRICKS
 from fugu.scaffold import Scaffold
-from fugu.backends import ds_Backend, snn_Backend, pynn_Backend
+from fugu.backends import snn_Backend
 
 from ..utilities import create_graph, create_weighted_graph
 
@@ -192,23 +192,3 @@ class SnnSimpleGraphTraversalTests(SimpleGraphTraversalBrickTests, unittest.Test
     @classmethod
     def setUpClass(self):
         self.backend = snn_Backend()
-
-
-class DsSimpleGraphTraversalTests(SimpleGraphTraversalBrickTests, unittest.TestCase):
-    @classmethod
-    def setUpClass(self):
-        self.backend = ds_Backend()
-
-
-class PynnSpinnakerSimpleGraphTraversalTests(SimpleGraphTraversalBrickTests, unittest.TestCase):
-    @classmethod
-    def setUpClass(self):
-        self.backend = pynn_Backend()
-        self.backend_args['backend'] = 'spinnaker'
-
-
-class PynnBrianSimpleGraphTraversalTests(SimpleGraphTraversalBrickTests, unittest.TestCase):
-    @classmethod
-    def setUpClass(self):
-        self.backend = pynn_Backend()
-        self.backend_args['backend'] = 'brian'

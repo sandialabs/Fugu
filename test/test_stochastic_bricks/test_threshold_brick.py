@@ -94,9 +94,3 @@ class SnnThresholdTests(ThresholdBrickTests, unittest.TestCase):
     def setUpClass(self):
         self.backend = snn_Backend()
         self.tolerance = .30
-
-
-class DsThresholdTests(ThresholdBrickTests, unittest.TestCase):
-    @classmethod
-    def setUpClass(self):
-        self.backend = ds_Backend()

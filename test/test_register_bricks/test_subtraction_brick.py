@@ -4,7 +4,7 @@ import numpy as np
 import fugu
 import fugu.bricks as BRICKS
 from fugu.scaffold import Scaffold
-from fugu.backends import ds_Backend, snn_Backend, pynn_Backend
+from fugu.backends import snn_Backend
 
 from ..base import BrickTest
 
@@ -72,23 +72,3 @@ class SnnSubtractionTests(SubtractionBrickTests, unittest.TestCase):
     @classmethod
     def setUpClass(self):
         self.backend = snn_Backend()
-
-
-class DsSubtractionTests(SubtractionBrickTests, unittest.TestCase):
-    @classmethod
-    def setUpClass(self):
-        self.backend = ds_Backend()
-
-
-class PynnSpinnakerSubtractionTests(SubtractionBrickTests, unittest.TestCase):
-    @classmethod
-    def setUpClass(self):
-        self.backend = pynn_Backend()
-        self.backend_args['backend'] = 'spinnaker'
-
-
-class PynnBrianSubtractionTests(SubtractionBrickTests, unittest.TestCase):
-    @classmethod
-    def setUpClass(self):
-        self.backend = pynn_Backend()
-        self.backend_args['backend'] = 'brian'

@@ -6,7 +6,7 @@ import networkx as nx
 
 import fugu.bricks as BRICKS
 from fugu.scaffold import Scaffold
-from fugu.backends import ds_Backend, snn_Backend, pynn_Backend
+from fugu.backends import snn_Backend
 
 from ..utilities import create_graph, create_weighted_graph
 
@@ -231,24 +231,3 @@ class SnnRegisterGraphTraversalTests(RegisterGraphTraversalBrickTests, unittest.
     @classmethod
     def setUpClass(self):
         self.backend = snn_Backend()
-
-
-class DsRegisterGraphTraversalTests(RegisterGraphTraversalBrickTests, unittest.TestCase):
-    @classmethod
-    def setUpClass(self):
-        self.backend = ds_Backend()
-
-
-class PynnSpinnakerRegisterGraphTraversalTests(RegisterGraphTraversalBrickTests, unittest.TestCase):
-    @classmethod
-    def setUpClass(self):
-        self.backend = pynn_Backend()
-        self.backend_args['backend'] = 'spinnaker'
-
-
-class PynnBrianRegisterGraphTraversalTests(RegisterGraphTraversalBrickTests, unittest.TestCase):
-    @classmethod
-    def setUpClass(self):
-        self.backend = pynn_Backend()
-        self.backend_args['backend'] = 'brian'
-        self.backend_args['single_fire'] = True # this is kinda hacky but necessary because pynn-brian is wonky

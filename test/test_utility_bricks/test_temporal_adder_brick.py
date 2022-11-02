@@ -4,7 +4,7 @@ import numpy as np
 import fugu
 import fugu.bricks as BRICKS
 from fugu.scaffold import Scaffold
-from fugu.backends import ds_Backend, snn_Backend, pynn_Backend
+from fugu.backends import snn_Backend
 
 from ..base import BrickTest
 
@@ -68,23 +68,3 @@ class SnnTemporalAdderTests(TemporalAdderBrickTests, unittest.TestCase):
     @classmethod
     def setUpClass(self):
         self.backend = snn_Backend()
-
-
-class DsTemporalAdderTests(TemporalAdderBrickTests, unittest.TestCase):
-    @classmethod
-    def setUpClass(self):
-        self.backend = ds_Backend()
-
-
-class PynnSpinnakerTemporalAdderTests(TemporalAdderBrickTests, unittest.TestCase):
-    @classmethod
-    def setUpClass(self):
-        self.backend = pynn_Backend()
-        self.backend_args['backend'] = 'spinnaker'
-
-
-class PynnBrianTemporalAdderTests(TemporalAdderBrickTests, unittest.TestCase):
-    @classmethod
-    def setUpClass(self):
-        self.backend = pynn_Backend()
-        self.backend_args['backend'] = 'brian'

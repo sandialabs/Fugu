@@ -80,23 +80,3 @@ class SnnInstantDecayTests(InstantDecayTests, unittest.TestCase):
     @classmethod
     def setUpClass(self):
         self.backend = snn_Backend()
-
-
-class DsInstantDecayTests(InstantDecayTests, unittest.TestCase):
-    @classmethod
-    def setUpClass(self):
-        self.backend = ds_Backend()
-
-
-class PynnSpinnakerInstantDecayTests(InstantDecayTests, unittest.TestCase):
-    @classmethod
-    def setUpClass(self):
-        self.backend = pynn_Backend()
-        self.backend_args['backend'] = 'spinnaker'
-
-
-class PynnBrianInstantDecayTests(InstantDecayTests, unittest.TestCase):
-    @classmethod
-    def setUpClass(self):
-        self.backend = pynn_Backend()
-        self.backend_args['backend'] = 'brian'
