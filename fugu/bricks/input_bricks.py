@@ -424,3 +424,4 @@ class BaseP_Input(Vector_Input):
                                             time_dimension = time_dimension,
                                             collapse_binary = collapse_binary)
         self.vector = formatted_array
+        self.coding = 'binary_L' if p=2 else 'Undefined'
