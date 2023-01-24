@@ -8,9 +8,11 @@
 .envrc
 *.ipynb_checkpoints/
 *.egg-info/
+env
 
 
 # IDEs
 .idea
+*.code-workspace
 
 
