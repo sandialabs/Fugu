@@ -100,17 +100,3 @@ sphinx-build -b html -a source/ build/html
 ```
 The documentation will be in docs/build/html
 Open introduction.html.  From this page you can you can navigate through the full website, Fugu Module, etc.
-
-## Known Bugs and todos
-New:
-Jira Kanban Board - available to all members of wg-fugu
-https://jira.sandia.gov/projects/FUGU/summary
-
-- Step 1: Join https://metagroup.sandia.gov/metagroups/wg-fugu
-- Step 2: Subscribe to Jira via Nile.  Subscribing as a Jira User (required for CEE Jira access).  To subscribe to Jira User, go to Nile, CEE’s shopping cart portal.
-
-    Navigate to Nile.
-    Enter "Jira User" in the search field at the top center of the browser.
-    Follow prompts to add the Jira User service to the cart.
-    Complete the checkout. P/Ts will be required but not be charged but are collected for tracking purposes to better understand the programs at Sandia that are benefiting from CEE Jira.
-    Access to CEE Jira should be available within 24 hours of subscribing. You will have access to any CEE Jira Project that has added you to their project Metagroup (wg-fugu) when you login.
