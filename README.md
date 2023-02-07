@@ -29,12 +29,30 @@ pip install --upgrade .
 ```
 
 # Documentation
-Documentation is currently spread across several files.  We are working on including docstrings on all the classes and methods.
+Documentation is currently spread across several files and directories.  We are working on including docstrings on all the classes and methods.
 
 For now, you can check:
-- This README.md
-- The docs folder
-- The examples folder
+- This `README.md`
+- The `examples` folder
+
+
+Additional documentation can be generated from the `docs` folder. Use the following instructions to generate it on your system.
+
+```bash
+pip install -U Sphinx
+```
+or
+```bash
+conda install Sphinx
+```
+
+Navigate to the `docs` folder.  Use the `sphinx-build` command with the `html` option to generate the HTML files on your system.
+```
+sphinx-build -b html -a source/ build/html
+```
+The documentation will be in `docs/build/html`.
+Open `introduction.html`.  From this page you can you can navigate through the full website, Fugu Module, etc.
+
 
 # Basic concepts
 
@@ -83,20 +101,3 @@ an input (if calling `Brick.build`) or an output (if returning from `Brick.build
 | ------ | ------ | ------ |
 | 'complete' | All Inputs/Outputs | A neuron that fires when a brick is done processing. |
 | 'begin' | Temporally-coded Inputs/Outputs | A neuron that fires when a brick begins providing output. |
-
-
-## Documentation
-To generate documentation on your home computer, download sphinx.
-```bash
-pip install -U Sphinx
-```
-or
-```bash
-conda install Sphinx
-```
-Navigate to the Fugu/docs folder.  Use the sphinx-build html command to generate the html files on your computer.
-```
-sphinx-build -b html -a source/ build/html
-```
-The documentation will be in docs/build/html
-Open introduction.html.  From this page you can you can navigate through the full website, Fugu Module, etc.
