@@ -55,7 +55,7 @@ Open `introduction.html`.  From this page you can you can navigate through the f
 
 # Testing
 
-[Click here](tests/README.md) for more information and instructions on Fugu's test suite.
+Click [here](tests/README.md) for more information and instructions on Fugu's test suite.
 
 # Basic concepts
 
