@@ -12,7 +12,7 @@ __Note that you can run the legacy test suite pointing PyTest to the old test su
 ### Coverage
 
 ```bash
-coverage run -m pytest tests --disable-warnings
+coverage run -m pytest
 coverage report -m
 ```
 
@@ -21,6 +21,8 @@ And to generate a HTML report
 coverage html
 ```
 Then open `htmlcov/index.html` in a browser for a more in-depth analysis of the coverage report.
+
+Additionally, the script `coverage.sh` can be ran to update your local coverage report, if needed.
 
 ## Setup
 
