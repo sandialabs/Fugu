@@ -309,4 +309,119 @@ class Vector_Input(InputBrick):
             output_codings,
         )
 
+def _convert_base_p(arr, p=2, bits=8, time_dimension = False, collapse_binary=True):
+    if p > 2:
+        collapse_binary = False
+    max_value = np.max(arr)
+    if max_value >= p**bits - 1:
+        raise ValueError("Max value of {} exceeded.".format(p**bits - 1))
+    min_value = np.min(arr)
+    if min_value < 0:
+        raise ValueError("Inputs should be positive.")
+    x = None
+    for bit_no in range(bits):
+        x_i = None
+        mod = np.mod(np.floor(arr/(p**bit_no)), p)
+        for p_i in range(p):
+            this_slice = (mod==p_i).astype(np.int8)
+            this_slice = np.expand_dims(this_slice, -1)
+            this_slice = np.expand_dims(this_slice, -1)
+            if p_i == 0:
+                x_i = this_slice
+            else:
+                x_i = np.concatenate([x_i,this_slice], axis=-1)
+        if collapse_binary:
+            x_i = x_i[...,1]
+        if bit_no == 0:
+            x = x_i
+        else:
+            concat_axis = -1 if collapse_binary else -2
+            x = np.concatenate([x, x_i], axis=concat_axis)
+    if time_dimension:
+        time_axis = -2 if collapse_binary else -3
+        x = np.moveaxis(x, time_axis, -1)
+    return x
 
+
+
+class BaseP_Input(Vector_Input):
+    """
+    Class to handle converting a numpy array to a "Base p" encoding. Inherits from Vector_Input.
+
+    By "Base p" we mean that an array is converted so that the numbers are represented by spikes using a particular base.
+
+    The case where p=2 corresponds to binary.  (Note that binary has a specific collapse_binary described below.)
+    
+    For now, the brick supports converting non-negative integer values only.
+
+    Here are some examples of how values are converted.
+
+    x = 222  p=7  bits=3 ->  [5, 3, 4] as 214 = 5*7^0 + 3*7^1 + 4*7^2
+    x = 222  p=3  bits=5 ->  [0,2,0,2,2] as 222 = 0*3^0 + 2*3^1 + 0*3^2 + 2*3^3 + 2*3^4
+
+    The resulting values are unary coded, with the first entry corresponding to 0.  Neurons that correspond to the 
+    factor will spike.
+    (p=7) [5, 3, 4] = [[0,0,0,0,0,1,0], [0,0,0,1,0,0,0], [0,0,0,0,1,0,0]]
+    (p=3) [0, 2, 0, 2, 2] = [[1,0,0], [0,0,1], [1,0,0], [0,0,1], [0,0,1]]
+
+    Note that the input space will require N*p*bits input neurons (where N is the number of values in the array).
+
+    In this configuration, there will be N*p spikes. 
+
+    In general, the array becomes formatted as (..., p, bits).
+
+    For p=2 (that is, binary), we have the option of collapse_binary, which removes one axis of redundant information.
+
+    In this case, we map the last axis as 
+    [1,0] -> 0
+    [0, 1] -> 1
+
+    and our array has shape (..., p).
+
+    Lastly, we allow for a time_dimension.  If time_dimension is True, then the last dimension of the input 
+    array is treated as a time index.  This is the same behavior as in the base Vector_Input. 
+
+    If time_dimension=False, then all the spikes delivered at the same time (first timestep).
+
+    If time_dimension=True, then the last dimension is treated as a time dimension and each slice creates spikes at that timestep.
+
+    In this case, the last dimension is preserved as a time dimension.
+
+    Examples:
+
+    Input is (2,4), p=3, bits=5, time_dimension=False.  Output will be (2, 4, 3, 5) all of which are delivered at the first timestep.
+    Input is (2,4), p=3, bits=5, time_dimension=True. Output will be (2,3,5) and there will be 4 timesteps of input spikes.
+
+
+    Construtor for this brick.
+        Args:
+            array (ndarray): A numpy array of values.  Currently supported values are non-negative integers.
+            p (int): Base to use
+            bits (int): Number of 'bits' or factors to use
+            collapse_binary (boolean): If true, binary arrays are collapsed to a single dim.
+            time_dimension: Time dimesion is included as dimension -1
+            coding: Coding type to be represented.
+            name (str): Name of the brick.  If not specified, a default will be used.  Name should be unique.
+    """
+    def __init__(
+        self,
+        array,
+        p=2,
+        bits=8,
+        collapse_binary=True,
+        time_dimension=False,
+        coding='Undefined',
+        name="BasePInput",
+    ):
+        super(BaseP_Input, self).__init__([], 
+                                    time_dimension = time_dimension,
+                                    coding=coding,
+                                    batchable=True,
+                                    name=name)
+        formatted_array =  _convert_base_p(array, 
+                                            p=p,
+                                            bits=bits,
+                                            time_dimension = time_dimension,
+                                            collapse_binary = collapse_binary)
+        self.vector = formatted_array
+        self.coding = 'binary_L' if p==2 else 'Undefined'
