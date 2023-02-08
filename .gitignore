@@ -11,6 +11,7 @@ __pycache__
 *.egg-info/
 env
 build
+.pytest_cache
 .coverage
 htmlcov
 

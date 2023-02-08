@@ -4,7 +4,7 @@
 
 ```bash
 pip install -U pytest coverage
-pytest tests
+pytest
 ```
 
 __Note that you can run the legacy test suite pointing PyTest to the old test suite, i.e. `pytest test`__
