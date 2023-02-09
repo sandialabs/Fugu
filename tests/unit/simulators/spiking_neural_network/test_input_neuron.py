@@ -8,6 +8,14 @@ def default_neuron():
 
 
 @pytest.fixture
+def custom_voltage_neuron():
+    def _inner(v):
+        return InputNeuron(voltage=v)
+
+    return _inner
+
+
+@pytest.fixture
 def named_neuron():
     return InputNeuron(name="Testing")
 
@@ -25,6 +33,11 @@ def test_constructor_defaults(default_neuron):
     assert default_neuron._T == 0.1
 
     assert default_neuron._it == None
+
+
+def test_constructor_custom_voltage(custom_voltage_neuron):
+    neuron = custom_voltage_neuron(0.1)
+    assert neuron.voltage == 0.1
 
 
 @pytest.mark.parametrize(
