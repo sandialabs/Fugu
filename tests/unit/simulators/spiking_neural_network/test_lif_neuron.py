@@ -20,6 +20,11 @@ def dull_neuron():
     return LIFNeuron(voltage=0.1, p=0.0)
 
 
+@pytest.fixture
+def named_neuron():
+    return LIFNeuron(name="Testing")
+
+
 def test_constructor_defaults(default_neuron):
     assert default_neuron.name == None
     # from parent abstract class
@@ -167,3 +172,15 @@ def test__repr__(capsys, default_neuron):
     print(repr(default_neuron))
     out, _ = capsys.readouterr()
     assert out == "LIFNeuron None\n"
+
+
+def test_named__str__(capsys, named_neuron):
+    print(named_neuron)
+    out, _ = capsys.readouterr()
+    assert out == "LIFNeuron Testing(0.0, 0.0, 1.0)\n"
+
+
+def test_named__repr__(capsys, named_neuron):
+    print(repr(named_neuron))
+    out, _ = capsys.readouterr()
+    assert out == "LIFNeuron Testing\n"
