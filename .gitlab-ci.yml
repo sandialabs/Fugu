@@ -2,7 +2,7 @@ stages:
   - build
   - deploy
 
-pages-mr:
+pages_build_on_mr:
   stage: build
   image: cee-gitlab.sandia.gov:4567/srberna/python:3.9
   before_script:
