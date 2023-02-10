@@ -3,7 +3,7 @@ stages:
 
 pages:
   stage: deploy
-  image: python:3.9-slim
+  image: cee-gitlab.sandia.gov:4567/srberna/python:3.9
   before_script:
     - apt-get update && apt-get install make --no-install-recommends -y
     - python -m pip install sphinx furo
