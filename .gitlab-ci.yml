@@ -1,5 +1,14 @@
 stages:
+  - test
   - deploy
+
+tests:
+  stage: test
+  image: cee-gitlab.sandia.gov:4567/srberna/python:3.9
+  before_script:
+    - python -m pip install pytest
+  script:
+    - pytest
 
 pages:
   stage: deploy
