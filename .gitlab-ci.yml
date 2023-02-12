@@ -1,16 +1,35 @@
+default:
+  image: cee-gitlab.sandia.gov:4567/srberna/python:3.9
+
 stages:
   - test
   - deploy
 
 tests:
   stage: test
-  image: cee-gitlab.sandia.gov:4567/srberna/python:3.9
   before_script:
     - python -m pip install -r requirements.txt
     - python -m pip install --upgrade .
     - python -m pip install pytest
   script:
     - pytest
+
+coverage:
+  stage: test
+  before_script:
+    - python -m pip install -r requirements.txt
+    - python -m pip install --upgrade .
+    - python -m pip install pytest coverage
+  script:
+    - coverage run -m pytest
+    - echo "Report generated with command: coverage report -m --skip-covered" > coverage_report.txt
+    - echo >> coverage_report.txt
+    - coverage report -m --skip-covered >> coverage_report.txt
+  artifacts:
+    paths:
+      - coverage_report.txt
+    when: on_success
+
 
 pages:
   stage: deploy
