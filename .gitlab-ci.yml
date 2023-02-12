@@ -21,10 +21,11 @@ coverage:
     - python -m pip install --upgrade .
     - python -m pip install pytest coverage
   script:
-    - coverage run -m pytest
-    - echo "Report generated with command: coverage report -m --skip-covered" > coverage_report.txt
-    - echo >> coverage_report.txt
-    - coverage report -m --skip-covered >> coverage_report.txt
+    - |
+      coverage run -m pytest
+      echo "Report generated with command: coverage report -m --skip-covered" > coverage_report.txt
+      echo >> coverage_report.txt
+      coverage report -m --skip-covered >> coverage_report.txt
   artifacts:
     paths:
       - coverage_report.txt
