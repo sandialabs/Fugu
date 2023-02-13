@@ -204,3 +204,4 @@ def test_named__repr__(capsys, default_synapse_w_lif_neurons):
 
 # TODO input validation for weight
 # TODO test update_state method
+# TODO difference testing with LIFNeuron vs InputNeuron
