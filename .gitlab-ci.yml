@@ -2,10 +2,29 @@ default:
   image: cee-gitlab.sandia.gov:4567/srberna/python:3.9
 
 stages:
+  - linting
   - test
   - deploy
 
-tests:
+isort:
+  stage: linting
+  before_script:
+    - python -m pip install -r requirements.txt
+    - python -m pip install --upgrade .
+    - python -m pip install isort
+  script:
+    - isort --check tests
+
+black:
+  stage: linting
+  before_script:
+    - python -m pip install -r requirements.txt
+    - python -m pip install --upgrade .
+    - python -m pip install black
+  script:
+    - black --check tests
+
+test:
   stage: test
   before_script:
     - python -m pip install -r requirements.txt
@@ -30,7 +49,6 @@ coverage:
     paths:
       - coverage_report.txt
     when: on_success
-
 
 pages:
   stage: deploy
