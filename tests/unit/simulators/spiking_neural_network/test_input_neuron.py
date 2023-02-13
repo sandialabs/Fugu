@@ -1,4 +1,5 @@
 import pytest
+
 from fugu.simulators.SpikingNeuralNetwork.neuron import InputNeuron
 
 

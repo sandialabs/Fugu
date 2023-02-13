@@ -1,8 +1,10 @@
-import pytest
-import numpy as np
 from collections import deque
+
+import numpy as np
+import pytest
+
+from fugu.simulators.SpikingNeuralNetwork.neuron import InputNeuron, LIFNeuron
 from fugu.simulators.SpikingNeuralNetwork.synapse import Synapse
-from fugu.simulators.SpikingNeuralNetwork.neuron import LIFNeuron, InputNeuron
 
 
 @pytest.fixture
@@ -198,6 +200,7 @@ def test_named__repr__(capsys, default_synapse_w_lif_neurons):
     print(repr(default_synapse_w_lif_neurons))
     out, _ = capsys.readouterr()
     assert out == "s_n1_n2\n"
+
 
 # TODO input validation for weight
 # TODO test update_state method
