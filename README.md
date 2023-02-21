@@ -1,15 +1,10 @@
-# RENAME to main
-
-NOTE: This branch has been renamed to main.  
-We've kept an old version in case it would break any local branches, but on your next git push type: 
-'''
-$git push origin HEAD   
-'''
-- to have your origin branch renamed on your local machine.  
-
-
 # Fugu
 A python library for computational neural graphs.
+
+_Note: the `master` branch has been renamed to `main`. We've kept an old version in case it would break any local branches, but on your next git push type the following command to have your origin branch renamed on your local machine:_
+```bash
+git push origin HEAD
+```
 
 # Install
 
@@ -26,7 +21,7 @@ Some of the examples additionally require Jupyter and matplotlib.
 
 
 ## Using Pip
-```
+```bash
 git clone https://cee-gitlab.sandia.gov/nerl/Fugu.git
 cd Fugu
 pip install -r requirements.txt
@@ -34,12 +29,30 @@ pip install --upgrade .
 ```
 
 # Documentation
-Documentation is currently spread across several files.  We are working on including docstrings on all the classes and methods.
+Documentation is currently spread across several files and directories.  We are working on including docstrings on all the classes and methods.
 
 For now, you can check:
-- This README.md
-- The docs folder
-- The examples folder
+- This `README.md`
+- The `examples` folder
+
+
+Additional documentation can be generated from the `docs` folder. Use the following instructions to generate it on your system.
+
+```bash
+pip install -U Sphinx
+```
+or
+```bash
+conda install Sphinx
+```
+
+Navigate to the `docs` folder.  Use the `sphinx-build` command with the `html` option to generate the HTML files on your system.
+```
+sphinx-build -b html -a source/ build/html
+```
+The documentation will be in `docs/build/html`.
+Open `introduction.html`.  From this page you can you can navigate through the full website, Fugu Module, etc.
+
 
 # Basic concepts
 
@@ -53,7 +66,7 @@ The `Scaffold` object is a graph that contains bricks at each node.  In reality,
 Each `Brick` represents one computational function.  Bricks are attached to a Scaffold.  Bricks have certain key properties:
 
 - metadata:  A dictionary containing information such as the input and output sizes, circuit depth (if defined), and the types of codings.
-- upported_codings:  A list of supported codings for this brick. A complete list of codings is avialable at input_coding_types .   
+- upported_codings:  A list of supported codings for this brick. A complete list of codings is avialable at input_coding_types .
 - is_built:  A simple boolean saying whether or not the brick as been built
 - name: A string representing the brick
 
@@ -72,7 +85,7 @@ Output:
 A tuple (graph, metadata, complete_node, output_lists, output_codings)
 - graph: Graph that is being built
 - metadata: Dictionary containing relevant metadata information
-- control_nodes: A dictionary of lists of neurons that transmists control information (see below) 
+- control_nodes: A dictionary of lists of neurons that transmists control information (see below)
 - output_lists: A list of lists of output neurons.  Each neuron is marked with a local index used for encodings.
 - output_codings: A list of types of codings.  See input_coding_types
 
@@ -88,38 +101,3 @@ an input (if calling `Brick.build`) or an output (if returning from `Brick.build
 | ------ | ------ | ------ |
 | 'complete' | All Inputs/Outputs | A neuron that fires when a brick is done processing. |
 | 'begin' | Temporally-coded Inputs/Outputs | A neuron that fires when a brick begins providing output. |
-
-
-
-
-
-
-## Documentation
-To generate documentation on your home computer, download sphinx.
-```
-pip install -U Sphinx 
-```
-or 
-```
-conda install Sphinx
-```
-Navigate to the Fugu/docs folder.  Use the sphinx-build html command to generate the html files on your computer.
-```
-sphinx-build -b html -a source/ build/html 
-```
-The documentation will be in docs/build/html 
-Open introduction.html.  From this page you can you can navigate through the full website, Fugu Module, etc.
-
-## Known Bugs and todos
-New:
-Jira Kanban Board - available to all members of wg-fugu
-https://jira.sandia.gov/projects/FUGU/summary
-
-- Step 1: Join https://metagroup.sandia.gov/metagroups/wg-fugu
-- Step 2: Subscribe to Jira via Nile.  Subscribing as a Jira User (required for CEE Jira access).  To subscribe to Jira User, go to Nile, CEE’s shopping cart portal.
-
-    Navigate to Nile.
-    Enter "Jira User" in the search field at the top center of the browser.
-    Follow prompts to add the Jira User service to the cart.
-    Complete the checkout. P/Ts will be required but not be charged but are collected for tracking purposes to better understand the programs at Sandia that are benefiting from CEE Jira.
-    Access to CEE Jira should be available within 24 hours of subscribing. You will have access to any CEE Jira Project that has added you to their project Metagroup (wg-fugu) when you login.

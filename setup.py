@@ -16,7 +16,7 @@ setup(name='fugu',
                   'python-dateutil',
                   'pytz',
                   'networkx==2.4',
-                  'numpy>1.19.0',
+                  'numpy<1.24.0',
                   'six==1.15.0'
                   ],
       packages=package_list)
