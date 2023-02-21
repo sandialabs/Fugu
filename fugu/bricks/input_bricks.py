@@ -356,7 +356,7 @@ class BaseP_Input(Vector_Input):
 
     Here are some examples of how values are converted.
 
-    x = 222  p=7  bits=3 ->  [5, 3, 4] as 214 = 5*7^0 + 3*7^1 + 4*7^2
+    x = 222  p=7  bits=3 ->  [5, 3, 4] as 222 = 5*7^0 + 3*7^1 + 4*7^2
     x = 222  p=3  bits=5 ->  [0,2,0,2,2] as 222 = 0*3^0 + 2*3^1 + 0*3^2 + 2*3^3 + 2*3^4
 
     The resulting values are unary coded, with the first entry corresponding to 0.  Neurons that correspond to the 
