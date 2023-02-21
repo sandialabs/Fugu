@@ -4,6 +4,7 @@ default:
 stages:
   - linting
   - testing
+  - build
   - deploy
 
 isort:
