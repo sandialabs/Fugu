@@ -1,4 +1,11 @@
 {
     "esbonio.sphinx.confDir": "",
-    "restructuredtext.preview.docutils.disabled": true
+    "restructuredtext.preview.docutils.disabled": true,
+    "python.testing.pytestArgs": [
+        "tests"
+    ],
+    "python.testing.unittestEnabled": false,
+    "python.testing.pytestEnabled": true,
+    "python.linting.banditEnabled": true,
+    "python.linting.banditPath": "bandit -r . --exclude $(pwd)/tests"
 }
