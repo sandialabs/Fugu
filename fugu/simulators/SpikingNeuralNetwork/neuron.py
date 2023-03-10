@@ -9,6 +9,7 @@ import numpy as np
 
 from fugu.utils.types import bool_types, float_types, str_types
 from fugu.utils.validation import int_to_float, validate_type
+from fugu.utils.types import str_types, float_types, bool_types
 
 if sys.version_info >= (3, 4):
     ABC = abc.ABC
