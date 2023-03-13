@@ -288,6 +288,12 @@ class loihi_Backend(Backend):
                 cx.inputCompartmentId0 = cxr.nodeId
                 cxp.connect(cxr, prototype=relayConnProto)
 
+            # Add probes to neuron based on graph information.
+            if 'outputs' in node:
+                for v, vdict in node['outputs'].items():
+                    if   v == 'spike': vdict['probe'] = node['cx'].probe([nx.ProbeParameter.SPIKE])[0]
+                    elif v == 'V':     vdict['probe'] = node['cx'].probe([nx.ProbeParameter.COMPARTMENT_VOLTAGE])[0]
+                    elif v == 'I':     vdict['probe'] = node['cx'].probe([nx.ProbeParameter.COMPARTMENT_CURRENT])[0]
 
             if 'outputs' in node:
             """
@@ -442,10 +448,11 @@ class loihi_Backend(Backend):
                     spikeNeurons.append(neuron_number)
                 continue
             outputs = node['outputs']
-            for i, s in enumerate(outputs['spike']['probe'].data):
-                if s:
-                    spikeTimes.append(i)
-                    spikeNeurons.append(neuron_number)
+            if 'spike' in outputs:
+                for i, s in enumerate(outputs['spike']['probe'].data):
+                    if s:
+                        spikeTimes  .append(i)
+                        spikeNeurons.append(neuron_number)
             if return_potentials:
                 scale = node.get('scale', self.defaultScale)
                 Vreset = node.get('reset_voltage', 0.0)

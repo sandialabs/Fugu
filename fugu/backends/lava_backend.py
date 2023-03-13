@@ -171,7 +171,7 @@ class lava_Backend(Backend):
             vth = pd['vth']
             count = len(v)
             index = pd['index']
-            print("process", index, vth, dv, v)
+            #print("process", index, vth, dv, v)
             pd['process'] = process = LIF(shape=(count,), v=v, vth=vth, du=1, dv=dv, name=f'lif{index}')
             pdo = pd.get('outputs', {})
             for v in pdo:
@@ -210,7 +210,7 @@ class lava_Backend(Backend):
         for n, node in G.nodes.data():
             maxDelay = node.get('maxDelay', 1)
             if maxDelay == 1: continue
-            print("have delay", n, maxDelay)
+            #print("have delay", n, maxDelay)
             start = node['delayIndex']
             if '$pikes' in node:  # from input
                 sourceIndex = node['inputIndex']
@@ -249,7 +249,7 @@ class lava_Backend(Backend):
             index2 = pd2['index']
             W = self.inputIterator.W[index2]
             if np.count_nonzero(W):
-                print("connecting inputs", process2.name, W.shape)
+                #print("connecting inputs", process2.name, W.shape)
                 c = Dense(weights=W)
                 inputProcess.s_out.connect(c.s_in)
                 c.a_out.connect(process2.a_in)
@@ -262,7 +262,7 @@ class lava_Backend(Backend):
                 index2 = pd2['index']
                 W = W1[index2]
                 if np.count_nonzero(W):
-                    print("connecting", process1.name, process2.name, W.shape)
+                    #print("connecting", process1.name, process2.name, W.shape)
                     c = Dense(weights=W)
                     process1.s_out.connect(c.s_in)
                     c.a_out.connect(process2.a_in)
@@ -297,7 +297,8 @@ class lava_Backend(Backend):
                 elif o == 'I':     key = 'u'
                 else:              key = o
                 pdo[o] = m.get_data()[f'lif{index}'][key]  # just the time series data
-                print("got", pdo[o])
+                #print("got", pdo[o])
+        process.stop()
 
         if self.recordInGraph:
             for n, node in self.fugu_graph.nodes.data():
