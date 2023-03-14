@@ -6,8 +6,8 @@ from __future__ import print_function
 from collections.abc import Iterable
 from collections import defaultdict
 import pandas as pd
-from ..neuron.neuron import Neuron, LIFNeuron
-from ..synapse.synapse import Synapse
+from .neuron import Neuron, LIFNeuron
+from .synapse import Synapse
 
 
 class NeuralNetwork:

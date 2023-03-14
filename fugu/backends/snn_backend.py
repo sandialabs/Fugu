@@ -24,7 +24,6 @@ class snn_Backend(Backend):
             if vals.get('layer') != 'input': continue
             for list in vals['output_lists']:
                 for neuron in list:
-                    print("adding input neuron", neuron)
                     n = snn.InputNeuron(neuron, record=recordAll)
                     neuron_dict[neuron] = n
                     self.nn.add_neuron(n)
