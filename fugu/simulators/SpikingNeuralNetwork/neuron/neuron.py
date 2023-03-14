@@ -54,6 +54,7 @@ class LIFNeuron(Neuron):
                  reset_voltage=0.0,
                  leakage_constant=1.0,
                  voltage=0.0,
+                 bias=0.0,
                  p=1.0,
                  record=False):
         """
@@ -81,6 +82,7 @@ class LIFNeuron(Neuron):
         self._T = threshold
         self._R = reset_voltage
         self._m = leakage_constant
+        self._b = bias
         self.v = voltage
         self.presyn = set()
         self.record = record
@@ -108,7 +110,7 @@ class LIFNeuron(Neuron):
                     input_v += s._hist[0]
 
 
-        self.v = self.v + input_v
+        self.v = self.v + input_v + self._b
 
         if self.v > self._T:
             if np.random.random(1) <= self.prob:
@@ -143,11 +145,13 @@ class LIFNeuron(Neuron):
         print("Neuron '{0}':\n"
               "Threshold\t  :{1:2} volts,\n"
               "Reset voltage\t  :{2:1} volts,\n"
-              "Leakage Constant :{3}\n".format(
+              "Leakage Constant :{3}\n"
+              "Bias :{4}\n".format(
                   self.name,
                   self._T,
                   self._R,
                   self._m,
+                  self._b
               ))
 
     def show_presynapses(self):

@@ -32,14 +32,15 @@ class snn_Backend(Backend):
         # Add all other neurons.
         for neuron, props in self.fugu_graph.nodes.data():
             if neuron in neuron_dict: continue
-            th   = props.get('threshold',        1.0)
-            rv   = props.get('reset_voltage',    0.0)
-            lk   = props.get('leakage_constant', 1.0)
-            vol  = props.get('voltage',          0.0)
-            prob = props.get('p',                1.0)
-            if 'potential' in props: vol = props['potential']
-            if 'decay'     in props: lk  = 1.0 - props['decay']
-            n = snn.LIFNeuron(neuron, threshold=th, reset_voltage=rv, leakage_constant=lk, voltage=vol, p=prob, record=recordAll)
+            Vinit   =       props.get('voltage',       0.0)
+            Vspike  =       props.get('threshold',     1.0)
+            Vreset  =       props.get('reset_voltage', 0.0)
+            Vretain = 1.0 - props.get('decay',         0.0)
+            Vbias   =       props.get('bias',          0.0)
+            P       =       props.get('p',             1.0)
+            if 'potential'        in props: Vinit   = props['potential']
+            if 'leakage_constant' in props: Vretain = props['leakage_constant']
+            n = snn.LIFNeuron(neuron, voltage=Vinit, threshold=Vspike, reset_voltage=Vreset, leakage_constant=Vretain, bias=Vbias, p=P, record=recordAll)
             neuron_dict[neuron] = n
             self.nn.add_neuron(n)
 
@@ -52,9 +53,9 @@ class snn_Backend(Backend):
                         neuron_dict[neuron].record = True
 
         for n1, n2, props in self.fugu_graph.edges.data():
-            delay = int(props.get('delay',  1))
-            wt    =     props.get('weight', 1.0)
-            syn = snn.Synapse(neuron_dict[n1], neuron_dict[n2], delay=delay, weight=wt)
+            delay  = int(props.get('delay',  1))
+            weight =     props.get('weight', 1.0)
+            syn = snn.Synapse(neuron_dict[n1], neuron_dict[n2], delay=delay, weight=weight)
             self.nn.add_synapse(syn)
 
         del neuron_dict
