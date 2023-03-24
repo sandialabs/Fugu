@@ -1,22 +1,24 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-import numpy as np
+import abc
 import numbers
 import sys
-import abc
+
+import numpy as np
 
 if sys.version_info >= (3, 4):
     ABC = abc.ABC
 else:
-    ABC = abc.ABCMeta('ABC', (), {'__slots__': ()})
+    ABC = abc.ABCMeta("ABC", (), {"__slots__": ()})
 
 
 class Neuron(ABC):
     """
-    Abstract Base Class for Neurons. This class defines the minimum set of 
-    properties of a Neuron. 
+    Abstract Base Class for Neurons. This class defines the minimum set of
+    properties of a Neuron.
     """
+
     @abc.abstractmethod
     def __init__(self, name=None, spike=False):
         """
@@ -42,21 +44,24 @@ class Neuron(ABC):
 
 class LIFNeuron(Neuron):
     """
-    Leaky Integrate and Fire neuron class. LIFNeurons inherit from base Neuron 
-    class. LIFNeurons inetgrate the incoming signals (weighted sum of spikes 
-    from pre-synapses). The leak-rate detemines the time evolution of the 
-    menbrane Voltage. If the voltage exceeds a threshold, the neurons spikes 
-    (with probability p) and resets to its reset-voltage. 
+    Leaky Integrate and Fire neuron class. LIFNeurons inherit from base Neuron
+    class. LIFNeurons inetgrate the incoming signals (weighted sum of spikes
+    from pre-synapses). The leak-rate detemines the time evolution of the
+    menbrane Voltage. If the voltage exceeds a threshold, the neurons spikes
+    (with probability p) and resets to its reset-voltage.
     """
-    def __init__(self,
-                 name=None,
-                 threshold=0.0,
-                 reset_voltage=0.0,
-                 leakage_constant=1.0,
-                 voltage=0.0,
-                 bias=0.0,
-                 p=1.0,
-                 record=False):
+
+    def __init__(
+        self,
+        name=None,
+        threshold=0.0,
+        reset_voltage=0.0,
+        leakage_constant=1.0,
+        voltage=0.0,
+        bias=0.0,
+        p=1.0,
+        record=False,
+    ):
         """
         Constructor for LIFNeurons. Inherits from Neuron Base Class
 
@@ -87,7 +92,7 @@ class LIFNeuron(Neuron):
         self.presyn = set()
         self.record = record
         if (p < 0) or (p > 1):
-            raise ValueError('Probability p must be in the interval [0,1].')
+            raise ValueError("Probability p must be in the interval [0,1].")
         self.prob = p
 
     def update_state(self):
@@ -102,13 +107,12 @@ class LIFNeuron(Neuron):
             None
 
         """
-        '''Update the states for one time step'''
+        """Update the states for one time step"""
         input_v = 0.0
         if self.presyn:
             for s in self.presyn:
                 if len(s._hist) > 0:
                     input_v += s._hist[0]
-
 
         self.v = self.v + input_v + self._b
 
@@ -131,8 +135,9 @@ class LIFNeuron(Neuron):
         Return:
             none
         """
-        print("Neuron {0}: {1} volts, spike = {2}".format(
-            self.name, self.v, self.spike))
+        print(
+            "Neuron {0}: {1} volts, spike = {2}".format(self.name, self.v, self.spike)
+        )
 
     def show_params(self):
         """
@@ -142,17 +147,13 @@ class LIFNeuron(Neuron):
             none
 
         """
-        print("Neuron '{0}':\n"
-              "Threshold\t  :{1:2} volts,\n"
-              "Reset voltage\t  :{2:1} volts,\n"
-              "Leakage Constant :{3}\n"
-              "Bias :{4}\n".format(
-                  self.name,
-                  self._T,
-                  self._R,
-                  self._m,
-                  self._b
-              ))
+        print(
+            "Neuron '{0}':\n"
+            "Threshold\t  :{1:2} volts,\n"
+            "Reset voltage\t  :{2:1} volts,\n"
+            "Leakage Constant :{3}\n"
+            "Bias :{4}\n".format(self.name, self._T, self._R, self._m, self._b)
+        )
 
     def show_presynapses(self):
         """
@@ -165,11 +166,17 @@ class LIFNeuron(Neuron):
         if len(self.presyn) == 0:
             print("Neuron {0} receives no external input".format(self.name))
         elif len(self.presyn) == 1:
-            print("{0} receives input via synapse: {1}".format(
-                self.__repr__(), self.presyn))
+            print(
+                "{0} receives input via synapse: {1}".format(
+                    self.__repr__(), self.presyn
+                )
+            )
         else:
-            print("{0} receives input via synapses: {1}".format(
-                self.__repr__(), self.presyn))
+            print(
+                "{0} receives input via synapses: {1}".format(
+                    self.__repr__(), self.presyn
+                )
+            )
 
     @property
     def threshold(self):
@@ -200,8 +207,9 @@ class LIFNeuron(Neuron):
         return self.v
 
     def __str__(self):
-        return "LIFNeuron {0}({1}, {2}, {3})".format(self.name, self._T,
-                                                     self._R, self._m)
+        return "LIFNeuron {0}({1}, {2}, {3})".format(
+            self.name, self._T, self._R, self._m
+        )
 
     def __repr__(self):
         return "LIFNeuron {0}".format(self.name)
@@ -212,9 +220,10 @@ class InputNeuron(Neuron):
     Input Neuron. Inherits from class Neuron.
     Input Neurons can read inputs and convert them to spike streams
     """
+
     def __init__(self, name=None, threshold=0.1, voltage=0.0, record=False):
         """
-        Constructor for Input Neuron. 
+        Constructor for Input Neuron.
 
         Parameters:
             name : String, optional. Input neuron name. The default is None.
@@ -234,7 +243,6 @@ class InputNeuron(Neuron):
         self._it = None
         self.record = record
 
-
     def connect_to_input(self, in_stream):
         """
         Enables a neuron to read in an input stream of data.
@@ -246,14 +254,14 @@ class InputNeuron(Neuron):
         Returns:
             None
         """
-        if not hasattr(in_stream, '__iter__'):
-            raise TypeError('{in_stream} must be iterable'.format(**locals()))
+        if not hasattr(in_stream, "__iter__"):
+            raise TypeError("{in_stream} must be iterable".format(**locals()))
         else:
             self._it = iter(in_stream)
 
     def update_state(self):
         """
-        Updates the neuron states. The neuron spikes if the input value in 
+        Updates the neuron states. The neuron spikes if the input value in
         the current iteration is above the threshold and resets.
 
         Raises:
@@ -264,7 +272,7 @@ class InputNeuron(Neuron):
         try:
             n = next(self._it)
             if not isinstance(n, numbers.Real):
-                raise TypeError('Inputs must be int or float')
+                raise TypeError("Inputs must be int or float")
 
             self.v = n
 
@@ -291,21 +299,23 @@ class InputNeuron(Neuron):
         return self.v
 
     def __str__(self):
-        return 'InputNeuron {self.name}'.format(**locals())
+        return "InputNeuron {self.name}".format(**locals())
 
     def __repr__(self):
-        return 'InputNeuron {self.name}'.format(**locals())
+        return "InputNeuron {self.name}".format(**locals())
+
 
 if __name__ == "__main__":
     print("Testing LIF Neuron:")
     print("Trying to set probability > 1")
     try:
-        n1 = LIFNeuron('n1', 0.5, 0, 0.6, 0,p=1.2)
+        n1 = LIFNeuron("n1", 0.5, 0, 0.6, 0, p=1.2)
     except:
-        print('Raises type error since probability was greater than 1')
-    
-    n1 = LIFNeuron('n1',threshold=1.2, reset_voltage=0.0, leakage_constant=0.6, 
-                   voltage=1, p=1)
+        print("Raises type error since probability was greater than 1")
+
+    n1 = LIFNeuron(
+        "n1", threshold=1.2, reset_voltage=0.0, leakage_constant=0.6, voltage=1, p=1
+    )
     print("Neuron with intial v = 1; leakage_constant=0.6:")
     print("Timestep 0:")
     n1.show_state()
@@ -313,10 +323,10 @@ if __name__ == "__main__":
     n1.update_state()
     n1.show_state()
     print()
-    
+
     # Input Neuron
     print("Testing Input Neuron")
-    n0 = InputNeuron('n0',threshold=0.1)
+    n0 = InputNeuron("n0", threshold=0.1)
     try:
         n0.connect_to_input(2)
     except:
@@ -327,6 +337,3 @@ if __name__ == "__main__":
     for i, _ in enumerate(range(7)):
         n0.update_state()
         print(f"Time {i}: {n0.spike}")
-    
-    
-            

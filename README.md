@@ -64,11 +64,21 @@ In order to homogenize the code base, we are including a couple of tools to help
 pip install black isort
 ```
 
-A linting step has been added to the CI pipeline as well to enforce the convention, __but it is only affecting the new test suite for now.__
+A linting step has been added to the CI pipeline as well to enforce the convention.
 ```bash
 # to check locally if the linting stage will pass
 isort --check <path>  # i.e. tests in the current state
 black --check <path>  # i.e. tests in the current state
+```
+
+__Note: the convention is only being enforced for the following paths:__
+- __`tests`__
+- __`fugu/simulators`__
+
+You can run CI pipeline checks locally to check first:
+```bash
+isort --check tests fugu/simulators --skip __init__.py
+black --check tests fugu/simulators
 ```
 
 There are various ways to automate these tools as part of your development: look up instructions for your text editor, IDE, etc. as well as Git pre-commit hooks.

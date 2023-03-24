@@ -3,10 +3,12 @@
 
 from __future__ import print_function
 
-from collections.abc import Iterable
 from collections import defaultdict
+from collections.abc import Iterable
+
 import pandas as pd
-from .neuron import Neuron, LIFNeuron
+
+from .neuron import LIFNeuron, Neuron
 from .synapse import Synapse
 
 
@@ -31,8 +33,7 @@ class NeuralNetwork:
             self._nrn_count += 1
             neuron = new_neuron
         else:
-            raise TypeError(
-                "{0} must be of type Neuron or str".format(new_neuron))
+            raise TypeError("{0} must be of type Neuron or str".format(new_neuron))
         self.nrns[neuron.name] = neuron
 
     def add_multiple_neurons(self, neuron_iterable=None):
@@ -49,7 +50,7 @@ class NeuralNetwork:
             self.add_neuron(n)
 
     def list_neurons(self):
-        print("Neurons: {", end='')
+        print("Neurons: {", end="")
         for n in self.nrns:
             print("{},".format(self.nrns[n].name), end=" ")
         print("\b\b}")
@@ -60,8 +61,11 @@ class NeuralNetwork:
         """
         if not new_synapse:
             raise TypeError("Needs synapse object with pre and post neurons")
-        elif type(new_synapse) == tuple and len(new_synapse) >= 2 and len(
-                new_synapse) < 5:
+        elif (
+            type(new_synapse) == tuple
+            and len(new_synapse) >= 2
+            and len(new_synapse) < 5
+        ):
             tmpsyn = Synapse(*new_synapse)
         elif type(new_synapse) == Synapse:
             tmpsyn = new_synapse
@@ -74,10 +78,13 @@ class NeuralNetwork:
             self.synps[tmpsyn.get_key()] = tmpsyn
             self.update_network(tmpsyn)
         else:
-            print("Warning! Not Added! "
-                  "{0} already defined in network. "
-                  "(Use <synapse>.set_params() to update synapse)".format(
-                      tmpsyn, ))
+            print(
+                "Warning! Not Added! "
+                "{0} already defined in network. "
+                "(Use <synapse>.set_params() to update synapse)".format(
+                    tmpsyn,
+                )
+            )
 
     def add_multiple_synapses(self, synapse_iterable=None):
         """
@@ -149,9 +156,9 @@ class NeuralNetwork:
                     else:
                         tempdct[t].append(0)
 
-        df = pd.DataFrame.from_dict(tempdct, orient='index', columns=nrn_list)
-        df.columns.rename('Neurons', inplace=True)
-        df.index.rename('Time', inplace=True)
+        df = pd.DataFrame.from_dict(tempdct, orient="index", columns=nrn_list)
+        df.columns.rename("Neurons", inplace=True)
+        df.index.rename("Time", inplace=True)
 
         if not debug_mode:
             drop_list = [
@@ -160,16 +167,13 @@ class NeuralNetwork:
             df = df.drop(drop_list, axis=1)
 
         if record_potentials:
-            final_potentials = pd.DataFrame({
-                'potential': [],
-                'neuron_number': []
-            })
+            final_potentials = pd.DataFrame({"potential": [], "neuron_number": []})
             neuron_number = 0
             for neuron in self.nrns:
                 final_potentials = final_potentials.append(
                     {
-                        'potential': self.nrns[neuron].voltage,
-                        'neuron_number': neuron_number,
+                        "potential": self.nrns[neuron].voltage,
+                        "neuron_number": neuron_number,
                     },
                     ignore_index=True,
                 )
