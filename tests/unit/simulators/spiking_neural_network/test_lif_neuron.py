@@ -185,3 +185,6 @@ def test_named__repr__(capsys, named_neuron):
     print(repr(named_neuron))
     out, _ = capsys.readouterr()
     assert out == "LIFNeuron Testing\n"
+
+
+# TODO add test(s) for show_presynapses method
