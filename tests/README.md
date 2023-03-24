@@ -7,7 +7,7 @@ pip install -U pytest coverage
 pytest
 ```
 
-__Note that you can run the legacy test suite pointing PyTest to the old test suite, i.e. `pytest test`__
+__Note that you can run the legacy test suite pointing PyTest to the old test suite, i.e. `pytest legacy_tests`__
 
 ### Coverage
 
