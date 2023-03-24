@@ -14,7 +14,7 @@ build
 .pytest_cache
 .coverage
 htmlcov
-playground
+scratch/
 
 
 # IDEs
