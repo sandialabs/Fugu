@@ -63,6 +63,28 @@ def a_neural_network():
     return _inner
 
 
+@pytest.fixture
+def spiking_neural_network():
+    nn = NeuralNetwork()
+    a = LIFNeuron("a", voltage=0.1, record=True)
+    b = LIFNeuron("b", record=True)
+    synapse = Synapse(a, b)
+    nn.add_multiple_neurons([a, b])
+    nn.add_synapse(synapse)
+    return nn
+
+
+@pytest.fixture
+def spiking_neural_network_w_reset():
+    nn = NeuralNetwork()
+    a = LIFNeuron("a", voltage=0.1, reset_voltage=0.1, record=True)
+    b = LIFNeuron("b", record=True)
+    synapse = Synapse(a, b)
+    nn.add_multiple_neurons([a, b])
+    nn.add_synapse(synapse)
+    return nn
+
+
 def test_run(a_neural_network):
     nn = a_neural_network(False)
     df = nn.run()
@@ -95,6 +117,65 @@ def test_run_with_record(a_neural_network):
         assert row["layer-1-2"] == 0
         assert row["layer-1-3"] == 0
         assert row["out"] == 0
+
+
+def test_run_with_spikes(spiking_neural_network):
+    df = spiking_neural_network.run(n_steps=2)
+    assert type(df) == type(pd.DataFrame())
+    assert df.shape == (2, 2)
+    assert df.size == 4
+    assert df.loc[0]["a"] == 1
+    assert df.loc[0]["b"] == 0
+    assert df.loc[1]["a"] == 0
+    assert df.loc[1]["b"] == 1
+
+
+def test_run_with_spikes_debug(spiking_neural_network):
+    df = spiking_neural_network.run(n_steps=2, debug_mode=True)
+    assert type(df) == type(pd.DataFrame())
+    assert df.shape == (2, 2)
+    assert df.size == 4
+    assert df.loc[0]["a"] == (1, 0.0)
+    assert df.loc[0]["b"] == (0, 0.0)
+    assert df.loc[1]["a"] == (0, 0.0)
+    assert df.loc[1]["b"] == (1, 0.0)
+
+
+def test_run_with_spikes_reset_debug(spiking_neural_network_w_reset):
+    df = spiking_neural_network_w_reset.run(n_steps=2, debug_mode=True)
+    assert type(df) == type(pd.DataFrame())
+    assert df.shape == (2, 2)
+    assert df.size == 4
+    assert df.loc[0]["a"] == (1, 0.1)
+    assert df.loc[0]["b"] == (0, 0.0)
+    assert df.loc[1]["a"] == (1, 0.1)
+    assert df.loc[1]["b"] == (1, 0.0)
+
+
+def test_run_with_record_potentials(
+    a_neural_network, spiking_neural_network, spiking_neural_network_w_reset
+):
+    df, fp = a_neural_network(False).run(record_potentials=True)
+    assert type(df) == type(pd.DataFrame())
+    assert type(fp) == type(pd.DataFrame())
+    for i in range(5):
+        assert fp.loc[i]["potential"] == 0.0
+        assert fp.loc[i]["neuron_number"] == float(i)
+
+    df, fp = spiking_neural_network.run(record_potentials=True)
+    assert type(df) == type(pd.DataFrame())
+    assert type(fp) == type(pd.DataFrame())
+    for i in range(2):
+        assert fp.loc[i]["potential"] == 0.0
+        assert fp.loc[i]["neuron_number"] == float(i)
+
+    df, fp = spiking_neural_network_w_reset.run(record_potentials=True)
+    assert type(df) == type(pd.DataFrame())
+    assert type(fp) == type(pd.DataFrame())
+    assert fp.loc[0]["potential"] == 0.1
+    assert fp.loc[0]["neuron_number"] == 0.0
+    assert fp.loc[1]["potential"] == 0.0
+    assert fp.loc[1]["neuron_number"] == 1.0
 
 
 # TODO what does a Spiking Neural Network look like?
