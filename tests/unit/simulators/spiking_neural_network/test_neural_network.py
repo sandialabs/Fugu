@@ -241,5 +241,3 @@ def test_step(blank_network, neurons_and_synapses):
 # TODO list_neurons: why the "\b\b"?
 # TODO remove NOT SURE IF THIS IS NEEDED section - after legacy test suite is ported over
 # TODO test update_input_neuron method
-# TODO add full step tests as integration tests for simulators
-# TODO add full run tests as integration tests for simulators
