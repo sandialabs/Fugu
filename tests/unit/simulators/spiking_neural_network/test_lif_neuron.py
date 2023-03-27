@@ -39,6 +39,7 @@ def test_constructor_defaults(default_neuron):
     assert default_neuron._T == 0.0
     assert default_neuron._R == 0.0
     assert default_neuron._m == 1.0
+    assert default_neuron._b == 0.0
     assert default_neuron.voltage == 0.0
     assert default_neuron.v == 0.0
 
@@ -48,9 +49,81 @@ def test_constructor_defaults(default_neuron):
     assert default_neuron.prob == 1.0
 
 
+def test_constructor():
+    neuron = LIFNeuron(
+        name="neuron",
+        threshold=1,
+        reset_voltage=1,
+        leakage_constant=1,
+        voltage=1,
+        bias=1,
+        p=1,
+    )
+    assert neuron.name == "neuron"
+    # from parent abstract class
+    assert neuron.spike == False
+    assert neuron.spike_hist == []
+
+    assert neuron.threshold == 1.0
+    assert neuron.reset_voltage == 1.0
+    assert neuron.leakage_constant == 1.0
+    # and their _ counterparts
+    assert neuron._T == 1.0
+    assert neuron._R == 1.0
+    assert neuron._m == 1.0
+    assert neuron._b == 1.0
+    assert neuron.voltage == 1.0
+    assert neuron.v == 1.0
+
+    assert neuron.presyn == set()
+    assert neuron.record == False
+
+    assert neuron.prob == 1.0
+
+
+@pytest.mark.parametrize("param", [True, {}, "test", list(), set()])
+def test_constructor_type_errors(param):
+    if type(param) is not str and param is not None:
+        with pytest.raises(TypeError):
+            LIFNeuron(name=param)
+
+    with pytest.raises(TypeError):
+        LIFNeuron(threshold=param)
+
+    with pytest.raises(TypeError):
+        LIFNeuron(reset_voltage=param)
+
+    with pytest.raises(TypeError):
+        LIFNeuron(leakage_constant=param)
+
+    with pytest.raises(TypeError):
+        LIFNeuron(voltage=param)
+
+    with pytest.raises(TypeError):
+        LIFNeuron(bias=param)
+
+    if type(param) is not bool:
+        with pytest.raises(TypeError):
+            LIFNeuron(record=param)
+
+
+@pytest.mark.parametrize("m", [-1, -0.1, 1.1, 10])
+def test_warning_on_unrealistic_leakage_constant(m):
+    with pytest.raises(UserWarning):
+        LIFNeuron(leakage_constant=m)
+
+
 @pytest.mark.parametrize(
     "p, expected_error",
-    [(1.1, ValueError), (5.0, ValueError), (-0.1, ValueError), (-10, ValueError)],
+    [
+        (1.1, ValueError),
+        (5.0, ValueError),
+        (-0.1, ValueError),
+        (-10.0, ValueError),
+        (-10, ValueError),
+        (True, TypeError),
+        ({}, TypeError),
+    ],
 )
 def test_invalid_spiking_probablity(p, expected_error):
     with pytest.raises(expected_error):

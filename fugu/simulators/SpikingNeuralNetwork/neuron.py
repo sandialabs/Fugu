@@ -42,6 +42,43 @@ class Neuron(ABC):
         """
 
 
+def int_to_float(n):
+    """
+    Casts an int into a float, safely.
+
+    Parameters:
+        n: int, required.  Input number as int.
+
+    Returns:
+        float, or n as-is if not an int
+    """
+    if type(n) is int:
+        return float(n)
+    else:
+        return n
+
+
+def validate_type(param, types=type(None)):
+    """
+    Validates the input param against a type or types.
+
+    Parameters:
+        param: Any, required.  Input parameter to be type-checked.
+        types: type, type[], optional.  Type or types to check param against.
+
+    Raises:
+        TypeError
+    """
+    if type(types) is list:
+        checks = [t for t in types if type(param) is not t]
+        if len(checks) == len(types):
+            raise TypeError(f"{param} must be of types {types}")
+    else:
+        t = types  # it's a single type at this point
+        if type(param) is not t:
+            raise TypeError(f"{param} must be of type {t}")
+
+
 class LIFNeuron(Neuron):
     """
     Leaky Integrate and Fire neuron class. LIFNeurons inherit from base Neuron
@@ -74,6 +111,7 @@ class LIFNeuron(Neuron):
                 m is calculated as m*v. A rate of m=1 indicates no leak. For
                 realistic models, 0<= m <=1. The default is 1.0.
             voltage : Double, optional.  Internal voltage of the neuron. The default is 0.0.
+            bias : Double, optional. The default is 0.0.
             p (double): optional.  Probability of spiking if voltage exceeds threshold.
                 p=1 indicates a deterministic neuron. The default is 1.0.
             record (bool): optional.  Indicates if a neuron spike state should be sensed with probes. Default is False.
@@ -82,6 +120,30 @@ class LIFNeuron(Neuron):
             none
 
         """
+        threshold = int_to_float(threshold)
+        reset_voltage = int_to_float(reset_voltage)
+        leakage_constant = int_to_float(leakage_constant)
+        voltage = int_to_float(voltage)
+        bias = int_to_float(bias)
+        p = int_to_float(p)
+
+        validate_type(name, [str, type(None)])
+        validate_type(threshold, float)
+        validate_type(reset_voltage, float)
+        validate_type(leakage_constant, float)
+        validate_type(voltage, float)
+        validate_type(bias, float)
+        validate_type(p, float)
+        validate_type(record, bool)
+
+        if leakage_constant < 0 or leakage_constant > 1:
+            raise UserWarning(
+                "For realistic models, leakage m should be in the interval [0, 1]."
+            )
+
+        if p < 0 or p > 1:
+            raise ValueError("Probability p must be in the interval [0, 1].")
+
         super(LIFNeuron, self).__init__()
         self.name = name
         self._T = threshold
@@ -91,8 +153,6 @@ class LIFNeuron(Neuron):
         self.v = voltage
         self.presyn = set()
         self.record = record
-        if (p < 0) or (p > 1):
-            raise ValueError("Probability p must be in the interval [0,1].")
         self.prob = p
 
     def update_state(self):
@@ -184,6 +244,8 @@ class LIFNeuron(Neuron):
 
     @threshold.setter
     def threshold(self, new_threshold):
+        new_threshold = int_to_float(new_threshold)
+        validate_type(new_threshold, float)
         self._T = new_threshold
 
     @property
@@ -192,6 +254,8 @@ class LIFNeuron(Neuron):
 
     @reset_voltage.setter
     def reset_voltage(self, new_reset_v):
+        new_reset_v = int_to_float(new_reset_v)
+        validate_type(new_reset_v, float)
         self._R = new_reset_v
 
     @property
@@ -200,6 +264,8 @@ class LIFNeuron(Neuron):
 
     @leakage_constant.setter
     def leakage_constant(self, new_leak_const):
+        new_leak_const = int_to_float(new_leak_const)
+        validate_type(new_leak_const, float)
         self._m = new_leak_const
 
     @property
@@ -236,6 +302,14 @@ class InputNeuron(Neuron):
             none
 
         """
+        threshold = int_to_float(threshold)
+        voltage = int_to_float(voltage)
+
+        validate_type(name, [str, type(None)])
+        validate_type(threshold, float)
+        validate_type(voltage, float)
+        validate_type(record, bool)
+
         super(InputNeuron, self).__init__()
         self.name = name
         self._T = threshold
@@ -292,6 +366,8 @@ class InputNeuron(Neuron):
 
     @threshold.setter
     def threshold(self, new_threshold):
+        new_threshold = int_to_float(new_threshold)
+        validate_type(new_threshold, float)
         self._T = new_threshold
 
     @property
