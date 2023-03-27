@@ -96,15 +96,6 @@ class NeuralNetwork:
         for s in synapse_iterable:
             self.add_synapse(s)
 
-    # NOT SURE IF THIS IS NEEDED! ###
-    # def build_network(self):
-    #    for s in self.synps:
-    #        if s._post in self._inmap.keys():
-    #            self._inmap[s._post].add(s)
-    #        else:
-    #            self._inmap[s._post] = {s}
-    #
-
     def update_input_neuron(self, neuron_name, input_values):
         self.nrns[neuron_name].connect_to_input(input_values)
 
