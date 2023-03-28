@@ -12,7 +12,6 @@ from lava.proc.dense.process import Dense
 from lava.proc.monitor.process import Monitor
 from lava.proc.io.dataloader import SpikeDataloader
 from lava.magma.core.run_conditions import RunSteps
-from lava.magma.core.run_configs import Loihi1SimCfg
 
 from .backend import Backend
 
@@ -279,6 +278,7 @@ class lava_Backend(Backend):
         self.brick_to_number = scaffold.brick_to_number
         self.record          = compile_args.get('record', False)
         self.recordInGraph   = 'recordInGraph' in compile_args
+        self.lavaConfig      = compile_args.get('config', 'sim2')
         # Wait to build the network until run() because we need to know the value of return_potentials first.
 
     def run(self, n_steps=10, return_potentials=False):
@@ -287,7 +287,18 @@ class lava_Backend(Backend):
         self._build_network()
 
         runCondition = RunSteps(num_steps=self.duration)
-        runConfig = Loihi1SimCfg()
+        if self.lavaConfig == "hw2":
+            from lava.magma.core.run_configs import Loihi2HwCfg
+            runConfig = Loihi2HwCfg()
+        elif self.lavaConfig == "hw1":
+            from lava.magma.core.run_configs import Loihi1HwCfg
+            runConfig = Loihi1HwCfg()
+        elif self.lavaConfig == "sim2":
+            from lava.magma.core.run_configs import Loihi2SimCfg
+            runConfig = Loihi2SimCfg()
+        else:  # sim1 and all others
+            from lava.magma.core.run_configs import Loihi1SimCfg
+            runConfig = Loihi1SimCfg()
         process = self.process[self.anchor]['process']  # Presumably any LIF process can be used to run the graph. TODO: What if there are disconnected components?
         process.run(condition=runCondition, run_cfg=runConfig)
 
