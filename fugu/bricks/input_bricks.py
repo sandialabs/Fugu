@@ -313,7 +313,7 @@ def _convert_base_p(arr, p=2, bits=8, time_dimension = False, collapse_binary=Tr
     if p > 2:
         collapse_binary = False
     max_value = np.max(arr)
-    if max_value >= p**bits - 1:
+    if max_value > p**bits - 1:
         raise ValueError("Max value of {} exceeded.".format(p**bits - 1))
     min_value = np.min(arr)
     if min_value < 0:
