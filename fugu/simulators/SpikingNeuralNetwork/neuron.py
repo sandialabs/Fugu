@@ -111,7 +111,7 @@ class LIFNeuron(Neuron):
                 m is calculated as m*v. A rate of m=1 indicates no leak. For
                 realistic models, 0<= m <=1. The default is 1.0.
             voltage : Double, optional.  Internal voltage of the neuron. The default is 0.0.
-            bias : Double, optional. The default is 0.0.
+            bias : Double, optional. Constant bias voltage value that is added at every timestep. The default is 0.0
             p (double): optional.  Probability of spiking if voltage exceeds threshold.
                 p=1 indicates a deterministic neuron. The default is 1.0.
             record (bool): optional.  Indicates if a neuron spike state should be sensed with probes. Default is False.

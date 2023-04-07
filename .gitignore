@@ -16,7 +16,6 @@ build
 htmlcov
 scratch/
 
-
 # IDEs
 .idea
 *.code-workspace

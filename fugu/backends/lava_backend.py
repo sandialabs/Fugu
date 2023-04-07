@@ -12,7 +12,6 @@ from lava.proc.dense.process import Dense
 from lava.proc.monitor.process import Monitor
 from lava.proc.io.dataloader import SpikeDataloader
 from lava.magma.core.run_conditions import RunSteps
-from lava.magma.core.run_configs import Loihi1SimCfg
 
 from .backend import Backend
 
@@ -40,7 +39,7 @@ class lava_Backend(Backend):
     def __init__(self):
         super(Backend, self).__init__()
 
-    def _allocate(self, v, dv, vth, count=1):
+    def _allocate(self, v, dv, vth, b, count=1):
         """ Lava LIF has single fixed {du, dv, vth} for entire population.
             We don't do anything with du, but every (dv, vth) combination requires
             a separate population (or "process" in Lava terminology). We also
@@ -48,11 +47,12 @@ class lava_Backend(Backend):
         """
         key = (dv, vth)
         if not key in self.process:
-            self.process[key] = {'v':[], 'dv':dv, 'vth':vth, 'index':len(self.process)}
+            self.process[key] = {'v':[], 'dv':dv, 'vth':vth, 'b':[], 'index':len(self.process)}
             self.anchor = key
         pd = self.process[key]  # 'pd' for 'process data'
         start = len(pd['v'])
         pd['v'].extend([v] * count)
+        pd['b'].extend([b] * count)
         return pd, start  # The caller can assume that exactly 'count' neurons were allocated.
 
     def _build_network(self):
@@ -72,7 +72,7 @@ class lava_Backend(Backend):
         #            Other sub-keys are reserved for use by the backend.
         # maxDelay -- Longest delay on any synapse going out from this node. Defined iff > 1.
         # neuronPD -- Process data for the main neuron.
-        # neuronIndex -- Position of this neuron in 'neuronProcess'.
+        # neuronIndex -- Position of this neuron in process.
         # inputIndex -- Position of this neuron in 'inputIterator'. Defined iff this is an input node.
         # delayIndex -- Position of first neuron in 'delayProcess' associated with this node.
         #               Defined iff maxDelay > 1.
@@ -111,9 +111,11 @@ class lava_Backend(Backend):
                     if '$pikes' not in node: node['$pikes'] = []
                     spikes = node['$pikes']
                     # Loihi-1 does not report spikes in cycle 0, so we don't see immediate effects of input in that cycle.
-                    # Thus, we need to shift all timing forward by 1 to compensate.
-                    # Presumably, Lava will primarily go to Loihi hardware, so assume the same limitation.
-                    spikes.append(timestep + 1)
+                    # The Fugu Loihi backend shifts timing later by 1 to compensate, then removes the shift in post-processing.
+                    # Not sure how Lava will work on Loihi hardware. It may prove necessary to include that compensation here too.
+                    # Unfortunately, if there are also spontaneously-firing neurons, it is impossible to align all the timing,
+                    # so it is best to avoid the shift unless absolutely necessary.
+                    spikes.append(timestep)
             # Set up InputIterator
             for list in vals['output_lists']:
                 for n in list:
@@ -134,7 +136,7 @@ class lava_Backend(Backend):
             # Set up delay chains. (Applies to all neurons, including inputs.)
             maxDelay = node.get('maxDelay', 1)
             if maxDelay > 1:
-                delayPD, start = self._allocate(0, 1, 1, maxDelay-1)
+                delayPD, start = self._allocate(0, 1, 1, 0, maxDelay-1)
                 node['delayIndex'] = start
 
             # Set up regular neurons.
@@ -144,6 +146,7 @@ class lava_Backend(Backend):
             Vinit  = node.get('voltage',       0.0) - Vreset
             Vspike = node.get('threshold',     1.0) - Vreset
             Vdecay = node.get('decay',         0.0)
+            Vbias  = node.get('bias',          0.0)
             P      = node.get('p',             1.0)
             if 'potential'        in node: Vinit  =       node['potential']
             if 'leakage_constant' in node: Vdecay = 1.0 - node['leakage_constant']
@@ -152,7 +155,7 @@ class lava_Backend(Backend):
                 print('WARNING: Probabilistic firing not supported by Lava') # But we plow on anyway.
                 Pwarning = True
 
-            pd, start = self._allocate(Vinit, Vdecay, Vspike)
+            pd, start = self._allocate(Vinit, Vdecay, Vspike, Vbias)
             node['neuronPD'] = pd
             node['neuronIndex'] = start
 
@@ -169,10 +172,11 @@ class lava_Backend(Backend):
             v   = pd['v']
             dv  = pd['dv']
             vth = pd['vth']
+            b   = pd['b']
             count = len(v)
             index = pd['index']
             #print("process", index, vth, dv, v)
-            pd['process'] = process = LIF(shape=(count,), v=v, vth=vth, du=1, dv=dv, name=f'lif{index}')
+            pd['process'] = process = LIF(shape=(count,), v=v, vth=vth, du=1, dv=dv, bias_mant=b, name=f'lif{index}')
             pdo = pd.get('outputs', {})
             for v in pdo:
                 if   v == 'spike':
@@ -274,6 +278,7 @@ class lava_Backend(Backend):
         self.brick_to_number = scaffold.brick_to_number
         self.record          = compile_args.get('record', False)
         self.recordInGraph   = 'recordInGraph' in compile_args
+        self.lavaConfig      = compile_args.get('config', 'sim2')
         # Wait to build the network until run() because we need to know the value of return_potentials first.
 
     def run(self, n_steps=10, return_potentials=False):
@@ -282,7 +287,18 @@ class lava_Backend(Backend):
         self._build_network()
 
         runCondition = RunSteps(num_steps=self.duration)
-        runConfig = Loihi1SimCfg()
+        if self.lavaConfig == "hw2":
+            from lava.magma.core.run_configs import Loihi2HwCfg
+            runConfig = Loihi2HwCfg()
+        elif self.lavaConfig == "hw1":
+            from lava.magma.core.run_configs import Loihi1HwCfg
+            runConfig = Loihi1HwCfg()
+        elif self.lavaConfig == "sim2":
+            from lava.magma.core.run_configs import Loihi2SimCfg
+            runConfig = Loihi2SimCfg()
+        else:  # sim1 and all others
+            from lava.magma.core.run_configs import Loihi1SimCfg
+            runConfig = Loihi1SimCfg()
         process = self.process[self.anchor]['process']  # Presumably any LIF process can be used to run the graph. TODO: What if there are disconnected components?
         process.run(condition=runCondition, run_cfg=runConfig)
 
@@ -300,6 +316,9 @@ class lava_Backend(Backend):
                 #print("got", pdo[o])
         process.stop()
 
+        timeOffset = 0
+        if self.inputIterator.inputs: timeOffset = 1  # because SpikeDataloader does not step data until after spike phase.
+
         if self.recordInGraph:
             for n, node in self.fugu_graph.nodes.data():
                 if not 'outputs' in node: continue
@@ -308,7 +327,7 @@ class lava_Backend(Backend):
                     # This is mainly for convenience while visualizing the run.
                     vdict = node['outputs']['spike']
                     vdict['data'] = data = []
-                    for s in node['$pikes']: data.append(s-1)
+                    for s in node['$pikes']: data.append(s+timeOffset)
                     continue
                 neuronIndex = node['neuronIndex']
                 pdo = node['neuronPD']['outputs']
@@ -316,7 +335,7 @@ class lava_Backend(Backend):
                     if v == 'spike':
                         vdict['data'] = data = []
                         for i, r in enumerate(pdo[v]):  # rows (time steps) of dataset
-                            if r[neuronIndex]: data.append(i-1)
+                            if r[neuronIndex]: data.append(i)
                     elif v == 'V':
                         vdict['data'] = data = []
                         Vreset = node.get('reset_voltage', 0.0)
@@ -337,7 +356,7 @@ class lava_Backend(Backend):
             neuron_number = node['neuron_number']
             if '$pikes' in node:
                 for s in node['$pikes']:
-                    spikeTimes  .append(s-1)
+                    spikeTimes  .append(s+timeOffset)
                     spikeNeurons.append(neuron_number)
                 continue
             outputs = node['outputs']
