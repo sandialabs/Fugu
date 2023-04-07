@@ -67,11 +67,14 @@ pip install black isort
 A linting step has been added to the CI pipeline as well to enforce the convention, __but it is only affecting the new test suite for now.__
 ```bash
 # to check locally if the linting stage will pass
-isort --check <path>  # i.e. tests in the current state
-black --check <path>  # i.e. tests in the current state
+isort --check --skip=fugu/backends/loihi_backend.py --filter-files <path>  # i.e. tests in the current state
+black --check --exclude fugu/backends/loihi_backend.py <path>              # i.e. tests in the current state
 ```
 
 There are various ways to automate these tools as part of your development: look up instructions for your text editor, IDE, etc. as well as Git pre-commit hooks.
+
+__Note to exclude the following modules from automated formatting:__
+- `fugu/backends/loihi_backend.py`
 
 # Basic concepts
 
