@@ -14,7 +14,7 @@ isort:
     - python -m pip install --upgrade .
     - python -m pip install isort
   script:
-    - isort --check tests
+    - isort --check --skip=fugu/backends/loihi_backend.py --filter-files tests
 
 black:
   stage: linting
@@ -23,7 +23,7 @@ black:
     - python -m pip install --upgrade .
     - python -m pip install black
   script:
-    - black --check tests
+    - black --check --exclude fugu/backends/loihi_backend.py tests
 
 tests:
   stage: testing
