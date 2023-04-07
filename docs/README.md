@@ -40,8 +40,8 @@ Documentation is currently spread across several files.  We are working on inclu
 
 For now, you can check:
 - This README.md
-- An upcoming documentation folder
 - The examples folder
+- [API Documentation](https://snl-nerl.github.io/Fugu/docs/build/html/index.html)
 
 # Basic concepts
 
