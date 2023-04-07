@@ -14,81 +14,47 @@ class snn_Backend(Backend):
     def _build_network(self):
         self.nn = snn.NeuralNetwork()
         neuron_dict = {}
-        """"
-        Add Neurons
-        * Add in input and output neurons. Use the fugu_circuit information to identify input and output layers
-        * For input nodes, create input neurons and identity and associate the appropriate inputs to it
-        * for output neurons, obtain neuron properties from fugu_graph and create LIFNeurons
-        * Add neurons to spiking neural network
         """
+        Add Neurons
+        """
+
+        # Add input neurons, as identified by circuit information.
+        recordAll =  self.record == 'all'
         for node, vals in self.fugu_circuit.nodes.data():
-            if 'layer' in vals:
-                if vals['layer'] == 'input':
-                    for neuron in self.fugu_circuit.nodes[node][
-                            'output_lists'][0]:
-                        rc = True if self.record == 'all' else False
-                        neuron_dict[neuron] = snn.InputNeuron(neuron,
-                                                              record=rc)
-                        self.nn.add_neuron(neuron_dict[neuron])
-                if vals['layer'] == 'output':
-                    for olist in self.fugu_circuit.nodes[node]['output_lists']:
-                        for neuron in olist:
-                            props = self.fugu_graph.nodes[neuron]
-                            th = props.get('threshold', 0.0)
-                            rv = props.get('reset_voltage', 0.0)
-                            lk = props.get('leakage_constant', 1.0)
-                            vol = props.get('voltage', 0.0)
-                            prob = props.get('p', 1.0)
-                            if 'potential' in props:
-                                vol = props['potential']
-                            if 'decay' in props:
-                                lk = 1.0 - props['decay']
-                            neuron_dict[neuron] = snn.LIFNeuron(
-                                neuron,
-                                threshold=th,
-                                reset_voltage=rv,
-                                leakage_constant=lk,
-                                voltage=vol,
-                                p=prob,
-                                record=True,
-                            )
-                            self.nn.add_neuron(neuron_dict[neuron])
-        # add other neurons from self.fugu_graph to spiking neural network
-        # parse through the self.fugu_graph and if a neuron is not present in spiking neural network, add to it.
+            if vals.get('layer') != 'input': continue
+            for list in vals['output_lists']:
+                for neuron in list:
+                    n = snn.InputNeuron(neuron, record=recordAll)
+                    neuron_dict[neuron] = n
+                    self.nn.add_neuron(n)
+
+        # Add all other neurons.
         for neuron, props in self.fugu_graph.nodes.data():
-            """
-            Add Synapses
-            * add synapses from self.fugu_graph edge information
-            """
-            if neuron not in neuron_dict.keys():
-                th = props.get('threshold', 0.0)
-                rv = props.get('reset_voltage', 0.0)
-                lk = props.get('leakage_constant', 1.0)
-                vol = props.get('voltage', 0.0)
-                prob = props.get('p', 1.0)
-                if 'potential' in props:
-                    vol = props['potential']
-                if 'decay' in props:
-                    lk = 1.0 - props['decay']
-                rc = True if self.record == 'all' else False
-                neuron_dict[neuron] = snn.LIFNeuron(
-                    neuron,
-                    threshold=th,
-                    reset_voltage=rv,
-                    leakage_constant=lk,
-                    voltage=vol,
-                    p=prob,
-                    record=rc,
-                )
-                self.nn.add_neuron(neuron_dict[neuron])
+            if neuron in neuron_dict: continue
+            Vinit   =       props.get('voltage',       0.0)
+            Vspike  =       props.get('threshold',     1.0)
+            Vreset  =       props.get('reset_voltage', 0.0)
+            Vretain = 1.0 - props.get('decay',         0.0)
+            Vbias   =       props.get('bias',          0.0)
+            P       =       props.get('p',             1.0)
+            if 'potential'        in props: Vinit   = props['potential']
+            if 'leakage_constant' in props: Vretain = props['leakage_constant']
+            n = snn.LIFNeuron(neuron, voltage=Vinit, threshold=Vspike, reset_voltage=Vreset, leakage_constant=Vretain, bias=Vbias, p=P, record=recordAll)
+            neuron_dict[neuron] = n
+            self.nn.add_neuron(n)
+
+        # Tag output neurons based on circuit information.
+        if not recordAll:
+            for node, vals in self.fugu_circuit.nodes.data():
+                if vals.get('layer') != 'output': continue
+                for list in vals['output_lists']:
+                    for neuron in list:
+                        neuron_dict[neuron].record = True
 
         for n1, n2, props in self.fugu_graph.edges.data():
-            delay = int(props.get('delay', 1))
-            wt = props.get('weight', 1.0)
-            syn = snn.Synapse(neuron_dict[n1],
-                              neuron_dict[n2],
-                              delay=delay,
-                              weight=wt)
+            delay  = int(props.get('delay',  1))
+            weight =     props.get('weight', 1.0)
+            syn = snn.Synapse(neuron_dict[n1], neuron_dict[n2], delay=delay, weight=weight)
             self.nn.add_synapse(syn)
 
         del neuron_dict
@@ -105,7 +71,6 @@ class snn_Backend(Backend):
         self.fugu_circuit = scaffold.circuit
         self.fugu_graph = scaffold.graph
         self.brick_to_number = scaffold.brick_to_number
-        self.name_to_tag = scaffold.name_to_tag
         if 'record' in compile_args:
             self.record = compile_args['record']
         else:
@@ -184,10 +149,8 @@ class snn_Backend(Backend):
         """
         for brick in properties:
             if brick != 'compile_args':
-                brick_tag = self.name_to_tag[brick]
-                brick_id = self.brick_to_number[brick_tag]
-                changes = self.fugu_circuit.nodes[brick_id][
-                    'brick'].set_properties(properties[brick])
+                brick_id = self.brick_to_number[brick]
+                changes = self.fugu_circuit.nodes[brick_id]['brick'].set_properties(properties[brick])
                 if changes:
                     neuron_props, synapse_props = changes
                     for neuron_name in self.nn.nrns:

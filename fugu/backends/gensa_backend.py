@@ -3,7 +3,6 @@ import subprocess
 import pandas as pd
 
 from .backend import Backend
-from ..utils.export_utils import results_df_from_dict
 from ..utils.OutputParser import OutputParser
 
 
@@ -61,7 +60,7 @@ class gensa_Backend(Backend):
 
         # Add all other neurons.
         for n, node in G.nodes.data():
-            if '$pikes' in node: continue
+            if '$pikes' in node: continue  # skip input neurons, because they've already been done
             index  = node['neuron_number']
             Vinit  = node.get('voltage',       0.0)
             Vspike = node.get('threshold',     1.0)
@@ -109,7 +108,7 @@ class gensa_Backend(Backend):
     def run(self, n_steps=10, return_potentials=False):
         self.traceV = return_potentials
         self.writeGraphFile()
-        subprocess.run([self.sst, self.gna, '--', '--steps', str(n_steps), '--dt', '1', '-n', 'model.graph'])  # call SST GNA
+        subprocess.run([self.sst, self.gna, '--', '--steps', str(n_steps), '--dt', '1', '--neurons', 'model.graph'])  # call SST GNA
         # SST saves output in a file called 'out'.
         op = OutputParser()
         op.parse('out')  # Reads entire file into memory at once, then closes file.
@@ -124,8 +123,7 @@ class gensa_Backend(Backend):
                     # This is mainly for convenience while visualizing the run.
                     if not 'spike' in outputs: continue
                     vdict = outputs['spike']
-                    vdict['data'] = data = []
-                    for s in node['$pikes']: data.append(s)
+                    vdict['data'] = node['$pikes']
                     continue
                 index = node['neuron_number']
                 for v, vdict in node['outputs'].items():
