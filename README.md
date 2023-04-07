@@ -77,8 +77,8 @@ __Note: the convention is only being enforced for the following paths:__
 
 You can run CI pipeline checks locally to check first:
 ```bash
-isort --check tests fugu/simulators --skip __init__.py
-black --check tests fugu/simulators
+isort --check --skip=__init__.py --filter-files tests fugu/utils/validation.py fugu/simulators
+black --check tests fugu/utils/validation.py fugu/simulators
 ```
 
 There are various ways to automate these tools as part of your development: look up instructions for your text editor, IDE, etc. as well as Git pre-commit hooks.

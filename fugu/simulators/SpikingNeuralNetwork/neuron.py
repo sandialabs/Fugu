@@ -7,6 +7,8 @@ import sys
 
 import numpy as np
 
+from fugu.utils.validation import int_to_float, validate_type
+
 if sys.version_info >= (3, 4):
     ABC = abc.ABC
 else:
@@ -31,6 +33,7 @@ class Neuron(ABC):
         Returns:
             None
         """
+
         self.name = name
         self.spike = False
         self.spike_hist = []
@@ -40,43 +43,6 @@ class Neuron(ABC):
         """
         Update the time evolution of the neuron state
         """
-
-
-def int_to_float(n):
-    """
-    Casts an int into a float, safely.
-
-    Parameters:
-        n: int, required.  Input number as int.
-
-    Returns:
-        float, or n as-is if not an int
-    """
-    if type(n) is int:
-        return float(n)
-    else:
-        return n
-
-
-def validate_type(param, types=type(None)):
-    """
-    Validates the input param against a type or types.
-
-    Parameters:
-        param: Any, required.  Input parameter to be type-checked.
-        types: type, type[], optional.  Type or types to check param against.
-
-    Raises:
-        TypeError
-    """
-    if type(types) is list:
-        checks = [t for t in types if type(param) is not t]
-        if len(checks) == len(types):
-            raise TypeError(f"{param} must be of types {types}")
-    else:
-        t = types  # it's a single type at this point
-        if type(param) is not t:
-            raise TypeError(f"{param} must be of type {t}")
 
 
 class LIFNeuron(Neuron):
@@ -118,8 +84,8 @@ class LIFNeuron(Neuron):
 
         Returns:
             none
-
         """
+
         threshold = int_to_float(threshold)
         reset_voltage = int_to_float(reset_voltage)
         leakage_constant = int_to_float(leakage_constant)
@@ -165,9 +131,9 @@ class LIFNeuron(Neuron):
 
         Returns:
             None
-
         """
         """Update the states for one time step"""
+
         input_v = 0.0
         if self.presyn:
             for s in self.presyn:
@@ -195,6 +161,7 @@ class LIFNeuron(Neuron):
         Return:
             none
         """
+
         print(
             "Neuron {0}: {1} volts, spike = {2}".format(self.name, self.v, self.spike)
         )
@@ -207,6 +174,7 @@ class LIFNeuron(Neuron):
             none
 
         """
+
         print(
             "Neuron '{0}':\n"
             "Threshold\t  :{1:2} volts,\n"
@@ -221,8 +189,8 @@ class LIFNeuron(Neuron):
 
         Returns:
             none
-
         """
+
         if len(self.presyn) == 0:
             print("Neuron {0} receives no external input".format(self.name))
         elif len(self.presyn) == 1:
@@ -293,15 +261,14 @@ class InputNeuron(Neuron):
 
         Parameters:
             name : String, optional. Input neuron name. The default is None.
-        threshold (double): optional. Threashold value above which the neuron spikes. The default is 0.1.
-        voltage (double): optional. Membrane voltage. The default is 0.0.
-        record (bool): optional. Indicates if a neuron spike state should be sensed with probes.
-            The default is False.
+            threshold (double): optional. Threashold value above which the neuron spikes. The default is 0.1.
+            voltage (double): optional. Membrane voltage. The default is 0.0.
+            record (bool): optional. Indicates if a neuron spike state should be sensed with probes. The default is False.
 
         Returns:
             none
-
         """
+
         threshold = int_to_float(threshold)
         voltage = int_to_float(voltage)
 
@@ -328,6 +295,7 @@ class InputNeuron(Neuron):
         Returns:
             None
         """
+
         if not hasattr(in_stream, "__iter__"):
             raise TypeError("{in_stream} must be iterable".format(**locals()))
         else:
@@ -343,6 +311,7 @@ class InputNeuron(Neuron):
         Returns:
             None
         """
+
         try:
             n = next(self._it)
             if not isinstance(n, numbers.Real):

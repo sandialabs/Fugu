@@ -7,6 +7,7 @@ import numpy as np
 
 # from ..neuron.neuron import Neuron
 from fugu.simulators.SpikingNeuralNetwork import Neuron
+from fugu.utils.validation import int_to_float, validate_type
 
 
 class Synapse:
@@ -19,28 +20,27 @@ class Synapse:
 
     def __init__(self, pre_neuron, post_neuron, delay=1, weight=1.0):
         """
-
         Parameters:
             pre_neuron (any): Neuron that provides input to the synapse
             post_neuron (any): Neuron that receives the signals from the synapse
-        delay (int) : non-negative Int, optional.  Number of time steps needed to relay the scaled spike. The default is 1.
-        weight (double): optional.  Scaling value for incoming spike. The default is 1.0.
+            delay (int) : non-negative Int, optional.  Number of time steps needed to relay the scaled spike. The default is 1.
+            weight (double): optional.  Scaling value for incoming spike. The default is 1.0.
 
         Raises:
-            TypeError: if pre and post neurons are not of type neurons.=
+            TypeError: if pre and post neurons are not of type neurons
             TypeError: if delay is not of type Int
             ValueError: if delay is less than 1
 
         Returns:
             none
-
         """
 
         if not isinstance(pre_neuron, Neuron) or not isinstance(post_neuron, Neuron):
             raise TypeError("Pre and Post Synanptic neurons must be of type Neuron")
 
-        if type(delay) != int:
-            raise TypeError("delay must be an int - encode number of time steps")
+        weight = int_to_float(weight)
+        validate_type(delay, int)
+        validate_type(weight, float)
 
         if delay < 1:
             raise ValueError("delay must be a strictly positive (>0) int value")
@@ -54,7 +54,6 @@ class Synapse:
 
     def get_key(self):
         """
-
         Returns:
             self._pre (tuple): Pre neuron of the synapse
             self._post (tuple) post neuron of synapse
@@ -69,7 +68,6 @@ class Synapse:
 
         Returns:
             self._pre: Neuron Pre-synaptic neuron
-
         """
         return self._pre
 
@@ -80,7 +78,6 @@ class Synapse:
 
         Returns:
             Neuron: post-synaptic neuron
-
         """
         return self._post
 
@@ -91,7 +88,6 @@ class Synapse:
 
         Returns:
             self._w (double): scaling weight of the synapse.
-
         """
         return self._w
 
@@ -105,6 +101,9 @@ class Synapse:
         Returns:
             none
         """
+
+        new_weight = int_to_float(new_weight)
+        validate_type(new_weight, float)
         self._w = new_weight
 
     @property
@@ -114,12 +113,11 @@ class Synapse:
 
         Returns:
             self._d (int): delay in time steps
-
         """
         return self._d
 
     @delay.setter
-    def delay(self, new_delay=1.0):
+    def delay(self, new_delay=1):
         """
         Setter for synaptic delay.
 
@@ -130,8 +128,7 @@ class Synapse:
             None
         """
 
-        if type(new_delay) != int:
-            raise TypeError("delay must be an int - encode number of time steps")
+        validate_type(new_delay, int)
 
         if new_delay < 1:
             raise ValueError("delay must be a strictly positive (>0) int value")
@@ -149,6 +146,11 @@ class Synapse:
         Returns:
             None
         """
+
+        new_weight = int_to_float(new_weight)
+        validate_type(new_delay, int)
+        validate_type(new_weight, float)
+
         self.delay = new_delay
         self.weight = new_weight
 
@@ -160,6 +162,7 @@ class Synapse:
         Returns:
             None
         """
+
         print(
             "Synapse {0} -> {1}:\n delay  : {2}\n weight : {3}".format(
                 self._pre,
