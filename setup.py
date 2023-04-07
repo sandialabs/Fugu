@@ -6,7 +6,7 @@ from setuptools import setup, find_packages
 package_list = find_packages()
 
 setup(name='fugu',
-      version='0.1',
+      version='0.1.5',
       description='A python library for computational neural graphs',
       install_requires = ['decorator',
                   'future',
