@@ -77,7 +77,7 @@ __Note: the convention is only being enforced for the following paths:__
 
 You can run CI pipeline checks locally to check first:
 ```bash
-isort --check --skip=__init__.py --filter-files tests fugu/utils/validation.py fugu/simulators
+isort --check --skip=__init__.py --skip=tests/unit/utils/test_validation.py --filter-files tests fugu/utils/validation.py fugu/simulators
 black --check tests fugu/utils/validation.py fugu/simulators
 ```
 

@@ -14,7 +14,7 @@ isort:
     - python -m pip install --upgrade .
     - python -m pip install isort
   script:
-    - isort --check --skip=__init__.py --filter-files tests fugu/utils/validation.py fugu/simulators
+    - isort --check --skip=__init__.py --skip=tests/unit/utils/test_validation.py --filter-files tests fugu/utils/validation.py fugu/simulators
 
 black:
   stage: linting

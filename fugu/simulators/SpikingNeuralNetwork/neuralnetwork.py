@@ -8,6 +8,8 @@ from collections.abc import Iterable
 
 import pandas as pd
 
+from fugu.utils.validation import validate_instance, validate_type
+
 from .neuron import LIFNeuron, Neuron
 from .synapse import Synapse
 
@@ -34,6 +36,7 @@ class NeuralNetwork:
             neuron = new_neuron
         else:
             raise TypeError("{0} must be of type Neuron or str".format(new_neuron))
+
         self.nrns[neuron.name] = neuron
 
     def add_multiple_neurons(self, neuron_iterable=None):
@@ -42,12 +45,10 @@ class NeuralNetwork:
         """
         if not neuron_iterable:
             self.add_neuron()
-
-        if not isinstance(neuron_iterable, Iterable):
-            raise TypeError("{0} is not iterable".format(neuron_iterable))
-
-        for n in neuron_iterable:
-            self.add_neuron(n)
+        else:
+            validate_instance(neuron_iterable, Iterable)
+            for n in neuron_iterable:
+                self.add_neuron(n)
 
     def list_neurons(self):
         print("Neurons: {", end="")
@@ -90,9 +91,7 @@ class NeuralNetwork:
         """
         Add synapses from an iterable containing synapses
         """
-        if not isinstance(synapse_iterable, Iterable):
-            raise TypeError("{0} is not iterable".format(synapse_iterable))
-
+        validate_instance(synapse_iterable, Iterable)
         for s in synapse_iterable:
             self.add_synapse(s)
 
@@ -104,6 +103,7 @@ class NeuralNetwork:
         """
         build the connection map from the Synapses and Neuron information contained in them
         """
+        validate_instance(new_synapse, Synapse)
         new_synapse._post.presyn.add(new_synapse)
 
     def step(self):
@@ -126,6 +126,10 @@ class NeuralNetwork:
         Returns:
             df: iteration of network evolution in pandas dataFrame
         """
+
+        validate_type(n_steps, int)
+        validate_type(debug_mode, bool)
+        validate_type(record_potentials, bool)
 
         tempdct = defaultdict(list)
         nrn_list = []

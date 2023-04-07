@@ -237,7 +237,6 @@ def test_step(blank_network, neurons_and_synapses):
 
 
 # TODO should add_multiple_neurons method accept {} (even though it's an instance of Iterable)
-# TODO add_multiple_neurons: needs to return after check if input is None
 # TODO list_neurons: why the "\b\b"?
 # TODO remove NOT SURE IF THIS IS NEEDED section - after legacy test suite is ported over
 # TODO test update_input_neuron method
