@@ -409,8 +409,7 @@ class loihi_Backend(Backend):
                     continue
                 for v, vdict in node['outputs'].items():
                     if v == 'spike':
-                        data = []
-                        vdict['data'] = data
+                        vdict['data'] = data = []
                         for i, s in enumerate(vdict['probe'].data):
                             if s: data.append(i)
                     elif v == 'V':
