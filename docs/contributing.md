@@ -1,5 +1,3 @@
-layout: page title: "Contributing" permalink: /contributing
-
 # Contributing to Fugu
 
 Fugu's designs mean there are several ways to add new components (e.g. bricks and backends) to Fugu.  Over time, new features and components will be added to Fugu itself, but we expect that Fugu will only include a base collection of bricks and backends.  
