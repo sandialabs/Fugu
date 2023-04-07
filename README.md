@@ -59,6 +59,15 @@ Click [here](tests/README.md) for more information and instructions on Fugu's te
 
 # Contributing
 
+## Branches
+
+We suggest the following convention for naming branches: `username/##-branch-name`, where:
+- `username`: your GitLab username
+- `##`: issue number (can be omitted if branch is not tied to an issue)
+- `branch-name`: a short descrition of the work
+
+## Formatters
+
 In order to homogenize the code base, we are including a couple of tools to help code formatting: `isort` for formatting imports and `black` for formatting code. The tools can be added with the following pip command:
 ```bash
 pip install black isort
