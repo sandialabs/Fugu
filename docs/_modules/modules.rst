@@ -1,7 +1,8 @@
-src
-===
+source
+======
 
 .. toctree::
    :maxdepth: 4
 
-   fugu
+   conf
+   examples
