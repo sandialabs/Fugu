@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Fugu &mdash; Fugu .01 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="The Fugu Module" href="fugu/index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="#" class="icon icon-home">
+            Fugu
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">API Docs</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="fugu/index.html">The Fugu Module</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="#">Fugu</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="#" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Fugu</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/index.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <div class="section" id="fugu">
+<h1>Fugu<a class="headerlink" href="#fugu" title="Permalink to this heading"></a></h1>
+<p>Copyright 2022 National Technology &amp; Engineering Solutions of Sandia, LLC (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S. Government retains certain rights in this software.</p>
+<p>Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:</p>
+<ol class="arabic simple">
+<li><p>Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.</p></li>
+<li><p>Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.</p></li>
+<li><p>Neither the name of the copyright holder nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.</p></li>
+</ol>
+<p>THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS” AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.</p>
+<div class="section" id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this heading"></a></h2>
+<p>A python library for computational neural graphs.</p>
+<p>Fugu is a high-level framework specifically designed for developing spiking circuits in terms of computation graphs. Accordingly, with a base leaky-integrate-and fire (LIF) neuron model at its core, neural circuits are built as <em>bricks</em>. These foundational computations are then combined and composed as scaffolds to construct larger computations. This allows us to describe spiking circuits in terms of neural features common to most NMC architectures rather than platform specific designs. In addition to architectural abstraction, the compositionality concept of Fugu not only facilitates a hierarchical approach to functionality development but also enables adding pre and post processing operations to overarching neural circuits. Such properties position Fugu to help explore under what parameterization or scale a neural approach may offer an advantage. For example, prior work has analyzed neural algorithms for computational kernels like sorting, optimization, and graph analytics identifying different regions in which a neural advantage exists accounting for neural circuit setup, timing, or other factors.</p>
+<p>Fugu is open source and availble on github:  <a class="reference external" href="https://github.com/SNL-NERL/Fugu">https://github.com/SNL-NERL/Fugu</a></p>
+</div>
+<div class="section" id="install">
+<h2>Install<a class="headerlink" href="#install" title="Permalink to this heading"></a></h2>
+<div class="section" id="dependencies">
+<h3>Dependencies<a class="headerlink" href="#dependencies" title="Permalink to this heading"></a></h3>
+<p>A full list of dependencies is listed in requirements.txt.  The high level dependencies are:</p>
+<ul class="simple">
+<li><p>Numpy</p></li>
+<li><p>NetworkX</p></li>
+<li><p>Pandas</p></li>
+</ul>
+</div>
+<div class="section" id="a-note-on-running-examples">
+<h3>A Note on Running Examples<a class="headerlink" href="#a-note-on-running-examples" title="Permalink to this heading"></a></h3>
+<p>Some of the examples additionally require Jupyter and matplotlib.</p>
+<p>Install using Pip:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">git</span> <span class="n">clone</span> <span class="n">http</span><span class="p">:</span><span class="o">//</span><span class="n">github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">SNL</span><span class="o">-</span><span class="n">NERL</span><span class="o">/</span><span class="n">Fugu</span><span class="o">.</span><span class="n">git</span>
+<span class="n">cd</span> <span class="n">Fugu</span>
+<span class="n">pip</span> <span class="n">install</span> <span class="o">-</span><span class="n">r</span> <span class="n">requirements</span><span class="o">.</span><span class="n">txt</span>
+<span class="n">pip</span> <span class="n">install</span> <span class="o">--</span><span class="n">upgrade</span> <span class="o">.</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="documentation">
+<h2>Documentation<a class="headerlink" href="#documentation" title="Permalink to this heading"></a></h2>
+<p>Documentation is available in a few different places.</p>
+<p>A good place to start is the examples folder on github: <a class="reference external" href="http://github.com/SNL-NERL/Fugu/tree/main/examples">http://github.com/SNL-NERL/Fugu/tree/main/examples</a></p>
+<p>The neuron model is explained <a class="reference external" href="http://snl-nerl.github.io/Fugu/build/html/neuron_model.html">here.</a></p>
+<p>Links to the API are below.</p>
+<div class="toctree-wrapper compound">
+<p class="caption" role="heading"><span class="caption-text">API Docs</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="fugu/index.html">The Fugu Module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="fugu/backends/index.html">Fugu Backends</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="fugu/backends/backend.html">Backend</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fugu/backends/loihi_backend.html">Loihi Backend</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fugu/backends/snn_backend.html">SNN Backend</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="fugu/bricks/index.html">Bricks</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="fugu/bricks/adder_bricks.html">Adder Bricks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fugu/bricks/application_bricks.html">Application Bricks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fugu/bricks/bricks.html">Bricks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fugu/bricks/graph_bricks.html">Graph Bricks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fugu/bricks/input_bricks.html">Input Bricks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fugu/bricks/register_bricks.html">Register Bricks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fugu/bricks/stochastic_bricks.html">Stochastic Bricks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fugu/bricks/test_bricks.html">Test Bricks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fugu/bricks/utility_bricks.html">Utility Bricks</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="fugu/scaffold/scaffold.html">Scaffold</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="fugu/scaffold/scaffold.html#fugu.scaffold.scaffold.Scaffold"><code class="docutils literal notranslate"><span class="pre">Scaffold</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="fugu/simulators/index.html">Simulators</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="fugu/simulators/SpikingNeuralNetwork/neuralnetwork/neuralnetwork.html">Neural Network</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fugu/simulators/SpikingNeuralNetwork/neuron/neuron.html">Neuron</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fugu/simulators/SpikingNeuralNetwork/synapse/synapse.html">Synapse</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="fugu/utils/index.html">Utilities</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="fugu/utils/export_utils.html">Export Utilities</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fugu/utils/misc.html">Miscellaneous Utilities</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div class="section" id="collaborations-and-contributing">
+<h2>Collaborations and Contributing<a class="headerlink" href="#collaborations-and-contributing" title="Permalink to this heading"></a></h2>
+<p>We hope that as Fugu develops it will become a useful tool for the spiking neuromorphic field.</p>
+<p>While the Fugu team is small, we are always interested in collaborations where possible.  If you have questions
+or are interested in starting a collaboration, please e-mail us at <a class="reference external" href="mailto:wg-fugu&#37;&#52;&#48;sandia&#46;gov">wg-fugu<span>&#64;</span>sandia<span>&#46;</span>gov</a>.</p>
+<p>If you are not a collaborator but would like to contribute, you are welcome to create an github issue or e-mail to discuss.
+In many cases, extensions to Fugu should not be incoporated into the core of Fugu, see <a class="reference external" href="http://snl-nerl.github.io/Fugu/build/html/contributing.html">http://snl-nerl.github.io/Fugu/build/html/contributing.html</a>.</p>
+<p>If you use Fugu for your research, please cite the following paper:</p>
+<p>Aimone, James B., William Severa, and Craig M. Vineyard. “Composing neural algorithms with Fugu.” Proceedings of the International Conference on Neuromorphic Systems. 2019.</p>
+</div>
+</div>
+<div class="section" id="indices-and-tables">
+<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this heading"></a></h1>
+<ul class="simple">
+<li><p><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></p></li>
+<li><p><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></p></li>
+<li><p><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></p></li>
+</ul>
+</div>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="fugu/index.html" class="btn btn-neutral float-right" title="The Fugu Module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, Sandia National Labs.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

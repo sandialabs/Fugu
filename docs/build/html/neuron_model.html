@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Fugu Neural Networks &mdash; Fugu .01 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
+        <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            Fugu
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">API Docs</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="fugu/index.html">The Fugu Module</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Fugu</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Fugu Neural Networks</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/neuron_model.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <div class="section" id="fugu-neural-networks">
+<h1>Fugu Neural Networks<a class="headerlink" href="#fugu-neural-networks" title="Permalink to this heading"></a></h1>
+<div class="section" id="specifying-the-network-in-fugu">
+<h2>Specifying the network in Fugu<a class="headerlink" href="#specifying-the-network-in-fugu" title="Permalink to this heading"></a></h2>
+<p>To prepare a network, fugu “bricks” are assembled into a “scaffold”.  Each brick may be thought of as generating a graph component analagous to a local neural “circuit” with neurons and synapses (as defined by nodes and edges within the brick).  The scaffold then defines the connectivity between these local neural circuits.  As with any neural circuit or graph, the functional properties of a brick’s circuitry are determined by the specific properties of the neurons and synapses as well as the circuit connectivity.  Below we describe the model properties of the neurons and synapses currently available within Fugu.</p>
+<p>It should be noted that each brick is the algorithm for generating a neural circuit, not the graph itself, and that the network object is not constructed until <cite>lay_bricks()</cite> is called.  At evaluation this network is converted into torch.Tensor objects for simulation.</p>
+</div>
+<div class="section" id="neuron-model">
+<h2>Neuron Model<a class="headerlink" href="#neuron-model" title="Permalink to this heading"></a></h2>
+<p>The Fugu neuron model is based upon a standard leaky-integrate-and-fire neuron.  The fugu neuron is constructed with the variables (for neuron <span class="math notranslate nohighlight">\(i\)</span>):</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Variable Key</p></th>
+<th class="head"><p>Definition/Description</p></th>
+<th class="head"><p>Variable Name</p></th>
+<th class="head"><p>Type</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>potential</p></td>
+<td><p>Internal state of the neuron</p></td>
+<td><p><span class="math notranslate nohighlight">\(x_i\)</span></p></td>
+<td><p>float</p></td>
+</tr>
+<tr class="row-odd"><td><p>threshold</p></td>
+<td><p>Neuron spike threshold</p></td>
+<td><p><span class="math notranslate nohighlight">\(T_i\)</span></p></td>
+<td><p>float</p></td>
+</tr>
+<tr class="row-even"><td><p>decay</p></td>
+<td><p>Decay constant</p></td>
+<td><p><span class="math notranslate nohighlight">\(m_i\)</span></p></td>
+<td><p>float <span class="math notranslate nohighlight">\(\in [0,1]\)</span></p></td>
+</tr>
+<tr class="row-odd"><td><p>p</p></td>
+<td><p>Probability of spike (given that <span class="math notranslate nohighlight">\(x_i &gt; T_i\)</span>)</p></td>
+<td><p><span class="math notranslate nohighlight">\(p_i\)</span></p></td>
+<td><p>float <span class="math notranslate nohighlight">\(\in [0,1]\)</span></p></td>
+</tr>
+<tr class="row-even"><td><p>record</p></td>
+<td><p>List of values to record</p></td>
+<td><p>N/A</p></td>
+<td><p>list of strings</p></td>
+</tr>
+<tr class="row-odd"><td><p>N/A</p></td>
+<td><p>Random Draw</p></td>
+<td><p>a</p></td>
+<td><p>float <span class="math notranslate nohighlight">\(\in [0,1]\)</span></p></td>
+</tr>
+</tbody>
+</table>
+<p>For each simulation step <span class="math notranslate nohighlight">\(t\)</span>, <span class="math notranslate nohighlight">\(x_i\)</span> is computed as follows:</p>
+<p>1. <span class="math notranslate nohighlight">\(x_i = x_{t-1,i} + I_i + W_{i}*S_{t-1}\)</span>,
+where <span class="math notranslate nohighlight">\(I_i\)</span>, <span class="math notranslate nohighlight">\(W_{i}\)</span> is a vector containing the weights of the edges between every other neuron in the network and neuron
+<span class="math notranslate nohighlight">\(i\)</span>, and <span class="math notranslate nohighlight">\(S_{t-1}\)</span> is a vector containing the spike history of the network for the previous stimulation step.</p>
+<p>2. If <span class="math notranslate nohighlight">\(x_i &gt; T_i\)</span>, then if <span class="math notranslate nohighlight">\(a &lt; p_i\)</span>, then <span class="math notranslate nohighlight">\(S[i]\)</span>
+If the internal state of neuron <span class="math notranslate nohighlight">\(i\)</span> is greater than its spike threshold, spike with probability <span class="math notranslate nohighlight">\(p_i\)</span>.  Currently the internal state is reset to <span class="math notranslate nohighlight">\(0\)</span> following a spike.</p>
+<p>3. If <span class="math notranslate nohighlight">\(x_i &lt;= T_i\)</span>, then <span class="math notranslate nohighlight">\(x_i = x_i * (1-m_i)\)</span>
+If neuron <span class="math notranslate nohighlight">\(i\)</span> does not spike, the internal state decays to <span class="math notranslate nohighlight">\(0\)</span> as described above.  Note: if <span class="math notranslate nohighlight">\(m_i = 0\)</span> there is no decay and in the absence of any additional input the
+neuron will remain at its current state.</p>
+<p>Other notes: If <span class="math notranslate nohighlight">\(T_i &lt; 0\)</span>, the neuron will spike with probability <span class="math notranslate nohighlight">\(p_i\)</span> on each simulation step, assuming that the input is not sufficiently negative to pull the neuron’s
+internal state below threshold.  If <span class="math notranslate nohighlight">\(p_i = 1.0\)</span>, then the neuron model is deterministic.</p>
+<div class="section" id="input-neurons">
+<h3>Input Neurons<a class="headerlink" href="#input-neurons" title="Permalink to this heading"></a></h3>
+<p>Thus far in Fugu development, we have used two types of neurons to provide input to the network.  In the first case, spike times of the input neurons are pre-determined prior to run-time, as in <cite>Example_Brick_Building.ipynb.</cite></p>
+<p>In the second case, input neurons are constructed to spike as a function of input data that is provided at run-time.  In this scenario, these input neurons act to “translate” information from the data domain to the spiking domain.</p>
+</div>
+</div>
+<div class="section" id="synapses">
+<h2>Synapses<a class="headerlink" href="#synapses" title="Permalink to this heading"></a></h2>
+<p>Thus far in Fugu, all neurons are modeled as point neurons with at most one synapse between a given pair pre- and post-synaptic neurons.</p>
+<p>In addition to being characterized by a weight (see below), each synapse is also characterized by a delay (time of transmission between pre-synaptic spike to post-synaptic potential).</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Record Key</p></th>
+<th class="head"><p>Definition</p></th>
+<th class="head"><p>Type</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>‘weight’</p></td>
+<td><p>Synaptic Weight</p></td>
+<td><p>float</p></td>
+</tr>
+<tr class="row-odd"><td><p>‘delay’</p></td>
+<td><p>Synaptic Delay</p></td>
+<td><p>int <span class="math notranslate nohighlight">\([1, \inf)\)</span></p></td>
+</tr>
+</tbody>
+</table>
+<p>Currently Fugu only supports discrete-time simulation.  Therefore delays must take integer values of at least 1 simulation step.  Synaptic weights may take any floating point value, including negative (inhibitory) values.</p>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, Sandia National Labs.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
