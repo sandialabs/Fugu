@@ -64,14 +64,26 @@ In order to homogenize the code base, we are including a couple of tools to help
 pip install black isort
 ```
 
-A linting step has been added to the CI pipeline as well to enforce the convention, __but it is only affecting the new test suite for now.__
+A linting step has been added to the CI pipeline as well to enforce the convention.
 ```bash
 # to check locally if the linting stage will pass
 isort --check <path>  # i.e. tests in the current state
 black --check <path>  # i.e. tests in the current state
 ```
 
+__Note: the convention is only being enforced for the following paths:__
+- __`tests`__
+- __`fugu/simulators`__
+
+You can run CI pipeline checks locally to check first:
+```bash
+isort --check --skip=__init__.py --skip=tests/unit/utils/test_validation.py --filter-files tests fugu/utils/validation.py fugu/simulators
+black --check tests fugu/utils/validation.py fugu/simulators
+```
+
 There are various ways to automate these tools as part of your development: look up instructions for your text editor, IDE, etc. as well as Git pre-commit hooks.
+
+__Caution: if you are working with existing code that hasn't been formatted yet, please commit the updates from the formatting tools as a single commit before doing actual work and record the SHA as a new line in the file `.git-blame-ignore-revs`. This helps with more accurate information from the `git blame` command and prevent polluting the record with your username from the updates from the formatters. To configure `git` to use this file automatically, run the command `git config blame.ignoreRevsFile .git-blame-ignore-revs`.__
 
 # Basic concepts
 
