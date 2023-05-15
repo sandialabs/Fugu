@@ -59,22 +59,36 @@ Click [here](tests/README.md) for more information and instructions on Fugu's te
 
 # Contributing
 
+## Branches
+
+We suggest the following convention for naming branches: `username/##-branch-name`, where:
+- `username`: your GitLab username
+- `##`: issue number (can be omitted if branch is not tied to an issue)
+- `branch-name`: a short descrition of the work
+
+## Formatters
+
 In order to homogenize the code base, we are including a couple of tools to help code formatting: `isort` for formatting imports and `black` for formatting code. The tools can be added with the following pip command:
 ```bash
 pip install black isort
 ```
 
-A linting step has been added to the CI pipeline as well to enforce the convention, __but it is only affecting the new test suite for now.__
+__Note: the convention is only being enforced for the following paths:__
+- __`tests`__
+- __`fugu/simulators`__
+
+__Note: exclude the following modules from automated formatting:__
+- `fugu/backends/loihi_backend.py`
+
+You can run CI pipeline checks locally to check first:
 ```bash
-# to check locally if the linting stage will pass
-isort --check --skip=fugu/backends/loihi_backend.py --filter-files <path>  # i.e. tests in the current state
-black --check --exclude fugu/backends/loihi_backend.py <path>              # i.e. tests in the current state
+isort --check --skip=__init__.py --skip=tests/unit/utils/test_validation.py --skip=fugu/backends/loihi_backend.py --filter-files tests fugu/utils/validation.py fugu/simulators
+black --check tests fugu/utils/validation.py fugu/simulators --exclude fugu/backends/loihi_backend.py
 ```
 
 There are various ways to automate these tools as part of your development: look up instructions for your text editor, IDE, etc. as well as Git pre-commit hooks.
 
-__Note to exclude the following modules from automated formatting:__
-- `fugu/backends/loihi_backend.py`
+__Caution: if you are working with existing code that hasn't been formatted yet, please commit the updates from the formatting tools as a single commit before doing actual work and record the SHA as a new line in the file `.git-blame-ignore-revs`. This helps with more accurate information from the `git blame` command and prevent polluting the record with your username from the updates from the formatters. To configure `git` to use this file automatically, run the command `git config blame.ignoreRevsFile .git-blame-ignore-revs`.__
 
 # Basic concepts
 
