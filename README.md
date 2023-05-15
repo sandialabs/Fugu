@@ -82,9 +82,11 @@ __Note: exclude the following modules from automated formatting:__
 
 You can run CI pipeline checks locally to check first:
 ```bash
-isort --check --skip=__init__.py --skip=tests/unit/utils/test_validation.py --skip=fugu/backends/loihi_backend.py --filter-files tests fugu/utils/validation.py fugu/simulators
-black --check tests fugu/utils/validation.py fugu/simulators --exclude fugu/backends/loihi_backend.py
+isort --check --skip=__init__.py --skip=tests/unit/utils/test_validation.py --skip=fugu/backends --filter-files tests fugu/utils/validation.py fugu/simulators
+black --check tests fugu/utils/validation.py fugu/simulators --exclude fugu/backends
 ```
+
+The `filter-files` option ensures that files and directories are still skipped when specified into `isort` inputs.
 
 There are various ways to automate these tools as part of your development: look up instructions for your text editor, IDE, etc. as well as Git pre-commit hooks.
 
