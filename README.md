@@ -78,7 +78,7 @@ __Note: the convention is only being enforced for the following paths:__
 - __`fugu/simulators`__
 
 __Note: exclude the following modules from automated formatting:__
-- `fugu/backends/loihi_backend.py`
+- `fugu/backends`
 
 You can run CI pipeline checks locally to check first:
 ```bash
