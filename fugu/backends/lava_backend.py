@@ -79,12 +79,62 @@ class lava_Backend(Backend):
 
         # Analyze connections.
         # Find max delay depth for each neuron.
-        # This will determine the chain of extra neurons we need to add to buffer a spike.
+        #   This will determine the chain of extra neurons we need to add to buffer a spike.
+        # Find max weight over all synapses.
+        #   Fugu's Loihi backend scales weight on a per-target-neuron basis, but it looks
+        #   like Lava treats an entire weight matrix as having the same scaling, so we just
+        #   determine a single scale for all weights in the network.
+        maxWeight = 1;
         for n1, n2, edge in G.edges.data():
             node = G.nodes[n1]
             delay = round(edge.get('delay', 1))
+            weight = abs(edge.get('weight', 1.0))
             maxDelay = node.get('maxDelay', 1)
             if delay > maxDelay: node['maxDelay'] = delay
+            if weight > maxWeight: maxWeight = weight
+        # Find max bias -- See above. A similar comment applies on how fine-grained bias can be.
+        # Find max threhsold -- ditto
+        maxBias      = 0
+        maxThreshold = 1
+        for n, node in G.nodes.data():
+            Vreset =     node.get('reset_voltage', 0.0)  # Offset from zero, since zero is always the reset voltage.
+            Vspike = abs(node.get('threshold',     1.0) - Vreset)
+            Vbias  = abs(node.get('bias',          0.0))
+            if Vbias  > maxBias:      maxBias      = Vbias
+            if Vspike > maxThreshold: maxThreshold = Vspike
+
+        # Determine scale for voltage
+        # See loihi_backend.py for reasoning behind this section.
+        # All these calculations assume the quirks of Loihi-1.
+        # May need something else for Loihi-2.
+        self.scale = 1 << 20
+        minScale   = 1 << 6
+        #   Compensate for threshold
+        if maxThreshold:
+            bits = math.floor(math.log2(abs(maxThreshold * self.scale)))  # The power of the MSB needed to represent Vspike. The number of bits required is actually (bits+1).
+            excess = bits - 22  # 22 is power of MSB of largest possible theshold.
+            if excess > 0:
+                self.scale >>= excess
+                if self.scale < minScale: print("WARNING: threshold exceeds available precision")
+        #   Compensate for weight magnitude
+        #   As long as firing threshold can be represented, we don't care by how much it might
+        #   be exceeded. Thus we don't worry about the sum of weights, only individual weights.
+        if maxWeight:
+            bits = math.floor(math.log2(maxWeight * self.scale))
+            excess = bits - 20  # 20 is highest possible bit position for weight
+            if excess > 0:
+                self.scale >>= excess
+                if self.scale < minScale: print("WARNING: at least one incoming weight exceeds available precision")
+        #   Compensate for large bias values
+        if maxBias:
+            # bias is signed 13-bit (12 significant bits), with up to 7 bits of shift
+            bits = math.floor(math.log2(abs(maxBias * self.scale)))
+            biasExp = max(0, bits - 11)  # 11 is highest allowable power in mantissa
+            excess = biasExp - 7
+            if excess > 0:
+                # Give up precision to support large bias.
+                self.scale >>= excess
+                if self.scale < minScale: print("WARNING: bias exceeds available precision")
 
         # Tag output neurons based on circuit information.
         if self.record != 'all':
@@ -136,20 +186,24 @@ class lava_Backend(Backend):
             # Set up delay chains. (Applies to all neurons, including inputs.)
             maxDelay = node.get('maxDelay', 1)
             if maxDelay > 1:
-                delayPD, start = self._allocate(0, 1, 1, 0, maxDelay-1)
+                delayPD, start = self._allocate(0, 1, self.scale/2, 0, maxDelay-1)  # Threshold is half of delay weight. See "connect delay chains" below.
                 node['delayIndex'] = start
 
             # Set up regular neurons.
             if '$pikes' in node: continue  # This was created as an input node, so can't be a regular neuron.
 
             Vreset = node.get('reset_voltage', 0.0)  # Offset from zero, since zero is always the reset voltage.
-            Vinit  = node.get('voltage',       0.0) - Vreset
-            Vspike = node.get('threshold',     1.0) - Vreset
+            Vinit  = node.get('voltage',       0.0)
+            Vspike = node.get('threshold',     1.0)
             Vdecay = node.get('decay',         0.0)
             Vbias  = node.get('bias',          0.0)
             P      = node.get('p',             1.0)
             if 'potential'        in node: Vinit  =       node['potential']
             if 'leakage_constant' in node: Vdecay = 1.0 - node['leakage_constant']
+
+            Vinit  = self.scale * (Vinit  - Vreset)
+            Vspike = self.scale * (Vspike - Vreset)
+            Vbias  = self.scale *  Vbias
 
             if P != 1 and not Pwarning:
                 print('WARNING: Probabilistic firing not supported by Lava') # But we plow on anyway.
@@ -218,19 +272,19 @@ class lava_Backend(Backend):
             start = node['delayIndex']
             if '$pikes' in node:  # from input
                 sourceIndex = node['inputIndex']
-                self.inputIterator.W[delayIndex][start,sourceIndex] = 1
+                self.inputIterator.W[delayIndex][start,sourceIndex] = self.scale  # equivalent to maxWeight on this synapse
             else:  # from regular neuron
                 sourceIndex = node['neuronIndex']
                 pd1 = node['neuronPD']
-                pd1.W[delayIndex][start,sourceIndex] = 1
+                pd1.W[delayIndex][start,sourceIndex] = self.scale
             if maxDelay == 2: continue
-            for i in range(start, start+maxDelay-2): W[i+1,i] = 1
+            for i in range(start, start+maxDelay-2): W[i+1,i] = self.scale
 
         # Add synapses
         for n1, n2, edge in G.edges.data():
             node1 = G.nodes[n1]
             node2 = G.nodes[n2]
-            weight = edge.get('weight', 1)
+            weight = edge.get('weight', 1) * self.scale
             delay  = edge.get('delay',  1)
             processIndex = node2['neuronPD']['index']
             targetIndex  = node2['neuronIndex']
@@ -339,8 +393,12 @@ class lava_Backend(Backend):
                     elif v == 'V':
                         vdict['data'] = data = []
                         Vreset = node.get('reset_voltage', 0.0)
-                        for r in pdo[v]: data.append(r[neuronIndex] + Vreset)
+                        for r in pdo[v]: data.append(r[neuronIndex] / self.scale + Vreset)
                         #del data[0]  # TODO: what is the timing relationship between Monitor readouts and actual state?
+                    elif v == 'I':
+                        vdict['data'] = data = []
+                        for r in pdo[v]: data.append(r[neuronIndex] / self.scale)
+                        #del data[0]  # ditto
                     else:
                         vdict['data'] = data = []
                         for r in pdo[v]: data.append(r[neuronIndex])
@@ -369,7 +427,7 @@ class lava_Backend(Backend):
                         spikeNeurons.append(neuron_number)
             if return_potentials:
                 Vreset = node.get('reset_voltage', 0.0)
-                potentialValues .append(pdo['V'][-1][neuronIndex] + Vreset)
+                potentialValues .append(pdo['V'][-1][neuronIndex] / self.scale + Vreset)
                 potentialNeurons.append(neuron_number)
         spikes = pd.DataFrame({'time':spikeTimes, 'neuron_number':spikeNeurons}, copy=False)
         spikes.sort_values('time', inplace=True)  # put in spike time order

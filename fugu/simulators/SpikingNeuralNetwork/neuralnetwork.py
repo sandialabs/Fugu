@@ -3,10 +3,14 @@
 
 from __future__ import print_function
 
-from collections.abc import Iterable
 from collections import defaultdict
+from collections.abc import Iterable
+
 import pandas as pd
-from .neuron import Neuron, LIFNeuron
+
+from fugu.utils.validation import validate_instance, validate_type
+
+from .neuron import LIFNeuron, Neuron
 from .synapse import Synapse
 
 
@@ -31,8 +35,8 @@ class NeuralNetwork:
             self._nrn_count += 1
             neuron = new_neuron
         else:
-            raise TypeError(
-                "{0} must be of type Neuron or str".format(new_neuron))
+            raise TypeError("{0} must be of type Neuron or str".format(new_neuron))
+
         self.nrns[neuron.name] = neuron
 
     def add_multiple_neurons(self, neuron_iterable=None):
@@ -41,15 +45,13 @@ class NeuralNetwork:
         """
         if not neuron_iterable:
             self.add_neuron()
-
-        if not isinstance(neuron_iterable, Iterable):
-            raise TypeError("{0} is not iterable".format(neuron_iterable))
-
-        for n in neuron_iterable:
-            self.add_neuron(n)
+        else:
+            validate_instance(neuron_iterable, Iterable)
+            for n in neuron_iterable:
+                self.add_neuron(n)
 
     def list_neurons(self):
-        print("Neurons: {", end='')
+        print("Neurons: {", end="")
         for n in self.nrns:
             print("{},".format(self.nrns[n].name), end=" ")
         print("\b\b}")
@@ -60,8 +62,11 @@ class NeuralNetwork:
         """
         if not new_synapse:
             raise TypeError("Needs synapse object with pre and post neurons")
-        elif type(new_synapse) == tuple and len(new_synapse) >= 2 and len(
-                new_synapse) < 5:
+        elif (
+            type(new_synapse) == tuple
+            and len(new_synapse) >= 2
+            and len(new_synapse) < 5
+        ):
             tmpsyn = Synapse(*new_synapse)
         elif type(new_synapse) == Synapse:
             tmpsyn = new_synapse
@@ -74,29 +79,21 @@ class NeuralNetwork:
             self.synps[tmpsyn.get_key()] = tmpsyn
             self.update_network(tmpsyn)
         else:
-            print("Warning! Not Added! "
-                  "{0} already defined in network. "
-                  "(Use <synapse>.set_params() to update synapse)".format(
-                      tmpsyn, ))
+            print(
+                "Warning! Not Added! "
+                "{0} already defined in network. "
+                "(Use <synapse>.set_params() to update synapse)".format(
+                    tmpsyn,
+                )
+            )
 
     def add_multiple_synapses(self, synapse_iterable=None):
         """
         Add synapses from an iterable containing synapses
         """
-        if not isinstance(synapse_iterable, Iterable):
-            raise TypeError("{0} is not iterable".format(synapse_iterable))
-
+        validate_instance(synapse_iterable, Iterable)
         for s in synapse_iterable:
             self.add_synapse(s)
-
-    # NOT SURE IF THIS IS NEEDED! ###
-    # def build_network(self):
-    #    for s in self.synps:
-    #        if s._post in self._inmap.keys():
-    #            self._inmap[s._post].add(s)
-    #        else:
-    #            self._inmap[s._post] = {s}
-    #
 
     def update_input_neuron(self, neuron_name, input_values):
         self.nrns[neuron_name].connect_to_input(input_values)
@@ -106,6 +103,7 @@ class NeuralNetwork:
         """
         build the connection map from the Synapses and Neuron information contained in them
         """
+        validate_instance(new_synapse, Synapse)
         new_synapse._post.presyn.add(new_synapse)
 
     def step(self):
@@ -129,6 +127,10 @@ class NeuralNetwork:
             df: iteration of network evolution in pandas dataFrame
         """
 
+        validate_type(n_steps, int)
+        validate_type(debug_mode, bool)
+        validate_type(record_potentials, bool)
+
         tempdct = defaultdict(list)
         nrn_list = []
         for n in self.nrns:
@@ -149,9 +151,9 @@ class NeuralNetwork:
                     else:
                         tempdct[t].append(0)
 
-        df = pd.DataFrame.from_dict(tempdct, orient='index', columns=nrn_list)
-        df.columns.rename('Neurons', inplace=True)
-        df.index.rename('Time', inplace=True)
+        df = pd.DataFrame.from_dict(tempdct, orient="index", columns=nrn_list)
+        df.columns.rename("Neurons", inplace=True)
+        df.index.rename("Time", inplace=True)
 
         if not debug_mode:
             drop_list = [
@@ -160,16 +162,13 @@ class NeuralNetwork:
             df = df.drop(drop_list, axis=1)
 
         if record_potentials:
-            final_potentials = pd.DataFrame({
-                'potential': [],
-                'neuron_number': []
-            })
+            final_potentials = pd.DataFrame({"potential": [], "neuron_number": []})
             neuron_number = 0
             for neuron in self.nrns:
                 final_potentials = final_potentials.append(
                     {
-                        'potential': self.nrns[neuron].voltage,
-                        'neuron_number': neuron_number,
+                        "potential": self.nrns[neuron].voltage,
+                        "neuron_number": neuron_number,
                     },
                     ignore_index=True,
                 )
