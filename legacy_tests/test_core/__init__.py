@@ -1,6 +1,0 @@
-from .test_instant_decay import SnnInstantDecayTests
-from .test_vector_input import SnnVectorInputTests
-from .test_neuron_props import SnnChangeNeuronPropertyTests
-from .test_internal_synapse_props import SnnChangeSynapseInternalPropertyTests
-from .test_external_synapse_props import SnnChangeSynapseExternalPropertyTests
-from .test_compound_brick import SnnCompoundBrickTests

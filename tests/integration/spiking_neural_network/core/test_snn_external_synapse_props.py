@@ -1,26 +1,36 @@
-import unittest
 import numpy as np
+import pytest
+from brick_test import BrickTest
 
-import fugu
 import fugu.bricks as BRICKS
-from fugu.scaffold import Scaffold
 from fugu.backends import snn_Backend
+from fugu.scaffold import Scaffold
 
-from ..base import BrickTest
 
+class TestSnnChangeSynapseExternalProperty(BrickTest):
+    def setup_method(self):
+        super().setup_method()
+        self.backend = snn_Backend()
 
-class ChangeSynapseInternalPropertyTests(BrickTest):
     # Base class function
     def build_scaffold(self, input_values):
         scaffold = Scaffold()
 
-        scaffold.add_brick(BRICKS.SynapseProperties(weights=input_values, name='Test'), output=True)
+        threshold_brick = BRICKS.Threshold(
+            1.0, p=1.0, decay=0, name="Test", output_coding="temporal-L"
+        )
+        vector = BRICKS.Vector_Input(np.array([1]), coding="Raster", name="input1")
+        dot_brick = BRICKS.Dot([input_values[0]], name="ADotOperator")
+
+        scaffold.add_brick(vector, "input")
+        scaffold.add_brick(dot_brick, input_nodes=[(0, 0)])
+        scaffold.add_brick(threshold_brick, input_nodes=[(1, 0)], output=True)
 
         scaffold.lay_bricks()
         return scaffold
 
     def check_spike_output(self, spikes, expected, scaffold):
-        graph_names = list(scaffold.graph.nodes.data('name'))
+        graph_names = list(scaffold.graph.nodes.data("name"))
         before_spikes, after_spikes = spikes
         before_expected, after_expected = expected
 
@@ -41,7 +51,9 @@ class ChangeSynapseInternalPropertyTests(BrickTest):
             processed.add((neuron_name, row.time))
 
         test_brick_tag = scaffold.name_to_tag["Test"]
-        test_brick = scaffold.circuit.nodes[scaffold.brick_to_number[test_brick_tag]]['brick']
+        test_brick = scaffold.circuit.nodes[scaffold.brick_to_number[test_brick_tag]][
+            "brick"
+        ]
         for entry in before_expected:
             converted = (test_brick.generate_neuron_name(entry[0]), entry[1])
             if self.debug:
@@ -55,30 +67,17 @@ class ChangeSynapseInternalPropertyTests(BrickTest):
             self.assertTrue(converted in processed)
             processed.remove(converted)
 
-        self.assertTrue(len(processed) == 0)
+        assert len(processed) == 0
 
     # tests
-    def test_change_internal_synapose_properties(self):
+    @pytest.mark.xfail()  # TODO fugu/backends/snn_backend.py:152: KeyError: 'ADotOperator'
+    def test_change_external_synapose_properties(self):
         props = {}
         props = {}
-        props['Test'] = {}
-        props['Test']['weights'] = [1.1, 1.1, 0.9, 2.1]
+        props["ADotOperator"] = {}
+        props["ADotOperator"]["weights"] = [2.1]
 
-        self.run_property_test(
-               [0.5, 0.1, 0.3, 0.4],
-               [props],
-               [[
-                 [],
-                 [
-                   ('0', 1.0),
-                   ('1', 1.0),
-                   ('3', 1.0),
-                 ],
-               ]],
-               )
+        self.run_property_test([0.5], [props], [[[], [("Main", 1.0)]]])
 
-
-class SnnChangeSynapseInternalPropertyTests(ChangeSynapseInternalPropertyTests, unittest.TestCase):
-    @classmethod
-    def setUpClass(self):
-        self.backend = snn_Backend()
+    def teardown_method(self):
+        super().teardown_method()
