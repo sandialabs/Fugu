@@ -1,1 +1,0 @@
-from .test_temporal_adder_brick import SnnTemporalAdderTests

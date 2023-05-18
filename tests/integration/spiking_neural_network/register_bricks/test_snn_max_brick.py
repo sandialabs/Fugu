@@ -1,27 +1,33 @@
-import unittest
 import numpy as np
-import random
+from brick_test import BrickTest
 
-import fugu
 import fugu.bricks as BRICKS
-from fugu.scaffold import Scaffold
 from fugu.backends import snn_Backend
+from fugu.scaffold import Scaffold
 
-from ..base import BrickTest
 
+class TestSnnMax(BrickTest):
+    def setup_method(self):
+        super().setup_method()
+        self.backend = snn_Backend()
 
-class MaxBrickTests(BrickTest):
     # Base class overrides
     def build_scaffold(self, input_values):
         scaffold = Scaffold()
 
         converted_input = self.convert_input(input_values)
 
-        max_brick = BRICKS.Max(name='Max')
+        max_brick = BRICKS.Max(name="Max")
         for i, value in enumerate(converted_input):
-            vector_brick = BRICKS.Vector_Input(value, coding='Raster', name='Input{}'.format(i))
-            scaffold.add_brick(vector_brick, 'input')
-        scaffold.add_brick(max_brick, input_nodes=[(i, 0) for i in range(len(converted_input))], output=True)
+            vector_brick = BRICKS.Vector_Input(
+                value, coding="Raster", name="Input{}".format(i)
+            )
+            scaffold.add_brick(vector_brick, "input")
+        scaffold.add_brick(
+            max_brick,
+            input_nodes=[(i, 0) for i in range(len(converted_input))],
+            output=True,
+        )
 
         scaffold.lay_bricks()
         if self.debug:
@@ -34,16 +40,16 @@ class MaxBrickTests(BrickTest):
 
     def check_spike_output(self, spikes, expected, scaffold):
         value = 0
-        graph_names = list(scaffold.graph.nodes.data('name'))
-        for row in spikes.sort_values('time').itertuples():
+        graph_names = list(scaffold.graph.nodes.data("name"))
+        for row in spikes.sort_values("time").itertuples():
             brick_tag, neuron_name = graph_names[int(row.neuron_number)][0].split(":")
             if self.debug:
                 print(neuron_name, row.time)
-            if 'M' in neuron_name and 'Max' not in neuron_name:
-                index = int(neuron_name.split('_')[1])
-                value += (2 ** index)
+            if "M" in neuron_name and "Max" not in neuron_name:
+                index = int(neuron_name.split("_")[1])
+                value += 2**index
 
-        self.assertEqual(expected, value)
+        assert expected == value
 
     def convert_input(self, input_values):
         vector_inputs = []
@@ -71,8 +77,5 @@ class MaxBrickTests(BrickTest):
         values = [23, 23, 23]
         self.basic_test(values, max(values))
 
-
-class SnnMaxTests(MaxBrickTests, unittest.TestCase):
-    @classmethod
-    def setUpClass(self):
-        self.backend = snn_Backend()
+    def teardown_method(self):
+        super().teardown_method()
