@@ -176,8 +176,3 @@ def test_run_with_record_potentials(
     assert fp.loc[0]["neuron_number"] == 0.0
     assert fp.loc[1]["potential"] == 0.0
     assert fp.loc[1]["neuron_number"] == 1.0
-
-
-# TODO what does a Spiking Neural Network look like?
-#      are they designed like ML and Deep Learning NN? inputs -> layer 1 -> ... -> layer n -> outputs
-#      can they be designed after a general graph?
