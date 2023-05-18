@@ -1,3 +1,7 @@
+"""
+isort:skip_file
+"""
+
 from collections.abc import Iterable
 
 import pytest

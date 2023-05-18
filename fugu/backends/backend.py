@@ -1,6 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+"""
+isort:skip_file
+"""
+
+# fmt: off
 from abc import abstractmethod
 
 import abc

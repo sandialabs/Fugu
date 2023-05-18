@@ -75,6 +75,7 @@ pip install black isort
 
 __Note: the convention is only being enforced for the following paths:__
 - __`tests`__
+- __`fugu/utils/validation.py`__
 - __`fugu/simulators`__
 
 __Note: exclude the following modules from automated formatting:__
@@ -82,13 +83,22 @@ __Note: exclude the following modules from automated formatting:__
 
 You can run CI pipeline checks locally to check first:
 ```bash
-isort --check --skip=__init__.py --skip=tests/unit/utils/test_validation.py --skip=fugu/backends --filter-files tests fugu/utils/validation.py fugu/simulators
-black --check tests fugu/utils/validation.py fugu/simulators --exclude fugu/backends
+isort --check --filter-files tests fugu/utils/validation.py fugu/simulators
+black --check tests fugu/utils/validation.py fugu/simulators
 ```
 
 The `filter-files` option ensures that files and directories are still skipped when specified into `isort` inputs.
 
 There are various ways to automate these tools as part of your development: look up instructions for your text editor, IDE, etc. as well as Git pre-commit hooks.
+
+_If you would like to exclude your source code from the auto-formatters, you can add the following at the top of your file(s):_
+```python
+"""
+isort:skip_file
+"""
+
+# fmt: off
+```
 
 __Caution: if you are working with existing code that hasn't been formatted yet, please commit the updates from the formatting tools as a single commit before doing actual work and record the SHA as a new line in the file `.git-blame-ignore-revs`. This helps with more accurate information from the `git blame` command and prevent polluting the record with your username from the updates from the formatters. To configure `git` to use this file automatically, run the command `git config blame.ignoreRevsFile .git-blame-ignore-revs`.__
 
