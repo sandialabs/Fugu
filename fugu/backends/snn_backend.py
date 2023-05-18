@@ -1,5 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+
+"""
+isort:skip_file
+"""
+
+# fmt: off
 from collections import deque
 from warnings import warn
 
