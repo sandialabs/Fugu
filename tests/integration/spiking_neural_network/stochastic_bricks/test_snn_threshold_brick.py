@@ -84,7 +84,7 @@ class TestSnnThreshold(BrickTest):
         scaffold = self.build_scaffold(["temporal-L", 3, 4, 1, 0])
         self.run_iterations(0.0, scaffold)
 
-    @pytest.mark.skip(reason="test fails during CI pipeline but not locally")
+    @pytest.mark.skip(reason="test fails during CI pipeline but not locally")  # TODO
     def test_thresh_temporal_sometimes_spikes(self):
         scaffold = self.build_scaffold(["temporal-L", 3, 2, 0.13, 0])
         self.run_iterations(0.13, scaffold)
