@@ -7,8 +7,8 @@ import numpy as np
 
 # from ..neuron.neuron import Neuron
 from fugu.simulators.SpikingNeuralNetwork import Neuron
+from fugu.utils.types import float_types, int_types
 from fugu.utils.validation import int_to_float, validate_type
-from fugu.utils.types import int_types, float_types
 
 
 class Synapse:
