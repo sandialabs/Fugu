@@ -7,6 +7,7 @@ import sys
 
 import numpy as np
 
+from fugu.utils.types import bool_types, float_types, str_types
 from fugu.utils.validation import int_to_float, validate_type
 
 if sys.version_info >= (3, 4):
@@ -93,14 +94,14 @@ class LIFNeuron(Neuron):
         bias = int_to_float(bias)
         p = int_to_float(p)
 
-        validate_type(name, [str, type(None)])
-        validate_type(threshold, float)
-        validate_type(reset_voltage, float)
-        validate_type(leakage_constant, float)
-        validate_type(voltage, float)
-        validate_type(bias, float)
-        validate_type(p, float)
-        validate_type(record, bool)
+        validate_type(name, str_types)
+        validate_type(threshold, float_types)
+        validate_type(reset_voltage, float_types)
+        validate_type(leakage_constant, float_types)
+        validate_type(voltage, float_types)
+        validate_type(bias, float_types)
+        validate_type(p, float_types)
+        validate_type(record, bool_types)
 
         if leakage_constant < 0 or leakage_constant > 1:
             raise UserWarning(
@@ -213,7 +214,7 @@ class LIFNeuron(Neuron):
     @threshold.setter
     def threshold(self, new_threshold):
         new_threshold = int_to_float(new_threshold)
-        validate_type(new_threshold, float)
+        validate_type(new_threshold, float_types)
         self._T = new_threshold
 
     @property
@@ -223,7 +224,7 @@ class LIFNeuron(Neuron):
     @reset_voltage.setter
     def reset_voltage(self, new_reset_v):
         new_reset_v = int_to_float(new_reset_v)
-        validate_type(new_reset_v, float)
+        validate_type(new_reset_v, float_types)
         self._R = new_reset_v
 
     @property
@@ -233,7 +234,7 @@ class LIFNeuron(Neuron):
     @leakage_constant.setter
     def leakage_constant(self, new_leak_const):
         new_leak_const = int_to_float(new_leak_const)
-        validate_type(new_leak_const, float)
+        validate_type(new_leak_const, float_types)
         self._m = new_leak_const
 
     @property
@@ -272,10 +273,10 @@ class InputNeuron(Neuron):
         threshold = int_to_float(threshold)
         voltage = int_to_float(voltage)
 
-        validate_type(name, [str, type(None)])
-        validate_type(threshold, float)
-        validate_type(voltage, float)
-        validate_type(record, bool)
+        validate_type(name, str_types)
+        validate_type(threshold, float_types)
+        validate_type(voltage, float_types)
+        validate_type(record, bool_types)
 
         super(InputNeuron, self).__init__()
         self.name = name
@@ -336,7 +337,7 @@ class InputNeuron(Neuron):
     @threshold.setter
     def threshold(self, new_threshold):
         new_threshold = int_to_float(new_threshold)
-        validate_type(new_threshold, float)
+        validate_type(new_threshold, float_types)
         self._T = new_threshold
 
     @property

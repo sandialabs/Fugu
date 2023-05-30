@@ -7,6 +7,7 @@ import numpy as np
 
 # from ..neuron.neuron import Neuron
 from fugu.simulators.SpikingNeuralNetwork import Neuron
+from fugu.utils.types import float_types, int_types
 from fugu.utils.validation import int_to_float, validate_type
 
 
@@ -39,8 +40,8 @@ class Synapse:
             raise TypeError("Pre and Post Synanptic neurons must be of type Neuron")
 
         weight = int_to_float(weight)
-        validate_type(delay, int)
-        validate_type(weight, float)
+        validate_type(delay, int_types)
+        validate_type(weight, float_types)
 
         if delay < 1:
             raise ValueError("delay must be a strictly positive (>0) int value")
@@ -103,7 +104,7 @@ class Synapse:
         """
 
         new_weight = int_to_float(new_weight)
-        validate_type(new_weight, float)
+        validate_type(new_weight, float_types)
         self._w = new_weight
 
     @property
@@ -128,7 +129,7 @@ class Synapse:
             None
         """
 
-        validate_type(new_delay, int)
+        validate_type(new_delay, int_types)
 
         if new_delay < 1:
             raise ValueError("delay must be a strictly positive (>0) int value")
@@ -148,8 +149,8 @@ class Synapse:
         """
 
         new_weight = int_to_float(new_weight)
-        validate_type(new_delay, int)
-        validate_type(new_weight, float)
+        validate_type(new_delay, int_types)
+        validate_type(new_weight, float_types)
 
         self.delay = new_delay
         self.weight = new_weight

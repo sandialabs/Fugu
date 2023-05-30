@@ -1,3 +1,8 @@
+import numpy as np
+
+from fugu.utils.types import int_types
+
+
 def int_to_float(n):
     """
     Casts an int into a float, safely.
@@ -9,7 +14,7 @@ def int_to_float(n):
         float, or n as-is if not an int
     """
 
-    if type(n) is int:
+    if type(n) in int_types:
         return float(n)
     else:
         return n
@@ -31,13 +36,15 @@ def validate_type(param, types=type(None)):
     """
 
     if type(types) is list:
-        checks = [t for t in types if type(param) is not t]
-        if len(checks) == len(types):
-            raise TypeError(f"{param} must be of types {types}")
+        if type(param) not in types:
+            raise TypeError(
+                f"{param} must be of types {types} but received type {type(param)}"
+            )
     else:
-        t = types  # it's a single type at this point
-        if type(param) is not t:
-            raise TypeError(f"{param} must be of type {t}")
+        if type(param) is not types:  # it's a single type at this point
+            raise TypeError(
+                f"{param} must be of type {types} but received type {type(param)}"
+            )
 
 
 def validate_instance(param, instances=type(None)):
