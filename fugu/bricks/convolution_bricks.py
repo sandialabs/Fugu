@@ -16,7 +16,6 @@ class convolution_1d(Brick):
     def __init__(self, pvector, filters, thresholds, basep, bits, name=None, mode='full'):
         super().__init__()
         self.is_built = False
-        self.metadata = {'D': 2}
         self.name = name
         self.supported_codings = ['binary-L']
         self.plength = len(pvector)
@@ -72,6 +71,7 @@ class convolution_1d(Brick):
         # determine output neuron bounds based on the "mode"
         self.get_output_bounds()
         dim1 = self.bnds[1] - self.bnds[0] + 1
+        self.metadata['convolution_output_shape'] = (dim1,)
 
         # Check for scalar value for thresholds
         if not hasattr(self.thresholds, '__len__') and (not isinstance(self.thresholds, str)):
