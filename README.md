@@ -43,7 +43,7 @@ Documentation is currently spread across several files.  We are working on inclu
 For now, you can check:
 - This README.md
 - The examples folder
-- [API Documentation](https://snl-nerl.github.io/Fugu/build/html/index.html)
+- [API Documentation](https://sandialabs.github.io/Fugu/build/html/index.html)
 
 # Basic concepts
 
