@@ -41,7 +41,7 @@ todo_include_todos = True
 
 ##import mock
 ##
-##MOCK_MODULES = ['numpy', 'scipy', 'sklearn', 'decorator', 'future', 'greenlet', 'msgpack', 'networkx', 'pandas', 'python', 'pytz', 'six', 'furo', 'sphinx', 'sphinx_rtd_theme']
+##MOCK_MODULES = ['numpy', 'sklearn', 'decorator', 'future', 'greenlet', 'msgpack', 'networkx', 'pandas', 'python', 'pytz', 'six', 'furo', 'sphinx', 'sphinx_rtd_theme']
 ##for mod_name in MOCK_MODULES:
 ##    sys.modules[mod_name] = mock.Mock()
 
@@ -69,7 +69,7 @@ autodoc_default_options = {
     'undoc-members': True
 }
 
-autodoc_mock_imports = ["nxsdk", 'numpy', 'scipy', 'sklearn', 'decorator', 'future', 'greenlet', 'msgpack', 'networkx', 'pandas', 'python', 'pytz', 'six', 'furo', 'sphinx', 'sphinx_rtd_theme']
+autodoc_mock_imports = ["nxsdk", 'numpy', 'sklearn', 'decorator', 'future', 'greenlet', 'msgpack', 'networkx', 'pandas', 'python', 'pytz', 'six', 'furo', 'sphinx', 'sphinx_rtd_theme']
 ### From flexpart
 source_suffix = ['.rst', '.md', '.txt']
 

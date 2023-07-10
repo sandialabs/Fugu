@@ -3,12 +3,12 @@ Fugu
 #############
 
 *************
-What is Fugu? 
+What is Fugu?
 *************
 
 Fugu is a high-level framework specifically designed for developing spiking circuits in terms of computation graphs. Accordingly, with a base leaky-integrate-and fire (LIF) neuron model at its core, neural circuits are built as *bricks*. These foundational computations are then combined and composed as scaffolds to construct larger computations. This allows us to describe spiking circuits in terms of neural features common to most NMC architectures rather than platform specific designs. In addition to architectural abstraction, the compositionality concept of Fugu not only facilitates a hierarchical approach to functionality development but also enables adding pre and post processing operations to overarching neural circuits. Such properties position Fugu to help explore under what parameterization or scale a neural approach may offer an advantage. For example, prior work has analyzed neural algorithms for computational kernels like sorting, optimization, and graph analytics identifying different regions in which a neural advantage exists accounting for neural circuit setup, timing, or other factors.
 
-Think of Fugu as a framework to ease the process of coding and deploying algorithms on spiking neuromorphic systems.  It is a managed intermediate representation (IR) between higher-level coding environments and low-level neuromorphic hardware and their compilers.  Fugu's front end is written in Python, and it leverages NetworkX library to construct and manage the Fugu generated neural circuit.  Fugu has three components which provide connection between API and compiler output during compilation.  
+Think of Fugu as a framework to ease the process of coding and deploying algorithms on spiking neuromorphic systems.  It is a managed intermediate representation (IR) between higher-level coding environments and low-level neuromorphic hardware and their compilers.  Fugu's front end is written in Python, and it leverages NetworkX library to construct and manage the Fugu generated neural circuit.  Fugu has three components which provide connection between API and compiler output during compilation.
 1. A library of spiking neural algorithm (SNA) modules
 2. A collections of algorithms for linking SNA modules
 3. Combined application graph output
@@ -16,26 +16,26 @@ Think of Fugu as a framework to ease the process of coding and deploying algorit
 
 Fugu is a linking framework with a goal of being “easy” to build spiking circuits for a single computation. We provide a mechanism to combine small computational kernels (Bricks) into large computational graphs, but also Fugu provides some specifications: For the Bricks to transfer information, we need to agree on data formatting. For computation to be consistent, we need to agree on neuron behavior (lowest common denominator). For this to be useful, we need a hardware independent intermediate representation.
 
-Fugu includes but is not a simulator: We include a reference simulator *snn* which can quickly run small sized spiking networks. We hope to provide a more comprehensive and efficient simulator in the future.  Fugu is designed to support a variety of backends including hardware platforms. We are working to build Fugu Bricks for many useful kernels; We are hoping that the community will help contribute. 
+Fugu includes but is not a simulator: We include a reference simulator *snn* which can quickly run small sized spiking networks. We hope to provide a more comprehensive and efficient simulator in the future.  Fugu is designed to support a variety of backends including hardware platforms. We are working to build Fugu Bricks for many useful kernels; We are hoping that the community will help contribute.
 
 
 ===========
 API
 ===========
-Fugu's API provides works with Python.  The user defines a computational graph, termed *scaffold*.  Within each scaffold nodes, called *bricks* are the component SNAs.  Edges between *bricks* defines the flow of information.  
+Fugu's API provides works with Python.  The user defines a computational graph, termed *scaffold*.  Within each scaffold nodes, called *bricks* are the component SNAs.  Edges between *bricks* defines the flow of information.
 
 Example
 ~~~~~~~~~~~
-Suppose a simple application with 4 operations: 
+Suppose a simple application with 4 operations:
 1. Function A processes an input.
 2. Function B processes the output of A.
-3. Function C processes the output of A. 
+3. Function C processes the output of A.
 4. Function D combines output of B and C.
-Fugu will construct a brick for each function A - D, and compose them into a larger algorithm scaffold as represented in the pseudocode below.  
+Fugu will construct a brick for each function A - D, and compose them into a larger algorithm scaffold as represented in the pseudocode below.
 The scaffold is a graphical representation of of the desired Fugu algorithm
 .. image:: images/pseudocode.png
   :width: 400
-  :alt: Simple 4 function pseudocode 
+  :alt: Simple 4 function pseudocode
 
 
 *************
@@ -43,23 +43,23 @@ Workflow for Fugu algorithm
 *************
 .. image:: images/scaffoldmetadata.png
   :width: 400
-  :alt: Scaffold Metadata 
+  :alt: Scaffold Metadata
 
 .. image:: images/scaffoldcircuit.png
   :width: 400
-  :alt: Control flow for Scaffold.circuit  
+  :alt: Control flow for Scaffold.circuit
 
 =======
 User Types
 ===========
-We forsee 3 user types: 
+We forsee 3 user types:
 1. User: This person develops algorithms and applications using Fugu, but may not fully understand spiking neural networks or neuromorphic hardware.  Users should be expected to understand python and combine Fugu’s tools and functions.
 2. Extenders: This person creates new spiking neural networks or adapts existing neural algorithms to the Fugu framework.  At this level, coders will need to be familiar with spiking neural networks and NetworkX, but should not need to be concerned with details of the implementations behind Fugu and the target hardware.
 3. Developers:  This person helps develop the Fugu framework  itself and provides backends to software and hardware platforms for execution.  For this, it is necessary to be familiar with the entire stack, from python through spiking neural networks and the intricacies of a particular hardware platform.
 <<<<<<< HEAD
 .. image:: images/component.png
   :width: 400
-  :alt: Fugu workflow  
+  :alt: Fugu workflow
 =======
 
 
@@ -68,8 +68,8 @@ Bricks Basics
 *************
 Bricks provides the framework for the scaffold to build a neural graph
 + Defines the main computational graph
-+ Uses networkx graph objects   
-Contains metadata 
++ Uses networkx graph objects
+Contains metadata
 + Synchronize with other bricks
 + Contains coding information
 + Neuron parameters
@@ -115,16 +115,16 @@ The Scaffold object is a graph that contains bricks at each node.  In reality, t
 *************
 Backend
 *************
-A backend generates platform-specific code from the platform-independent network graph (Scaffold.graph). Included in Fugu today is a backend to a basic reference simulator SNN and a backend that targets Intel's Loihi platform. 
+A backend generates platform-specific code from the platform-independent network graph (Scaffold.graph). Included in Fugu today is a backend to a basic reference simulator SNN and a backend that targets Intel's Loihi platform.
 
 *************
-Get Started 
+Get Started
 *************
 1. Installation
-   - We recommend installing Fugu in a conda or virtual environment in Python 3.8.  The requirements can be found in requirements3.txt 
-   - Dependencies include: Numpy, Scipy, NetworkX, Pandas, and Pytorch (for DS)
+   - We recommend installing Fugu in a conda or virtual environment in Python 3.8.  The requirements can be found in requirements3.txt
+   - Dependencies include: Numpy, NetworkX, Pandas, and Pytorch (for DS)
 2. Jupyter Notebook examples
-   - Walk through our Jupyter Notebook examples as a first step into the world of Fugu.  These can be found in the examples folder, in a folder labeled notebooks.  We've outlined how we translate common algorithms and problems into Fugu brick formation.  
+   - Walk through our Jupyter Notebook examples as a first step into the world of Fugu.  These can be found in the examples folder, in a folder labeled notebooks.  We've outlined how we translate common algorithms and problems into Fugu brick formation.
 3. Documentation
    - We have documented many of the applicable python files for your reference in our docs page.
 
