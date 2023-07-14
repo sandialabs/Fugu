@@ -1,3 +1,4 @@
+import numpy as np
 import whetstone
 import tensorflow
 
@@ -13,9 +14,8 @@ tensorflow.keras.layers.Convolution2D
 tensorflow.keras.layers.MaxPooling2D
 
 model = whetstone.utils.load_model('C:\\Users\\mkrygie\\Repositories\\Whetstone\\examples\\model_adaptive_mnist.keras')
-model.
 
-def whetstone_2_fugu(keras_model,scaffold=None):
+def whetstone_2_fugu(keras_model, basep, bits, scaffold=None):
     '''
     
     '''
@@ -23,6 +23,7 @@ def whetstone_2_fugu(keras_model,scaffold=None):
         scaffold = Scaffold
 
     model = keras_model
+    layerID = 0
     for idx, layer in enumerate(model.layers):
         if type(layer) is Conv2D:
             # need pvector shape, filters, thresholds, basep, bits, and mode
@@ -32,7 +33,11 @@ def whetstone_2_fugu(keras_model,scaffold=None):
             weights = layer.get_weights()[0]
             bias = layer.get_weights()[1]
             strides = layer.strides
-            pass
+            for channel in np.arange(input_shape[-1]):
+                #TODO: update convolution brick to use pvector shape, instead of pvector, as an input parameter to the brick.
+                scaffold.add_brick(convolution_2d(np.zeros(input_shape[1:-1]),weights,bias,basep,bits,name=f"convolution_layer_{layerID}",mode=padding),[(layerID, 0)],output=True)
+                layerID += 1
+
         if type(layer) is MaxPooling2D:
             # need pool size, strides, thresholds, and method
             pool_size = layer.pool_size
@@ -40,12 +45,17 @@ def whetstone_2_fugu(keras_model,scaffold=None):
             output_shape = layer.output_shape
             padding = layer.padding
             strides = layer.strides
-            pass
+            for channel in np.arange(input_shape[-1]):
+                # TODO: update pooling brick to accept 2D tuples for pool size and strides. For now, the brick assumes the pool size/strides is constant in both directions
+                scaffold.add_brick(pooling_2d(pool_size[0],strides[0],name=f"pool_layer_{layerID}",method="max"),[(layerID,0)],output=True)
+                layerID += 1
+
         if type(layer) is Dense:
             # need output shape, weights, thresholds 
             output_shape = layer.output_shape
             weights = layer.weights[0]
             bias = layer.weights[1]
-            pass    
+            scaffold.add_brick(dense_layer_2d(output_shape,weights=weights,thresholds=bias,name=f"dense_layer_{layerID}"),[(layerID,0)],output=True)
+            layerID += 1
     
     return scaffold
