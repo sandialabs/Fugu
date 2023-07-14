@@ -13,7 +13,7 @@ from tensorflow.keras.layers import Dense, Conv2D, Flatten, MaxPooling2D
 tensorflow.keras.layers.Convolution2D
 tensorflow.keras.layers.MaxPooling2D
 
-model = whetstone.utils.load_model('C:\\Users\\mkrygie\\Repositories\\Whetstone\\examples\\model_adaptive_mnist.keras')
+model = whetstone.utils.load_model('tests/unit/utils/data/model_adaptive_mnist_normalization_off.keras')
 
 def whetstone_2_fugu(keras_model, basep, bits, scaffold=None):
     '''
