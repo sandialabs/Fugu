@@ -31,7 +31,7 @@ class pooling_1d(Brick):
         Arguments:
             + graph - networkx graph to define connections of the computational graph
             + metadata - dictionary to define the shapes and parameters of the brick
-            + control_nodes - dictionary of lists of auxillary networkx nodes.  Excpected keys: 'complete' - A list of neurons that fire when the brick is done
+            + control_nodes - dictionary of lists of auxillary networkx nodes.  Expected keys: 'complete' - A list of neurons that fire when the brick is done
             + input_lists - list of nodes that will contain input
             + input_coding - list of input coding formats
 
@@ -135,7 +135,7 @@ class pooling_2d(Brick):
         Arguments:
             + graph - networkx graph to define connections of the computational graph
             + dimensionality - dictionary to define the shapes and parameters of the brick
-            + control_nodes - dictionary of lists of auxillary networkx nodes.  Excpected keys: 'complete' - A list of neurons that fire when the brick is done
+            + control_nodes - dictionary of lists of auxillary networkx nodes.  Expected keys: 'complete' - A list of neurons that fire when the brick is done
             + input_lists - list of nodes that will contain input
             + input_coding - list of input coding formats
 
