@@ -1,22 +1,18 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-
-import unittest
 import abc
 import sys
-
 from abc import abstractmethod
 
 if sys.version_info >= (3, 4):
     ABC = abc.ABC
 else:
-    ABC = abc.ABCMeta('ABC', (), {'__slots__': ()})
+    ABC = abc.ABCMeta("ABC", (), {"__slots__": ()})
 
 
 class BrickTest(ABC):
-    backend = None
-    backend_args = {}
-    debug = False
+    def setup_method(self):
+        self.backend = None
+        self.backend_args = {}
+        self.debug = False
 
     @abstractmethod
     def build_scaffold(self, input_values):
@@ -36,7 +32,7 @@ class BrickTest(ABC):
             scaffold.summary(verbose=2)
         self.backend.compile(scaffold, self.backend_args)
         if self.debug:
-            print(">>>>> Running circuit for {} timesteps".format(timesteps))
+            print("Running circuit for {} timesteps".format(timesteps))
         return self.backend.run(timesteps)
 
     def basic_test(self, input_values, expected_output):
@@ -60,7 +56,7 @@ class BrickTest(ABC):
 
         for properties, output in zip(new_properties, expected_outputs):
             if self.debug:
-                print(">>>> Property test {}".format(properties))
+                print("Property test {}".format(properties))
             self.backend.reset()
 
             self.backend.set_properties(properties)
@@ -69,6 +65,6 @@ class BrickTest(ABC):
 
             self.check_spike_output([before_results, after_results], output, scaffold)
 
-    def tearDown(self):
+    def teardown_method(self):
         self.backend.cleanup()
         self.debug = False

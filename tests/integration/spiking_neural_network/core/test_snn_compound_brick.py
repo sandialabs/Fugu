@@ -1,15 +1,18 @@
-import unittest
 import numpy as np
+from brick_test import BrickTest
 
-import fugu
 import fugu.bricks as BRICKS
-from fugu.scaffold import Scaffold
 from fugu.backends import snn_Backend
+from fugu.scaffold import Scaffold
 
-from ..base import BrickTest
 
+class TestSnnCompoundBrick(BrickTest):
+    def setup_method(self):
+        super().setup_method()
+        self.backend = snn_Backend()
+        self.backend_args = {"record": "all"}
+        self.brick_name = "VectorInput"
 
-class CompoundBrickTests(BrickTest):
     # Base class function
     def build_scaffold(self, input_values):
         scaffold = Scaffold()
@@ -22,18 +25,24 @@ class CompoundBrickTests(BrickTest):
         for input_set in converted_inputs:
             set_sizes.append(len(input_set))
             for input_value in input_set:
-                vector = BRICKS.Vector_Input(input_value, coding='Raster', name="Input{}".format(num_of_inputs))
-                scaffold.add_brick(vector, 'input')
+                vector = BRICKS.Vector_Input(
+                    input_value, coding="Raster", name="Input{}".format(num_of_inputs)
+                )
+                scaffold.add_brick(vector, "input")
                 num_of_inputs += 1
         sum_of_maxes = BRICKS.SumOfMaxes(set_sizes, name="SumOfMaxes")
-        scaffold.add_brick(sum_of_maxes, input_nodes=[(i, 0) for i in range(num_of_inputs)], output=True)
+        scaffold.add_brick(
+            sum_of_maxes,
+            input_nodes=[(i, 0) for i in range(num_of_inputs)],
+            output=True,
+        )
 
         scaffold.lay_bricks()
 
         return scaffold
 
     def check_spike_output(self, spikes, expected, scaffold):
-        graph_names = list(scaffold.graph.nodes.data('name'))
+        graph_names = list(scaffold.graph.nodes.data("name"))
         answer = 0
 
         for row in sorted(spikes.itertuples(), key=lambda x: x[-1]):
@@ -43,11 +52,11 @@ class CompoundBrickTests(BrickTest):
             neuron_name = tags[-1]
             if self.debug:
                 print(node_name, row.time)
-            if 'S' in neuron_name and 'SumOfMaxes' in brick_tag:
-                bit_position = scaffold.graph.nodes[node_name]['bit_position']
-                answer += 2 ** bit_position
+            if "S" in neuron_name and "SumOfMaxes" in brick_tag:
+                bit_position = scaffold.graph.nodes[node_name]["bit_position"]
+                answer += 2**bit_position
 
-        self.assertEqual(expected, answer)
+        assert expected == answer
 
     def calculate_max_timesteps(self, input_values):
         return 130
@@ -76,8 +85,5 @@ class CompoundBrickTests(BrickTest):
         inputs = [[5, 4], [3, 5, 4, 12]]
         self.basic_test(inputs, sum([max(i) for i in inputs]))
 
-
-class SnnCompoundBrickTests(CompoundBrickTests, unittest.TestCase):
-    @classmethod
-    def setUpClass(self):
-        self.backend = snn_Backend()
+    def teardown_method(self):
+        super().teardown_method()

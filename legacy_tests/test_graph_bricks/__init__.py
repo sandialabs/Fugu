@@ -1,2 +1,0 @@
-from .test_simple_graph_traversal_brick import SnnSimpleGraphTraversalTests
-from .test_register_graph_traversal_brick import SnnRegisterGraphTraversalTests

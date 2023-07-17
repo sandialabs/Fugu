@@ -1,28 +1,28 @@
-import unittest
-import numpy as np
+from brick_test import BrickTest
 
-import fugu
 import fugu.bricks as BRICKS
-from fugu.scaffold import Scaffold
 from fugu.backends import snn_Backend
+from fugu.scaffold import Scaffold
 
-from ..base import BrickTest
 
+class TestSnnInstantDecay(BrickTest):
+    def setup_method(self):
+        super().setup_method()
+        self.backend = snn_Backend()
 
-class InstantDecayTests(BrickTest):
     # Base class function
     def build_scaffold(self, input_times):
         scaffold = Scaffold()
 
         vector_brick = BRICKS.Vector_Input(
-                                self.convert_input(input_times),
-                                coding='Raster',
-                                name='InputBrick',
-                                time_dimension=True,
-                                )
+            self.convert_input(input_times),
+            coding="Raster",
+            name="InputBrick",
+            time_dimension=True,
+        )
         decay_brick = BRICKS.InstantDecay(len(input_times), name="InstantDecay")
 
-        scaffold.add_brick(vector_brick, 'input')
+        scaffold.add_brick(vector_brick, "input")
         scaffold.add_brick(decay_brick, input_nodes=[(0, 0)], output=True)
 
         scaffold.lay_bricks()
@@ -41,14 +41,14 @@ class InstantDecayTests(BrickTest):
         return 2 * max_seq
 
     def check_spike_output(self, spikes, expected, scaffold):
-        graph_names = list(scaffold.graph.nodes.data('name'))
+        graph_names = list(scaffold.graph.nodes.data("name"))
         main_fired = False
         for row in spikes.itertuples():
             neuron_name = graph_names[int(row.neuron_number)][0]
             if "main" in neuron_name:
                 main_fired = True
 
-        self.assertEqual(expected, main_fired)
+        assert expected == main_fired
 
     def convert_input(self, spike_times):
         max_time = 0
@@ -75,8 +75,5 @@ class InstantDecayTests(BrickTest):
         input_spikes = [[1, 3, 5, 7, 9], [2, 4, 6, 8]]
         self.basic_test(input_spikes, False)
 
-
-class SnnInstantDecayTests(InstantDecayTests, unittest.TestCase):
-    @classmethod
-    def setUpClass(self):
-        self.backend = snn_Backend()
+    def teardown_method(self):
+        super().teardown_method()

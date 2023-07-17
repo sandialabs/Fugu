@@ -1,27 +1,32 @@
-import unittest
 import numpy as np
+from brick_test import BrickTest
 
-import fugu
 import fugu.bricks as BRICKS
-from fugu.scaffold import Scaffold
 from fugu.backends import snn_Backend
+from fugu.scaffold import Scaffold
 
-from ..base import BrickTest
 
+class TestSnnSubtraction(BrickTest):
+    def setup_method(self):
+        super().setup_method()
+        self.backend = snn_Backend()
 
-class SubtractionBrickTests(BrickTest):
     # Base class overrides
     def build_scaffold(self, input_values):
         scaffold = Scaffold()
 
         converted_input = self.convert_input(input_values)
-        vector_1 = BRICKS.Vector_Input(converted_input[0], coding='Raster', name='Input1')
-        vector_2 = BRICKS.Vector_Input(converted_input[1], coding='Raster', name='Input2')
+        vector_1 = BRICKS.Vector_Input(
+            converted_input[0], coding="Raster", name="Input1"
+        )
+        vector_2 = BRICKS.Vector_Input(
+            converted_input[1], coding="Raster", name="Input2"
+        )
 
         subtraction_brick = BRICKS.Subtraction(name="Subtraction")
 
-        scaffold.add_brick(vector_1, 'input')
-        scaffold.add_brick(vector_2, 'input')
+        scaffold.add_brick(vector_1, "input")
+        scaffold.add_brick(vector_2, "input")
         scaffold.add_brick(subtraction_brick, input_nodes=[(0, 0), (1, 0)], output=True)
 
         scaffold.lay_bricks()
@@ -32,7 +37,7 @@ class SubtractionBrickTests(BrickTest):
 
     def check_spike_output(self, spikes, expected, scaffold):
         answer = 0
-        graph_names = list(scaffold.graph.nodes.data('name'))
+        graph_names = list(scaffold.graph.nodes.data("name"))
         for row in spikes.itertuples():
             node_name = graph_names[int(row.neuron_number)][0]
             tags = node_name.split(":")
@@ -40,11 +45,11 @@ class SubtractionBrickTests(BrickTest):
             neuron_name = tags[-1]
             if self.debug:
                 print(node_name, row.time)
-            if 'S' in neuron_name and 'Subtraction' in brick_tag:
-                bit_position = scaffold.graph.nodes[node_name]['bit_position']
-                answer += 2 ** bit_position
+            if "S" in neuron_name and "Subtraction" in brick_tag:
+                bit_position = scaffold.graph.nodes[node_name]["bit_position"]
+                answer += 2**bit_position
 
-        self.assertEqual(expected, answer)
+        assert expected == answer
 
     def convert_input(self, input_values):
         converted_inputs = []
@@ -67,8 +72,5 @@ class SubtractionBrickTests(BrickTest):
     def test_subtraction_4(self):
         self.basic_test([23, 2], 21)
 
-
-class SnnSubtractionTests(SubtractionBrickTests, unittest.TestCase):
-    @classmethod
-    def setUpClass(self):
-        self.backend = snn_Backend()
+    def teardown_method(self):
+        super().teardown_method()
