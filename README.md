@@ -46,14 +46,13 @@ Next we will install the nxsdk package. But before we can do this, we will need 
         - Need to replace the '-' after the third number to a '+'.
         - AA.BB.CC-\<STUFF\> ----> AA.BB.CC+\<STUFF\>
 3. Replace nxsdk requirements.txt (`/PATH/TO/nxsdk-<version>/requirements.txt`) file with
-```bash 
+```bash
 attrdict>=2.0.1
 numpy==1.15.*
 pandas>=1.0.*
 matplotlib>=2.2.2
 imageio>=2.6.1
 scikit-image>=0.14.2
-scipy>=1.5.*
 scikit-learn>=0.19.2
 jinja2>=2.10
 coloredlogs>=10.0
@@ -61,7 +60,7 @@ grpcio>=1.19.0
 protobuf==3.19.*
 grpcio_tools>=1.19.0
 memory_profiler>=0.55
-bitstring>=3.1.6 
+bitstring>=3.1.6
 ```
 
 Then run
