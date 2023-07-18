@@ -1,6 +1,5 @@
 import numpy as np
 import pytest
-from scipy.signal import convolve2d
 
 from fugu.backends import snn_Backend
 from fugu.bricks.convolution_bricks import convolution_1d, convolution_2d
@@ -8,6 +7,7 @@ from fugu.bricks.input_bricks import BaseP_Input
 from fugu.bricks.pooling_bricks import pooling_1d, pooling_2d
 from fugu.scaffold import Scaffold
 
+convolve2d = pytest.importorskip("scipy.signal", reason=f"Scipy package not installed. Skipping test file {__file__} because of module dependency.").convolve2d
 
 class Test_Pooling1D:
 
