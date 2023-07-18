@@ -20,9 +20,10 @@ def whetstone_2_fugu(keras_model, basep, bits, scaffold=None):
     
     '''
     if scaffold is None:
-        scaffold = Scaffold
+        scaffold = Scaffold()
 
-    model = keras_model
+
+    model = whetstone.utils.export_utils.copy_remove_batchnorm(keras_model)
     layerID = 0
     for idx, layer in enumerate(model.layers):
         if type(layer) is Conv2D:
@@ -33,8 +34,10 @@ def whetstone_2_fugu(keras_model, basep, bits, scaffold=None):
             weights = layer.get_weights()[0]
             bias = layer.get_weights()[1]
             strides = layer.strides
+            # Add a brick for each channel
             for channel in np.arange(input_shape[-1]):
-                #TODO: update convolution brick to use pvector shape, instead of pvector, as an input parameter to the brick.
+                #TODO: update convolution brick to use pvector shape, instead of pvector, as an input parameter to the brick. Note, the convolution brick assumes
+                # the strides are 1 in each direction.
                 scaffold.add_brick(convolution_2d(np.zeros(input_shape[1:-1]),weights,bias,basep,bits,name=f"convolution_layer_{layerID}",mode=padding),[(layerID, 0)],output=True)
                 layerID += 1
 
@@ -45,6 +48,7 @@ def whetstone_2_fugu(keras_model, basep, bits, scaffold=None):
             output_shape = layer.output_shape
             padding = layer.padding
             strides = layer.strides
+            # Add a brick for each channel
             for channel in np.arange(input_shape[-1]):
                 # TODO: update pooling brick to accept 2D tuples for pool size and strides. For now, the brick assumes the pool size/strides is constant in both directions
                 scaffold.add_brick(pooling_2d(pool_size[0],strides[0],name=f"pool_layer_{layerID}",method="max"),[(layerID,0)],output=True)
