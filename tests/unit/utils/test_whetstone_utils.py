@@ -5,7 +5,7 @@ from scipy.signal import convolve2d
 from fugu.backends import snn_Backend
 from fugu.bricks.convolution_bricks import convolution_1d, convolution_2d
 from fugu.bricks.dense_bricks import dense_layer_1d, dense_layer_2d
-from fugu.bricks.input_bricks import BaseP_Input
+from fugu.bricks.input_bricks import BaseP_Input, Vector_Input
 from fugu.bricks.pooling_bricks import pooling_1d, pooling_2d
 from fugu.scaffold import Scaffold
 from fugu.utils.whetstone import whetstone_2_fugu
@@ -32,7 +32,9 @@ class Test_Whetstone_2_Fugu_Normalization_Off:
 
         basep = 3
         bits = 3
-        scaffold = whetstone_2_fugu(model,basep,bits)
+        scaffold = Scaffold()
+        scaffold.add_brick(Vector_Input(np.ones((28,28)), name="Input0"),"input")
+        scaffold = whetstone_2_fugu(model,basep,bits,scaffold=scaffold)
         self.graph = scaffold.lay_bricks()
 
         # test against layer names

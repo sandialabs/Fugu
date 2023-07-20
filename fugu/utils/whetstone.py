@@ -38,8 +38,9 @@ def whetstone_2_fugu(keras_model, basep, bits, scaffold=None):
             for channel in np.arange(input_shape[-1]):
                 #TODO: update convolution brick to use pvector shape, instead of pvector, as an input parameter to the brick. Note, the convolution brick assumes
                 # the strides are 1 in each direction.
-                scaffold.add_brick(convolution_2d(np.zeros(input_shape[1:-1]),weights,bias,basep,bits,name=f"convolution_layer_{layerID}",mode=padding),[(layerID, 0)],output=True)
-                layerID += 1
+                for filter in np.arange(layer.filters):
+                    scaffold.add_brick(convolution_2d(np.zeros(input_shape[1:-1]),weights[:,:,channel,filter],bias,basep,bits,name=f"convolution_layer_{layerID}",mode=padding),[(layerID, 0)],output=True)
+                    layerID += 1
 
         if type(layer) is MaxPooling2D:
             # need pool size, strides, thresholds, and method
