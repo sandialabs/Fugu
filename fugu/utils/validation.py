@@ -1,4 +1,5 @@
 import numpy as np
+
 from fugu.utils.types import int_types
 
 
