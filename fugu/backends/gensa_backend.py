@@ -1,3 +1,8 @@
+"""
+isort:skip_file
+"""
+
+# fmt: off
 import os
 import subprocess
 import pandas as pd

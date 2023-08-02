@@ -1,3 +1,8 @@
+"""
+isort:skip_file
+"""
+
+# fmt: off
 import math
 from .backend import Backend
 import nxsdk.api.n2a as nx
@@ -146,7 +151,7 @@ class loihi_Backend(Backend):
             Vspike = node.get('threshold',     1.0) - Vreset
             Vdecay = node.get('decay',         0.0)
             P      = node.get('p',             1.0)
-            if 'potential'        in node: Vinit  =       node['potential']
+            if 'potential'        in node: Vinit  =       node['potential'] - Vreset
             if 'leakage_constant' in node: Vdecay = 1.0 - node['leakage_constant']
 
             # Determine scale for V
