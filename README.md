@@ -92,3 +92,17 @@ an input (if calling `Brick.build`) or an output (if returning from `Brick.build
 | ------ | ------ | ------ |
 | 'complete' | All Inputs/Outputs | A neuron that fires when a brick is done processing. |
 | 'begin' | Temporally-coded Inputs/Outputs | A neuron that fires when a brick begins providing output. |
+
+
+# Collaborations and Contributing
+We hope that as Fugu develops it will become a useful tool for the spiking neuromorphic field.
+
+While the Fugu team is small, we are always interested in collaborations where possible. If you have questions or are interested in starting a collaboration, please e-mail us at wg-fugu@sandia.gov.
+
+If you are not a collaborator but would like to contribute, you are welcome to create an github issue or e-mail to discuss. In many cases, extensions to Fugu should not be incoporated into the core of Fugu, see http://sandialabs.github.io/Fugu/build/html/contributing.html.
+
+If you use Fugu for your research, please cite the following paper:
+
+Aimone, James B., William Severa, and Craig M. Vineyard. “Composing neural algorithms with Fugu.” Proceedings of the International Conference on Neuromorphic Systems. 2019.
+
+
