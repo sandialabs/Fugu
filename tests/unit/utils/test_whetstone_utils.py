@@ -28,7 +28,7 @@ def mock_keras_model(filename):
 class Test_Whetstone_2_Fugu_Normalization_Off:
     @pytest.mark.xfail(reason="Not implemented.")
     def test_layers(self):
-        model = whetstone.utils.load_model("tests/unit/utils/data/model_adaptive_mnist_normalization_off.keras")
+        model = whetstone.utils.load_model("data/model_adaptive_mnist_normalization_off.keras")
 
         basep = 3
         bits = 3
@@ -51,7 +51,7 @@ class Test_Whetstone_2_Fugu_Normalization_Off:
     @pytest.mark.xfail(reason="Not implemented.")
     def test_mock_keras_model(self, monkeypatch):
         monkeypatch.setattr("whetstone.utils.load_model", mock_keras_model)
-        model = whetstone.utils.load_model("tests/unit/utils/data/model_adaptive_mnist_normalization_off.keras")
+        model = whetstone.utils.load_model("data/model_adaptive_mnist_normalization_off.keras")
 
         assert False
 
