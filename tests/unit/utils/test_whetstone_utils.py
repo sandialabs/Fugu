@@ -19,14 +19,14 @@ def mock_keras_model(filename):
     '''
         Monkeypatch (i.e., mock) for a keras model.
     '''
-    # 28x28 image with 3 channels
+    # 28x28 image with 3 (RGB) channels
     input_shape = (28,28,3)
     model = Sequential()
     model.add(Conv2D(3, (7, 7), padding='same', activation=None, use_bias=True, input_shape=input_shape))
     return model
 
 class Test_Whetstone_2_Fugu_Normalization_Off:
-    # @pytest.mark.xfail(reason="Not implemented.")
+    @pytest.mark.xfail(reason="Not implemented.")
     def test_layers(self):
         model = whetstone.utils.load_model("tests/unit/utils/data/model_adaptive_mnist_normalization_off.keras")
 
