@@ -13,7 +13,7 @@ from fugu.utils.whetstone import whetstone_2_fugu
 import pandas as pd
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense, Conv2D, Flatten, MaxPooling2D
-import whetstone
+from whetstone.utils.layer_utils import load_model
 
 def mock_keras_model(filename):
     '''
@@ -25,10 +25,14 @@ def mock_keras_model(filename):
     model.add(Conv2D(3, (7, 7), padding='same', activation=None, use_bias=True, input_shape=input_shape))
     return model
 
+def keras_mnist_model_norm_off():
+    import os
+    return f"{os.path.dirname(__file__)}/data/model_adaptive_mnist_normalization_off.keras"
+
 class Test_Whetstone_2_Fugu_Normalization_Off:
-    @pytest.mark.xfail(reason="Not implemented.")
+    @pytest.mark.skip(reason="Not implemented.")
     def test_layers(self):
-        model = whetstone.utils.load_model("data/model_adaptive_mnist_normalization_off.keras")
+        model = load_model(keras_mnist_model_norm_off())
 
         basep = 3
         bits = 3
@@ -50,8 +54,8 @@ class Test_Whetstone_2_Fugu_Normalization_Off:
 
     @pytest.mark.xfail(reason="Not implemented.")
     def test_mock_keras_model(self, monkeypatch):
-        monkeypatch.setattr("whetstone.utils.load_model", mock_keras_model)
-        model = whetstone.utils.load_model("data/model_adaptive_mnist_normalization_off.keras")
+        monkeypatch.setattr("whetstone.utils.layer_utils.load_model", mock_keras_model)
+        model = load_model(keras_mnist_model_norm_off())
 
         assert False
 

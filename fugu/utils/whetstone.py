@@ -1,6 +1,4 @@
 import numpy as np
-import whetstone
-import tensorflow
 
 from fugu.bricks.convolution_bricks import convolution_1d, convolution_2d
 from fugu.bricks.input_bricks import BaseP_Input
@@ -9,9 +7,7 @@ from fugu.bricks.dense_bricks import dense_layer_2d
 from fugu.scaffold import Scaffold
 
 from tensorflow.keras.layers import Dense, Conv2D, Flatten, MaxPooling2D
-
-tensorflow.keras.layers.Convolution2D
-tensorflow.keras.layers.MaxPooling2D
+from whetstone.utils.export_utils import copy_remove_batchnorm
 
 def whetstone_2_fugu(keras_model, basep, bits, scaffold=None):
     '''
@@ -21,7 +17,7 @@ def whetstone_2_fugu(keras_model, basep, bits, scaffold=None):
         scaffold = Scaffold()
 
 
-    model = whetstone.utils.export_utils.copy_remove_batchnorm(keras_model)
+    model = copy_remove_batchnorm(keras_model)
     layerID = 0
     for idx, layer in enumerate(model.layers):
         if type(layer) is Conv2D:
