@@ -13,7 +13,7 @@ from fugu.utils.whetstone import whetstone_2_fugu
 import pandas as pd
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense, Conv2D, Flatten, MaxPooling2D
-from whetstone.utils.layer_utils import load_model
+from whetstone.utils import layer_utils
 
 def mock_keras_model(filename):
     '''
@@ -32,7 +32,7 @@ def keras_mnist_model_norm_off():
 class Test_Whetstone_2_Fugu_Normalization_Off:
     @pytest.mark.skip(reason="Not implemented.")
     def test_layers(self):
-        model = load_model(keras_mnist_model_norm_off())
+        model = layer_utils.load_model(keras_mnist_model_norm_off())
 
         basep = 3
         bits = 3
@@ -54,8 +54,9 @@ class Test_Whetstone_2_Fugu_Normalization_Off:
 
     @pytest.mark.xfail(reason="Not implemented.")
     def test_mock_keras_model(self, monkeypatch):
+        # monkeypatch.setattr("whetstone.utils.layer_utils.load_model", mock_keras_model)
         monkeypatch.setattr("whetstone.utils.layer_utils.load_model", mock_keras_model)
-        model = load_model(keras_mnist_model_norm_off())
+        model = layer_utils.load_model(keras_mnist_model_norm_off())
 
         assert False
 
