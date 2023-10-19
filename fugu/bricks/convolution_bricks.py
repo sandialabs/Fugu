@@ -13,12 +13,12 @@ class convolution_1d(Brick):
     
     """
     
-    def __init__(self, pvector, filters, thresholds, basep, bits, name=None, mode='full'):
+    def __init__(self, plength, filters, thresholds, basep, bits, name=None, mode='full'):
         super().__init__()
         self.is_built = False
         self.name = name
         self.supported_codings = ['binary-L']
-        self.plength = len(pvector)
+        self.plength = plength
         self.filters = filters
         self.thresholds = thresholds
         self.basep = basep
@@ -159,12 +159,12 @@ class convolution_2d(Brick):
     
     """
     
-    def __init__(self, pvector, filters, thresholds, basep, bits, name=None, mode='full'):
+    def __init__(self, input_shape, filters, thresholds, basep, bits, name=None, mode='full'):
         super().__init__()
         self.is_built = False
         self.name = name
         self.supported_codings = ['binary-L']
-        self.pshape = np.array(pvector).shape
+        self.pshape = input_shape
         self.filters = filters
         self.thresholds = thresholds
         self.basep = basep

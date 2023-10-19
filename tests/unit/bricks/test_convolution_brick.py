@@ -12,6 +12,7 @@ class Test_Convolution1D:
         self.basep = 2
         self.bits = 2
         self.pvector = [1, 1]
+        self.plength = len(self.pvector)
         self.filters = [2, 3]
         self.mode = "full"
 
@@ -199,7 +200,7 @@ class Test_Convolution1D:
         )
         scaffold.add_brick(
             convolution_1d(
-                self.pvector,
+                self.plength,
                 self.filters,
                 thresholds,
                 self.basep,
@@ -411,7 +412,7 @@ class Test_Convolution2D:
         )
         scaffold.add_brick(
             convolution_2d(
-                self.pvector,
+                self.pshape,
                 self.filters,
                 thresholds,
                 self.basep,
