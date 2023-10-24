@@ -10,9 +10,9 @@ class keras_convolution_2d(Brick):
     Convolution Function
     Michael Krygier
     mkrygie@sandia.gov
-    
+
     """
-    
+
     def __init__(self, input_shape, filters, thresholds, basep, bits, name=None, mode='same', strides=(1,1)):
         super().__init__()
         self.is_built = False
@@ -36,10 +36,10 @@ class keras_convolution_2d(Brick):
             raise ValueError("Check strides input variable.")
         self.strides = strides
         self.metadata = {'D': 2, 'basep': basep, 'bits': bits, 'convolution_mode': mode, 'convolution_input_shape': self.pshape, 'convolution_strides': self.strides}
-        
+
     def build(self, graph, metadata, control_nodes, input_lists, input_codings):
         """
-        Build convolution brick. 
+        Build convolution brick.
 
         Arguments:
             + graph - networkx graph to define connections of the computational graph
@@ -55,32 +55,33 @@ class keras_convolution_2d(Brick):
             + list of output
             + list of coding formats of output
         """
-        
+
         if len(input_codings) != 1:
             raise ValueError("convolution takes in 1 inputs of size n")
-            
+
         output_codings = [input_codings[0]]
-        
+
         new_complete_node_name = self.name + '_complete'
         new_begin_node_name = self.name + '_begin'
-        
+
         graph.add_node(new_begin_node_name   , index = -2, threshold = 0.0, decay =0.0, p=1.0, potential=0.0)
         graph.add_node(new_complete_node_name, index = -1, threshold = 0.9, decay =0.0, p=1.0, potential=0.0)
-        
+
 
         graph.add_edge(control_nodes[0]['complete'], new_complete_node_name, weight=1.0, delay=1)
         graph.add_edge(control_nodes[0]['begin']   , new_begin_node_name   , weight=1.0, delay=1)
 
         complete_node = new_complete_node_name
         begin_node = new_begin_node_name
-        
+
         # Get size/shape information from input arrays
         Am, An = self.pshape
         Bm, Bn = self.filters.shape
 
         # determine output neuron bounds based on the "mode"
         self.get_output_bounds()
-        dim1, dim2 = self.bnds[1,0] - self.bnds[0,0] + 1, self.bnds[1,1] - self.bnds[0,1] + 1
+        # dim1, dim2 = self.bnds[1,0] - self.bnds[0,0] + 1, self.bnds[1,1] - self.bnds[0,1] + 1
+        dim1, dim2 = self.get_output_shape()
         self.metadata['convolution_output_shape'] = (dim1,dim2)
 
         # Check for scalar value for thresholds
@@ -91,19 +92,19 @@ class keras_convolution_2d(Brick):
                 raise ValueError(f"Threshold shape {self.thresholds.shape} does not equal the output neuron shape ({dim1},{dim2}).")
 
         num_input_neurons = len(input_lists[0])
-            
+
         # output neurons/nodes
         output_lists = [[]]
         for i in np.arange(self.bnds[0,0],self.bnds[1,0] + 1):
-            ix = i - self.bnds[0,0]                
+            ix = i - self.bnds[0,0]
             for j in np.arange(self.bnds[0,1],self.bnds[1,1] + 1):
                 jx = j - self.bnds[0,1]
                 graph.add_node(f'{self.name}g{i}{j}', index=(ix,jx), threshold=self.thresholds[ix][jx], decay=1.0, p=1.0, potential=0.0)
                 output_lists[0].append(f'{self.name}g{i}{j}')
-        
+
         # Collect Inputs
         I = input_lists[0]
-               
+
         # Construct edges connecting input and output nodes
         pwr = -1
         cnt = -1
@@ -124,53 +125,45 @@ class keras_convolution_2d(Brick):
                 cnt += 1
                 graph.add_edge(I[k], f'{self.name}g{i}{j}', weight=coeff_i * self.basep**pwr * self.filters[ix][jx], delay=1)
                 logging.debug(f'{cnt}     coeff_i: {coeff_i}    power: {pwr}    input: {k}      output: {i}{j}     filter: {self.filters[ix][jx]}     I: {np.unravel_index(k,(Am,An,self.bits*self.basep))}')
-                
+
         self.is_built=True
-        
+
         return (graph, self.metadata, [{'complete': complete_node, 'begin': begin_node}], output_lists, output_codings)
-    
+
     def get_output_neurons(self,row,col,Bm,Bn):
         neuron_indices = []
         bnds = self.bnds
+        Sm, Sn = self.strides
 
-        if self.mode == "full":
-            for i in np.arange(row, row + Bm):
-                for j in np.arange(col, col + Bn):
-                    neuron_indices.append((i, j))
-
-        if self.mode == "same" or self.mode == "valid":
-            for i in np.arange(row, row + Bm):
-                if (i >= bnds[0, 0]) and (i <= bnds[1, 0]):
-                    for j in np.arange(col, col + Bn):
-                        if (j >= bnds[0, 1]) and (j <= bnds[1, 1]):
-                            neuron_indices.append((i, j))
+        for i in np.arange(row, row + Bm, Sm):
+            if (i >= bnds[0, 0]) and (i <= bnds[1, 0]):
+                for j in np.arange(col, col + Bn, Sn):
+                    if (j >= bnds[0, 1]) and (j <= bnds[1, 1]):
+                        neuron_indices.append((i, j))
 
         return neuron_indices
 
     def get_output_bounds(self):
         # TODO: incorporate inclusion of stride length here
-        Am, An = self.pshape
-        Bm, Bn = self.filters.shape
-        Gm, Gn = Am + Bm - 1, An + Bn - 1
-        s1, s2 = self.strides
+        A = np.array(self.pshape)
+        B = np.array(self.filters.shape)
+        G = A + B - 1
+
 
         if self.mode == "full":
             lb = [0, 0]
-            ub = [Gm - 1, Gn - 1]
+            ub = G - 1
             self.bnds = np.array([lb, ub], dtype=int)
 
         if self.mode == "same":
-            apos = np.array([Am, An])
-            gpos = np.array([Gm, Gn])
-
-            lb = np.floor(0.5 * (gpos - apos))
-            ub = np.floor(0.5 * (gpos + apos) - 1)
+            lb = np.floor(0.5 * (G - A)) + self.strides - 1
+            ub = np.floor(0.5 * (G + A) - 1)
             self.bnds = np.array([lb, ub], dtype=int)
 
         if self.mode == "valid":
-            lmins = np.minimum((Am, An), (Bm, Bn))
+            lmins = np.minimum(A, B)
             lb = lmins - 1
-            ub = np.array([Gm, Gn]) - lmins
+            ub = G - lmins
             self.bnds = np.array([lb, ub], dtype=int)
 
     def get_output_shape(self):
@@ -179,5 +172,17 @@ class keras_convolution_2d(Brick):
         kernel_shape = np.array(self.filters.shape)
 
         p = 0.5 if self.mode == "same" else 0
-        output_shape = np.floor((input_shape + 2*p - kernel_shape)/strides_shape + 1)
+        output_shape = np.floor((input_shape + 2*p - kernel_shape)/strides_shape + 1).astype(int)
+
+        apos = np.array(self.pshape)
+        gpos = np.array(self.pshape) + np.array(self.filters.shape) - 1
+        if self.mode == "same":
+            ub = np.floor(0.5 * (gpos + apos) - 1)
+        elif self.mode == "valid":
+            lmins = np.minimum(self.pshape,self.filters.shape)
+            ub = gpos - lmins
+
+        lb = ub - (output_shape - 1)
+        # self.bnds = np.array([lb,ub],dtype=int)
+
         return output_shape
