@@ -120,7 +120,7 @@ class Test_KerasConvolution2D:
         self.mode = mode
         self.strides = strides
         layer = convolution_2d(self.pshape,self.filters,np.ones(self.filters_shape),self.basep,self.bits,name='conv',strides=self.strides)
-        calculated = list(layer.get_output_shape())
+        calculated = list(layer.output_shape)
         assert expected == calculated
 
     @pytest.mark.parametrize("strides,expected,expectation", 

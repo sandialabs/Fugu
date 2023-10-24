@@ -35,7 +35,8 @@ class keras_convolution_2d(Brick):
         else:
             raise ValueError("Check strides input variable.")
         self.strides = strides
-        self.metadata = {'D': 2, 'basep': basep, 'bits': bits, 'convolution_mode': mode, 'convolution_input_shape': self.pshape, 'convolution_strides': self.strides}
+        self.get_output_shape()
+        self.metadata = {'D': 2, 'basep': basep, 'bits': bits, 'convolution_mode': mode, 'convolution_input_shape': self.pshape, 'convolution_strides': self.strides, 'convolution_output_shape': self.output_shape}
 
     def build(self, graph, metadata, control_nodes, input_lists, input_codings):
         """
@@ -80,16 +81,13 @@ class keras_convolution_2d(Brick):
 
         # determine output neuron bounds based on the "mode"
         self.get_output_bounds()
-        # dim1, dim2 = self.bnds[1,0] - self.bnds[0,0] + 1, self.bnds[1,1] - self.bnds[0,1] + 1
-        dim1, dim2 = self.get_output_shape()
-        self.metadata['convolution_output_shape'] = (dim1,dim2)
 
         # Check for scalar value for thresholds
         if not hasattr(self.thresholds, '__len__') and (not isinstance(self.thresholds, str)):
-            self.thresholds = self.thresholds * np.ones((dim1,dim2))
+            self.thresholds = self.thresholds * np.ones(self.output_shape)
         else:
-            if self.thresholds.shape != (dim1, dim2):
-                raise ValueError(f"Threshold shape {self.thresholds.shape} does not equal the output neuron shape ({dim1},{dim2}).")
+            if self.thresholds.shape != self.output_shape:
+                raise ValueError(f"Threshold shape {self.thresholds.shape} does not equal the output neuron shape {self.output_shape}.")
 
         num_input_neurons = len(input_lists[0])
 
@@ -144,27 +142,18 @@ class keras_convolution_2d(Brick):
         return neuron_indices
 
     def get_output_bounds(self):
-        # TODO: incorporate inclusion of stride length here
-        A = np.array(self.pshape)
-        B = np.array(self.filters.shape)
-        G = A + B - 1
-
-
-        if self.mode == "full":
-            lb = [0, 0]
-            ub = G - 1
-            self.bnds = np.array([lb, ub], dtype=int)
-
+        input_shape = np.array(self.pshape)
+        full_output_shape = np.array(self.pshape) + np.array(self.filters.shape) - 1
+        mode_output_shape = np.array(self.output_shape)
+        
         if self.mode == "same":
-            lb = np.floor(0.5 * (G - A)) + self.strides - 1
-            ub = np.floor(0.5 * (G + A) - 1)
-            self.bnds = np.array([lb, ub], dtype=int)
+            ub = np.floor(0.5 * (full_output_shape + input_shape) - 1)
+        elif self.mode == "valid":
+            lmins = np.minimum(self.pshape,self.filters.shape)
+            ub = full_output_shape - lmins
 
-        if self.mode == "valid":
-            lmins = np.minimum(A, B)
-            lb = lmins - 1
-            ub = G - lmins
-            self.bnds = np.array([lb, ub], dtype=int)
+        lb = ub - (mode_output_shape - 1)
+        self.bnds = np.array([lb,ub],dtype=int)
 
     def get_output_shape(self):
         strides_shape = np.array(self.strides)
@@ -173,16 +162,4 @@ class keras_convolution_2d(Brick):
 
         p = 0.5 if self.mode == "same" else 0
         output_shape = np.floor((input_shape + 2*p - kernel_shape)/strides_shape + 1).astype(int)
-
-        apos = np.array(self.pshape)
-        gpos = np.array(self.pshape) + np.array(self.filters.shape) - 1
-        if self.mode == "same":
-            ub = np.floor(0.5 * (gpos + apos) - 1)
-        elif self.mode == "valid":
-            lmins = np.minimum(self.pshape,self.filters.shape)
-            ub = gpos - lmins
-
-        lb = ub - (output_shape - 1)
-        # self.bnds = np.array([lb,ub],dtype=int)
-
-        return output_shape
+        self.output_shape = tuple(output_shape)
