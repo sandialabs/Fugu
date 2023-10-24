@@ -14,44 +14,14 @@ class Test_KerasConvolution2D:
         self.filters = [[1, 2], [3, 4]]
         self.pshape = np.array(self.pvector).shape
         self.filters_shape = np.array(self.filters).shape
-        self.mode = "full"
-
-    @pytest.mark.parametrize("basep", [2, 3, 4, 5, 6, 7, 8, 9])
-    @pytest.mark.parametrize("bits", [2, 3, 4, 7, 8])
-    @pytest.mark.parametrize("nSpikes", [0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
-    def test_full_mode_spikes(self, basep, bits, nSpikes):
-        subt = np.zeros(9)
-        subt[:nSpikes] = 0.1
-        subt = np.reshape(subt, (3, 3))
-        thresholds = (
-            np.array([[1, 3, 2], [4, 10, 6], [3, 7, 4]]) - subt
-        )  # 2d convolution answer is [[1,3,2][,4,10,6],[3,7,4]]. Spikes fire when less than threshold. Thus subtract 0.1 so that spikes fire
-
-        self.basep = basep
-        self.bits = bits
-        result = self.run_convolution_2d(thresholds)
-
-        # get output positions in result
-        output_positions = self.output_spike_positions(
-            self.basep, self.bits, self.pvector, self.filters, thresholds
-        )
-        output_mask = self.output_mask(output_positions, result)
-
-        # Check calculations
-        if nSpikes == 0:
-            expected_spikes = list(np.array([]))
-        else:
-            expected_spikes = list(np.ones((nSpikes,)))
-
-        calculated_spikes = list(result[output_mask].to_numpy()[:, 0])
-        assert expected_spikes == calculated_spikes
+        self.mode = "same"
 
     @pytest.mark.parametrize("basep", [2])
     @pytest.mark.parametrize("bits", [2])
     @pytest.mark.parametrize("thresholds", np.arange(0.9, 11, 1))
     def test_scalar_threshold(self, basep, bits, thresholds):
         ans_thresholds = np.array(
-            [[1, 3, 2], [4, 10, 6], [3, 7, 4]]
+            [[1, 3], [4, 10,]]
         )  # 2d convolution answer is [[1,3,2][,4,10,6],[3,7,4]]. Spikes fire when less than threshold. Thus subtract 0.1 so that spikes fire
         nSpikes = len(ans_thresholds[ans_thresholds > thresholds])
 
@@ -74,8 +44,8 @@ class Test_KerasConvolution2D:
         calculated_spikes = list(result[output_mask].to_numpy()[:, 0])
         assert expected_spikes == calculated_spikes
 
-    @pytest.mark.parametrize("basep", [2])
-    @pytest.mark.parametrize("bits", [2])
+    @pytest.mark.parametrize("basep", [2, 3, 4, 5, 6, 7, 8, 9])
+    @pytest.mark.parametrize("bits", [2, 3, 4, 7, 8])
     @pytest.mark.parametrize("nSpikes", [0, 1, 2, 3, 4])
     def test_same_mode_spikes(self, basep, bits, nSpikes):
         self.mode = "same"
@@ -136,7 +106,7 @@ class Test_KerasConvolution2D:
         calculated_spikes = list(result[output_mask].to_numpy()[:, 0])
         assert expected_spikes == calculated_spikes
 
-    @pytest.mark.parametrize("mode", ["full", "valid", "same"])
+    @pytest.mark.parametrize("mode", ["valid", "same"])
     def test_thresholds_shape(self, mode):
         self.mode = mode
         with pytest.raises(ValueError):
