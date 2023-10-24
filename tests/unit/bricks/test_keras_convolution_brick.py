@@ -1,5 +1,6 @@
 import numpy as np
 import pytest
+from contextlib import nullcontext as does_not_raise
 
 from fugu.backends import snn_Backend
 from fugu.bricks.keras_convolution_bricks import keras_convolution_2d as convolution_2d
@@ -121,6 +122,23 @@ class Test_KerasConvolution2D:
         layer = convolution_2d(self.pshape,self.filters,np.ones(self.filters_shape),self.basep,self.bits,name='conv',strides=self.strides)
         calculated = list(layer.get_output_shape())
         assert expected == calculated
+
+    @pytest.mark.parametrize("strides,expected,expectation", 
+                             [
+                                 (1, (1,1), does_not_raise()), 
+                                 (2, (2,2), does_not_raise()), 
+                                 (2.0, (2,2), does_not_raise()), 
+                                 ((2,1), (2,1), does_not_raise()), 
+                                 ([1,2], (1,2), does_not_raise()), 
+                                 ([2.0,2.0], (2,2), does_not_raise()), 
+                                 ([1,2,3], None, pytest.raises(ValueError)),
+                            ])
+    def test_strides_parameter(self,strides,expected,expectation):
+        with expectation:
+            self.strides = strides
+            layer = convolution_2d(self.pshape,self.filters,np.ones(self.filters_shape),self.basep,self.bits,name='conv',strides=self.strides)
+            calculated = layer.strides
+            assert expected == calculated
 
     def get_num_output_neurons(self, thresholds):
         Am, An = self.pshape

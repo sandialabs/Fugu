@@ -24,8 +24,18 @@ class keras_convolution_2d(Brick):
         self.basep = basep
         self.bits = bits
         self.mode = mode
+
+        if isinstance(strides,(list,tuple)):
+            if len(strides) > 2:
+                raise ValueError("Strides must be an integer or tuple/list of 2 integers.")
+            else:
+                strides = tuple(map(int,strides))
+        elif isinstance(strides,(float,int)):
+            strides = tuple(map(int,[strides,strides]))
+        else:
+            raise ValueError("Check strides input variable.")
         self.strides = strides
-        self.metadata = {'D': 2, 'basep': basep, 'bits': bits, 'convolution_mode': mode, 'convolution_input_shape': self.pshape, 'convolution_strides': strides}
+        self.metadata = {'D': 2, 'basep': basep, 'bits': bits, 'convolution_mode': mode, 'convolution_input_shape': self.pshape, 'convolution_strides': self.strides}
         
     def build(self, graph, metadata, control_nodes, input_lists, input_codings):
         """
@@ -66,7 +76,7 @@ class keras_convolution_2d(Brick):
         
         # Get size/shape information from input arrays
         Am, An = self.pshape
-        Bm, Bn = self.filters
+        Bm, Bn = self.filters.shape
 
         # determine output neuron bounds based on the "mode"
         self.get_output_bounds()
