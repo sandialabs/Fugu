@@ -22,7 +22,7 @@ class Test_KerasConvolution2D:
     def test_scalar_threshold(self, basep, bits, thresholds):
         ans_thresholds = np.array(
             [[1, 3], [4, 10,]]
-        )  # 2d convolution answer is [[1,3,2][,4,10,6],[3,7,4]]. Spikes fire when less than threshold. Thus subtract 0.1 so that spikes fire
+        )  # 2d convolution answer is [[1,3,],[4,10]]. Spikes fire when less than threshold. Thus subtract 0.1 so that spikes fire
         nSpikes = len(ans_thresholds[ans_thresholds > thresholds])
 
         self.basep = basep
@@ -112,6 +112,15 @@ class Test_KerasConvolution2D:
         with pytest.raises(ValueError):
             thresholds = np.array([[4, 10]])
             self.run_convolution_2d(thresholds)
+
+    @pytest.mark.parametrize("mode", ["same"])
+    @pytest.mark.parametrize("strides,expected", [(1,[2,2]), (2,[1,1]), ((2,1),[1,2]), ((1,2),[2,1]), ([1,2],[2,1])])
+    def test_output_shape(self,mode,strides,expected):
+        self.mode = mode
+        self.strides = strides
+        layer = convolution_2d(self.pshape,self.filters,np.ones(self.filters_shape),self.basep,self.bits,name='conv',strides=self.strides)
+        calculated = list(layer.get_output_shape())
+        assert expected == calculated
 
     def get_num_output_neurons(self, thresholds):
         Am, An = self.pshape

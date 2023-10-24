@@ -13,18 +13,19 @@ class keras_convolution_2d(Brick):
     
     """
     
-    def __init__(self, input_shape, filters, thresholds, basep, bits, name=None, mode='full'):
+    def __init__(self, input_shape, filters, thresholds, basep, bits, name=None, mode='same', strides=(1,1)):
         super().__init__()
         self.is_built = False
         self.name = name
         self.supported_codings = ['binary-L']
         self.pshape = input_shape
-        self.filters = filters
+        self.filters = np.array(filters)
         self.thresholds = thresholds
         self.basep = basep
         self.bits = bits
         self.mode = mode
-        self.metadata = {'D': 2, 'basep': basep, 'bits': bits, 'convolution_mode': mode, 'convolution_input_shape': self.pshape}
+        self.strides = strides
+        self.metadata = {'D': 2, 'basep': basep, 'bits': bits, 'convolution_mode': mode, 'convolution_input_shape': self.pshape, 'convolution_strides': strides}
         
     def build(self, graph, metadata, control_nodes, input_lists, input_codings):
         """
@@ -65,7 +66,7 @@ class keras_convolution_2d(Brick):
         
         # Get size/shape information from input arrays
         Am, An = self.pshape
-        Bm, Bn = np.array(self.filters).shape
+        Bm, Bn = self.filters
 
         # determine output neuron bounds based on the "mode"
         self.get_output_bounds()
@@ -137,9 +138,11 @@ class keras_convolution_2d(Brick):
         return neuron_indices
 
     def get_output_bounds(self):
+        # TODO: incorporate inclusion of stride length here
         Am, An = self.pshape
-        Bm, Bn = np.array(self.filters).shape
+        Bm, Bn = self.filters.shape
         Gm, Gn = Am + Bm - 1, An + Bn - 1
+        s1, s2 = self.strides
 
         if self.mode == "full":
             lb = [0, 0]
@@ -159,3 +162,12 @@ class keras_convolution_2d(Brick):
             lb = lmins - 1
             ub = np.array([Gm, Gn]) - lmins
             self.bnds = np.array([lb, ub], dtype=int)
+
+    def get_output_shape(self):
+        strides_shape = np.array(self.strides)
+        input_shape = np.array(self.pshape)
+        kernel_shape = np.array(self.filters.shape)
+
+        p = 0.5 if self.mode == "same" else 0
+        output_shape = np.floor((input_shape + 2*p - kernel_shape)/strides_shape + 1)
+        return output_shape
