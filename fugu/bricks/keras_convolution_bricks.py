@@ -122,7 +122,7 @@ class keras_convolution_2d(Brick):
 
                 cnt += 1
                 graph.add_edge(I[k], f'{self.name}g{i}{j}', weight=coeff_i * self.basep**pwr * self.filters[ix][jx], delay=1)
-                logging.debug(f'{cnt}     coeff_i: {coeff_i}    power: {pwr}    input: {k}      output: {i}{j}     filter: {self.filters[ix][jx]}     I: {np.unravel_index(k,(Am,An,self.bits*self.basep))}')
+                logging.debug(f'{cnt}     coeff_i: {coeff_i}    power: {pwr}    input: {k}      output: {i}{j}     filter: {self.filters[ix][jx]}     I(row,col,Ck): {np.unravel_index(k,(Am,An,self.bits*self.basep))}     I[index]: {graph.nodes[I[k]]["index"]}')
 
         self.is_built=True
 
@@ -133,9 +133,12 @@ class keras_convolution_2d(Brick):
         bnds = self.bnds
         Sm, Sn = self.strides
 
-        for i in np.arange(row, row + Bm, Sm):
+        #TODO: Do I need these conditions in this loop? Is it possible to simply use
+        # bnds[0,0] to bnds[1,0] as the range for i and
+        # bnds[0,1] to bnds[1,1] as the range for j here?
+        for i in np.arange(row, row + Bm):
             if (i >= bnds[0, 0]) and (i <= bnds[1, 0]):
-                for j in np.arange(col, col + Bn, Sn):
+                for j in np.arange(col, col + Bn):
                     if (j >= bnds[0, 1]) and (j <= bnds[1, 1]):
                         neuron_indices.append((i, j))
 
@@ -163,3 +166,9 @@ class keras_convolution_2d(Brick):
         p = 0.5 if self.mode == "same" else 0
         output_shape = np.floor((input_shape + 2*p - kernel_shape)/strides_shape + 1).astype(int)
         self.output_shape = tuple(output_shape)
+
+def input_index_to_matrix_entry(input_shape,basep,bits,index):
+    Am, An = input_shape
+    linearized_index = np.ravel_multi_index(index,tuple(np.repeat([1,2,basep],[1,2,2])))# zero-based linearized index
+
+    return np.unravel_index(linearized_index,(Am,An,basep*bits))[:2]

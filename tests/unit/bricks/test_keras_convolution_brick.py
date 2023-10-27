@@ -1,5 +1,6 @@
 import numpy as np
 import pytest
+import logging
 from contextlib import nullcontext as does_not_raise
 
 from fugu.backends import snn_Backend
@@ -16,6 +17,7 @@ class Test_KerasConvolution2D:
         self.pshape = np.array(self.pvector).shape
         self.filters_shape = np.array(self.filters).shape
         self.mode = "same"
+        self.strides = (1,1)
 
     @pytest.mark.parametrize("basep", [2])
     @pytest.mark.parametrize("bits", [2])
@@ -140,6 +142,47 @@ class Test_KerasConvolution2D:
             calculated = layer.strides
             assert expected == calculated
 
+    # @pytest.mark.xfail(reason="Not implemented")
+    def test_same_mode_with_strides(self,caplog):
+        caplog.set_level(logging.DEBUG)
+        nSpikes = 1
+        self.mode = "same"
+        # subt = np.zeros(2)
+        # subt[:nSpikes] = 0.1
+        # subt = np.reshape(subt, (2, 1))
+        # thresholds = (
+        #     np.array([[3], [10]]) - subt
+        # )  # 2d convolution answer is [[1,3],[4,10]]. Spikes fire when less than threshold. Thus subtract 0.1 so that spikes fire
+
+        # manually set strides, thresholds, and expected values
+        # self.strides = (1,1)
+        # thresholds = np.array([[1,2.9],[4,10]])
+        self.strides = (2,1)
+        thresholds = np.array([[2.9,10]])
+        # self.strides = (2,2)
+        # thresholds = np.array([[9.9]])
+        expected_spikes = [1]
+
+        self.basep = 2 #basep
+        self.bits = 2 #bits
+        result = self.run_convolution_2d(thresholds)
+        logging.debug(f"result:\n{result}")
+
+        # get output positions in result
+        output_positions = self.output_spike_positions(
+            self.basep, self.bits, self.pvector, self.filters, thresholds
+        )
+        output_mask = self.output_mask(output_positions, result)
+
+        # Check calculations
+        # if nSpikes == 0:
+        #     expected_spikes = list(np.array([]))
+        # else:
+        #     expected_spikes = list(np.ones((nSpikes,)))
+
+        calculated_spikes = list(result[output_mask].to_numpy()[:, 0])
+        assert expected_spikes == calculated_spikes
+
     def get_num_output_neurons(self, thresholds):
         Am, An = self.pshape
         Bm, Bn = self.filters_shape
@@ -188,7 +231,7 @@ class Test_KerasConvolution2D:
                 p=self.basep,
                 bits=self.bits,
                 collapse_binary=False,
-                name="Input0",
+                name="I",
                 time_dimension=False,
             ),
             "input",
@@ -202,6 +245,7 @@ class Test_KerasConvolution2D:
                 self.bits,
                 name="convolution_",
                 mode=self.mode,
+                strides=self.strides,
             ),
             [(0, 0)],
             output=True,
