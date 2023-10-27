@@ -157,8 +157,10 @@ class Test_KerasConvolution2D:
         # manually set strides, thresholds, and expected values
         # self.strides = (1,1)
         # thresholds = np.array([[1,2.9],[4,10]])
-        self.strides = (2,1)
-        thresholds = np.array([[2.9,10]])
+        # self.strides = (2,1) # answer is [[4,10]]
+        # thresholds = np.array([[3.9,9.9]])
+        self.strides = (1,2) # answer is [[3],[10]]
+        thresholds = np.array([[3],[9.9]])
         # self.strides = (2,2)
         # thresholds = np.array([[9.9]])
         expected_spikes = [1]
