@@ -173,6 +173,8 @@ class Test_KerasConvolution2D:
         result = self.run_convolution_2d(thresholds)
         assert expected_spikes == self.calculated_spikes(thresholds,result)
 
+    @pytest.mark.parametrize("basep", [2, 3, 4, 5, 6, 7, 8, 9])
+    @pytest.mark.parametrize("bits", [2, 3, 4, 7, 8])
     @pytest.mark.parametrize("strides,nSpikes",
                              [
                                  ((1,1), 0),
@@ -189,10 +191,10 @@ class Test_KerasConvolution2D:
                                  ((2,2), 0),
                                  ((2,2), 1),
                              ])
-    def test_same_mode_with_strides(self,caplog,strides,nSpikes):
+    def test_same_mode_with_strides(self,caplog,basep,bits,strides,nSpikes):
         caplog.set_level(logging.DEBUG)
-        self.basep = 2 #basep
-        self.bits = 2 #bits
+        self.basep = basep
+        self.bits = bits
         self.strides = strides
         self.mode = "same"
 
