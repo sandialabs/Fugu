@@ -258,7 +258,7 @@ class convolution_2d(Brick):
 
                 cnt += 1
                 graph.add_edge(I[k], f'{self.name}g{i}{j}', weight=coeff_i * self.basep**pwr * self.filters[ix][jx], delay=1)
-                logging.debug(f'{cnt}     coeff_i: {coeff_i}    power: {pwr}    input: {k}      output: {i}{j}     filter: {self.filters[ix][jx]}     I: {np.unravel_index(k,(Am,An,self.bits*self.basep))}')
+                logging.debug(f'{cnt}     coeff_i: {coeff_i}    power: {pwr}    input: {k}      output: {i}{j}     filter: {self.filters[ix][jx]}     I(row,col,Ck): {np.unravel_index(k,(Am,An,self.bits*self.basep))}     I[index]: {graph.nodes[I[k]]["index"]}')
                 
         self.is_built=True
         
@@ -305,3 +305,9 @@ class convolution_2d(Brick):
             lb = lmins - 1
             ub = np.array([Gm, Gn]) - lmins
             self.bnds = np.array([lb, ub], dtype=int)
+
+def input_index_to_matrix_entry(input_shape,basep,bits,index):
+    Am, An = input_shape
+    linearized_index = np.ravel_multi_index(index,tuple(np.repeat([1,2,basep],[1,2,2])))# zero-based linearized index
+
+    return np.unravel_index(linearized_index,(Am,An,basep*bits))[:2]
