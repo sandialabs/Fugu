@@ -203,6 +203,69 @@ class Test_KerasConvolution2D:
 
         assert self.expected_spikes(nSpikes) == self.calculated_spikes(thresholds,result)
 
+    def test_explicit_valid_mode_with_strides(self):
+        self.basep = 2
+        self.bits = 4
+        self.mode = "valid"
+        self.pvector = np.arange(1,10).reshape(3,3)
+        self.pshape = self.pvector.shape
+
+        # manually set strides, thresholds, and expected values
+        self.strides = (1,1) # answer is [[23,33],[53,63]]
+        thresholds = np.array([[23,32.3],[53,62.9]])
+        expected_spikes = [1, 1]
+        result = self.run_convolution_2d(thresholds)
+        assert expected_spikes == self.calculated_spikes(thresholds,result)
+
+        self.strides = (2,1) # answer is [[53,63]]
+        thresholds = np.array([[52.9,63]])
+        expected_spikes = [1]
+        result = self.run_convolution_2d(thresholds)
+        assert expected_spikes == self.calculated_spikes(thresholds,result)
+
+        self.strides = (1,2) # answer is [[33],[63]]
+        thresholds = np.array([[33],[62.9]])
+        expected_spikes = [1]
+        result = self.run_convolution_2d(thresholds)
+        assert expected_spikes == self.calculated_spikes(thresholds,result)
+
+        self.strides = (2,2) # answer is [[63]]
+        thresholds = np.array([[62.9]])
+        expected_spikes = [1]
+        result = self.run_convolution_2d(thresholds)
+        assert expected_spikes == self.calculated_spikes(thresholds,result)
+
+    @pytest.mark.parametrize("basep", [2, 3, 7])
+    @pytest.mark.parametrize("bits", [4, 7])
+    @pytest.mark.parametrize("strides,nSpikes",
+                             [
+                                 ((1,1), 0),
+                                 ((1,1), 1),
+                                 ((1,1), 2),
+                                 ((1,1), 3),
+                                 ((1,1), 4),
+                                 ((1,2), 0),
+                                 ((1,2), 1),
+                                 ((1,2), 2),
+                                 ((2,1), 0),
+                                 ((2,1), 1),
+                                 ((2,1), 2),
+                                 ((2,2), 0),
+                                 ((2,2), 1),
+                             ])
+    def test_valid_mode_with_strides(self,basep,bits,strides,nSpikes):
+        self.basep = basep
+        self.bits = bits
+        self.mode = "valid"
+        self.pvector = np.arange(1,10).reshape(3,3)
+        self.pshape = self.pvector.shape
+        self.strides = strides
+
+        thresholds = get_unique_thresholds(self.pvector,self.filters,self.strides,self.mode,nSpikes)
+        result = self.run_convolution_2d(thresholds)
+
+        assert self.expected_spikes(nSpikes) == self.calculated_spikes(thresholds,result)
+
     def get_num_output_neurons(self, thresholds):
         Am, An = self.pshape
         Bm, Bn = self.filters_shape
