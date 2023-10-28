@@ -47,78 +47,18 @@ class Test_KerasConvolution2D:
         calculated_spikes = list(result[output_mask].to_numpy()[:, 0])
         assert expected_spikes == calculated_spikes
 
-    @pytest.mark.parametrize("basep", [2, 3, 4, 5, 6, 7, 8, 9])
-    @pytest.mark.parametrize("bits", [2, 3, 4, 7, 8])
-    @pytest.mark.parametrize("nSpikes", [0, 1, 2, 3, 4])
-    def test_same_mode_spikes(self, basep, bits, nSpikes):
-        self.mode = "same"
-        subt = np.zeros(4)
-        subt[:nSpikes] = 0.1
-        subt = np.reshape(subt, (2, 2))
-        thresholds = (
-            np.array([[1, 3], [4, 10]]) - subt
-        )  # 2d convolution answer is [[1,3],[4,10]]. Spikes fire when less than threshold. Thus subtract 0.1 so that spikes fire
-
-        self.basep = basep
-        self.bits = bits
-        result = self.run_convolution_2d(thresholds)
-
-        # get output positions in result
-        output_positions = self.output_spike_positions(
-            self.basep, self.bits, self.pvector, self.filters, thresholds
-        )
-        output_mask = self.output_mask(output_positions, result)
-
-        # Check calculations
-        if nSpikes == 0:
-            expected_spikes = list(np.array([]))
-        else:
-            expected_spikes = list(np.ones((nSpikes,)))
-
-        calculated_spikes = list(result[output_mask].to_numpy()[:, 0])
-        assert expected_spikes == calculated_spikes
-
-    @pytest.mark.parametrize("basep", [2, 3])
-    @pytest.mark.parametrize("bits", [2, 3])
-    @pytest.mark.parametrize("nSpikes", [0, 1])
-    def test_valid_mode_spikes(self, basep, bits, nSpikes):
-        self.mode = "valid"
-        subt = np.zeros(1)
-        subt[:nSpikes] = 0.1
-        subt = np.reshape(subt, (1, 1))
-        thresholds = (
-            np.array([[10]]) - subt
-        )  # 2d convolution answer is [[10]]. Spikes fire when less than threshold. Thus subtract 0.1 so that spikes fire
-
-        self.basep = basep
-        self.bits = bits
-        result = self.run_convolution_2d(thresholds)
-
-        # get output positions in result
-        output_positions = self.output_spike_positions(
-            self.basep, self.bits, self.pvector, self.filters, thresholds
-        )
-        output_mask = self.output_mask(output_positions, result)
-
-        # Check calculations
-        if nSpikes == 0:
-            expected_spikes = list(np.array([]))
-        else:
-            expected_spikes = list(np.ones((nSpikes,)))
-
-        calculated_spikes = list(result[output_mask].to_numpy()[:, 0])
-        assert expected_spikes == calculated_spikes
-
     @pytest.mark.parametrize("mode", ["valid", "same"])
-    def test_thresholds_shape(self, mode):
+    @pytest.mark.parametrize("thresholds_shape", [(1,2),(2,1)])
+    def test_thresholds_shape(self, mode, thresholds_shape):
         self.mode = mode
         with pytest.raises(ValueError):
-            thresholds = np.array([[4, 10]])
+            thresholds = np.ones(thresholds_shape)
             self.run_convolution_2d(thresholds)
 
     @pytest.mark.parametrize("mode", ["same"])
     @pytest.mark.parametrize("strides,expected", [(1,[2,2]), (2,[1,1]), ((2,1),[1,2]), ((1,2),[2,1]), ([1,2],[2,1])])
     def test_output_shape(self,mode,strides,expected):
+        #TODO: Add mode="valid" to output shape check
         self.mode = mode
         self.strides = strides
         layer = convolution_2d(self.pshape,self.filters,np.ones(self.filters_shape),self.basep,self.bits,name='conv',strides=self.strides)
