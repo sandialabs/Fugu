@@ -1,12 +1,13 @@
 import numpy as np
 
-from fugu.bricks.convolution_bricks import convolution_1d, convolution_2d
+from fugu.bricks.keras_convolution_bricks import keras_convolution_2d as convolution_2d
 from fugu.bricks.input_bricks import BaseP_Input
 from fugu.bricks.pooling_bricks import pooling_1d, pooling_2d
 from fugu.bricks.dense_bricks import dense_layer_2d
 from fugu.scaffold import Scaffold
 
 from tensorflow.keras.layers import Dense, Conv2D, Flatten, MaxPooling2D
+from whetstone.layers import Spiking_BRelu
 from whetstone.utils.export_utils import copy_remove_batchnorm
 
 def whetstone_2_fugu(keras_model, basep, bits, scaffold=None):
@@ -17,7 +18,8 @@ def whetstone_2_fugu(keras_model, basep, bits, scaffold=None):
         scaffold = Scaffold()
 
 
-    model = copy_remove_batchnorm(keras_model)
+    # model = copy_remove_batchnorm(keras_model)
+    model = keras_model
     layerID = 0
     for idx, layer in enumerate(model.layers):
         if type(layer) is Conv2D:
@@ -32,9 +34,14 @@ def whetstone_2_fugu(keras_model, basep, bits, scaffold=None):
             for channel in np.arange(input_shape[-1]):
                 #TODO: update convolution brick to use pvector shape, instead of pvector, as an input parameter to the brick. Note, the convolution brick assumes
                 # the strides are 1 in each direction.
+                #TODO: Update convolution brick to have different stride length capabilities
                 for filter in np.arange(layer.filters):
-                    scaffold.add_brick(convolution_2d(np.zeros(input_shape[1:-1]),weights[:,:,channel,filter],bias,basep,bits,name=f"convolution_layer_{layerID}",mode=padding),[(layerID, 0)],output=True)
+                    print(f"Conv2D:: Channel: {channel} Filter: {filter}")
+                    scaffold.add_brick(convolution_2d(input_shape[1:-1],weights[:,:,channel,filter],1.0,basep,bits,name=f"convolution_layer_{layerID}",mode=padding,strides=strides),[(layerID, 0)],output=True)
                     layerID += 1
+
+        if type(layer) is Spiking_BRelu:
+            pass
 
         if type(layer) is MaxPooling2D:
             # need pool size, strides, thresholds, and method
