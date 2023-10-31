@@ -84,13 +84,14 @@ class Test_Whetstone_2_Fugu_Normalization_Off:
 
         assert False
 
-    def test_whetstone_2_fugu_conv2d_layer(self):
+    @pytest.mark.parametrize("bias,nSpikes", [(-22,9),(-23,8),(-24,7),(-33,6),(-36,5),(-42,4),(-52,3),(-53,2),(-59,1),(-63,0)])
+    def test_whetstone_2_fugu_conv2d_layer(self,bias,nSpikes):
         '''
             [[1,2,3]                 [[ 4,11,18, 9]
              [4,5,6]  *  [[1,2]  =    [18,37,47,21]
              [7,8,9]]     [3,4]]      [36,67,77,33]
-                                      [14,23,26, 9]
-            
+                                      [14,23,26, 9]]
+
             *** Note ***
             [METHOD 1]
             If you don't flip the kernel for Keras then don't "flip" the kernel when doing convolution by hand. Moreover this result is equivalent 
@@ -103,22 +104,19 @@ class Test_Whetstone_2_Fugu_Normalization_Off:
             [[1,2,3]                 [[ 1, 4, 7, 6]
              [4,5,6]  *  [[1,2]  =    [ 7,23,33,24]
              [7,8,9]]     [3,4]]      [19,53,63,42]
-                                      [21,52,59,36]
+                                      [21,52,59,36]]
         '''
         from tensorflow.keras import Model, initializers
         input_shape = (3,3,1)
         strides = (1,1)
         init_kernel = np.reshape(np.arange(1,5),(1,2,2,1))
-        init_bias = -52.6*np.ones((1,))
-        init_bias = -52.6*np.zeros((1,))
+        init_bias = bias*np.ones((1,))
         kernel_initializer = initializers.constant(np.flip(init_kernel)) # [METHOD 2] keras doesn't flip the filter during the convolution; so force the array flip manually.
         bias_initializer = initializers.constant(init_bias)
-        nSpikes = 2
 
         model = Sequential()
         model.add(Conv2D(1, (2, 2), strides=strides, padding='same', activation=None, use_bias=True, input_shape=input_shape, name="one", kernel_initializer=kernel_initializer, bias_initializer=bias_initializer))
         model.add(Spiking_BRelu(input_shape=(3,3),sharpness=1.0,name="spike"))
-        thresholds = model.layers[0].get_weights()[0].reshape(2,2)
         mock_image = np.arange(1,10,dtype=float).reshape(1,3,3,1)
         calculated = model.layers[0](mock_image)[0,:,:,0].numpy().tolist() # gives the output of the input through this layer only
         feature_extractor = Model(inputs=model.inputs, outputs=[layer.output for layer in model.layers]) # gives cumalative output of the input through this and previous layers.
@@ -130,7 +128,6 @@ class Test_Whetstone_2_Fugu_Normalization_Off:
         self.filters = init_kernel.reshape(2,2)
         self.filters_shape = self.filters.shape
         self.strides = strides
-        thresholds = calculated
         scaffold = Scaffold()
         scaffold.add_brick(BaseP_Input(mock_image.reshape(3,3),p=self.basep,bits=self.bits,collapse_binary=False,name="I",time_dimension=False),"input")
         scaffold = whetstone_2_fugu(model,self.basep,self.bits,scaffold=scaffold)
@@ -138,8 +135,6 @@ class Test_Whetstone_2_Fugu_Normalization_Off:
 
         # Override output neuron threshold values in scaffold
         output_neuron_names = np.array(scaffold.graph.nodes)[-9:]
-        for k, name in enumerate(output_neuron_names):
-            print(f"threshold: {scaffold.graph.nodes[name]['threshold']}  Spiking_BRelu: {feature_extractor(mock_image)[1][0,:,:,0].numpy().flatten()[k]}")
         
         keras_convolution_answer = feature_extractor(mock_image)[0][0,:,:,0].numpy()
         keras_spike_answer = feature_extractor(mock_image)[1][0,:,:,0].numpy()
@@ -156,7 +151,73 @@ class Test_Whetstone_2_Fugu_Normalization_Off:
         result = backend.run(5)
 
         assert self.expected_spikes(nSpikes) == self.calculated_spikes(new_fugu_thresholds, result)
-        assert False
+
+    def test_explicit_whetstone_2_fugu_conv2d_layer(self):
+            '''
+                [[1,2,3]                 [[ 4,11,18, 9]
+                [4,5,6]  *  [[1,2]  =     [18,37,47,21]
+                [7,8,9]]     [3,4]]       [36,67,77,33]
+                                          [14,23,26, 9]]
+
+                *** Note ***
+                [METHOD 1]
+                If you don't flip the kernel for Keras then don't "flip" the kernel when doing convolution by hand. Moreover this result is equivalent 
+                to performing scipy.signal.convolve2d([[1,2,3],[4,5,6],[7,8,9]],np.flip( [[1,2],[3,4]] ), mode="full").
+
+                [METHOD 2]
+                Otherwise, "flip" the kernel (filter) for keras and then perform the traditional convolution practice when calculating convolution by hand.
+                The below result is equivalent to scipy.signal.convolve2d([[1,2,3],[4,5,6],[7,8,9]],[[1,2],[3,4]], mode="full")
+
+                [[1,2,3]                 [[ 1, 4, 7, 6]
+                [4,5,6]  *  [[1,2]  =     [ 7,23,33,24]
+                [7,8,9]]     [3,4]]       [19,53,63,42]
+                                          [21,52,59,36]]
+            '''
+            from tensorflow.keras import Model, initializers
+            input_shape = (3,3,1)
+            strides = (1,1)
+            init_kernel = np.reshape(np.arange(1,5),(1,2,2,1))
+            init_bias = -52.6*np.ones((1,))
+            kernel_initializer = initializers.constant(np.flip(init_kernel)) # [METHOD 2] keras doesn't flip the filter during the convolution; so force the array flip manually.
+            bias_initializer = initializers.constant(init_bias)
+            nSpikes = 2
+
+            model = Sequential()
+            model.add(Conv2D(1, (2, 2), strides=strides, padding='same', activation=None, use_bias=True, input_shape=input_shape, name="one", kernel_initializer=kernel_initializer, bias_initializer=bias_initializer))
+            model.add(Spiking_BRelu(input_shape=(3,3),sharpness=1.0,name="spike"))
+            mock_image = np.arange(1,10,dtype=float).reshape(1,3,3,1)
+            calculated = model.layers[0](mock_image)[0,:,:,0].numpy().tolist() # gives the output of the input through this layer only
+            feature_extractor = Model(inputs=model.inputs, outputs=[layer.output for layer in model.layers]) # gives cumalative output of the input through this and previous layers.
+
+            self.basep = 3
+            self.bits = 3
+            self.pvector = mock_image.reshape(3,3)
+            self.pshape = self.pvector.shape
+            self.filters = init_kernel.reshape(2,2)
+            self.filters_shape = self.filters.shape
+            self.strides = strides
+            scaffold = Scaffold()
+            scaffold.add_brick(BaseP_Input(mock_image.reshape(3,3),p=self.basep,bits=self.bits,collapse_binary=False,name="I",time_dimension=False),"input")
+            scaffold = whetstone_2_fugu(model,self.basep,self.bits,scaffold=scaffold)
+            scaffold.lay_bricks()
+
+            # Override output neuron threshold values in scaffold
+            output_neuron_names = np.array(scaffold.graph.nodes)[-9:]
+            keras_convolution_answer = feature_extractor(mock_image)[0][0,:,:,0].numpy()
+            keras_spike_answer = feature_extractor(mock_image)[1][0,:,:,0].numpy()
+            new_fugu_thresholds = (keras_convolution_answer - init_bias).astype(int) - 0.1*keras_spike_answer
+
+            # Assign new thresholds values to convolution output neurons in the scaffold
+            for k, name in enumerate(output_neuron_names):
+                scaffold.graph.nodes[name]['threshold'] = new_fugu_thresholds.flatten()[k]
+
+            scaffold.summary(verbose=1)
+            backend = snn_Backend()
+            backend_args = {}
+            backend.compile(scaffold, backend_args)
+            result = backend.run(5)
+
+            assert self.expected_spikes(nSpikes) == self.calculated_spikes(new_fugu_thresholds, result)
 
     # Auxillary/helper functions
     def get_num_output_neurons(self, thresholds):
@@ -269,12 +330,12 @@ class Test_Keras_Conv2d:
         *** IMPORTANT ***
         Keras does NOT "flip" the kernel before applying the convolution operator "*" to the input image. That is, using scipy.signal.convolve2d (or hand calculated results) for
         image=[[1,2],[3,4]] and kernel=[[1,2],[3,4]] with mode="full" and strides=(1,1) will produce a 2D convolution result equal to [[1,4,4],[6,20,16],[9,24,16]].
-        
-        To reproduce the Keras padding="same" result, you must 
+
+        To reproduce the Keras padding="same" result, you must
             (1) "flip" (np.flip(...)) the input kernel matrix passed to the scipy.signal.convolve2d function and then
             (2) take the [1:,1:] sliced convolution result.
 
-        Passing image=[[1,2],[3,4]] and the flipped (flipped both row and column) kernel=[[1,2],[3,4]] ([[4,3],[2,1]]) to scipy.signal.convolve2d with mode="full" returns a 
+        Passing image=[[1,2],[3,4]] and the flipped (flipped both row and column) kernel=[[1,2],[3,4]] ([[4,3],[2,1]]) to scipy.signal.convolve2d with mode="full" returns a
         2D convolution result equal to [[4,11,6],[14,30,14],[6,11,4]]. The Keras' 2D convolution result using padding="same", image=[[1,2],[3,4]], and kernel=[[1,2],[3,4]]
         (i.e., same parameters, except kernel is NOT flipped when passed to Keras; Keras' doesn't have padding="full") results in a 2D convolution equation to [[30,14],[11,4]].
         '''
