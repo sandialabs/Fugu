@@ -150,13 +150,14 @@ class keras_convolution_2d(Brick):
         mode_output_shape = np.array(self.output_shape)
         
         if self.mode == "same":
-            ub = np.floor(0.5 * (full_output_shape + input_shape) - 1)
+            ub = np.floor(0.5 * (mode_output_shape + input_shape) - 1)
+            lb = ub - (mode_output_shape - 1)
+            self.bnds = np.array([lb,ub],dtype=int) + 1
         elif self.mode == "valid":
             lmins = np.minimum(self.pshape,self.filters.shape)
             ub = full_output_shape - lmins
-
-        lb = ub - (mode_output_shape - 1)
-        self.bnds = np.array([lb,ub],dtype=int)
+            lb = ub - (mode_output_shape - 1)
+            self.bnds = np.array([lb,ub],dtype=int) - (np.array(self.strides) - 1)
 
     def get_output_shape(self):
         strides_shape = np.array(self.strides)

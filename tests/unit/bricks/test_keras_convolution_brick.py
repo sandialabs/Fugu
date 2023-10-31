@@ -24,8 +24,8 @@ class Test_KerasConvolution2D:
     @pytest.mark.parametrize("thresholds", np.arange(0.9, 11, 1))
     def test_scalar_threshold(self, basep, bits, thresholds):
         ans_thresholds = np.array(
-            [[1, 3], [4, 10,]]
-        )  # 2d convolution answer is [[1,3,],[4,10]]. Spikes fire when less than threshold. Thus subtract 0.1 so that spikes fire
+            [[10, 6], [7, 4,]]
+        )  # 2d convolution answer is [[1,3,2],[4,10,6],[3,7,4]]. Spikes fire when less than threshold. Thus subtract 0.1 so that spikes fire
         nSpikes = len(ans_thresholds[ans_thresholds > thresholds])
 
         self.basep = basep
@@ -83,32 +83,43 @@ class Test_KerasConvolution2D:
             assert expected == calculated
 
     def test_explicit_same_mode_with_strides(self,caplog):
+        '''
+        mode="full" 2D convolution result is [[1,4,4],[6,20,16],[9,24,16]].
+
+        Keras 2d convolution brick does only supports mode="same" or mode="valid". The
+        "same" result should return [[20,16],[24,16]], where padding is applied only to
+        the bottom and right image data; padding is NOT appended to the left and top image positions.
+        '''
         caplog.set_level(logging.DEBUG)
         self.mode = "same"
         self.basep = 3 #basep
         self.bits = 3 #bits
+        self.pvector = [[1, 2], [3, 4]]
+        self.filters = [[1, 2], [3, 4]]
+        self.pshape = np.array(self.pvector).shape
+        self.filters_shape = np.array(self.filters).shape
 
         # manually set strides, thresholds, and expected values
-        self.strides = (1,1)
-        thresholds = np.array([[1,2.9],[4,9.9]])
+        self.strides = (1,1) # answer is [[20,16],[24,16]]
+        thresholds = np.array([[20,15.9],[24,15.9]])
         expected_spikes = [1, 1]
         result = self.run_convolution_2d(thresholds)
         assert expected_spikes == self.calculated_spikes(thresholds,result)
 
-        self.strides = (2,1) # answer is [[4,10]]
-        thresholds = np.array([[4,9.9]])
+        self.strides = (2,1) # answer is [[20,16]]
+        thresholds = np.array([[20,15.9]])
         expected_spikes = [1]
         result = self.run_convolution_2d(thresholds)
         assert expected_spikes == self.calculated_spikes(thresholds,result)
 
-        self.strides = (1,2) # answer is [[3],[10]]
-        thresholds = np.array([[3],[9.9]])
+        self.strides = (1,2) # answer is [[20],[24]]
+        thresholds = np.array([[20],[23.9]])
         expected_spikes = [1]
         result = self.run_convolution_2d(thresholds)
         assert expected_spikes == self.calculated_spikes(thresholds,result)
 
-        self.strides = (2,2) # answer is [[10]]
-        thresholds = np.array([[9.9]])
+        self.strides = (2,2) # answer is [[20]]
+        thresholds = np.array([[19.9]])
         expected_spikes = [1]
         result = self.run_convolution_2d(thresholds)
         assert expected_spikes == self.calculated_spikes(thresholds,result)
@@ -143,7 +154,31 @@ class Test_KerasConvolution2D:
 
         assert self.expected_spikes(nSpikes) == self.calculated_spikes(thresholds,result)
 
+    def test_3x3_image_same_mode_with_strides(self):
+        self.basep = 3
+        self.bits = 3
+        self.pvector = [[1,2,3],[4,5,6],[7,8,9]]
+        self.pshape = np.array(self.pvector).shape
+        self.filters = [[1, 2], [3, 4]]
+        self.filters_shape = np.array(self.filters).shape
+
+        # manually set strides, thresholds, and expected values
+        self.strides = (1,1) # answer is [[23,33,24],[53,63,42],[52,59,36]]
+        thresholds = np.array([[23,33,24],[53,62.9,42],[52,58.9,36]])
+        expected_spikes = [1, 1]
+        result = self.run_convolution_2d(thresholds)
+        assert expected_spikes == self.calculated_spikes(thresholds,result)
+
     def test_explicit_valid_mode_with_strides(self):
+        '''
+        image=[[1,2,3],[4,5,6],[7,8,9]]
+        kernel=[[1,2],[3,4]]
+
+        mode="full" 2D convolution result is [[1,4,7,6],[7,23,33,24],[19,53,63,42],[21,52,59,36]].
+
+        Keras 2d convolution brick does only supports mode="same" or mode="valid". The
+        "valid" result should return [[23,33],[53,63]] with strides=(1,1).
+        '''
         self.basep = 2
         self.bits = 4
         self.mode = "valid"
@@ -152,31 +187,31 @@ class Test_KerasConvolution2D:
 
         # manually set strides, thresholds, and expected values
         self.strides = (1,1) # answer is [[23,33],[53,63]]
-        thresholds = np.array([[23,32.3],[53,62.9]])
+        thresholds = np.array([[23,32.9],[53,62.9]])
         expected_spikes = [1, 1]
         result = self.run_convolution_2d(thresholds)
         assert expected_spikes == self.calculated_spikes(thresholds,result)
 
-        self.strides = (2,1) # answer is [[53,63]]
-        thresholds = np.array([[52.9,63]])
+        self.strides = (2,1) # answer is [[23,33]]
+        thresholds = np.array([[22.9,33]])
         expected_spikes = [1]
         result = self.run_convolution_2d(thresholds)
         assert expected_spikes == self.calculated_spikes(thresholds,result)
 
-        self.strides = (1,2) # answer is [[33],[63]]
-        thresholds = np.array([[33],[62.9]])
+        self.strides = (1,2) # answer is [[23],[53]]
+        thresholds = np.array([[23],[52.9]])
         expected_spikes = [1]
         result = self.run_convolution_2d(thresholds)
         assert expected_spikes == self.calculated_spikes(thresholds,result)
 
-        self.strides = (2,2) # answer is [[63]]
-        thresholds = np.array([[62.9]])
+        self.strides = (2,2) # answer is [[23]]
+        thresholds = np.array([[22.9]])
         expected_spikes = [1]
         result = self.run_convolution_2d(thresholds)
         assert expected_spikes == self.calculated_spikes(thresholds,result)
 
-    @pytest.mark.parametrize("basep", [2, 3, 7])
-    @pytest.mark.parametrize("bits", [4, 7])
+    @pytest.mark.parametrize("basep", [3, 7])
+    @pytest.mark.parametrize("bits", [3, 4, 7])
     @pytest.mark.parametrize("strides,nSpikes",
                              [
                                  ((1,1), 0),
@@ -305,8 +340,8 @@ def get_unique_thresholds(image,kernel,strides,mode,nSpikes):
     # image = self.pvector
     # kernel = self.filters
     Srow, Scol = strides
-    mode_answer = convolve2d(image,kernel,mode=mode)
-    strided_answer = np.flip(np.flip(mode_answer)[::Srow,::Scol])
+    mode_answer = np.flip(convolve2d(np.flip(image),np.flip(kernel),mode=mode))
+    strided_answer = mode_answer[::Srow,::Scol]
 
     subt = np.zeros(np.size(strided_answer))
     subt[:nSpikes] = 0.1
