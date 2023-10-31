@@ -108,16 +108,15 @@ class Test_Whetstone_2_Fugu_Normalization_Off:
         from tensorflow.keras import Model, initializers
         input_shape = (3,3,1)
         strides = (1,1)
-        init_kernel = np.reshape(np.flip(np.arange(1,5)),(1,2,2,1)) # [METHOD 2] keras doesn't flip the filter during the convolution; so force the array flip manually.
-        init_bias = np.flip(np.array([[23,33,24],[53,63,42],[52,59,36]])).reshape(1,3,3,1)
+        init_kernel = np.reshape(np.arange(1,5),(1,2,2,1))
         init_bias = -52.6*np.ones((1,))
-        kernel_initializer = initializers.constant(init_kernel)
+        init_bias = -52.6*np.zeros((1,))
+        kernel_initializer = initializers.constant(np.flip(init_kernel)) # [METHOD 2] keras doesn't flip the filter during the convolution; so force the array flip manually.
         bias_initializer = initializers.constant(init_bias)
         nSpikes = 2
 
         model = Sequential()
         model.add(Conv2D(1, (2, 2), strides=strides, padding='same', activation=None, use_bias=True, input_shape=input_shape, name="one", kernel_initializer=kernel_initializer, bias_initializer=bias_initializer))
-        # model.add(Conv2D(1, (2, 2), strides=strides, padding='same', activation=None, use_bias=True, input_shape=input_shape, name="two", kernel_initializer=kernel_initializer, bias_initializer=bias_initializer))
         model.add(Spiking_BRelu(input_shape=(3,3),sharpness=1.0,name="spike"))
         thresholds = model.layers[0].get_weights()[0].reshape(2,2)
         mock_image = np.arange(1,10,dtype=float).reshape(1,3,3,1)
@@ -128,7 +127,7 @@ class Test_Whetstone_2_Fugu_Normalization_Off:
         self.bits = 3
         self.pvector = mock_image.reshape(3,3)
         self.pshape = self.pvector.shape
-        self.filters = np.flip(init_kernel.reshape(2,2))
+        self.filters = init_kernel.reshape(2,2)
         self.filters_shape = self.filters.shape
         self.strides = strides
         thresholds = calculated
@@ -251,7 +250,7 @@ class Test_Keras_Conv2d:
         input_shape = (2,2,1)
         init_kernel = np.reshape(np.arange(1,5),(1,2,2,1))
         init_bias = np.zeros((1,))
-        kernel_initializer = initializers.constant(init_kernel)
+        kernel_initializer = initializers.constant(np.flip(init_kernel))
         bias_initializer = initializers.constant(init_bias)
 
         model = Sequential()
@@ -259,27 +258,32 @@ class Test_Keras_Conv2d:
 
         # feature_extractor = Model(inputs=model.inputs, outputs=model.get_layer(name="one").output)
         feature_extractor = Model(inputs=model.inputs, outputs=[layer.output for layer in model.layers])
-        image = np.ones((1,2,2,1))
-        calculated = np.flip(feature_extractor(image)[0,:,:,0].numpy()).tolist()
-        expected = [[1.,3.],[4.,10.]]
+        image = np.arange(1,5).reshape(1,2,2,1)
+        calculated = feature_extractor(image)[0,:,:,0].numpy().tolist()
+        expected = [[20.,16.],[24.,16.]]
         assert expected == calculated
 
-    @pytest.mark.parametrize("strides,expected", [((1,1), [[1.,3.],[4.,10.]]), ((1,2), [[3.],[10.]]), ((2,1), [[4.,10.]]), ((2,2), [[10.]])])
+    @pytest.mark.parametrize("strides,expected", [((1,1), [[20.,16.],[24.,16.]]), ((1,2), [[20.],[24.]]), ((2,1), [[20.,16.]]), ((2,2), [[20.]])])
     def test_simple_conv2d_strides(self, strides, expected):
         '''
         *** IMPORTANT ***
-        Keras returns a "flipped" convolution result. That is, using scipy.signal.convolve2d (or hand calculated results) for image=[[1,1],[1,1]] and kernel=[[1,2],[3,4]] with mode="same" and
-        strides=(1,1) will produce a 2D convolution result equal to [[1,3],[4,10]]. Whereas Keras returns [[10,4],[3,1]] which is flipped version (both rows & columns) of the "normal" result. Consquently,
-        this behavior is important to understand when using non-unit strides in a Convolution2D layer in Keras because the answer that is return will coincide with the "flipped" result. For example, using
-        the same example image and kernel provided early with mode/padding="same" and strides=(2,2) will return [[10]] in Keras but the "normal" calculation will return [[1]]. The reason for this behavior due
-        to the flipped result that contains the "10" in the top left entry when strides=(1,1). 
+        Keras does NOT "flip" the kernel before applying the convolution operator "*" to the input image. That is, using scipy.signal.convolve2d (or hand calculated results) for
+        image=[[1,2],[3,4]] and kernel=[[1,2],[3,4]] with mode="full" and strides=(1,1) will produce a 2D convolution result equal to [[1,4,4],[6,20,16],[9,24,16]].
+        
+        To reproduce the Keras padding="same" result, you must 
+            (1) "flip" (np.flip(...)) the input kernel matrix passed to the scipy.signal.convolve2d function and then
+            (2) take the [1:,1:] sliced convolution result.
+
+        Passing image=[[1,2],[3,4]] and the flipped (flipped both row and column) kernel=[[1,2],[3,4]] ([[4,3],[2,1]]) to scipy.signal.convolve2d with mode="full" returns a 
+        2D convolution result equal to [[4,11,6],[14,30,14],[6,11,4]]. The Keras' 2D convolution result using padding="same", image=[[1,2],[3,4]], and kernel=[[1,2],[3,4]]
+        (i.e., same parameters, except kernel is NOT flipped when passed to Keras; Keras' doesn't have padding="full") results in a 2D convolution equation to [[30,14],[11,4]].
         '''
         from tensorflow.keras import Model, initializers
         
         input_shape = (2,2,1)
         init_kernel = np.reshape(np.arange(1,5),(1,2,2,1))
         init_bias = np.zeros((1,))
-        kernel_initializer = initializers.constant(init_kernel)
+        kernel_initializer = initializers.constant(np.flip(init_kernel))
         bias_initializer = initializers.constant(init_bias)
 
         model = Sequential()
@@ -287,18 +291,19 @@ class Test_Keras_Conv2d:
         # feature_extractor = Model(inputs=model.inputs, outputs=model.get_layer(name="one").output)
         feature_extractor = Model(inputs=model.inputs, outputs=[layer.output for layer in model.layers])
 
-        image = np.ones((1,2,2,1))
-        calculated = np.flip(feature_extractor(image)[0,:,:,0].numpy()).tolist()
+        image = np.arange(1,5).reshape(1,2,2,1)
+        calculated = feature_extractor(image)[0,:,:,0].numpy().tolist()
         assert expected == calculated
 
     @pytest.mark.xfail(reason="Not implemented.")
     def test_simple_conv2d_strides_tmp(self):
+        #TODO: finish test using image.np.arange(1,10).reshape(1,3,3,1)
         from tensorflow.keras import Model, initializers
         
-        input_shape = (2,2,1)
+        input_shape = (3,3,1)
         init_kernel = np.reshape(np.arange(1,5),(1,2,2,1))
         init_bias = np.zeros((1,))
-        kernel_initializer = initializers.constant(init_kernel)
+        kernel_initializer = initializers.constant(np.flip(init_kernel))
         bias_initializer = initializers.constant(init_bias)
 
         model11 = Sequential()
@@ -321,13 +326,15 @@ class Test_Keras_Conv2d:
         feature_extractor22 = Model(inputs=model22.inputs, outputs=model22.get_layer(name="one").output)
         # feature_extractor22 = Model(inputs=model22.inputs, outputs=[layer.output for layer in model22.layers])
 
-        image = np.ones((1,2,2,1))
-        calculated = np.flip(feature_extractor11(image)[0,:,:,0].numpy()).tolist()
+        # image = np.ones((1,3,3,1))
+        image = np.arange(1,10,dtype=float).reshape(1,3,3,1)
+        calculated = feature_extractor11(image)[0,:,:,0].numpy().tolist()
         expected = [[1.,3.],[4.,10.]]
         assert expected == calculated
         assert False
 
     def test_multichannel_conv2d(self):
+        #TODO: Update using "image = np.repeat(np.arange(1,5),nChannels).reshape(1,2,2,nChannels)" instead of "image=np.ones((1,2,2,nChannels))"
         from tensorflow.keras import Model, initializers
         
         nChannels = 2
@@ -349,6 +356,7 @@ class Test_Keras_Conv2d:
         assert expected == calculated
 
     def test_multifilter_conv2d(self):
+        #TODO: Update using "image = np.arange(1,5).reshape(1,2,2,1)" instead of "image=np.ones((1,2,2,1))"
         from tensorflow.keras import Model, initializers
         
         nFilters = 3
@@ -370,6 +378,7 @@ class Test_Keras_Conv2d:
         assert expected == calculated
 
     def test_multifilter_multichannel_conv2d(self):
+        #TODO: Update using "image = np.repeat(np.arange(1,5),nChannels).reshape(1,2,2,nChannels)" instead of "image=np.ones((1,2,2,nChannels))"
         from tensorflow.keras import Model, initializers
         
         nFilters = 3
@@ -408,6 +417,7 @@ class Test_Keras_MaxPooling2d:
         assert expected == calculated
 
 class Test_Keras_Multilayer_Model:
+    #TODO: Update using "image = np.arange(1,5).reshape(1,2,2,1)" instead of "image=np.ones((1,2,2,1))"
     @pytest.mark.parametrize("mock_conv2d_output,pool_size,pool_strides,expected", [(np.arange(1,10).reshape((1,3,3,1)), (1,1), (1,1), [[1.,3.],[4.,10.]]),
                                                                                     (np.arange(1,10).reshape((1,3,3,1)), (2,2), (1,1), [[1.,3.],[4.,10.]])])
     @pytest.mark.xfail(reason="Not implemented.")
