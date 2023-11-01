@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-import pandas as pd
+from scipy.signal import convolve2d
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense, Conv2D, Flatten, MaxPooling2D
 from tensorflow.keras import Model, initializers
@@ -26,7 +26,7 @@ class Test_Keras_Conv2d:
         assert expected == calculated
 
     @pytest.mark.parametrize("strides,expected", [((1,1), [[20.,16.],[24.,16.]]), ((1,2), [[20.],[24.]]), ((2,1), [[20.,16.]]), ((2,2), [[20.]])])
-    def test_simple_conv2d_strides(self, strides, expected):
+    def test_simple_same_mode_conv2d_strides_2x2_image(self, strides, expected):
         '''
         *** IMPORTANT ***
         Keras does NOT "flip" the kernel before applying the convolution operator "*" to the input image. That is, using scipy.signal.convolve2d (or hand calculated results) for
@@ -56,108 +56,138 @@ class Test_Keras_Conv2d:
         calculated = feature_extractor(image)[0,:,:,0].numpy().tolist()
         assert expected == calculated
 
-    @pytest.mark.xfail(reason="Not implemented.")
-    def test_simple_conv2d_strides_tmp(self):
-        #TODO: finish test using image.np.arange(1,10).reshape(1,3,3,1)
-        
+    def test_simple_valid_mode_conv2d_strides_3x3_image(self):
+        '''
+            image = [[1,2,3],[4,5,6],[7,8,9]]
+            kernel = [[1,2],[3,4]]
+
+            Answers
+             - padding="same", strides=(1,1) gives [[23,33,24],[53,63,42],[52,59,36]]
+             - padding="valid", strides=(1,1) gives [[23,33],[53,63]]
+
+
+            Note: Must flip the input kernel matrix parameter passed to Keras model layer
+            so that the Keras convolution result reproduces the scipy.signal.convolve2d result.
+
+        '''
         input_shape = (3,3,1)
         init_kernel = np.reshape(np.arange(1,5),(1,2,2,1))
         init_bias = np.zeros((1,))
         kernel_initializer = initializers.constant(np.flip(init_kernel))
         bias_initializer = initializers.constant(init_bias)
+        mock_image = np.arange(1,10,dtype=float).reshape(1,3,3,1)
 
         model11 = Sequential()
         model11.add(Conv2D(1, (2, 2), strides=(1,1), padding='valid', activation=None, use_bias=True, input_shape=input_shape, name="one", kernel_initializer=kernel_initializer, bias_initializer=bias_initializer))
         feature_extractor11 = Model(inputs=model11.inputs, outputs=model11.get_layer(name="one").output)
-        # feature_extractor11 = Model(inputs=model11.inputs, outputs=[layer.output for layer in model11.layers])
+        calculated = feature_extractor11(mock_image)[0,:,:,0].numpy().tolist()
+        expected = [[23.,33.],[53.,63.]]
+        assert expected == calculated
 
         model12 = Sequential()
         model12.add(Conv2D(1, (2, 2), strides=(1,2), padding='valid', activation=None, use_bias=True, input_shape=input_shape, name="one", kernel_initializer=kernel_initializer, bias_initializer=bias_initializer))
         feature_extractor12 = Model(inputs=model12.inputs, outputs=model12.get_layer(name="one").output)
-        # feature_extractor12 = Model(inputs=model12.inputs, outputs=[layer.output for layer in model12.layers])
+        calculated = feature_extractor12(mock_image)[0,:,:,0].numpy().tolist()
+        expected = [[23.],[53.]]
+        assert expected == calculated
 
         model21 = Sequential()
         model21.add(Conv2D(1, (2, 2), strides=(2,1), padding='valid', activation=None, use_bias=True, input_shape=input_shape, name="one", kernel_initializer=kernel_initializer, bias_initializer=bias_initializer))
         feature_extractor21 = Model(inputs=model21.inputs, outputs=model21.get_layer(name="one").output)
-        # feature_extractor21 = Model(inputs=model21.inputs, outputs=[layer.output for layer in model21.layers])
+        calculated = feature_extractor21(mock_image)[0,:,:,0].numpy().tolist()
+        expected = [[23.,33.]]
+        assert expected == calculated
 
         model22 = Sequential()
         model22.add(Conv2D(1, (2, 2), strides=(2,2), padding='valid', activation=None, use_bias=True, input_shape=input_shape, name="one", kernel_initializer=kernel_initializer, bias_initializer=bias_initializer))
         feature_extractor22 = Model(inputs=model22.inputs, outputs=model22.get_layer(name="one").output)
-        # feature_extractor22 = Model(inputs=model22.inputs, outputs=[layer.output for layer in model22.layers])
-
-        # image = np.ones((1,3,3,1))
-        image = np.arange(1,10,dtype=float).reshape(1,3,3,1)
-        calculated = feature_extractor11(image)[0,:,:,0].numpy().tolist()
-        expected = [[1.,3.],[4.,10.]]
+        calculated = feature_extractor22(mock_image)[0,:,:,0].numpy().tolist()
+        expected = [[23.]]
         assert expected == calculated
-        assert False
 
-    def test_multichannel_conv2d(self):
-        #TODO: Update using "image = np.repeat(np.arange(1,5),nChannels).reshape(1,2,2,nChannels)" instead of "image=np.ones((1,2,2,nChannels))"
-        
+    def test_simple_multichannel_conv2d(self):
+        '''
+            image = [[1,2],[3,4]]
+            kernel = [[[1,5],[2,6]],[[3,7],[4,8]]] (2 channels)
+        '''
         nChannels = 2
         input_shape = (2,2,nChannels)
-        init_kernel = np.reshape(np.repeat(np.arange(1,5),nChannels),(1,2,2,nChannels))
+        init_kernel = np.moveaxis(np.arange(1,9).reshape(1,2,2,nChannels),1,3)
         init_bias = np.zeros((1,))
-        kernel_initializer = initializers.constant(init_kernel)
+        kernel_initializer = initializers.constant(np.flip(init_kernel,(0,1,2)))
         bias_initializer = initializers.constant(init_bias)
+        mode = "same"
+        strides = (1,1)
+        mock_image = np.repeat(np.arange(1,5),nChannels).reshape(1,2,2,nChannels)
 
         model = Sequential()
-        model.add(Conv2D(1, (2, 2), padding='same', activation=None, use_bias=True, input_shape=input_shape, name="one", kernel_initializer=kernel_initializer, bias_initializer=bias_initializer))
+        model.add(Conv2D(1, (2, 2), strides=strides, padding=mode, activation=None, use_bias=True, input_shape=input_shape, name="one", kernel_initializer=kernel_initializer, bias_initializer=bias_initializer))
 
         # feature_extractor = Model(inputs=model.inputs, outputs=model.get_layer(name="one").output)
         feature_extractor = Model(inputs=model.inputs, outputs=[layer.output for layer in model.layers])
         
-        image = np.ones((1,2,2,nChannels))
-        calculated = np.flip(feature_extractor(image)[0,:,:,:].numpy()).tolist()
-        expected = [[2.,6.],[8.,20.]]
-        assert expected == calculated
+        calculated = feature_extractor(mock_image)[0,:,:,0].numpy().tolist()
+        expected = keras_convolve2d(mock_image[0,:,:,0],init_kernel[0,:,:,0],strides,mode) + keras_convolve2d(mock_image[0,:,:,1],init_kernel[0,:,:,1],strides,mode)
+        assert expected.tolist() == calculated
 
     def test_multifilter_conv2d(self):
-        #TODO: Update using "image = np.arange(1,5).reshape(1,2,2,1)" instead of "image=np.ones((1,2,2,1))"
-        
+        '''
+            image = []
+            kernel = []
+
+            3 filters with 1 kernel per filter
+        '''
         nFilters = 3
-        input_shape = (2,2,1)
-        init_kernel = np.reshape(np.repeat(np.arange(1,5),nFilters),(1,2,2,nFilters))
+        nChannels = 1
+        input_shape = (2,2,nChannels)
+        # init_kernel = np.repeat(np.arange(1,5),nFilters).reshape(1,2,2,nFilters)
+        init_kernel = np.moveaxis(np.arange(1,13).reshape(1,nFilters,2,2),1,3)
+        init_filter = init_kernel
+        filters = np.arange(1,13).reshape(nFilters,2,2)
         init_bias = np.zeros((nFilters,))
-        kernel_initializer = initializers.constant(init_kernel)
+        kernel_initializer = initializers.constant(np.flip(init_kernel,(0,1,2)))
         bias_initializer = initializers.constant(init_bias)
+        mode = "same"
+        strides = (1,1)
 
         model = Sequential()
-        model.add(Conv2D(nFilters, (2, 2), padding='same', activation=None, use_bias=True, input_shape=input_shape, name="one", kernel_initializer=kernel_initializer, bias_initializer=bias_initializer))
+        model.add(Conv2D(nFilters, (2, 2), strides=strides, padding=mode, activation=None, use_bias=True, input_shape=input_shape, name="one", kernel_initializer=kernel_initializer, bias_initializer=bias_initializer))
 
         # feature_extractor = Model(inputs=model.inputs, outputs=model.get_layer(name="one").output)
         feature_extractor = Model(inputs=model.inputs, outputs=[layer.output for layer in model.layers])
         
-        image = np.ones((1,2,2,1))
-        calculated = np.flip(feature_extractor(image)[0,:,:,:].numpy()).tolist()
-        expected = [[[1.,1.,1.],[3.,3.,3.]],[[4.,4.,4.],[10.,10.,10.]]]
+        mock_image = np.arange(1,5).reshape(1,2,2,nChannels)
+        calculated = feature_extractor(mock_image)[0,:,:,:].numpy().tolist()
+        # expected = [[[20.,60.,100.],[16.,40.,64.]],[[24.,52.,80.],[16.,32.,48.]]]
+        expected = keras_convolve2d_4dinput(mock_image,init_kernel,strides=strides,mode=mode,filters=nFilters).tolist()
         assert expected == calculated
 
     def test_multifilter_multichannel_conv2d(self):
-        #TODO: Update using "image = np.repeat(np.arange(1,5),nChannels).reshape(1,2,2,nChannels)" instead of "image=np.ones((1,2,2,nChannels))"
+        '''
         
+        '''
         nFilters = 3
         nChannels = 2
         input_shape = (2,2,nChannels)
-        init_kernel = np.reshape(np.repeat(np.arange(1,5),nChannels*nFilters),(1,2,2,nFilters*nChannels))
+        # init_kernel = np.reshape(np.repeat(np.arange(1,5),nChannels*nFilters),(1,2,2,nFilters*nChannels))
+        init_kernel = np.moveaxis(np.arange(1,nFilters*nChannels*2*2+1).reshape(1,nFilters*nChannels,2,2),1,3)
         init_bias = np.zeros((nFilters,))
-        kernel_initializer = initializers.constant(init_kernel)
+        kernel_initializer = initializers.constant(np.flip(init_kernel,(0,1,2)))
         bias_initializer = initializers.constant(init_bias)
+        mode = "same"
+        strides = (1,1)
 
         model = Sequential()
-        model.add(Conv2D(nFilters, (2, 2), padding='same', activation=None, use_bias=True, input_shape=input_shape, name="one", kernel_initializer=kernel_initializer, bias_initializer=bias_initializer))
+        model.add(Conv2D(nFilters, (2, 2), strides=strides, padding=mode, activation=None, use_bias=True, input_shape=input_shape, name="one", kernel_initializer=kernel_initializer, bias_initializer=bias_initializer))
 
         # feature_extractor = Model(inputs=model.inputs, outputs=model.get_layer(name="one").output)
         feature_extractor = Model(inputs=model.inputs, outputs=[layer.output for layer in model.layers])
         
-        image = np.ones((1,2,2,nChannels))
-        calculated = np.flip(feature_extractor(image)[0,:,:,:].numpy()).tolist()
+        mock_image = np.arange(1,9).reshape(1,2,2,nChannels)
+        calculated = feature_extractor(mock_image)[0,:,:,:].numpy().tolist()
 
         # expected result
-        ans = nChannels * convolve2d(image[0,:,:,0],init_kernel[0,:,:,0],mode='same')
-        expected = np.repeat(ans,nFilters).reshape(2,2,nFilters).tolist()
+        expected = keras_convolve2d_4dinput(mock_image,init_kernel,strides=strides,mode=mode,filters=nFilters).tolist()
         assert expected == calculated
 
 class Test_Keras_MaxPooling2d:
@@ -194,3 +224,43 @@ class Test_Keras_Multilayer_Model:
         image = np.ones((1,2,2,1))
         calculated = np.flip(feature_extractor(image)[0,:,:,0].numpy()).tolist()
         assert expected == calculated
+
+# Auxillary/Helper functions
+def keras_convolve2d(image,kernel,strides=(1,1),mode="same"):
+    '''
+        Custom function that uses scipy.signal.convove2d to reproduce the Keras 2D convolution result with strides
+    '''
+    return np.flip(convolve2d(np.flip(image),np.flip(kernel),mode=mode))[::strides[0],::strides[1]]
+
+def keras_convolve2d_4dinput(image,kernel,strides=(1,1),mode="same",data_format="channels_last",filters=1):
+    '''
+        Custom function that uses scipy.signal.convove2d to reproduce the Keras 2D convolution result with strides. Attempts to
+        handle the number of channels in image and the number of kernels per filter to calculating the result.
+    '''
+    if data_format.lower() == "channels_last":
+        if image.ndim == 3:
+            height, width, nChannels = image.shape
+        elif image.ndim == 4:
+            batch_size, height, width, nChannels = image.shape
+    elif data_format.lower() == "channels_first":
+        if image.ndim == 3:
+            nChannels, height, width = image.shape
+        elif image.ndim == 4:
+            batch_size, nChannels, height, width = image.shape
+    else:
+        raise ValueError("Unknown 'data_format' passed to 'keras_convolve2d_4dinput.")
+
+    if data_format.lower() == "channels_last":
+        conv2d_answer = np.zeros((height,width,filters))
+        for filter in np.arange(filters):
+            for channel in np.arange(nChannels):
+                id = np.ravel_multi_index((channel,filter),(nChannels,filters))
+                conv2d_answer[:,:,filter] += keras_convolve2d(image[0,:,:,channel],kernel[0,:,:,id],strides,mode) # update zero index in first array position to handle batch_size
+    elif data_format.lower() == "channels_first":
+        conv2d_answer = np.zeros((filters,height,width))
+        for filter in np.arange(filters):
+            for channel in np.arange(nChannels):
+                id = np.ravel_multi_index((channel,filter),(nChannels,filters))
+                conv2d_answer[filter] += keras_convolve2d(image[0,channel,:,:],kernel[0,id,:,:],strides,mode) # update zero index in first array position to handle batch_size
+
+    return conv2d_answer
