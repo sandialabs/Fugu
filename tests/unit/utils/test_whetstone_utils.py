@@ -47,7 +47,7 @@ def keras_custom_model_inference():
     features = feature_extractor(x)
 
 class Test_Whetstone_2_Fugu_Normalization_Off:
-    @pytest.mark.skip(reason="Not implemented.")
+    @pytest.mark.skip(reason="Not implemented. And takes to long for 'xfail'.")
     def test_layers(self):
         model = layer_utils.load_model(keras_mnist_model_norm_off())
 
@@ -306,4 +306,6 @@ class Test_Whetstone_2_Fugu_PoolingLayer:
         assert False
 
 class Test_Whetstone_2_Fugu_DenseLayer:
-    pass
+    @pytest.mark.xfail(reason="Not implemented.")
+    def test_dense_layer(self):
+        assert False

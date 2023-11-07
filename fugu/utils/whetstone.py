@@ -23,6 +23,7 @@ def whetstone_2_fugu(keras_model, basep, bits, scaffold=None):
     layerID = 0
     for idx, layer in enumerate(model.layers):
         if type(layer) is Conv2D:
+            # TODO: Add capability to handle "data_format='channels_first'". Current implementation assumes data_format='channels_last'.
             # need pvector shape, filters, thresholds, basep, bits, and mode
             input_shape = layer.input_shape
             output_shape = layer.output_shape

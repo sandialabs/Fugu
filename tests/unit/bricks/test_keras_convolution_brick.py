@@ -241,6 +241,19 @@ class Test_KerasConvolution2D:
 
         assert self.expected_spikes(nSpikes) == self.calculated_spikes(thresholds,result)
 
+    @pytest.mark.xfail(reason="Not implemented.")
+    def test_4d_tensor_input(self):
+        self.basep = 2
+        self.bits = 2
+        self.pvector = [[1, 1], [1, 1]]
+        self.filters = [[1, 2], [3, 4]]
+        self.pshape = np.array(self.pvector).shape
+        self.filters_shape = np.array(self.filters).shape
+        self.mode = "same"
+        self.strides = (1,1)
+        assert False
+
+    # Auxillary/Helper Function below
     def get_num_output_neurons(self, thresholds):
         Am, An = self.pshape
         Bm, Bn = self.filters_shape
