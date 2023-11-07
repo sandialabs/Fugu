@@ -162,7 +162,7 @@ class Test_Keras_Conv2d:
         expected = keras_convolve2d_4dinput(mock_image,init_kernel,strides=strides,mode=mode,filters=nFilters).tolist()
         assert expected == calculated
 
-    def test_multifilter_multichannel_conv2d(self):
+    def test_explicit_multifilter_multichannel_conv2d(self):
         '''
             The initial kernel must be structured so that all first channel (kernel) values in each filter come first, followed by all second channel (kernel) values in each filter, then third channel (kernel) values in each filter. 
             This process is repeated until all channels (kernels) in each filter have been covered. Here, a filter is composed of kernels. The number of kernels in a filter must match the number of channels in the input image. Hence,
@@ -179,6 +179,37 @@ class Test_Keras_Conv2d:
         bias_initializer = initializers.constant(init_bias)
         mode = "same"
         strides = (1,1)
+
+        model = Sequential()
+        model.add(Conv2D(nFilters, (2, 2), strides=strides, padding=mode, activation=None, use_bias=True, input_shape=input_shape, name="one", kernel_initializer=kernel_initializer, bias_initializer=bias_initializer))
+
+        # feature_extractor = Model(inputs=model.inputs, outputs=model.get_layer(name="one").output)
+        feature_extractor = Model(inputs=model.inputs, outputs=[layer.output for layer in model.layers])
+        
+        mock_image = np.moveaxis(np.arange(1,nRows*nCols*nChannels+1).reshape(1,nRows,nCols,nChannels),1,3)
+        calculated = feature_extractor(mock_image)[0,:,:,:].numpy().tolist()
+
+        # expected result
+        expected = keras_convolve2d_4dinput(mock_image,init_kernel,strides=strides,mode=mode,filters=nFilters).tolist()
+        assert expected == calculated
+
+    @pytest.mark.parametrize("strides",[(1,1),(1,2),(2,1),(2,2)])
+    def test_multifilter_multichannel_conv2d(self,strides):
+        '''
+            The initial kernel must be structured so that all first channel (kernel) values in each filter come first, followed by all second channel (kernel) values in each filter, then third channel (kernel) values in each filter. 
+            This process is repeated until all channels (kernels) in each filter have been covered. Here, a filter is composed of kernels. The number of kernels in a filter must match the number of channels in the input image. Hence,
+            for this reason, we can use number of kernels per filter interchangeably with the number of channels per filter. At the end of the day, the number of filters or number of channels is simply the depth of filter (or image).
+
+        '''
+        nRows, nCols = 2, 2
+        nFilters = 3
+        nChannels = 2
+        input_shape = (nRows,nCols,nChannels)
+        init_kernel = generate_keras_kernel(nRows,nCols,nFilters,nChannels)
+        init_bias = np.zeros((nFilters,))
+        kernel_initializer = initializers.constant(np.flip(init_kernel,(0,1,2)))
+        bias_initializer = initializers.constant(init_bias)
+        mode = "same"
 
         model = Sequential()
         model.add(Conv2D(nFilters, (2, 2), strides=strides, padding=mode, activation=None, use_bias=True, input_shape=input_shape, name="one", kernel_initializer=kernel_initializer, bias_initializer=bias_initializer))
@@ -268,7 +299,7 @@ def keras_convolve2d_4dinput(image,kernel,strides=(1,1),mode="same",data_format=
                 id = np.ravel_multi_index((channel,filter),(nChannels,filters))
                 conv2d_answer[filter] += keras_convolve2d(image[0,channel,:,:],kernel[0,id,:,:],strides,mode) # update zero index in first array position to handle batch_size
 
-    return conv2d_answer
+    return conv2d_answer[::strides[0],::strides[1]]
 
 def generate_keras_kernel(nRows,nCols,nFilters,nChannels):
     '''
