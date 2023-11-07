@@ -173,11 +173,8 @@ class Test_Keras_Conv2d:
         nFilters = 3
         nChannels = 2
         input_shape = (nRows,nCols,nChannels)
-        # init_kernel = np.reshape(np.repeat(np.arange(1,5),nChannels*nFilters),(1,2,2,nFilters*nChannels))
-        init_kernel = np.moveaxis(np.arange(1,nFilters*nChannels*nRows*nCols+1).reshape(1,nFilters*nChannels,nRows,nCols),1,3)
-        # init_kernel = np.arange(1,nFilters*nChannels*nRows*nCols+1).reshape(nRows*nCols,nFilters*nChannels,order='F').reshape(1,nRows,nCols,nFilters*nChannels)
+        init_kernel = generate_keras_kernel(nRows,nCols,nFilters,nChannels)
         init_bias = np.zeros((nFilters,))
-        init_kernel = init_kernel.reshape(4,nFilters*nChannels)[:,[0,2,4,1,3,5]].reshape(1,nRows,nCols,nFilters*nChannels) # reorder the columns so that the filters' first channels come first (columns 1-3) then the second channels (4-6)
         kernel_initializer = initializers.constant(np.flip(init_kernel,(0,1,2)))
         bias_initializer = initializers.constant(init_bias)
         mode = "same"
@@ -274,5 +271,21 @@ def keras_convolve2d_4dinput(image,kernel,strides=(1,1),mode="same",data_format=
     return conv2d_answer
 
 def generate_keras_kernel(nRows,nCols,nFilters,nChannels):
+    '''
+        Generates an initial kernel (weights) for Keras 2D convolution layer. This essentially, creates an array from an integer sequence (1,2,3,4...) into a format 
+        acceptable for the Keras model. The reordering of the columns is so that Keras applies the kernels in (my desired) sequential integer sequence. For instance,
+        given two Filters with 2 kernels (channels) per filter given by
+
+        F1 = [[[1,2],[3,4]], [[5,6],[7,8]]]
+        F2 = [[[9,10],[11,12]], [[13,14],[15,16]]]
+
+        image = [[[1,2],[3,4]], [[5,6],[7,8]]]
+
+        To respect the filter's two kernels (channels), you must reorder the columns in the Keras kernel so that the first kernel in all filters come first then the second
+        kernel in all filters, all the way up to the last kernel in all filters.
+
+        Use the image and filters above, first filter applied to the image should give a 2D convolution result equal to [[184,112],[136,80]]. Similarly, the second filter
+        applied to the image gives a 2D convolution result equal to [[472,272],[312,176]].
+    '''
     column_permutations = np.concatenate((np.arange(0,nFilters*nChannels,2),np.arange(1,nFilters*nChannels,2)))
     return np.arange(1,nFilters*nChannels*nRows*nCols+1).reshape(nRows*nCols,nFilters*nChannels,order='F')[:,column_permutations].reshape(1,nRows,nCols,nFilters*nChannels)
