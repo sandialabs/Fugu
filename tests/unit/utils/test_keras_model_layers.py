@@ -164,14 +164,20 @@ class Test_Keras_Conv2d:
 
     def test_multifilter_multichannel_conv2d(self):
         '''
-        
+            The initial kernel must be structured so that all first channel (kernel) values in each filter come first, followed by all second channel (kernel) values in each filter, then third channel (kernel) values in each filter. 
+            This process is repeated until all channels (kernels) in each filter have been covered. Here, a filter is composed of kernels. The number of kernels in a filter must match the number of channels in the input image. Hence,
+            for this reason, we can use number of kernels per filter interchangeably with the number of channels per filter. At the end of the day, the number of filters or number of channels is simply the depth of filter (or image).
+
         '''
+        nRows, nCols = 2, 2
         nFilters = 3
         nChannels = 2
-        input_shape = (2,2,nChannels)
+        input_shape = (nRows,nCols,nChannels)
         # init_kernel = np.reshape(np.repeat(np.arange(1,5),nChannels*nFilters),(1,2,2,nFilters*nChannels))
-        init_kernel = np.moveaxis(np.arange(1,nFilters*nChannels*2*2+1).reshape(1,nFilters*nChannels,2,2),1,3)
+        init_kernel = np.moveaxis(np.arange(1,nFilters*nChannels*nRows*nCols+1).reshape(1,nFilters*nChannels,nRows,nCols),1,3)
+        # init_kernel = np.arange(1,nFilters*nChannels*nRows*nCols+1).reshape(nRows*nCols,nFilters*nChannels,order='F').reshape(1,nRows,nCols,nFilters*nChannels)
         init_bias = np.zeros((nFilters,))
+        init_kernel = init_kernel.reshape(4,nFilters*nChannels)[:,[0,2,4,1,3,5]].reshape(1,nRows,nCols,nFilters*nChannels) # reorder the columns so that the filters' first channels come first (columns 1-3) then the second channels (4-6)
         kernel_initializer = initializers.constant(np.flip(init_kernel,(0,1,2)))
         bias_initializer = initializers.constant(init_bias)
         mode = "same"
@@ -183,7 +189,7 @@ class Test_Keras_Conv2d:
         # feature_extractor = Model(inputs=model.inputs, outputs=model.get_layer(name="one").output)
         feature_extractor = Model(inputs=model.inputs, outputs=[layer.output for layer in model.layers])
         
-        mock_image = np.arange(1,9).reshape(1,2,2,nChannels)
+        mock_image = np.moveaxis(np.arange(1,nRows*nCols*nChannels+1).reshape(1,nRows,nCols,nChannels),1,3)
         calculated = feature_extractor(mock_image)[0,:,:,:].numpy().tolist()
 
         # expected result
@@ -204,14 +210,14 @@ class Test_Keras_MaxPooling2d:
 
 class Test_Keras_Multilayer_Model:
     #TODO: Update using "image = np.arange(1,5).reshape(1,2,2,1)" instead of "image=np.ones((1,2,2,1))"
-    @pytest.mark.parametrize("mock_conv2d_output,pool_size,pool_strides,expected", [(np.arange(1,10).reshape((1,3,3,1)), (1,1), (1,1), [[1.,3.],[4.,10.]]),
-                                                                                    (np.arange(1,10).reshape((1,3,3,1)), (2,2), (1,1), [[1.,3.],[4.,10.]])])
+    @pytest.mark.parametrize("mock_conv2d_output,pool_size,pool_strides,expected", [(np.arange(1,10).reshape((1,3,3,1)), (1,1), (1,1), [[30.,16.],[24.,16.]]),
+                                                                                    (np.arange(1,10).reshape((1,3,3,1)), (2,2), (1,1), [[24]])])
     @pytest.mark.xfail(reason="Not implemented.")
     def test_simple_multilayer_model(self, mock_conv2d_output, pool_size, pool_strides, expected):
         input_shape = (2,2,1)
         init_kernel = np.reshape(np.arange(1,5),(1,2,2,1))
         init_bias = np.zeros((1,))
-        kernel_initializer = initializers.constant(init_kernel)
+        kernel_initializer = initializers.constant(np.flip(init_kernel))
         bias_initializer = initializers.constant(init_bias)
 
         model = Sequential()
@@ -219,10 +225,11 @@ class Test_Keras_Multilayer_Model:
         model.add(MaxPooling2D(pool_size=pool_size, strides=pool_strides, padding='same', name="two"))
         # model.add(MaxPooling2D(pool_size=(2,2), strides=(1,1), padding='same', name="two"))
 
-        feature_extractor = Model(inputs=model.inputs, outputs=model.get_layer(name="two").output)
-        # feature_extractor = Model(inputs=model.inputs, outputs=[layer.output for layer in model.layers])
-        image = np.ones((1,2,2,1))
-        calculated = np.flip(feature_extractor(image)[0,:,:,0].numpy()).tolist()
+        # feature_extractor = Model(inputs=model.inputs, outputs=model.get_layer(name="two").output)
+        feature_extractor = Model(inputs=model.inputs, outputs=[layer.output for layer in model.layers])
+
+        mock_image = np.arange(1,5).reshape(1,2,2,1)
+        calculated = feature_extractor(mock_image)[1][0,:,:,0].numpy().tolist()
         assert expected == calculated
 
 # Auxillary/Helper functions
@@ -255,6 +262,7 @@ def keras_convolve2d_4dinput(image,kernel,strides=(1,1),mode="same",data_format=
         for filter in np.arange(filters):
             for channel in np.arange(nChannels):
                 id = np.ravel_multi_index((channel,filter),(nChannels,filters))
+                print(f"filter: {filter:2d}  channel: {channel:2d}  linearized index: {id:2d}")
                 conv2d_answer[:,:,filter] += keras_convolve2d(image[0,:,:,channel],kernel[0,:,:,id],strides,mode) # update zero index in first array position to handle batch_size
     elif data_format.lower() == "channels_first":
         conv2d_answer = np.zeros((filters,height,width))
@@ -264,3 +272,7 @@ def keras_convolve2d_4dinput(image,kernel,strides=(1,1),mode="same",data_format=
                 conv2d_answer[filter] += keras_convolve2d(image[0,channel,:,:],kernel[0,id,:,:],strides,mode) # update zero index in first array position to handle batch_size
 
     return conv2d_answer
+
+def generate_keras_kernel(nRows,nCols,nFilters,nChannels):
+    column_permutations = np.concatenate((np.arange(0,nFilters*nChannels,2),np.arange(1,nFilters*nChannels,2)))
+    return np.arange(1,nFilters*nChannels*nRows*nCols+1).reshape(nRows*nCols,nFilters*nChannels,order='F')[:,column_permutations].reshape(1,nRows,nCols,nFilters*nChannels)
