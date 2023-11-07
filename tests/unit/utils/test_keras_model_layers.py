@@ -20,7 +20,7 @@ class Test_Keras_Conv2d:
 
         # feature_extractor = Model(inputs=model.inputs, outputs=model.get_layer(name="one").output)
         feature_extractor = Model(inputs=model.inputs, outputs=[layer.output for layer in model.layers])
-        image = np.arange(1,5).reshape(1,2,2,1)
+        image = generate_mock_image(2,2,1)
         calculated = feature_extractor(image)[0,:,:,0].numpy().tolist()
         expected = [[20.,16.],[24.,16.]]
         assert expected == calculated
@@ -52,7 +52,7 @@ class Test_Keras_Conv2d:
         # feature_extractor = Model(inputs=model.inputs, outputs=model.get_layer(name="one").output)
         feature_extractor = Model(inputs=model.inputs, outputs=[layer.output for layer in model.layers])
 
-        image = np.arange(1,5).reshape(1,2,2,1)
+        image = generate_mock_image(2,2,1)
         calculated = feature_extractor(image)[0,:,:,0].numpy().tolist()
         assert expected == calculated
 
@@ -75,7 +75,7 @@ class Test_Keras_Conv2d:
         init_bias = np.zeros((1,))
         kernel_initializer = initializers.constant(np.flip(init_kernel))
         bias_initializer = initializers.constant(init_bias)
-        mock_image = np.arange(1,10,dtype=float).reshape(1,3,3,1)
+        mock_image = generate_mock_image(3,3,1)
 
         model11 = Sequential()
         model11.add(Conv2D(1, (2, 2), strides=(1,1), padding='valid', activation=None, use_bias=True, input_shape=input_shape, name="one", kernel_initializer=kernel_initializer, bias_initializer=bias_initializer))
@@ -118,7 +118,7 @@ class Test_Keras_Conv2d:
         bias_initializer = initializers.constant(init_bias)
         mode = "same"
         strides = (1,1)
-        mock_image = np.repeat(np.arange(1,5),nChannels).reshape(1,2,2,nChannels)
+        mock_image = generate_mock_image(2,2,nChannels)
 
         model = Sequential()
         model.add(Conv2D(1, (2, 2), strides=strides, padding=mode, activation=None, use_bias=True, input_shape=input_shape, name="one", kernel_initializer=kernel_initializer, bias_initializer=bias_initializer))
@@ -156,7 +156,7 @@ class Test_Keras_Conv2d:
         # feature_extractor = Model(inputs=model.inputs, outputs=model.get_layer(name="one").output)
         feature_extractor = Model(inputs=model.inputs, outputs=[layer.output for layer in model.layers])
         
-        mock_image = np.arange(1,5).reshape(1,2,2,nChannels)
+        mock_image = generate_mock_image(2,2,nChannels)
         calculated = feature_extractor(mock_image)[0,:,:,:].numpy().tolist()
         # expected = [[[20.,60.,100.],[16.,40.,64.]],[[24.,52.,80.],[16.,32.,48.]]]
         expected = keras_convolve2d_4dinput(mock_image,init_kernel,strides=strides,mode=mode,filters=nFilters).tolist()
@@ -186,7 +186,7 @@ class Test_Keras_Conv2d:
         # feature_extractor = Model(inputs=model.inputs, outputs=model.get_layer(name="one").output)
         feature_extractor = Model(inputs=model.inputs, outputs=[layer.output for layer in model.layers])
         
-        mock_image = np.moveaxis(np.arange(1,nRows*nCols*nChannels+1).reshape(1,nRows,nCols,nChannels),1,3)
+        mock_image = generate_mock_image(nRows,nCols,nChannels)
         calculated = feature_extractor(mock_image)[0,:,:,:].numpy().tolist()
 
         # expected result
@@ -194,7 +194,9 @@ class Test_Keras_Conv2d:
         assert expected == calculated
 
     @pytest.mark.parametrize("strides",[(1,1),(1,2),(2,1),(2,2)])
-    def test_multifilter_multichannel_conv2d(self,strides):
+    @pytest.mark.parametrize("nFilters", [3,4])
+    @pytest.mark.parametrize("nChannels",[2,3])
+    def test_multifilter_multichannel_conv2d(self,strides,nFilters,nChannels):
         '''
             The initial kernel must be structured so that all first channel (kernel) values in each filter come first, followed by all second channel (kernel) values in each filter, then third channel (kernel) values in each filter. 
             This process is repeated until all channels (kernels) in each filter have been covered. Here, a filter is composed of kernels. The number of kernels in a filter must match the number of channels in the input image. Hence,
@@ -202,8 +204,6 @@ class Test_Keras_Conv2d:
 
         '''
         nRows, nCols = 2, 2
-        nFilters = 3
-        nChannels = 2
         input_shape = (nRows,nCols,nChannels)
         init_kernel = generate_keras_kernel(nRows,nCols,nFilters,nChannels)
         init_bias = np.zeros((nFilters,))
@@ -217,7 +217,7 @@ class Test_Keras_Conv2d:
         # feature_extractor = Model(inputs=model.inputs, outputs=model.get_layer(name="one").output)
         feature_extractor = Model(inputs=model.inputs, outputs=[layer.output for layer in model.layers])
         
-        mock_image = np.moveaxis(np.arange(1,nRows*nCols*nChannels+1).reshape(1,nRows,nCols,nChannels),1,3)
+        mock_image = generate_mock_image(nRows,nCols,nChannels)
         calculated = feature_extractor(mock_image)[0,:,:,:].numpy().tolist()
 
         # expected result
@@ -317,6 +317,16 @@ def generate_keras_kernel(nRows,nCols,nFilters,nChannels):
 
         Use the image and filters above, first filter applied to the image should give a 2D convolution result equal to [[184,112],[136,80]]. Similarly, the second filter
         applied to the image gives a 2D convolution result equal to [[472,272],[312,176]].
+
+        Returns a 4d tensor
     '''
     column_permutations = np.concatenate((np.arange(0,nFilters*nChannels,2),np.arange(1,nFilters*nChannels,2)))
     return np.arange(1,nFilters*nChannels*nRows*nCols+1).reshape(nRows*nCols,nFilters*nChannels,order='F')[:,column_permutations].reshape(1,nRows,nCols,nFilters*nChannels)
+
+def generate_mock_image(nRows,nCols,nChannels):
+    '''
+        Generates a mock image of integers in a sequence. The sequence is from 1 to nRows*nCols*nChannels.
+
+        Returns a 4d tensor
+    '''
+    return np.arange(1,nRows*nCols*nChannels+1).reshape(nRows*nCols,nChannels,order='F').reshape(1,nRows,nCols,nChannels)
