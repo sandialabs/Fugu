@@ -224,9 +224,28 @@ class Test_Whetstone_2_Fugu:
 
         assert self.expected_spikes(nSpikes) == self.calculated_spikes(new_fugu_thresholds, result)
 
-    @pytest.mark.xfail(reason="Not implemented.")
     def test_batch_normalization_removal(self):
         from tensorflow.keras import Model, initializers
+
+        def normalization(batch, bnorm_layer):
+            gamma, beta, mean, variance = bnorm_layer.get_weights()
+            epsilon = bnorm_layer.epsilon
+            return apply_normalization(batch,gamma,beta,mean,variance,epsilon)
+        
+        def apply_normalization(batch,gamma, beta, moving_mean, moving_var, epsilon):
+            return gamma*(batch - moving_mean) / np.sqrt(moving_var+epsilon) + beta
+        
+        def merge_layers(conv2d_layer, bnorm_layer):
+            gamma, beta, mean, variance = bnorm_layer.get_weights()
+            epsilon = bnorm_layer.epsilon
+            weights = conv2d_layer.get_weights()[0]
+            biases = conv2d_layer.get_weights()[1]
+
+            stdev = np.sqrt(variance + epsilon)
+            new_weights = weights * gamma / stdev
+            new_biases = (gamma / stdev) * (biases - mean) + beta            
+            return new_weights, new_biases
+
         image_height, image_width = 3, 3
         kernel_height, kernel_width = 2, 2
         nChannels = 1
@@ -237,16 +256,36 @@ class Test_Whetstone_2_Fugu:
         init_bias = -52.6*np.ones((nFilters,))
         kernel_initializer = initializers.constant(np.flip(init_kernel)) # [METHOD 2] keras doesn't flip the filter during the convolution; so force the array flip manually.
         bias_initializer = initializers.constant(init_bias)
+        mock_image = generate_mock_image(image_height,image_width,nChannels).astype(float)
         nSpikes = 2
+        mode = "same"
+        
+        gamma_initializer = initializers.constant(2.)
+        beta_initializer = initializers.constant(3.)
+        moving_mean_initializer = initializers.constant(4.)
+        moving_variance_initializer = initializers.constant(5.)
 
         model = Sequential()
-        model.add(Conv2D(nFilters, (kernel_height, kernel_width), strides=strides, padding='same', activation=None, use_bias=True, input_shape=input_shape, name="one", kernel_initializer=kernel_initializer, bias_initializer=bias_initializer))
-        model.add(BatchNormalization())
-        model.add(Spiking_BRelu(input_shape=(image_height,image_width),sharpness=1.0,name="spike"))
-        mock_image = generate_mock_image(image_height,image_width,nChannels).astype(float)
-        calculated = model.layers[0](mock_image)[0,:,:,:].numpy().tolist() # gives the output of the input through this layer only
+        model.add(Conv2D(nFilters, (kernel_height, kernel_width), strides=strides, padding=mode, activation=None, use_bias=True, input_shape=input_shape, name="one", kernel_initializer=kernel_initializer, bias_initializer=bias_initializer))
+        model.add(BatchNormalization(beta_initializer=beta_initializer, gamma_initializer=gamma_initializer, moving_mean_initializer=moving_mean_initializer, moving_variance_initializer=moving_variance_initializer))
         feature_extractor = Model(inputs=model.inputs, outputs=[layer.output for layer in model.layers]) # gives cumalative output of the input through this and previous layers.
-        assert False
+        conv2d_layer = model.layers[0]
+        bnorm_layer = model.layers[1]
+        conv2d_result = feature_extractor(mock_image)[0][0,:,:,:].numpy()
+        expected = feature_extractor(mock_image)[1][0,:,:,:].numpy()
+        calculated = normalization(conv2d_result,bnorm_layer)
+        assert np.allclose(calculated,expected,rtol=1e-7,atol=0)
+
+        new_weights, new_biases = merge_layers(conv2d_layer,bnorm_layer)
+        new_kernel_initializer = initializers.constant(new_weights)
+        new_biases_initializer = initializers.constant(new_biases)
+
+        new_model = Sequential()
+        new_model.add(Conv2D(nFilters, (kernel_height, kernel_width), strides=strides, padding=mode, activation=None, use_bias=True, input_shape=input_shape, name="merged", kernel_initializer=new_kernel_initializer, bias_initializer=new_biases_initializer))
+        calculated = new_model.layers[0](mock_image)[0,:,:,:].numpy()
+        assert np.allclose(calculated,expected,rtol=1e-8,atol=1e-5)
+
+
 
     @pytest.mark.xfail(reason="Not implemented.")
     def test_4d_tensor_input_whetstone_2_fugu_conv2d_layer(self):
