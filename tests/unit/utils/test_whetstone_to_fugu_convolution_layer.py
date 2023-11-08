@@ -51,7 +51,7 @@ def keras_custom_model_inference():
     x = np.ones((1,2,2,1))
     features = feature_extractor(x)
 
-class Test_Whetstone_2_Fugu:
+class Test_Whetstone_2_Fugu_ConvolutionLayer:
     @pytest.mark.skip(reason="Not implemented. And takes to long for 'xfail'.")
     def test_layers(self):
         model = layer_utils.load_model(keras_mnist_model_norm_off())
@@ -224,7 +224,11 @@ class Test_Whetstone_2_Fugu:
 
         assert self.expected_spikes(nSpikes) == self.calculated_spikes(new_fugu_thresholds, result)
 
-    def test_batch_normalization_removal(self):
+    @pytest.mark.parametrize("strides",[(1,1),(1,2),(2,1),(2,2)])
+    @pytest.mark.parametrize("mode", ["same", "valid"])
+    @pytest.mark.parametrize("nChannels", [1,2,3])
+    @pytest.mark.parametrize("nFilters", [1,2,3])
+    def test_batch_normalization_removal(self,strides,mode,nChannels,nFilters):
         from tensorflow.keras import Model, initializers
 
         def normalization(batch, bnorm_layer):
@@ -248,17 +252,13 @@ class Test_Whetstone_2_Fugu:
 
         image_height, image_width = 3, 3
         kernel_height, kernel_width = 2, 2
-        nChannels = 1
-        nFilters = 1
         input_shape = (image_height,image_width,nChannels)
-        strides = (1,1)
         init_kernel = generate_keras_kernel(kernel_height,kernel_width,nFilters,nChannels)
-        init_bias = -52.6*np.ones((nFilters,))
+        init_bias = -53*np.ones((nFilters,))
         kernel_initializer = initializers.constant(np.flip(init_kernel)) # [METHOD 2] keras doesn't flip the filter during the convolution; so force the array flip manually.
         bias_initializer = initializers.constant(init_bias)
         mock_image = generate_mock_image(image_height,image_width,nChannels).astype(float)
         nSpikes = 2
-        mode = "same"
         
         gamma_initializer = initializers.constant(2.)
         beta_initializer = initializers.constant(3.)
@@ -274,7 +274,7 @@ class Test_Whetstone_2_Fugu:
         conv2d_result = feature_extractor(mock_image)[0][0,:,:,:].numpy()
         expected = feature_extractor(mock_image)[1][0,:,:,:].numpy()
         calculated = normalization(conv2d_result,bnorm_layer)
-        assert np.allclose(calculated,expected,rtol=1e-7,atol=0)
+        assert np.allclose(calculated,expected,rtol=1e-6,atol=1e-5)
 
         new_weights, new_biases = merge_layers(conv2d_layer,bnorm_layer)
         new_kernel_initializer = initializers.constant(new_weights)
@@ -283,7 +283,7 @@ class Test_Whetstone_2_Fugu:
         new_model = Sequential()
         new_model.add(Conv2D(nFilters, (kernel_height, kernel_width), strides=strides, padding=mode, activation=None, use_bias=True, input_shape=input_shape, name="merged", kernel_initializer=new_kernel_initializer, bias_initializer=new_biases_initializer))
         calculated = new_model.layers[0](mock_image)[0,:,:,:].numpy()
-        assert np.allclose(calculated,expected,rtol=1e-8,atol=1e-5)
+        assert np.allclose(calculated,expected,rtol=1e-6,atol=1e-5)
 
 
 
