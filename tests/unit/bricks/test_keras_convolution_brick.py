@@ -1,3 +1,4 @@
+# isort: skip_file
 import numpy as np
 import pytest
 import logging
@@ -10,6 +11,9 @@ from fugu.scaffold import Scaffold
 from fugu.utils.keras_helpers import keras_convolve2d, keras_convolve2d_4dinput, generate_keras_kernel, generate_mock_image
 
 from scipy.signal import convolve2d
+
+# Turn off black formatting for this file
+# fmt: off
 
 class Test_KerasConvolution2D:
     def setup_method(self):

@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
-
+# isort: skip_file
 import logging
 import numpy as np
 from .bricks import Brick
+
+# Turn off black formatting for this file
+# fmt: off
 
 class keras_convolution_2d(Brick):
     'Convolution brick that assumes collapse_binary=False for all base-p values'

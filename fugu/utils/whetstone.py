@@ -1,3 +1,4 @@
+# isort: skip_file
 import numpy as np
 
 from fugu.bricks.keras_convolution_bricks import keras_convolution_2d as convolution_2d
@@ -9,6 +10,9 @@ from fugu.scaffold import Scaffold
 from tensorflow.keras.layers import Dense, Conv2D, Flatten, MaxPooling2D
 from whetstone.layers import Spiking_BRelu
 from whetstone.utils.export_utils import copy_remove_batchnorm
+
+# Turn off black formatting for this file
+# fmt: off
 
 def whetstone_2_fugu(keras_model, basep, bits, scaffold=None):
     '''

@@ -1,3 +1,4 @@
+# isort: skip_file
 import numpy as np
 import pytest
 from scipy.signal import convolve2d
@@ -16,6 +17,9 @@ from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense, Conv2D, Flatten, MaxPooling2D, BatchNormalization
 from whetstone.layers import Spiking_BRelu
 from whetstone.utils import layer_utils
+
+# Turn off black formatting for this file
+# fmt: off
 
 def mock_keras_model(filename):
     '''

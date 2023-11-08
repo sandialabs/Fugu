@@ -1,6 +1,10 @@
+# isort: skip_file
 import numpy as np
 
 from scipy.signal import convolve2d
+
+# Turn off black formatting for this file
+# fmt: off
 
 # Auxillary/Helper functions
 def keras_convolve2d(image,kernel,strides=(1,1),mode="same"):

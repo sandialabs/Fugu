@@ -1,3 +1,4 @@
+# isort: skip_file
 import numpy as np
 import pytest
 
@@ -6,6 +7,9 @@ from scipy.signal import convolve2d
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense, Conv2D, Flatten, MaxPooling2D
 from tensorflow.keras import Model, initializers
+
+# Turn off black formatting for this file
+# fmt: off
 
 class Test_Keras_Conv2d:
     def test_simple_conv2d(self):
