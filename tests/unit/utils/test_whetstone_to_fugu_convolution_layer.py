@@ -52,7 +52,7 @@ def keras_custom_model_inference():
     features = feature_extractor(x)
 
 class Test_Whetstone_2_Fugu_ConvolutionLayer:
-    @pytest.mark.skip(reason="Not implemented. And takes to long for 'xfail'.")
+    @pytest.mark.xfail(run=False,reason="Not implemented. And takes to long for 'xfail'.")
     def test_layers(self):
         model = layer_utils.load_model(keras_mnist_model_norm_off())
 
@@ -284,8 +284,6 @@ class Test_Whetstone_2_Fugu_ConvolutionLayer:
         new_model.add(Conv2D(nFilters, (kernel_height, kernel_width), strides=strides, padding=mode, activation=None, use_bias=True, input_shape=input_shape, name="merged", kernel_initializer=new_kernel_initializer, bias_initializer=new_biases_initializer))
         calculated = new_model.layers[0](mock_image)[0,:,:,:].numpy()
         assert np.allclose(calculated,expected,rtol=1e-6,atol=1e-5)
-
-
 
     @pytest.mark.xfail(reason="Not implemented.")
     def test_4d_tensor_input_whetstone_2_fugu_conv2d_layer(self):

@@ -25,6 +25,7 @@ class Test_KerasConvolution2D:
         self.filters_shape = np.array(self.filters).shape
         self.mode = "same"
         self.strides = (1,1)
+        self.biases = None
 
     @pytest.mark.parametrize("basep", [2])
     @pytest.mark.parametrize("bits", [2])
@@ -156,7 +157,7 @@ class Test_KerasConvolution2D:
         self.strides = strides
         self.mode = "same"
 
-        thresholds = get_unique_thresholds(self.pvector,self.filters,self.strides,self.mode,nSpikes)
+        thresholds = get_spiked_thresholds(self.pvector,self.filters,self.strides,self.mode,nSpikes)
         result = self.run_convolution_2d(thresholds)
 
         assert self.expected_spikes(nSpikes) == self.calculated_spikes(thresholds,result)
@@ -221,19 +222,10 @@ class Test_KerasConvolution2D:
     @pytest.mark.parametrize("bits", [3, 4, 7])
     @pytest.mark.parametrize("strides,nSpikes",
                              [
-                                 ((1,1), 0),
-                                 ((1,1), 1),
-                                 ((1,1), 2),
-                                 ((1,1), 3),
-                                 ((1,1), 4),
-                                 ((1,2), 0),
-                                 ((1,2), 1),
-                                 ((1,2), 2),
-                                 ((2,1), 0),
-                                 ((2,1), 1),
-                                 ((2,1), 2),
-                                 ((2,2), 0),
-                                 ((2,2), 1),
+                                 ((1,1), 0),((1,1), 1),((1,1), 2),((1,1), 3),((1,1), 4),
+                                 ((1,2), 0),((1,2), 1),((1,2), 2),
+                                 ((2,1), 0),((2,1), 1),((2,1), 2),
+                                 ((2,2), 0),((2,2), 1),
                              ])
     def test_valid_mode_with_strides(self,basep,bits,strides,nSpikes):
         self.basep = basep
@@ -243,17 +235,51 @@ class Test_KerasConvolution2D:
         self.pshape = self.pvector.shape
         self.strides = strides
 
-        thresholds = get_unique_thresholds(self.pvector,self.filters,self.strides,self.mode,nSpikes)
+        thresholds = get_spiked_thresholds(self.pvector,self.filters,self.strides,self.mode,nSpikes)
+        result = self.run_convolution_2d(thresholds)
+
+        assert self.expected_spikes(nSpikes) == self.calculated_spikes(thresholds,result)
+
+    @pytest.mark.parametrize("mode,strides,nSpikes,biases",
+                             [
+                                 ("same",(1,1),0,None),("same",(1,1),0,0.),("same",(1,1),0,0.1),("same",(1,1),4,-0.1),
+                                 ("same",(1,2),0,0.1),("same",(1,2),2,-0.1),
+                                 ("same",(2,1),0,0.1),("same",(2,1),2,-0.1),
+                                 ("same",(2,2),0,0.1),("same",(2,2),1,-0.1),
+                                 ("valid",(1,1),0,0.1),("valid",(1,1),1,-0.1),
+                            ])
+    def test_convolution_with_bias(self,mode,strides,nSpikes,biases):
+        image_height, image_width = 2, 2
+        kernel_height, kernel_width = 2, 2
+        nChannels = 1
+        nFilters = 1
+
+        self.basep = 3
+        self.bits = 2
+        self.pvector = generate_mock_image(image_height,image_width,nChannels).reshape(image_height,image_width)
+        self.filters = generate_keras_kernel(kernel_height,kernel_width,nFilters,nChannels).reshape(kernel_height,kernel_width) # for now, this line ASSUMES nFilters and nChannels equals 1
+        self.pshape = np.array(self.pvector).shape
+        self.filters_shape = np.array(self.filters).shape
+        self.mode = mode
+        self.strides = strides
+        self.biases = biases
+
+        thresholds = get_biased_thresholds(self.pvector,self.filters,self.strides,self.mode,self.biases)
         result = self.run_convolution_2d(thresholds)
 
         assert self.expected_spikes(nSpikes) == self.calculated_spikes(thresholds,result)
 
     @pytest.mark.xfail(reason="Not implemented.")
     def test_handling_of_4d_tensor_input(self):
+        image_height, image_width = 3, 3
+        kernel_height, kernel_width = 2, 2
+        nChannels = 2
+        nFilters = 3
+
         self.basep = 2
         self.bits = 2
-        self.pvector = generate_mock_image(2,2,2)
-        self.filters = generate_keras_kernel(2,2,3,2)
+        self.pvector = generate_mock_image(image_height,image_width,nChannels)
+        self.filters = generate_keras_kernel(kernel_height,kernel_width,nFilters,nChannels)
         self.pshape = np.array(self.pvector).shape
         self.filters_shape = np.array(self.filters).shape
         self.mode = "same"
@@ -355,6 +381,7 @@ class Test_KerasConvolution2D:
                 name="convolution_",
                 mode=self.mode,
                 strides=self.strides,
+                biases=self.biases,
             ),
             [(0, 0)],
             output=True,
@@ -367,17 +394,22 @@ class Test_KerasConvolution2D:
         result = backend.run(5)
         return result
 
-def get_unique_thresholds(image,kernel,strides,mode,nSpikes):
-    from scipy.signal import convolve2d
+def get_spiked_thresholds(image,kernel,strides,mode,nSpikes):
     # image = self.pvector
     # kernel = self.filters
-    Srow, Scol = strides
-    mode_answer = np.flip(convolve2d(np.flip(image),np.flip(kernel),mode=mode))
-    strided_answer = mode_answer[::Srow,::Scol]
+    strided_answer = keras_convolve2d(image,kernel,strides,mode)
 
     subt = np.zeros(np.size(strided_answer))
     subt[:nSpikes] = 0.1
     subt = np.reshape(subt, strided_answer.shape)
-    thresholds = strided_answer - subt
+    spiked_thresholds = strided_answer - subt
 
-    return thresholds
+    return spiked_thresholds
+
+def get_biased_thresholds(image,kernel,strides,mode,biases):
+    # image = self.pvector
+    # kernel = self.filters
+    strided_answer = keras_convolve2d(image,kernel,strides,mode)
+
+    biased_thresholds = strided_answer + biases if biases is not None else strided_answer
+    return biased_thresholds

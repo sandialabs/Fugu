@@ -16,7 +16,7 @@ class keras_convolution_2d(Brick):
 
     """
 
-    def __init__(self, input_shape, filters, thresholds, basep, bits, name=None, mode='same', strides=(1,1)):
+    def __init__(self, input_shape, filters, thresholds, basep, bits, name=None, mode='same', strides=(1,1), biases=None):
         super().__init__()
         self.is_built = False
         self.name = name
@@ -27,6 +27,7 @@ class keras_convolution_2d(Brick):
         self.basep = basep
         self.bits = bits
         self.mode = mode
+        self.biases = biases
 
         if isinstance(strides,(list,tuple)):
             if len(strides) > 2:
@@ -102,6 +103,16 @@ class keras_convolution_2d(Brick):
                 jx = j - self.bnds[0,1]
                 graph.add_node(f'{self.name}g{i}{j}', index=(ix,jx), threshold=self.thresholds[ix][jx], decay=1.0, p=1.0, potential=0.0)
                 output_lists[0].append(f'{self.name}g{i}{j}')
+
+        # Biases for convolution
+        if self.biases is not None:
+            # biases neurons/nodes; one node per kernel/channel in filter
+            graph.add_node(f'{self.name}b', index=(99,0), threshold=0.0, decay=1.0, p=1.0, potential=0.0)
+
+            # Construct edges connecting biases node(s) to output nodes
+            for i in np.arange(self.bnds[0,0],self.bnds[1,0] + 1):
+                for j in np.arange(self.bnds[0,1],self.bnds[1,1] + 1):
+                    graph.add_edge(f'{self.name}b',f'{self.name}g{i}{j}', weight=self.biases, delay=1)
 
         # Collect Inputs
         I = input_lists[0]
