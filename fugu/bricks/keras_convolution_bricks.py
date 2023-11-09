@@ -268,7 +268,7 @@ class keras_convolution_2d_4dinput(Brick):
 
         # Get size/shape information from input arrays
         batch_size, Am, An, nChannels = self.pshape
-        Bm, Bn = self.filters.shape
+        Bm, Bn = self.filters.shape[:2]
 
         # determine output neuron bounds based on the "mode"
         self.get_output_bounds()
@@ -284,46 +284,53 @@ class keras_convolution_2d_4dinput(Brick):
 
         # output neurons/nodes
         output_lists = [[]]
-        for i in np.arange(self.bnds[0,0],self.bnds[1,0] + 1):
-            ix = i - self.bnds[0,0]
-            for j in np.arange(self.bnds[0,1],self.bnds[1,1] + 1):
-                jx = j - self.bnds[0,1]
-                graph.add_node(f'{self.name}g{i}{j}', index=(ix,jx), threshold=self.thresholds[ix][jx], decay=1.0, p=1.0, potential=0.0)
-                output_lists[0].append(f'{self.name}g{i}{j}')
+        # TODO: Fixed non-continuous memory strides. This will result in poor performance.
+        for kx in np.arange(self.nFilters):
+            for i in np.arange(self.bnds[0,0],self.bnds[1,0] + 1):
+                ix = i - self.bnds[0,0]
+                for j in np.arange(self.bnds[0,1],self.bnds[1,1] + 1):
+                    jx = j - self.bnds[0,1]
+                    graph.add_node(f'{self.name}g{i}{j}{kx}', index=(ix,jx,kx), threshold=self.thresholds[0,ix,jx,kx], decay=1.0, p=1.0, potential=0.0)
+                    output_lists[0].append(f'{self.name}g{i}{j}{kx}')
 
         # Biases for convolution
         if self.biases is not None:
             # biases neurons/nodes; one node per kernel/channel in filter
-            graph.add_node(f'{self.name}b', index=(99,0), threshold=-1.0, decay=1.0, p=1.0, potential=0.0)
+            for k in np.arange(self.nFilters):
+                graph.add_node(f'{self.name}b{k}', index=(99,k), threshold=-1.0, decay=1.0, p=1.0, potential=0.0)
 
             # Construct edges connecting biases node(s) to output nodes
             for i in np.arange(self.bnds[0,0],self.bnds[1,0] + 1):
                 for j in np.arange(self.bnds[0,1],self.bnds[1,1] + 1):
-                    graph.add_edge(f'{self.name}b',f'{self.name}g{i}{j}', weight=self.biases, delay=1)
+                    for k in np.arange(self.nFilters):
+                        graph.add_edge(f'{self.name}b{k}',f'{self.name}g{i}{j}{k}', weight=self.biases[k], delay=1)
 
         # Collect Inputs
-        I = input_lists[0]
-
+        I = np.array(input_lists[0])
+        num_input_neurons_per_channel = Am * An * self.basep * self.bits
+        # I = np.array(input_lists[0]).reshape(-1,num_input_neurons_per_channel)
         # Construct edges connecting input and output nodes
         pwr = -1
         cnt = -1
-        for k in np.arange(num_input_neurons):  # loop over input neurons
-            coeff_i = np.mod(k, self.basep)
-            if coeff_i == 0:
-                pwr = pwr + 1
-                if np.mod(pwr, self.bits) == 0:
-                    pwr = 0
-                continue
+        # for channel in np.arange(nChannels):
+        for filter in np.arange(self.nFilters):
+            for k in np.arange(num_input_neurons):  # loop over input neurons
+                coeff_i = np.mod(k, self.basep)
+                if coeff_i == 0:
+                    pwr = pwr + 1
+                    if np.mod(pwr, self.bits) == 0:
+                        pwr = 0
+                    continue
 
-            # loop over output neurons
-            row, col = np.unravel_index(k, (Am, An, self.bits * self.basep))[0:2]
-            for i, j in self.get_output_neurons(row, col, Bm, Bn):
-                ix = i - row
-                jx = j - col
+                # loop over output neurons
+                row, col, channel = np.unravel_index(k, (Am, An, self.nChannels, self.bits * self.basep))[0:3]
+                for i, j in self.get_output_neurons(row, col, Bm, Bn):
+                    ix = i - row
+                    jx = j - col
 
-                cnt += 1
-                graph.add_edge(I[k], f'{self.name}g{i}{j}', weight=coeff_i * self.basep**pwr * self.filters[ix][jx], delay=1)
-                logging.debug(f'{cnt}     coeff_i: {coeff_i}    power: {pwr}    input: {k}      output: {i}{j}     filter: {self.filters[ix][jx]}     I(row,col,Ck): {np.unravel_index(k,(Am,An,self.bits*self.basep))}     I[index]: {graph.nodes[I[k]]["index"]}')
+                    cnt += 1
+                    graph.add_edge(I[k], f'{self.name}g{i}{j}{filter}', weight=coeff_i * self.basep**pwr * self.filters[ix,jx,channel,filter], delay=1)
+                    logging.debug(f'{cnt}     coeff_i: {coeff_i}    power: {pwr}    input: {k}      output: {i}{j}{filter}     filter: {self.filters[ix,jx,channel,filter]}     I(row,col,Ck): {np.unravel_index(k,(Am,An,self.nChannels,self.bits*self.basep))}     I[index]: {graph.nodes[I[k]]["index"]}')
 
         self.is_built=True
 
@@ -346,16 +353,16 @@ class keras_convolution_2d_4dinput(Brick):
         return neuron_indices
 
     def get_output_bounds(self):
-        input_shape = np.array(self.pshape)
-        full_output_shape = np.array(self.pshape) + np.array(self.filters.shape) - 1
-        mode_output_shape = np.array(self.output_shape)
+        input_shape = np.array(self.pshape)[1:3]
+        full_output_shape = np.array(self.pshape)[1:3] + np.array(self.filters.shape)[:2] - 1
+        mode_output_shape = np.array(self.output_shape)[1:3]
 
         if self.mode == "same":
             ub = np.floor(0.5 * (mode_output_shape + input_shape) - 1)
             lb = ub - (mode_output_shape - 1)
             self.bnds = np.array([lb,ub],dtype=int) + 1
         elif self.mode == "valid":
-            lmins = np.minimum(self.pshape,self.filters.shape)
+            lmins = np.minimum(self.pshape[1:3],self.filters.shape[:2])
             ub = full_output_shape - lmins
             lb = ub - (mode_output_shape - 1)
             self.bnds = np.array([lb,ub],dtype=int) - (np.array(self.strides) - 1)
@@ -363,7 +370,7 @@ class keras_convolution_2d_4dinput(Brick):
     def get_output_shape(self):
         strides_shape = np.array(self.strides)
         input_shape = np.array(self.pshape)[1:3]
-        kernel_shape = np.array(self.filters.shape)[1:3]
+        kernel_shape = np.array(self.filters.shape)[:2]
         nFilters = self.nFilters
 
         p = 0.5 if self.mode == "same" else 0

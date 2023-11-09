@@ -467,8 +467,35 @@ class Test_KerasConvolution2D_4dinput:
         self.nChannels = nChannels
         self.nFilters = nFilters
 
-    @pytest.mark.xfail(reason="Not implemented.")
-    def test_exlicit_convolution_with_bias(self):
+    @pytest.mark.parametrize("nSpikes,bias",[(0,-63),(1,-62),(2,-58)])
+    def test_exlicit_simple_convolution_with_bias(self,nSpikes,bias):
+        '''
+            Convolution answer is
+                  [[23., 33., 24.],
+                   [53., 63., 42.],
+                   [52., 59., 36.]]
+        '''
+        image_height, image_width = 3, 3
+        kernel_height, kernel_width = 2, 2
+        nChannels = 1
+        nFilters = 1
+
+        self.pvector = generate_mock_image(image_height,image_width,nChannels)
+        self.filters = generate_keras_kernel(kernel_height,kernel_width,nFilters,nChannels)
+        self.pshape = np.array(self.pvector).shape
+        self.filters_shape = np.array(self.filters).shape
+        self.nChannels = nChannels
+        self.nFilters = nFilters
+        self.biases = np.array([bias]) # leads to 2 spike at g22 and g32
+
+        output_shape = keras_convolution2d_output_shape_4dinput(self.pvector,self.filters,self.strides,self.mode,self.nFilters)
+        thresholds = 0.5*np.ones(output_shape).reshape(1,*output_shape)
+        keras_convolution_answer = keras_convolve2d_4dinput(self.pvector,self.filters,strides=self.strides,mode=self.mode,filters=self.nFilters)
+        result = self.run_convolution_2d(thresholds)
+        assert self.expected_spikes(nSpikes) == self.calculated_spikes(thresholds,result)
+
+    @pytest.mark.parametrize("nSpikes,biases",[(3,[-471, -1207, -1943]),(4,[-471, -1107, -1943]),(0,[-472, -1208, -1944])])
+    def test_exlicit_convolution_with_bias(self,nSpikes,biases):
         '''
             Given image and kernel provided in setup_method, the convolution ("same") answer is
                         Filter 1 Out            Filter 2 Out            Filter 3 Out
@@ -476,13 +503,12 @@ class Test_KerasConvolution2D_4dinput:
                    [ 436.,  472.,  270.],  [1108., 1208.,  654.],  [1780., 1944., 1038.], 
                    [ 299.,  321.,  180.]], [ 683.,  737.,  396.]], [1067., 1153.,  612.]])
         '''
-        self.biases = np.array([471.4, 1207.4, 1943.4]) # leads to 1 spike per filter output
+        self.biases = np.array(biases) # leads to 1 spike per filter output
         output_shape = keras_convolution2d_output_shape_4dinput(self.pvector,self.filters,self.strides,self.mode,self.nFilters)
         thresholds = 0.5*np.ones(output_shape).reshape(1,*output_shape)
-        expected_spikes = [1]
         keras_convolution_answer = keras_convolve2d_4dinput(self.pvector,self.filters,strides=self.strides,mode=self.mode,filters=self.nFilters)
         result = self.run_convolution_2d(thresholds)
-        assert expected_spikes == self.calculated_spikes(thresholds,result)
+        assert self.expected_spikes(nSpikes) == self.calculated_spikes(thresholds,result)
 
     @pytest.mark.xfail(reason="Not implemented.")
     def test_handling_of_4d_tensor_input(self):
@@ -494,8 +520,8 @@ class Test_KerasConvolution2D_4dinput:
 
     # Auxillary/Helper Function below
     def get_num_output_neurons(self, thresholds):
-        Am, An = self.pshape
-        Bm, Bn = self.filters_shape
+        Am, An = self.pshape[1:3]
+        Bm, Bn = self.filters_shape[:2]
         Gm, Gn = Am + Bm - 1, An + Bn - 1
 
         if not hasattr(thresholds, "__len__") and (not isinstance(thresholds, str)):
@@ -518,7 +544,7 @@ class Test_KerasConvolution2D_4dinput:
         else:
             thresholds_size = np.size(thresholds)
 
-        return thresholds_size
+        return thresholds_size * self.nFilters
 
     def output_spike_positions(self, basep, bits, pvector, filters, thresholds):
         thresholds_size = self.get_num_output_neurons(thresholds)
