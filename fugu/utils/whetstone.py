@@ -33,13 +33,13 @@ def whetstone_2_fugu(keras_model, basep, bits, scaffold=None):
             output_shape = layer.output_shape
             mode = layer.padding
             kernel = layer.get_weights()[0]
-            bias = layer.get_weights()[1]
+            bias = layer.get_weights()[1][0]
             strides = layer.strides
             # Add a brick for each channel
             for channel in np.arange(input_shape[-1]):
                 for filter in np.arange(layer.filters):
                     print(f"Conv2D:: Channel: {channel} Filter: {filter}")
-                    scaffold.add_brick(convolution_2d(input_shape[1:-1],np.flip(kernel[:,:,channel,filter]),1.0,basep,bits,name=f"convolution_layer_{layerID}",mode=mode,strides=strides),[(layerID, 0)],output=True)
+                    scaffold.add_brick(convolution_2d(input_shape[1:-1],np.flip(kernel[:,:,channel,filter]),0.5,basep,bits,name=f"convolution_layer_{layerID}",mode=mode,strides=strides,biases=bias),[(layerID, 0)],output=True)
                     layerID += 1
 
         if type(layer) is Spiking_BRelu:

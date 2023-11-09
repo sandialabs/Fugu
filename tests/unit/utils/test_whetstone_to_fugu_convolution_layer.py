@@ -112,17 +112,22 @@ class Test_Whetstone_2_Fugu_ConvolutionLayer:
                                       [21,52,59,36]]
         '''
         from tensorflow.keras import Model, initializers
-        input_shape = (3,3,1)
+        image_height, image_width = 3, 3
+        kernel_height, kernel_width = 2, 2
+        nChannels = 1
+        nFilters = 1
+        input_shape = (image_height,image_width,nChannels)
         strides = (1,1)
-        init_kernel = np.reshape(np.arange(1,5),(1,2,2,1))
-        init_bias = bias*np.ones((1,))
+        init_kernel = generate_keras_kernel(kernel_height,kernel_width,nFilters,nChannels)
+        init_bias = bias*np.ones((nFilters,))
         kernel_initializer = initializers.constant(np.flip(init_kernel)) # [METHOD 2] keras doesn't flip the filter during the convolution; so force the array flip manually.
         bias_initializer = initializers.constant(init_bias)
+        mode = "same"
 
         model = Sequential()
-        model.add(Conv2D(1, (2, 2), strides=strides, padding='same', activation=None, use_bias=True, input_shape=input_shape, name="one", kernel_initializer=kernel_initializer, bias_initializer=bias_initializer))
+        model.add(Conv2D(nFilters, (kernel_height, kernel_width), strides=strides, padding=mode, activation=None, use_bias=True, input_shape=input_shape, name="one", kernel_initializer=kernel_initializer, bias_initializer=bias_initializer))
         model.add(Spiking_BRelu(input_shape=(3,3),sharpness=1.0,name="spike"))
-        mock_image = np.arange(1,10,dtype=float).reshape(1,3,3,1)
+        mock_image = generate_mock_image(image_height,image_width,nChannels).astype(float)
         calculated = model.layers[0](mock_image)[0,:,:,0].numpy().tolist() # gives the output of the input through this layer only
         feature_extractor = Model(inputs=model.inputs, outputs=[layer.output for layer in model.layers]) # gives cumalative output of the input through this and previous layers.
 
@@ -134,27 +139,16 @@ class Test_Whetstone_2_Fugu_ConvolutionLayer:
         self.filters_shape = self.filters.shape
         self.strides = strides
         scaffold = Scaffold()
-        scaffold.add_brick(BaseP_Input(mock_image.reshape(3,3),p=self.basep,bits=self.bits,collapse_binary=False,name="I",time_dimension=False),"input")
+        scaffold.add_brick(BaseP_Input(mock_image.reshape(image_height,image_width),p=self.basep,bits=self.bits,collapse_binary=False,name="I",time_dimension=False),"input")
         scaffold = whetstone_2_fugu(model,self.basep,self.bits,scaffold=scaffold)
         scaffold.lay_bricks()
-
-        # Override output neuron threshold values in scaffold
-        output_neuron_names = np.array(scaffold.graph.nodes)[-9:]
-        
-        keras_convolution_answer = feature_extractor(mock_image)[0][0,:,:,0].numpy()
-        keras_spike_answer = feature_extractor(mock_image)[1][0,:,:,0].numpy()
-        new_fugu_thresholds = (keras_convolution_answer - init_bias).astype(int) - 0.1*keras_spike_answer
-
-        # Assign new thresholds values to convolution output neurons in the scaffold
-        for k, name in enumerate(output_neuron_names):
-            scaffold.graph.nodes[name]['threshold'] = new_fugu_thresholds.flatten()[k]
-
         scaffold.summary(verbose=1)
+
         backend = snn_Backend()
         backend_args = {}
         backend.compile(scaffold, backend_args)
         result = backend.run(5)
-
+        new_fugu_thresholds = 0.5*np.ones(feature_extractor(mock_image)[0][0,:,:,0].numpy().shape)
         assert self.expected_spikes(nSpikes) == self.calculated_spikes(new_fugu_thresholds, result)
 
     def test_explicit_whetstone_2_fugu_conv2d_layer(self):
@@ -206,22 +200,13 @@ class Test_Whetstone_2_Fugu_ConvolutionLayer:
         scaffold = whetstone_2_fugu(model,self.basep,self.bits,scaffold=scaffold)
         scaffold.lay_bricks()
 
-        # Override output neuron threshold values in scaffold
-        output_neuron_names = np.array(scaffold.graph.nodes)[-9:]
-        keras_convolution_answer = feature_extractor(mock_image)[0][0,:,:,0].numpy()
-        keras_spike_answer = feature_extractor(mock_image)[1][0,:,:,0].numpy()
-        new_fugu_thresholds = (keras_convolution_answer - init_bias).astype(int) - 0.1*keras_spike_answer
-
-        # Assign new thresholds values to convolution output neurons in the scaffold
-        for k, name in enumerate(output_neuron_names):
-            scaffold.graph.nodes[name]['threshold'] = new_fugu_thresholds.flatten()[k]
-
         scaffold.summary(verbose=1)
         backend = snn_Backend()
         backend_args = {}
         backend.compile(scaffold, backend_args)
         result = backend.run(5)
 
+        new_fugu_thresholds = 0.5*np.ones(feature_extractor(mock_image)[0][0,:,:,0].numpy().shape)
         assert self.expected_spikes(nSpikes) == self.calculated_spikes(new_fugu_thresholds, result)
 
     @pytest.mark.parametrize("strides",[(1,1),(1,2),(2,1),(2,2)])
