@@ -5,10 +5,10 @@ import logging
 from contextlib import nullcontext as does_not_raise
 
 from fugu.backends import snn_Backend
-from fugu.bricks.keras_convolution_bricks import keras_convolution_2d as convolution_2d
+from fugu.bricks.keras_convolution_bricks import keras_convolution_2d, keras_convolution_2d_4dinput
 from fugu.bricks.input_bricks import BaseP_Input
 from fugu.scaffold import Scaffold
-from fugu.utils.keras_helpers import keras_convolve2d, keras_convolve2d_4dinput, generate_keras_kernel, generate_mock_image
+from fugu.utils.keras_helpers import keras_convolve2d, keras_convolve2d_4dinput, generate_keras_kernel, generate_mock_image, keras_convolution2d_output_shape_4dinput
 
 from scipy.signal import convolve2d
 
@@ -69,7 +69,7 @@ class Test_KerasConvolution2D:
         #TODO: Add mode="valid" to output shape check
         self.mode = mode
         self.strides = strides
-        layer = convolution_2d(self.pshape,self.filters,np.ones(self.filters_shape),self.basep,self.bits,name='conv',strides=self.strides)
+        layer = keras_convolution_2d(self.pshape,self.filters,np.ones(self.filters_shape),self.basep,self.bits,name='conv',strides=self.strides)
         calculated = list(layer.output_shape)
         assert expected == calculated
 
@@ -86,7 +86,7 @@ class Test_KerasConvolution2D:
     def test_strides_parameter(self,strides,expected,expectation):
         with expectation:
             self.strides = strides
-            layer = convolution_2d(self.pshape,self.filters,np.ones(self.filters_shape),self.basep,self.bits,name='conv',strides=self.strides)
+            layer = keras_convolution_2d(self.pshape,self.filters,np.ones(self.filters_shape),self.basep,self.bits,name='conv',strides=self.strides)
             calculated = layer.strides
             assert expected == calculated
 
@@ -400,7 +400,7 @@ class Test_KerasConvolution2D:
             "input",
         )
         scaffold.add_brick(
-            convolution_2d(
+            keras_convolution_2d(
                 self.pshape,
                 self.filters,
                 thresholds,
@@ -447,3 +447,143 @@ def get_output_shape(image,kernel,strides,mode):
     # kernel = self.filters
     strided_answer = keras_convolve2d(image,kernel,strides,mode)
     return strided_answer.shape
+
+class Test_KerasConvolution2D_4dinput:
+    def setup_method(self):
+        image_height, image_width = 3, 3
+        kernel_height, kernel_width = 2, 2
+        nChannels = 2
+        nFilters = 3
+
+        self.basep = 4
+        self.bits = 4
+        self.pvector = generate_mock_image(image_height,image_width,nChannels)
+        self.filters = generate_keras_kernel(kernel_height,kernel_width,nFilters,nChannels)
+        self.pshape = np.array(self.pvector).shape
+        self.filters_shape = np.array(self.filters).shape
+        self.mode = "same"
+        self.strides = (1,1)
+        self.biases = np.zeros((nFilters,))
+        self.nChannels = nChannels
+        self.nFilters = nFilters
+
+    @pytest.mark.xfail(reason="Not implemented.")
+    def test_exlicit_convolution_with_bias(self):
+        '''
+            Given image and kernel provided in setup_method, the convolution ("same") answer is
+                        Filter 1 Out            Filter 2 Out            Filter 3 Out
+                  [[ 328.,  364.,  210.], [[ 808.,  908.,  498.], [[1288., 1452.,  786.], 
+                   [ 436.,  472.,  270.],  [1108., 1208.,  654.],  [1780., 1944., 1038.], 
+                   [ 299.,  321.,  180.]], [ 683.,  737.,  396.]], [1067., 1153.,  612.]])
+        '''
+        self.biases = np.array([471.4, 1207.4, 1943.4]) # leads to 1 spike per filter output
+        output_shape = keras_convolution2d_output_shape_4dinput(self.pvector,self.filters,self.strides,self.mode,self.nFilters)
+        thresholds = 0.5*np.ones(output_shape).reshape(1,*output_shape)
+        expected_spikes = [1]
+        keras_convolution_answer = keras_convolve2d_4dinput(self.pvector,self.filters,strides=self.strides,mode=self.mode,filters=self.nFilters)
+        result = self.run_convolution_2d(thresholds)
+        assert expected_spikes == self.calculated_spikes(thresholds,result)
+
+    @pytest.mark.xfail(reason="Not implemented.")
+    def test_handling_of_4d_tensor_input(self):
+        assert False
+
+    @pytest.mark.xfail(reason="Not implemented.")
+    def test_4d_tensor_input(self):
+        assert False
+
+    # Auxillary/Helper Function below
+    def get_num_output_neurons(self, thresholds):
+        Am, An = self.pshape
+        Bm, Bn = self.filters_shape
+        Gm, Gn = Am + Bm - 1, An + Bn - 1
+
+        if not hasattr(thresholds, "__len__") and (not isinstance(thresholds, str)):
+            if self.mode == "full":
+                thresholds_size = (Gm) * (Gn)
+
+            if self.mode == "valid":
+                lmins = np.minimum((Am, An), (Bm, Bn))
+                lb = lmins - 1
+                ub = np.array([Gm, Gn]) - lmins
+                thresholds_size = (ub[0] - lb[0] + 1) * (ub[1] - lb[1] + 1)
+
+            if self.mode == "same":
+                apos = np.array([Am, An])
+                gpos = np.array([Gm, Gn])
+
+                lb = np.floor(0.5 * (gpos - apos))
+                ub = np.floor(0.5 * (gpos + apos) - 1)
+                thresholds_size = (ub[0] - lb[0] + 1) * (ub[1] - lb[1] + 1)
+        else:
+            thresholds_size = np.size(thresholds)
+
+        return thresholds_size
+
+    def output_spike_positions(self, basep, bits, pvector, filters, thresholds):
+        thresholds_size = self.get_num_output_neurons(thresholds)
+        offset = 4  # begin/complete nodes for input and output nodes
+        input_basep_len = np.size(pvector) * basep * bits
+        output_ini_position = offset + input_basep_len
+        output_end_position = offset + input_basep_len + thresholds_size
+        return [output_ini_position, output_end_position]
+
+    def output_mask(self, output_positions, result):
+        ini = output_positions[0]
+        end = output_positions[1]
+        return (result["neuron_number"] >= ini) & (result["neuron_number"] <= end)
+
+    def calculated_spikes(self,thresholds,result):
+        # get output positions in result
+        output_positions = self.output_spike_positions(
+            self.basep, self.bits, self.pvector, self.filters, thresholds
+        )
+        output_mask = self.output_mask(output_positions, result)
+
+        calculated_spikes = list(result[output_mask].to_numpy()[:, 0])
+        return calculated_spikes
+
+    def expected_spikes(self,nSpikes):
+        # Check calculations
+        if nSpikes == 0:
+            expected_spikes = list(np.array([]))
+        else:
+            expected_spikes = list(np.ones((nSpikes,)))
+
+        return expected_spikes
+
+    def run_convolution_2d(self, thresholds):
+        scaffold = Scaffold()
+        scaffold.add_brick(
+            BaseP_Input(
+                np.array([self.pvector]),
+                p=self.basep,
+                bits=self.bits,
+                collapse_binary=False,
+                name="I",
+                time_dimension=False,
+            ),
+            "input",
+        )
+        scaffold.add_brick(
+            keras_convolution_2d_4dinput(
+                self.pshape,
+                self.filters,
+                thresholds,
+                self.basep,
+                self.bits,
+                name="convolution_",
+                mode=self.mode,
+                strides=self.strides,
+                biases=self.biases,
+            ),
+            [(0, 0)],
+            output=True,
+        )
+        scaffold.lay_bricks()
+        scaffold.summary(verbose=1)
+        backend = snn_Backend()
+        backend_args = {}
+        backend.compile(scaffold, backend_args)
+        result = backend.run(5)
+        return result

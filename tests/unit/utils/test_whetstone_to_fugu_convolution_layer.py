@@ -9,7 +9,7 @@ from fugu.bricks.dense_bricks import dense_layer_1d, dense_layer_2d
 from fugu.bricks.input_bricks import BaseP_Input, Vector_Input
 from fugu.bricks.pooling_bricks import pooling_1d, pooling_2d
 from fugu.scaffold import Scaffold
-from fugu.utils.keras_helpers import keras_convolve2d, keras_convolve2d_4dinput, generate_keras_kernel, generate_mock_image
+from fugu.utils.keras_helpers import keras_convolve2d, keras_convolve2d_4dinput, generate_keras_kernel, generate_mock_image, keras_convolution2d_output_shape, keras_convolution2d_output_shape_4dinput
 from fugu.utils.whetstone import whetstone_2_fugu
 
 import pandas as pd
@@ -120,7 +120,7 @@ class Test_Whetstone_2_Fugu_ConvolutionLayer:
         strides = (1,1)
         init_kernel = generate_keras_kernel(kernel_height,kernel_width,nFilters,nChannels)
         init_bias = bias*np.ones((nFilters,))
-        kernel_initializer = initializers.constant(np.flip(init_kernel)) # [METHOD 2] keras doesn't flip the filter during the convolution; so force the array flip manually.
+        kernel_initializer = initializers.constant(np.flip(init_kernel,(0,1))) # [METHOD 2] keras doesn't flip the filter during the convolution; so force the array flip manually.
         bias_initializer = initializers.constant(init_bias)
         mode = "same"
 
@@ -153,10 +153,10 @@ class Test_Whetstone_2_Fugu_ConvolutionLayer:
 
     def test_explicit_whetstone_2_fugu_conv2d_layer(self):
         '''
-            [[1,2,3]                 [[ 4,11,18, 9]
-            [4,5,6]  *  [[1,2]  =     [18,37,47,21]
-            [7,8,9]]     [3,4]]       [36,67,77,33]
-                                        [14,23,26, 9]]
+            [[1,2,3]                  [[ 4,11,18, 9]
+             [4,5,6]  *  [[1,2]  =     [18,37,47,21]
+             [7,8,9]]     [3,4]]       [36,67,77,33]
+                                       [14,23,26, 9]]
 
             *** Note ***
             [METHOD 1]
@@ -167,24 +167,29 @@ class Test_Whetstone_2_Fugu_ConvolutionLayer:
             Otherwise, "flip" the kernel (filter) for keras and then perform the traditional convolution practice when calculating convolution by hand.
             The below result is equivalent to scipy.signal.convolve2d([[1,2,3],[4,5,6],[7,8,9]],[[1,2],[3,4]], mode="full")
 
-            [[1,2,3]                 [[ 1, 4, 7, 6]
-            [4,5,6]  *  [[1,2]  =     [ 7,23,33,24]
-            [7,8,9]]     [3,4]]       [19,53,63,42]
-                                        [21,52,59,36]]
+            [[1,2,3]                  [[ 1, 4, 7, 6]
+             [4,5,6]  *  [[1,2]  =     [ 7,23,33,24]
+             [7,8,9]]     [3,4]]       [19,53,63,42]
+                                       [21,52,59,36]]
         '''
         from tensorflow.keras import Model, initializers
-        input_shape = (3,3,1)
+        image_height, image_width = 3, 3
+        kernel_height, kernel_width = 2, 2
+        nChannels = 1
+        nFilters = 1
+        input_shape = (image_height,image_width,nChannels)
         strides = (1,1)
-        init_kernel = np.reshape(np.arange(1,5),(1,2,2,1))
-        init_bias = -52.6*np.ones((1,))
-        kernel_initializer = initializers.constant(np.flip(init_kernel)) # [METHOD 2] keras doesn't flip the filter during the convolution; so force the array flip manually.
+        init_kernel = generate_keras_kernel(kernel_height,kernel_width,nFilters,nChannels)
+        init_bias = -52.6*np.ones((nFilters,))
+        kernel_initializer = initializers.constant(np.flip(init_kernel,(0,1))) # [METHOD 2] keras doesn't flip the filter during the convolution; so force the array flip manually.
         bias_initializer = initializers.constant(init_bias)
+        mode = "same"
         nSpikes = 2
 
         model = Sequential()
-        model.add(Conv2D(1, (2, 2), strides=strides, padding='same', activation=None, use_bias=True, input_shape=input_shape, name="one", kernel_initializer=kernel_initializer, bias_initializer=bias_initializer))
+        model.add(Conv2D(nFilters, (kernel_height, kernel_width), strides=strides, padding=mode, activation=None, use_bias=True, input_shape=input_shape, name="one", kernel_initializer=kernel_initializer, bias_initializer=bias_initializer))
         model.add(Spiking_BRelu(input_shape=(3,3),sharpness=1.0,name="spike"))
-        mock_image = np.arange(1,10,dtype=float).reshape(1,3,3,1)
+        mock_image = generate_mock_image(image_height,image_width,nChannels).astype(float)
         calculated = model.layers[0](mock_image)[0,:,:,0].numpy().tolist() # gives the output of the input through this layer only
         feature_extractor = Model(inputs=model.inputs, outputs=[layer.output for layer in model.layers]) # gives cumalative output of the input through this and previous layers.
 
@@ -209,6 +214,127 @@ class Test_Whetstone_2_Fugu_ConvolutionLayer:
         new_fugu_thresholds = 0.5*np.ones(feature_extractor(mock_image)[0][0,:,:,0].numpy().shape)
         assert self.expected_spikes(nSpikes) == self.calculated_spikes(new_fugu_thresholds, result)
 
+    @pytest.mark.xfail(reason="Not implemented.")
+    def test_explicit_whetstone_2_fugu_conv2d_layer_multichannel_multifilter(self):
+        '''
+            [[1,2,3]                  [[ 4,11,18, 9]
+             [4,5,6]  *  [[1,2]  =     [18,37,47,21]
+             [7,8,9]]     [3,4]]       [36,67,77,33]
+                                       [14,23,26, 9]]
+
+            *** Note ***
+            [METHOD 1]
+            If you don't flip the kernel for Keras then don't "flip" the kernel when doing convolution by hand. Moreover this result is equivalent 
+            to performing scipy.signal.convolve2d([[1,2,3],[4,5,6],[7,8,9]],np.flip( [[1,2],[3,4]] ), mode="full").
+
+            [METHOD 2]
+            Otherwise, "flip" the kernel (filter) for keras and then perform the traditional convolution practice when calculating convolution by hand.
+            The below result is equivalent to scipy.signal.convolve2d([[1,2,3],[4,5,6],[7,8,9]],[[1,2],[3,4]], mode="full")
+
+            [[1,2,3]                  [[ 1, 4, 7, 6]
+             [4,5,6]  *  [[1,2]  =     [ 7,23,33,24]
+             [7,8,9]]     [3,4]]       [19,53,63,42]
+                                       [21,52,59,36]]
+        '''
+        from tensorflow.keras import Model, initializers
+        image_height, image_width = 3, 3
+        kernel_height, kernel_width = 2, 2
+        nChannels = 1
+        nFilters = 3
+        input_shape = (image_height,image_width,nChannels)
+        strides = (1,1)
+        init_kernel = generate_keras_kernel(kernel_height,kernel_width,nFilters,nChannels)
+        init_bias = np.array([1799.4,1063.4,327.4]).reshape((nFilters,))#-52.6*np.ones((nFilters,))
+        kernel_initializer = initializers.constant(np.flip(init_kernel,(0,1))) # [METHOD 2] keras doesn't flip the filter during the convolution; so force the array flip manually.
+        bias_initializer = initializers.constant(init_bias)
+        mock_image = generate_mock_image(image_height,image_width,nChannels).astype(float)
+        mode = "same"
+        nSpikes = 2
+        basep = 3
+        bits = 4
+
+        model = Sequential()
+        model.add(Conv2D(nFilters, (kernel_height, kernel_width), strides=strides, padding=mode, activation=None, use_bias=True, input_shape=input_shape, name="one", kernel_initializer=kernel_initializer, bias_initializer=bias_initializer))
+        model.add(Spiking_BRelu(sharpness=1.0,name="spike"))
+        feature_extractor = Model(inputs=model.inputs, outputs=[layer.output for layer in model.layers]) # gives cumalative output of the input through this and previous layers.
+
+        scaffold = Scaffold()
+        scaffold.add_brick(BaseP_Input(mock_image.reshape(input_shape),p=basep,bits=bits,collapse_binary=False,name="I",time_dimension=False),"input")
+        scaffold = whetstone_2_fugu(model,basep,bits,scaffold=scaffold)
+        scaffold.lay_bricks()
+
+        scaffold.summary(verbose=1)
+        backend = snn_Backend()
+        backend_args = {}
+        backend.compile(scaffold, backend_args)
+        result = backend.run(5)
+
+        new_fugu_thresholds = 0.5*np.ones(feature_extractor(mock_image)[0][0,:,:,0].numpy().shape)
+        assert self.expected_spikes(nSpikes) == self.calculated_spikes(new_fugu_thresholds, result)
+
+    @pytest.mark.xfail(reason="Not implemented.")
+    def test_whetstone_2_fugu_conv2d_layer_with_batchnormalization(self):
+        '''
+            [[1,2,3]                  [[ 4,11,18, 9]
+             [4,5,6]  *  [[1,2]  =     [18,37,47,21]
+             [7,8,9]]     [3,4]]       [36,67,77,33]
+                                       [14,23,26, 9]]
+
+            *** Note ***
+            [METHOD 1]
+            If you don't flip the kernel for Keras then don't "flip" the kernel when doing convolution by hand. Moreover this result is equivalent 
+            to performing scipy.signal.convolve2d([[1,2,3],[4,5,6],[7,8,9]],np.flip( [[1,2],[3,4]] ), mode="full").
+
+            [METHOD 2]
+            Otherwise, "flip" the kernel (filter) for keras and then perform the traditional convolution practice when calculating convolution by hand.
+            The below result is equivalent to scipy.signal.convolve2d([[1,2,3],[4,5,6],[7,8,9]],[[1,2],[3,4]], mode="full")
+
+            [[1,2,3]                  [[ 1, 4, 7, 6]
+             [4,5,6]  *  [[1,2]  =     [ 7,23,33,24]
+             [7,8,9]]     [3,4]]       [19,53,63,42]
+                                       [21,52,59,36]]
+        '''
+        from tensorflow.keras import Model, initializers
+        image_height, image_width = 3, 3
+        kernel_height, kernel_width = 2, 2
+        nChannels = 1
+        nFilters = 1
+        input_shape = (image_height,image_width,nChannels)
+        strides = (1,1)
+        init_kernel = generate_keras_kernel(kernel_height,kernel_width,nFilters,nChannels)
+        init_bias = -52.6*np.ones((nFilters,))
+        kernel_initializer = initializers.constant(np.flip(init_kernel,(0,1))) # [METHOD 2] keras doesn't flip the filter during the convolution; so force the array flip manually.
+        bias_initializer = initializers.constant(init_bias)
+        mode = "same"
+        nSpikes = 2
+        basep = 3
+        bits = 3
+
+        gamma_initializer = initializers.constant(2.)
+        beta_initializer = initializers.constant(3.)
+        moving_mean_initializer = initializers.constant(4.)
+        moving_variance_initializer = initializers.constant(5.)
+
+        model = Sequential()
+        model.add(Conv2D(nFilters, (kernel_height, kernel_width), strides=strides, padding=mode, activation=None, use_bias=True, input_shape=input_shape, name="one", kernel_initializer=kernel_initializer, bias_initializer=bias_initializer))
+        model.add(BatchNormalization(beta_initializer=beta_initializer, gamma_initializer=gamma_initializer, moving_mean_initializer=moving_mean_initializer, moving_variance_initializer=moving_variance_initializer))
+        mock_image = generate_mock_image(image_height,image_width,nChannels).astype(float)
+        feature_extractor = Model(inputs=model.inputs, outputs=[layer.output for layer in model.layers]) # gives cumalative output of the input through this and previous layers.
+
+        scaffold = Scaffold()
+        scaffold.add_brick(BaseP_Input(mock_image.reshape(3,3),p=basep,bits=bits,collapse_binary=False,name="I",time_dimension=False),"input")
+        scaffold = whetstone_2_fugu(model,basep,bits,scaffold=scaffold)
+        scaffold.lay_bricks()
+
+        scaffold.summary(verbose=1)
+        backend = snn_Backend()
+        backend_args = {}
+        backend.compile(scaffold, backend_args)
+        result = backend.run(5)
+
+        new_fugu_thresholds = 0.5*np.ones(feature_extractor(mock_image)[0][0,:,:,0].numpy().shape)
+        assert self.expected_spikes(nSpikes) == self.calculated_spikes(new_fugu_thresholds, result)
+
     @pytest.mark.parametrize("strides",[(1,1),(1,2),(2,1),(2,2)])
     @pytest.mark.parametrize("mode", ["same", "valid"])
     @pytest.mark.parametrize("nChannels", [1,2,3])
@@ -216,31 +342,12 @@ class Test_Whetstone_2_Fugu_ConvolutionLayer:
     def test_batch_normalization_removal(self,strides,mode,nChannels,nFilters):
         from tensorflow.keras import Model, initializers
 
-        def normalization(batch, bnorm_layer):
-            gamma, beta, mean, variance = bnorm_layer.get_weights()
-            epsilon = bnorm_layer.epsilon
-            return apply_normalization(batch,gamma,beta,mean,variance,epsilon)
-        
-        def apply_normalization(batch,gamma, beta, moving_mean, moving_var, epsilon):
-            return gamma*(batch - moving_mean) / np.sqrt(moving_var+epsilon) + beta
-        
-        def merge_layers(conv2d_layer, bnorm_layer):
-            gamma, beta, mean, variance = bnorm_layer.get_weights()
-            epsilon = bnorm_layer.epsilon
-            weights = conv2d_layer.get_weights()[0]
-            biases = conv2d_layer.get_weights()[1]
-
-            stdev = np.sqrt(variance + epsilon)
-            new_weights = weights * gamma / stdev
-            new_biases = (gamma / stdev) * (biases - mean) + beta            
-            return new_weights, new_biases
-
         image_height, image_width = 3, 3
         kernel_height, kernel_width = 2, 2
         input_shape = (image_height,image_width,nChannels)
         init_kernel = generate_keras_kernel(kernel_height,kernel_width,nFilters,nChannels)
         init_bias = -53*np.ones((nFilters,))
-        kernel_initializer = initializers.constant(np.flip(init_kernel)) # [METHOD 2] keras doesn't flip the filter during the convolution; so force the array flip manually.
+        kernel_initializer = initializers.constant(np.flip(init_kernel,(0,1))) # [METHOD 2] keras doesn't flip the filter during the convolution; so force the array flip manually.
         bias_initializer = initializers.constant(init_bias)
         mock_image = generate_mock_image(image_height,image_width,nChannels).astype(float)
         nSpikes = 2
@@ -333,3 +440,23 @@ class Test_Whetstone_2_Fugu_ConvolutionLayer:
             expected_spikes = list(np.ones((nSpikes,)))
 
         return expected_spikes
+
+# Auxillary/Helper functions
+def normalization(batch, bnorm_layer):
+    gamma, beta, mean, variance = bnorm_layer.get_weights()
+    epsilon = bnorm_layer.epsilon
+    return apply_normalization(batch,gamma,beta,mean,variance,epsilon)
+
+def apply_normalization(batch,gamma, beta, moving_mean, moving_var, epsilon):
+    return gamma*(batch - moving_mean) / np.sqrt(moving_var+epsilon) + beta
+
+def merge_layers(conv2d_layer, bnorm_layer):
+    gamma, beta, mean, variance = bnorm_layer.get_weights()
+    epsilon = bnorm_layer.epsilon
+    weights = conv2d_layer.get_weights()[0]
+    biases = conv2d_layer.get_weights()[1]
+
+    stdev = np.sqrt(variance + epsilon)
+    new_weights = weights * gamma / stdev
+    new_biases = (gamma / stdev) * (biases - mean) + beta
+    return new_weights, new_biases

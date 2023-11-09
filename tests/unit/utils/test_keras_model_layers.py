@@ -146,11 +146,9 @@ class Test_Keras_Conv2d:
         nChannels = 1
         input_shape = (2,2,nChannels)
         # init_kernel = np.repeat(np.arange(1,5),nFilters).reshape(1,2,2,nFilters)
-        init_kernel = np.moveaxis(np.arange(1,13).reshape(1,nFilters,2,2),1,3)
-        init_filter = init_kernel
-        filters = np.arange(1,13).reshape(nFilters,2,2)
+        init_kernel = generate_keras_kernel(2,2,nFilters,nChannels)
         init_bias = np.zeros((nFilters,))
-        kernel_initializer = initializers.constant(np.flip(init_kernel,(0,1,2)))
+        kernel_initializer = initializers.constant(np.flip(init_kernel,(0,1)))
         bias_initializer = initializers.constant(init_bias)
         mode = "same"
         strides = (1,1)
@@ -174,24 +172,25 @@ class Test_Keras_Conv2d:
             for this reason, we can use number of kernels per filter interchangeably with the number of channels per filter. At the end of the day, the number of filters or number of channels is simply the depth of filter (or image).
 
         '''
-        nRows, nCols = 2, 2
+        image_height, image_width = 2, 2
+        kernel_height, kernel_width = 2, 2
         nFilters = 3
         nChannels = 2
-        input_shape = (nRows,nCols,nChannels)
-        init_kernel = generate_keras_kernel(nRows,nCols,nFilters,nChannels)
+        input_shape = (image_height,image_width,nChannels)
+        init_kernel = generate_keras_kernel(kernel_height,kernel_width,nFilters,nChannels)
         init_bias = np.zeros((nFilters,))
-        kernel_initializer = initializers.constant(np.flip(init_kernel,(0,1,2)))
+        kernel_initializer = initializers.constant(np.flip(init_kernel,(0,1)))
         bias_initializer = initializers.constant(init_bias)
         mode = "same"
         strides = (1,1)
 
         model = Sequential()
-        model.add(Conv2D(nFilters, (2, 2), strides=strides, padding=mode, activation=None, use_bias=True, input_shape=input_shape, name="one", kernel_initializer=kernel_initializer, bias_initializer=bias_initializer))
+        model.add(Conv2D(nFilters, (kernel_height, kernel_width), strides=strides, padding=mode, activation=None, use_bias=True, input_shape=input_shape, name="one", kernel_initializer=kernel_initializer, bias_initializer=bias_initializer))
 
         # feature_extractor = Model(inputs=model.inputs, outputs=model.get_layer(name="one").output)
         feature_extractor = Model(inputs=model.inputs, outputs=[layer.output for layer in model.layers])
         
-        mock_image = generate_mock_image(nRows,nCols,nChannels)
+        mock_image = generate_mock_image(image_height,image_width,nChannels)
         calculated = feature_extractor(mock_image)[0,:,:,:].numpy().tolist()
 
         # expected result
@@ -208,21 +207,22 @@ class Test_Keras_Conv2d:
             for this reason, we can use number of kernels per filter interchangeably with the number of channels per filter. At the end of the day, the number of filters or number of channels is simply the depth of filter (or image).
 
         '''
-        nRows, nCols = 2, 2
-        input_shape = (nRows,nCols,nChannels)
-        init_kernel = generate_keras_kernel(nRows,nCols,nFilters,nChannels)
+        image_height, image_width = 2, 2
+        kernel_height, kernel_width = 2, 2
+        input_shape = (image_height,image_width,nChannels)
+        init_kernel = generate_keras_kernel(kernel_height,kernel_width,nFilters,nChannels)
         init_bias = np.zeros((nFilters,))
-        kernel_initializer = initializers.constant(np.flip(init_kernel,(0,1,2)))
+        kernel_initializer = initializers.constant(np.flip(init_kernel,(0,1)))
         bias_initializer = initializers.constant(init_bias)
         mode = "same"
 
         model = Sequential()
-        model.add(Conv2D(nFilters, (2, 2), strides=strides, padding=mode, activation=None, use_bias=True, input_shape=input_shape, name="one", kernel_initializer=kernel_initializer, bias_initializer=bias_initializer))
+        model.add(Conv2D(nFilters, (kernel_height, kernel_width), strides=strides, padding=mode, activation=None, use_bias=True, input_shape=input_shape, name="one", kernel_initializer=kernel_initializer, bias_initializer=bias_initializer))
 
         # feature_extractor = Model(inputs=model.inputs, outputs=model.get_layer(name="one").output)
         feature_extractor = Model(inputs=model.inputs, outputs=[layer.output for layer in model.layers])
         
-        mock_image = generate_mock_image(nRows,nCols,nChannels)
+        mock_image = generate_mock_image(image_height,image_width,nChannels)
         calculated = feature_extractor(mock_image)[0,:,:,:].numpy().tolist()
 
         # expected result

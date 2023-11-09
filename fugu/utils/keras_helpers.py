@@ -1,4 +1,5 @@
 # isort: skip_file
+import logging
 import numpy as np
 
 from scipy.signal import convolve2d
@@ -35,15 +36,14 @@ def keras_convolve2d_4dinput(image,kernel,strides=(1,1),mode="same",data_format=
         conv2d_answer = np.zeros((height,width,filters))
         for filter in np.arange(filters):
             for channel in np.arange(nChannels):
-                id = np.ravel_multi_index((channel,filter),(nChannels,filters))
-                print(f"filter: {filter:2d}  channel: {channel:2d}  linearized index: {id:2d}")
-                conv2d_answer[:,:,filter] += keras_convolve2d(image[0,:,:,channel],kernel[0,:,:,id],strides,mode) # update zero index in first array position to handle batch_size
+                logging.debug(f"filter: {filter:2d}  channel: {channel:2d}")
+                conv2d_answer[:,:,filter] += keras_convolve2d(image[0,:,:,channel],kernel[:,:,channel,filter],strides,mode) # update zero index in first array position to handle batch_size
     elif data_format.lower() == "channels_first":
         conv2d_answer = np.zeros((filters,height,width))
         for filter in np.arange(filters):
             for channel in np.arange(nChannels):
-                id = np.ravel_multi_index((channel,filter),(nChannels,filters))
-                conv2d_answer[filter] += keras_convolve2d(image[0,channel,:,:],kernel[0,id,:,:],strides,mode) # update zero index in first array position to handle batch_size
+                logging.debug(f"filter: {filter:2d}  channel: {channel:2d}")
+                conv2d_answer[filter] += keras_convolve2d(image[0,channel,:,:],kernel[channel,filter,:,:],strides,mode) # update zero index in first array position to handle batch_size
 
     return conv2d_answer[::strides[0],::strides[1]]
 
@@ -67,7 +67,7 @@ def generate_keras_kernel(nRows,nCols,nFilters,nChannels):
         Returns a 4d tensor
     '''
     column_permutations = np.concatenate((np.arange(0,nFilters*nChannels,2),np.arange(1,nFilters*nChannels,2)))
-    return np.arange(1,nFilters*nChannels*nRows*nCols+1).reshape(nRows*nCols,nFilters*nChannels,order='F')[:,column_permutations].reshape(1,nRows,nCols,nFilters*nChannels)
+    return np.arange(1,nFilters*nChannels*nRows*nCols+1).reshape(nRows*nCols,nFilters*nChannels,order='F')[:,column_permutations].reshape(nRows,nCols,nChannels,nFilters)
 
 def generate_mock_image(nRows,nCols,nChannels):
     '''
@@ -76,3 +76,21 @@ def generate_mock_image(nRows,nCols,nChannels):
         Returns a 4d tensor
     '''
     return np.arange(1,nRows*nCols*nChannels+1).reshape(nRows*nCols,nChannels,order='F').reshape(1,nRows,nCols,nChannels)
+
+def keras_convolution2d_output_shape(image,kernel,strides,mode):
+    '''
+        Returns the output shape of a 2D convolution in Keras Conv2D layer.
+
+        Assumes the image and kernel arrays are matrices (i.e., rank-2 tensors).
+    '''
+    strided_answer = keras_convolve2d(image,kernel,strides,mode)
+    return strided_answer.shape
+
+def keras_convolution2d_output_shape_4dinput(image,kernel,strides,mode,nFilters,data_format="channels_last"):
+    '''
+        Returns the output shape of a 2D convolution in Keras Conv2D layer.
+
+        Assumes the image and kernel arrays are matrices (i.e., rank-2 tensors).
+    '''
+    strided_answer = keras_convolve2d_4dinput(image,kernel,strides=strides,mode=mode,data_format=data_format,filters=nFilters)
+    return strided_answer.shape
