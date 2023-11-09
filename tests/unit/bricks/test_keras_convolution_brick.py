@@ -242,13 +242,16 @@ class Test_KerasConvolution2D:
 
     @pytest.mark.parametrize("mode,strides,nSpikes,biases",
                              [
-                                 ("same",(1,1),0,None),("same",(1,1),0,0.),("same",(1,1),0,0.1),("same",(1,1),4,-0.1),
-                                 ("same",(1,2),0,0.1),("same",(1,2),2,-0.1),
-                                 ("same",(2,1),0,0.1),("same",(2,1),2,-0.1),
-                                 ("same",(2,2),0,0.1),("same",(2,2),1,-0.1),
-                                 ("valid",(1,1),0,0.1),("valid",(1,1),1,-0.1),
+                                 ("same",(1,1),4,None),("same",(1,1),4,0.),("same",(1,1),2,-17.),("same",(1,1),1,-20.),
+                                 ("same",(1,2),2,-19.),("same",(1,2),1,-23),
+                                 ("same",(2,1),0,-20.),("same",(2,1),2,-15.4),
+                                 ("same",(2,2),0,-20.),("same",(2,2),1,-19.),
+                                 ("valid",(1,1),0,-19.6),("valid",(1,1),1,-19),
                             ])
     def test_convolution_with_bias(self,mode,strides,nSpikes,biases):
+        '''
+            Convolution answer is [[20,16],[24,16]]
+        '''
         image_height, image_width = 2, 2
         kernel_height, kernel_width = 2, 2
         nChannels = 1
@@ -264,10 +267,35 @@ class Test_KerasConvolution2D:
         self.strides = strides
         self.biases = biases
 
-        thresholds = get_biased_thresholds(self.pvector,self.filters,self.strides,self.mode,self.biases)
+        output_shape = get_output_shape(self.pvector,self.filters,self.strides,self.mode)
+        thresholds = 0.5*np.ones(output_shape)
         result = self.run_convolution_2d(thresholds)
 
         assert self.expected_spikes(nSpikes) == self.calculated_spikes(thresholds,result)
+
+    def test_exlicit_convolution_with_bias(self):
+        '''
+        mode="full" 2D convolution result is [[1,4,4],[6,20,16],[9,24,16]].
+
+        Keras 2d convolution brick does only supports mode="same" or mode="valid". The
+        "same" result should return [[20,16],[24,16]], where padding is applied only to
+        the bottom and right image data; padding is NOT appended to the left and top image positions.
+        '''
+        self.mode = "same"
+        self.basep = 3 #basep
+        self.bits = 3 #bits
+        self.pvector = [[1, 2], [3, 4]]
+        self.filters = [[1, 2], [3, 4]]
+        self.pshape = np.array(self.pvector).shape
+        self.filters_shape = np.array(self.filters).shape
+        self.biases = -20.0
+
+        # manually set strides, thresholds, and expected values
+        self.strides = (1,1) # answer is [[20,16],[24,16]]
+        thresholds = np.array([[0.5,0.5],[0.5,0.5]])
+        expected_spikes = [1]
+        result = self.run_convolution_2d(thresholds)
+        assert expected_spikes == self.calculated_spikes(thresholds,result)
 
     @pytest.mark.xfail(reason="Not implemented.")
     def test_handling_of_4d_tensor_input(self):
@@ -413,3 +441,9 @@ def get_biased_thresholds(image,kernel,strides,mode,biases):
 
     biased_thresholds = strided_answer + biases if biases is not None else strided_answer
     return biased_thresholds
+
+def get_output_shape(image,kernel,strides,mode):
+    # image = self.pvector
+    # kernel = self.filters
+    strided_answer = keras_convolve2d(image,kernel,strides,mode)
+    return strided_answer.shape
