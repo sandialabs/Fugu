@@ -273,7 +273,7 @@ class Test_KerasConvolution2D:
 
         assert self.expected_spikes(nSpikes) == self.calculated_spikes(thresholds,result)
 
-    def test_exlicit_convolution_with_bias(self):
+    def test_explicit_convolution_with_bias(self):
         '''
         mode="full" 2D convolution result is [[1,4,4],[6,20,16],[9,24,16]].
 
@@ -468,7 +468,7 @@ class Test_KerasConvolution2D_4dinput:
         self.nFilters = nFilters
 
     @pytest.mark.parametrize("nSpikes,bias",[(0,-63),(1,-62),(2,-58)])
-    def test_exlicit_simple_convolution_with_bias(self,nSpikes,bias):
+    def test_explicit_simple_convolution_with_bias(self,nSpikes,bias):
         '''
             Convolution answer is
                   [[23., 33., 24.],
@@ -495,7 +495,7 @@ class Test_KerasConvolution2D_4dinput:
         assert self.expected_spikes(nSpikes) == self.calculated_spikes(thresholds,result)
 
     @pytest.mark.parametrize("nSpikes,biases",[(3,[-471, -1207, -1943]),(4,[-471, -1107, -1943]),(0,[-472, -1208, -1944])])
-    def test_exlicit_convolution_with_bias(self,nSpikes,biases):
+    def test_explicit_convolution_with_bias(self,nSpikes,biases):
         '''
             Given image and kernel provided in setup_method, the convolution ("same") answer is
                         Filter 1 Out            Filter 2 Out            Filter 3 Out
