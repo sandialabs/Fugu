@@ -32,6 +32,9 @@ def keras_convolve2d_4dinput(image,kernel,strides=(1,1),mode="same",data_format=
     else:
         raise ValueError("Unknown 'data_format' passed to 'keras_convolve2d_4dinput.")
 
+    if mode.lower() == "valid":
+        height, width = keras_convolution2d_output_shape(image[0,:,:,0],kernel[:,:,0,0],strides,mode)
+        
     if data_format.lower() == "channels_last":
         conv2d_answer = np.zeros((height,width,filters))
         for filter in np.arange(filters):
