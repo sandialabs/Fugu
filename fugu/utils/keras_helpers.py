@@ -32,23 +32,22 @@ def keras_convolve2d_4dinput(image,kernel,strides=(1,1),mode="same",data_format=
     else:
         raise ValueError("Unknown 'data_format' passed to 'keras_convolve2d_4dinput.")
 
-    if mode.lower() == "valid":
-        height, width = keras_convolution2d_output_shape(image[0,:,:,0],kernel[:,:,0,0],strides,mode)
-        
+    output_height, output_width = keras_convolution2d_output_shape(image[0,:,:,0],kernel[:,:,0,0],strides,mode)
+
     if data_format.lower() == "channels_last":
-        conv2d_answer = np.zeros((height,width,filters))
+        conv2d_answer = np.zeros((output_height,output_width,filters))
         for filter in np.arange(filters):
             for channel in np.arange(nChannels):
                 logging.debug(f"filter: {filter:2d}  channel: {channel:2d}")
                 conv2d_answer[:,:,filter] += keras_convolve2d(image[0,:,:,channel],kernel[:,:,channel,filter],strides,mode) # update zero index in first array position to handle batch_size
     elif data_format.lower() == "channels_first":
-        conv2d_answer = np.zeros((filters,height,width))
+        conv2d_answer = np.zeros((filters,output_height,output_width))
         for filter in np.arange(filters):
             for channel in np.arange(nChannels):
                 logging.debug(f"filter: {filter:2d}  channel: {channel:2d}")
                 conv2d_answer[filter] += keras_convolve2d(image[0,channel,:,:],kernel[channel,filter,:,:],strides,mode) # update zero index in first array position to handle batch_size
 
-    return conv2d_answer[::strides[0],::strides[1]]
+    return conv2d_answer
 
 def generate_keras_kernel(nRows,nCols,nFilters,nChannels):
     '''
