@@ -495,7 +495,7 @@ class Test_KerasConvolution2D_4dinput:
         assert self.expected_spikes(nSpikes) == self.calculated_spikes(thresholds,result)
 
     @pytest.mark.parametrize("nSpikes,biases",[(3,[-471, -1207, -1943]),(4,[-471, -1107, -1943]),(0,[-472, -1208, -1944])])
-    def test_explicit_convolution_with_bias(self,nSpikes,biases):
+    def test_explicit_same_convolution_with_bias(self,nSpikes,biases):
         '''
             Given image and kernel provided in setup_method, the convolution ("same") answer is
                         Filter 1 Out            Filter 2 Out            Filter 3 Out
@@ -503,6 +503,58 @@ class Test_KerasConvolution2D_4dinput:
                    [ 436.,  472.,  270.],  [1108., 1208.,  654.],  [1780., 1944., 1038.], 
                    [ 299.,  321.,  180.]], [ 683.,  737.,  396.]], [1067., 1153.,  612.]])
         '''
+        # TODO: Test different stride values
+        self.biases = np.array(biases) # leads to 1 spike per filter output
+        output_shape = keras_convolution2d_output_shape_4dinput(self.pvector,self.filters,self.strides,self.mode,self.nFilters)
+        thresholds = 0.5*np.ones(output_shape).reshape(1,*output_shape)
+        keras_convolution_answer = keras_convolve2d_4dinput(self.pvector,self.filters,strides=self.strides,mode=self.mode,filters=self.nFilters)
+        result = self.run_convolution_2d(thresholds)
+        assert self.expected_spikes(nSpikes) == self.calculated_spikes(thresholds,result)
+
+    @pytest.mark.parametrize("nSpikes,biases,strides",[(16,[-320, -682, -1152],(1,2)),(13,[-298, -682, -1037],(2,1)),(0,[-472, -1208, -1944],(1,2)),(3,[-436, -1108, -1780],(2,1)),(0,[-471, -1207, -1943],(2,2))])
+    def test_explicit_same_convolution_with_bias_and_strides(self,nSpikes,biases,strides):
+        '''
+            Given image and kernel provided in setup_method, the convolution ("same") answer is
+                        Filter 1 Out            Filter 2 Out            Filter 3 Out
+                  [[ 328.,  364.,  210.], [[ 808.,  908.,  498.], [[1288., 1452.,  786.],
+                   [ 436.,  472.,  270.],  [1108., 1208.,  654.],  [1780., 1944., 1038.],
+                   [ 299.,  321.,  180.]], [ 683.,  737.,  396.]], [1067., 1153.,  612.]])
+        '''
+        # TODO: Test different stride values
+        self.strides = strides
+        self.biases = np.array(biases) # leads to 1 spike per filter output
+        output_shape = keras_convolution2d_output_shape_4dinput(self.pvector,self.filters,self.strides,self.mode,self.nFilters)
+        thresholds = 0.5*np.ones(output_shape).reshape(1,*output_shape)
+        keras_convolution_answer = keras_convolve2d_4dinput(self.pvector,self.filters,strides=self.strides,mode=self.mode,filters=self.nFilters)
+        result = self.run_convolution_2d(thresholds)
+        assert self.expected_spikes(nSpikes) == self.calculated_spikes(thresholds,result)
+
+    @pytest.mark.parametrize("nSpikes,biases",[(3,[-471, -1207, -1943]),(4,[-471, -1107, -1943]),(0,[-472, -1208, -1944]),(2,[-435, -1208, -1944]),(3,[-472, -907, -1944]),(2,[-472, -1208, -1779])])
+    def test_explicit_valid_convolution_with_bias(self,nSpikes,biases):
+        '''
+            Given image and kernel provided in setup_method, the convolution ("valid") answer is
+                        Filter 1 Out            Filter 2 Out            Filter 3 Out
+                  [[ 328.,  364.],        [[ 808.,  908.],        [[1288., 1452.],
+                   [ 436.,  472.]],        [1108., 1208.]],        [1780., 1944.]])
+        '''
+        self.mode = "valid"
+        self.biases = np.array(biases) # leads to 1 spike per filter output
+        output_shape = keras_convolution2d_output_shape_4dinput(self.pvector,self.filters,self.strides,self.mode,self.nFilters)
+        thresholds = 0.5*np.ones(output_shape).reshape(1,*output_shape)
+        keras_convolution_answer = keras_convolve2d_4dinput(self.pvector,self.filters,strides=self.strides,mode=self.mode,filters=self.nFilters)
+        result = self.run_convolution_2d(thresholds)
+        assert self.expected_spikes(nSpikes) == self.calculated_spikes(thresholds,result)
+
+    @pytest.mark.parametrize("nSpikes,biases,strides",[(3,[-363, -907, -1451],(1,2)),(6,[-327, -807, -1287],(2,1)),(2,[-327, -808, -1287],(2,2))])
+    def test_explicit_valid_convolution_with_bias_and_strides(self,nSpikes,biases,strides):
+        '''
+            Given image and kernel provided in setup_method, the convolution ("valid") answer is
+                        Filter 1 Out            Filter 2 Out            Filter 3 Out
+                  [[ 328.,  364.],        [[ 808.,  908.],        [[1288., 1452.],
+                   [ 436.,  472.]],        [1108., 1208.]],        [1780., 1944.]])
+        '''
+        self.mode = "valid"
+        self.strides = strides
         self.biases = np.array(biases) # leads to 1 spike per filter output
         output_shape = keras_convolution2d_output_shape_4dinput(self.pvector,self.filters,self.strides,self.mode,self.nFilters)
         thresholds = 0.5*np.ones(output_shape).reshape(1,*output_shape)
