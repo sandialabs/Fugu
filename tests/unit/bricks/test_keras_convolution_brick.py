@@ -511,7 +511,7 @@ class Test_KerasConvolution2D_4dinput:
         result = self.run_convolution_2d(thresholds)
         assert self.expected_spikes(nSpikes) == self.calculated_spikes(thresholds,result)
 
-    @pytest.mark.parametrize("nSpikes,biases,strides",[(16,[-320, -682, -1152],(1,2)),(13,[-298, -682, -1037],(2,1)),(0,[-472, -1208, -1944],(1,2)),(3,[-436, -1108, -1780],(2,1)),(0,[-471, -1207, -1943],(2,2))])
+    @pytest.mark.parametrize("nSpikes,biases,strides",[(16,[-320, -682, -1152],(1,2)),(13,[-298, -682, -1037],(2,1)),(0,[-472, -1208, -1944],(1,2)),(3,[-436, -1108, -1780],(2,1)),(0,[-179, -1208, -1944],(2,2))])
     def test_explicit_same_convolution_with_bias_and_strides(self,nSpikes,biases,strides):
         '''
             Given image and kernel provided in setup_method, the convolution ("same") answer is
