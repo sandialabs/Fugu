@@ -177,6 +177,12 @@ class Test_KerasConvolution2D:
         result = self.run_convolution_2d(thresholds)
         assert expected_spikes == self.calculated_spikes(thresholds,result)
 
+        self.strides = (2,2) # answer is [[23,24],[52,36]]
+        thresholds = np.array([[23,23.9],[51.9,36]])
+        expected_spikes = [1, 1]
+        result = self.run_convolution_2d(thresholds)
+        assert expected_spikes == self.calculated_spikes(thresholds,result)
+
     def test_explicit_valid_mode_with_strides(self):
         '''
         image=[[1,2,3],[4,5,6],[7,8,9]]
@@ -511,7 +517,68 @@ class Test_KerasConvolution2D_4dinput:
         result = self.run_convolution_2d(thresholds)
         assert self.expected_spikes(nSpikes) == self.calculated_spikes(thresholds,result)
 
-    @pytest.mark.parametrize("nSpikes,biases,strides",[(16,[-320, -682, -1152],(1,2)),(13,[-298, -682, -1037],(2,1)),(0,[-472, -1208, -1944],(1,2)),(3,[-436, -1108, -1780],(2,1)),(0,[-179, -1208, -1944],(2,2))])
+    def test_explicit_3x3_simple_troubleshoot(self):
+        '''
+            Convolution answer is
+                  [[23., 33., 24.],
+                   [53., 63., 42.],
+                   [52., 59., 36.]]
+        '''
+        image_height, image_width = 3, 3
+        kernel_height, kernel_width = 2, 2
+        nChannels = 1
+        nFilters = 1
+        nSpikes = 1
+        biases = -62.0
+
+        self.basep = 3
+        self.bits = 3
+        self.pvector = generate_mock_image(image_height,image_width,nChannels)
+        self.filters = generate_keras_kernel(kernel_height,kernel_width,nFilters,nChannels)
+        self.pshape = np.array(self.pvector).shape
+        self.filters_shape = np.array(self.filters).shape
+        self.nChannels = nChannels
+        self.nFilters = nFilters
+        self.biases = np.array([biases])
+
+        output_shape = keras_convolution2d_output_shape_4dinput(self.pvector,self.filters,self.strides,self.mode,self.nFilters)
+        thresholds = 0.5*np.ones(output_shape).reshape(1,*output_shape)
+        keras_convolution_answer = keras_convolve2d_4dinput(self.pvector,self.filters,strides=self.strides,mode=self.mode,filters=self.nFilters)
+        result = self.run_convolution_2d(thresholds)
+        assert self.expected_spikes(nSpikes) == self.calculated_spikes(thresholds,result)
+        assert False
+
+    def test_explicit_2x2_simple_troubleshoot(self):
+        '''
+            Convolution answer is
+                [[20., 16.],
+                 [24., 16.]]
+        '''
+        image_height, image_width = 2, 2
+        kernel_height, kernel_width = 2, 2
+        nChannels = 1
+        nFilters = 1
+        nSpikes = 1
+        biases = -23.0
+
+        self.basep = 3
+        self.bits = 3
+        self.pvector = generate_mock_image(image_height,image_width,nChannels)
+        self.filters = generate_keras_kernel(kernel_height,kernel_width,nFilters,nChannels)
+        self.pshape = np.array(self.pvector).shape
+        self.filters_shape = np.array(self.filters).shape
+        self.nChannels = nChannels
+        self.nFilters = nFilters
+        self.biases = np.array([biases])
+
+        output_shape = keras_convolution2d_output_shape_4dinput(self.pvector,self.filters,self.strides,self.mode,self.nFilters)
+        thresholds = 0.5*np.ones(output_shape).reshape(1,*output_shape)
+        keras_convolution_answer = keras_convolve2d_4dinput(self.pvector,self.filters,strides=self.strides,mode=self.mode,filters=self.nFilters)
+        result = self.run_convolution_2d(thresholds)
+        assert self.expected_spikes(nSpikes) == self.calculated_spikes(thresholds,result)
+        assert False
+
+    @pytest.mark.parametrize("nSpikes,biases,strides",[(16,[-320, -682, -1152],(1,2)),(13,[-298, -682, -1037],(2,1)),(0,[-472, -1208, -1944],(1,2)),(3,[-436, -1108, -1780],(2,1)),(0,[-328, -1208, -1944],(2,2))])
     def test_explicit_same_convolution_with_bias_and_strides(self,nSpikes,biases,strides):
         '''
             Given image and kernel provided in setup_method, the convolution ("same") answer is

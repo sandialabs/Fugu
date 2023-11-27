@@ -328,7 +328,7 @@ class keras_convolution_2d_4dinput(Brick):
 
                     cnt += 1
                     graph.add_edge(I[k], f'{self.name}g{i}{j}{filter}', weight=coeff_i * self.basep**pwr * self.filters[ix,jx,channel,filter], delay=1)
-                    logging.debug(f'{cnt}     coeff_i: {coeff_i}    power: {pwr}    input: {k}      output: {i}{j}{filter}     filter: {self.filters[ix,jx,channel,filter]}     I(row,col,Ck): {np.unravel_index(k,(Am,An,self.nChannels,self.bits*self.basep))}     I[index]: {graph.nodes[I[k]]["index"]}')
+                    print(f'{cnt}     coeff_i: {coeff_i}    power: {pwr}    input: {k}      output: {i}{j}{filter}     filter: {self.filters[ix,jx,channel,filter]}     I(row,col,Ck): {np.unravel_index(k,(Am,An,self.nChannels,self.bits*self.basep))}     I[index]: {graph.nodes[I[k]]["index"]}')
 
         # for filter in np.arange(self.nFilters):
         #     for channel in np.arange(self.nChannels):
@@ -369,6 +369,20 @@ class keras_convolution_2d_4dinput(Brick):
                     if (j >= bnds[0, 1]) and (j <= bnds[1, 1]):
                         neuron_indices.append((i, j))
 
+        return neuron_indices
+
+    def get_output_neurons_alt(self,row,col,Bm,Bn):
+        neuron_indices = []
+        Sm, Sn = self.strides
+
+        for i in np.arange(row - Bm, row):
+
+            if i+1 < 0 or np.mod(i+1, Sm) != 0:
+                continue
+            for j in np.arange(col - Bn, col):
+                if j+1 < 0 or np.mod(j+1, Sn) != 0:
+                    continue
+                neuron_indices.append((i+1,j+1))
         return neuron_indices
 
     def get_output_bounds(self):
