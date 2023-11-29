@@ -183,6 +183,39 @@ class Test_KerasConvolution2D:
         result = self.run_convolution_2d(thresholds)
         assert expected_spikes == self.calculated_spikes(thresholds,result)
 
+    def test_2x2_image_same_mode_with_strides(self):
+        self.basep = 3
+        self.bits = 3
+        self.pvector = [[1 ,2] ,[3, 4]]
+        self.pshape = np.array(self.pvector).shape
+        self.filters = [[1, 2], [3, 4]]
+        self.filters_shape = np.array(self.filters).shape
+
+        # manually set strides, thresholds, and expected values
+        self.strides = (1,1) # answer is [[20,16],[24,16]]
+        thresholds = np.array([[20,15.9],[24,15.9]])
+        expected_spikes = [1, 1]
+        result = self.run_convolution_2d(thresholds)
+        assert expected_spikes == self.calculated_spikes(thresholds,result)
+
+        self.strides = (1,1) # answer is [[20],[24]]
+        thresholds = np.array([[19.9],[23.9]])
+        expected_spikes = [1, 1]
+        result = self.run_convolution_2d(thresholds)
+        assert expected_spikes == self.calculated_spikes(thresholds,result)
+
+        self.strides = (2,1) # answer is [[20,16]]
+        thresholds = np.array([[20,15.9]])
+        expected_spikes = [1]
+        result = self.run_convolution_2d(thresholds)
+        assert expected_spikes == self.calculated_spikes(thresholds,result)
+
+        self.strides = (2,2) # answer is [[20]]
+        thresholds = np.array([[19.9]])
+        expected_spikes = [1]
+        result = self.run_convolution_2d(thresholds)
+        assert expected_spikes == self.calculated_spikes(thresholds,result)
+
     def test_explicit_valid_mode_with_strides(self):
         '''
         image=[[1,2,3],[4,5,6],[7,8,9]]
