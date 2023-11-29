@@ -185,11 +185,12 @@ class Test_KerasConvolution2D:
 
     def test_2x2_image_same_mode_with_strides(self):
         self.basep = 3
-        self.bits = 3
+        self.bits = 2
         self.pvector = [[1 ,2] ,[3, 4]]
         self.pshape = np.array(self.pvector).shape
         self.filters = [[1, 2], [3, 4]]
         self.filters_shape = np.array(self.filters).shape
+        self.biases = 0.0
 
         # manually set strides, thresholds, and expected values
         self.strides = (1,1) # answer is [[20,16],[24,16]]

@@ -80,7 +80,7 @@ class keras_convolution_2d(Brick):
         begin_node = new_begin_node_name
 
         # determine output neuron bounds based on the "mode"
-        self.get_output_bounds()
+        self.get_output_bounds_alt()
 
         # Check for scalar value for thresholds
         if not hasattr(self.thresholds, '__len__') and (not isinstance(self.thresholds, str)):
@@ -108,7 +108,7 @@ class keras_convolution_2d(Brick):
                 for j in np.arange(self.bnds[0,1],self.bnds[1,1] + 1):
                     graph.add_edge(f'{self.name}b',f'{self.name}g{i}{j}', weight=self.biases, delay=1)
 
-        self.connect_input_and_output_neurons(input_lists,graph)
+        self.connect_input_and_output_neurons_alt(input_lists,graph)
 
         self.is_built=True
 
@@ -144,6 +144,41 @@ class keras_convolution_2d(Brick):
                 cnt += 1
                 graph.add_edge(I[k], f'{self.name}g{i}{j}', weight=coeff_i * self.basep**pwr * self.filters[ix][jx], delay=1)
                 logging.debug(f'{cnt}     coeff_i: {coeff_i}    power: {pwr}    input: {k}      output: {i}{j}     filter: {self.filters[ix][jx]}     I(row,col,Ck): {np.unravel_index(k,(Am,An,self.bits*self.basep))}     I[index]: {graph.nodes[I[k]]["index"]}')
+
+    def connect_input_and_output_neurons_alt(self,input_lists,graph):
+        # Get size/shape information from input arrays
+        Am, An = self.pshape
+        Bm, Bn = self.filters.shape
+
+        num_input_neurons = len(input_lists[0])
+
+        # Collect Inputs
+        I = input_lists[0]
+
+        # Construct edges connecting input and output nodes
+        pwr = -1
+        cnt = -1
+        print("")
+        for k in np.arange(num_input_neurons):  # loop over input neurons
+            coeff_i = np.mod(k, self.basep)
+            if coeff_i == 0:
+                pwr = pwr + 1
+                if np.mod(pwr, self.bits) == 0:
+                    pwr = 0
+                continue
+
+            # loop over output neurons
+            row, col, pwr2, Ck = np.unravel_index(k, (Am, An, self.bits, self.basep))
+            if Ck == 0:
+                continue
+
+            for i, j in self.get_output_neurons_alt(row, col, Bm, Bn):
+                ix = i - row
+                jx = j - col
+
+                cnt += 1
+                graph.add_edge(I[k], f'{self.name}g{i}{j}', weight=Ck * self.basep**pwr2 * self.filters[ix][jx], delay=1)
+                print(f'{cnt:3d}  A[m,n]: ({row:2d},{col:2d})   coeff_i: {Ck}    power: {pwr2}    input: {k:3d}      output: {i}{j}   B[m,n]: ({ix:2d},{jx:2d})   filter: {self.filters[ix][jx]}     I(row,col,bit-pwr,basep-coeff): {np.unravel_index(k,(Am,An,self.bits,self.basep))}     I[index]: {graph.nodes[I[k]]["index"]}')
 
     def get_output_neurons(self,row,col,Bm,Bn):
         neuron_indices = []
@@ -215,6 +250,11 @@ class keras_convolution_2d(Brick):
         p = 0.5 if self.mode == "same" else 0
         output_shape = np.floor((input_shape + 2*p - kernel_shape)/strides_shape + 1).astype(int)
         self.output_shape = tuple(output_shape)
+
+def debug_input_index(input_lists, Am, An, basep, bits):
+    for k in np.arange(len(input_lists[0])):
+        row, col, pwr, Ck = np.unravel_index(k, (Am, An, bits, basep))
+        print(f"{k:3d}  {np.mod(k,basep*bits):2d}  ({row},{col}) {Ck:2d}  {pwr:2d}")
 
 def input_index_to_matrix_entry(input_shape,basep,bits,index):
     Am, An = input_shape
