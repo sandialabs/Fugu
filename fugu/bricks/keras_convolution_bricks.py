@@ -89,13 +89,31 @@ class keras_convolution_2d(Brick):
             if self.thresholds.shape != self.output_shape:
                 raise ValueError(f"Threshold shape {self.thresholds.shape} does not equal the output neuron shape {self.output_shape}.")
 
+        # # output neurons/nodes
+        # output_lists = [[]]
+        # for i in np.arange(self.bnds[0,0],self.bnds[1,0] + 1):
+        #     ix = i - self.bnds[0,0]
+        #     for j in np.arange(self.bnds[0,1],self.bnds[1,1] + 1):
+        #         jx = j - self.bnds[0,1]
+        #         graph.add_node(f'{self.name}g{i}{j}', index=(ix,jx), threshold=self.thresholds[ix][jx], decay=1.0, p=1.0, potential=0.0)
+        #         output_lists[0].append(f'{self.name}g{i}{j}')
+
+        # # Biases for convolution
+        # if self.biases is not None:
+        #     # biases neurons/nodes; one node per kernel/channel in filter
+        #     graph.add_node(f'{self.name}b', index=(99,0), threshold=-1.0, decay=1.0, p=1.0, potential=0.0)
+
+        #     # Construct edges connecting biases node(s) to output nodes
+        #     for i in np.arange(self.bnds[0,0],self.bnds[1,0] + 1):
+        #         for j in np.arange(self.bnds[0,1],self.bnds[1,1] + 1):
+        #             graph.add_edge(f'{self.name}b',f'{self.name}g{i}{j}', weight=self.biases, delay=1)
+
         # output neurons/nodes
         output_lists = [[]]
-        for i in np.arange(self.bnds[0,0],self.bnds[1,0] + 1):
-            ix = i - self.bnds[0,0]
-            for j in np.arange(self.bnds[0,1],self.bnds[1,1] + 1):
-                jx = j - self.bnds[0,1]
-                graph.add_node(f'{self.name}g{i}{j}', index=(ix,jx), threshold=self.thresholds[ix][jx], decay=1.0, p=1.0, potential=0.0)
+        # TODO: Fixed non-continuous memory strides. This will result in poor performance.
+        for ix, i in enumerate(np.arange(self.bnds[0,0],self.bnds[1,0] + 1,self.strides[0])):
+            for jx, j in enumerate(np.arange(self.bnds[0,1],self.bnds[1,1] + 1,self.strides[1])):
+                graph.add_node(f'{self.name}g{i}{j}', index=(ix,jx), threshold=self.thresholds[ix,jx], decay=1.0, p=1.0, potential=0.0)
                 output_lists[0].append(f'{self.name}g{i}{j}')
 
         # Biases for convolution
@@ -104,8 +122,8 @@ class keras_convolution_2d(Brick):
             graph.add_node(f'{self.name}b', index=(99,0), threshold=-1.0, decay=1.0, p=1.0, potential=0.0)
 
             # Construct edges connecting biases node(s) to output nodes
-            for i in np.arange(self.bnds[0,0],self.bnds[1,0] + 1):
-                for j in np.arange(self.bnds[0,1],self.bnds[1,1] + 1):
+            for i in np.arange(self.bnds[0,0],self.bnds[1,0] + 1,self.strides[0]):
+                for j in np.arange(self.bnds[0,1],self.bnds[1,1] + 1,self.strides[1]):
                     graph.add_edge(f'{self.name}b',f'{self.name}g{i}{j}', weight=self.biases, delay=1)
 
         self.connect_input_and_output_neurons_alt(input_lists,graph)
@@ -175,6 +193,8 @@ class keras_convolution_2d(Brick):
             for i, j in self.get_output_neurons_alt(row, col, Bm, Bn):
                 ix = i - row
                 jx = j - col
+                # ix = (Bm - 1) - i
+                # jx = (Bn - 1) - j
 
                 cnt += 1
                 graph.add_edge(I[k], f'{self.name}g{i}{j}', weight=Ck * self.basep**pwr2 * self.filters[ix][jx], delay=1)

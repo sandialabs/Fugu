@@ -193,27 +193,47 @@ class Test_KerasConvolution2D:
         self.biases = 0.0
 
         # manually set strides, thresholds, and expected values
-        self.strides = (1,1) # answer is [[20,16],[24,16]]
-        thresholds = np.array([[20,15.9],[24,15.9]])
-        expected_spikes = [1, 1]
+        self.strides = (1,1) # answer is [[20,16],[24,16]]; [[30, 14],[11,4]]
+        # thresholds = np.array([[20,15.9],[24,15.9]])
+        thresholds = np.array([[29.9,13.9],[10.9,3.9]])
+        expected_spikes = [1, 1, 1, 1]
         result = self.run_convolution_2d(thresholds)
         assert expected_spikes == self.calculated_spikes(thresholds,result)
 
-        self.strides = (1,1) # answer is [[20],[24]]
-        thresholds = np.array([[19.9],[23.9]])
+        self.strides = (1,2) # answer is [[20],[24]]
+        # thresholds = np.array([[19.9],[23.9]])
+        thresholds = np.array([[29.9],[10.9]])
         expected_spikes = [1, 1]
         result = self.run_convolution_2d(thresholds)
         assert expected_spikes == self.calculated_spikes(thresholds,result)
 
         self.strides = (2,1) # answer is [[20,16]]
-        thresholds = np.array([[20,15.9]])
+        # thresholds = np.array([[20,15.9]])
+        thresholds = np.array([[30,13.9]])
         expected_spikes = [1]
         result = self.run_convolution_2d(thresholds)
         assert expected_spikes == self.calculated_spikes(thresholds,result)
 
         self.strides = (2,2) # answer is [[20]]
-        thresholds = np.array([[19.9]])
+        # thresholds = np.array([[19.9]])
+        thresholds = np.array([[29.9]])
         expected_spikes = [1]
+        result = self.run_convolution_2d(thresholds)
+        assert expected_spikes == self.calculated_spikes(thresholds,result)
+
+    def test_2x2_image_same_mode_with_strides_12(self):
+        self.basep = 3
+        self.bits = 2
+        self.pvector = [[1 ,2] ,[3, 4]]
+        self.pshape = np.array(self.pvector).shape
+        self.filters = [[1, 2], [3, 4]]
+        self.filters_shape = np.array(self.filters).shape
+        self.biases = 0.0
+
+        self.strides = (1,2) # answer is [[20],[24]]
+        # thresholds = np.array([[19.9],[23.9]])
+        thresholds = np.array([[29.9],[10.9]])
+        expected_spikes = [1, 1]
         result = self.run_convolution_2d(thresholds)
         assert expected_spikes == self.calculated_spikes(thresholds,result)
 
