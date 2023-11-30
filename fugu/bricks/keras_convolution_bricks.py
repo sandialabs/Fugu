@@ -22,7 +22,7 @@ class keras_convolution_2d(Brick):
         self.name = name
         self.supported_codings = ['binary-L']
         self.pshape = input_shape
-        self.filters = np.array(filters)
+        self.filters = np.flip(np.array(filters))
         self.thresholds = thresholds
         self.basep = basep
         self.bits = bits
@@ -109,6 +109,17 @@ class keras_convolution_2d(Brick):
         #             graph.add_edge(f'{self.name}b',f'{self.name}g{i}{j}', weight=self.biases, delay=1)
 
         # output neurons/nodes
+        output_lists = self.create_output_neurons(graph)
+
+        self.create_biases_nodes_and_synapses(graph)
+        self.connect_input_and_output_neurons_alt(input_lists,graph)
+
+        self.is_built=True
+
+        return (graph, self.metadata, [{'complete': complete_node, 'begin': begin_node}], output_lists, output_codings)
+
+    def create_output_neurons(self,graph):
+        # output neurons/nodes
         output_lists = [[]]
         # TODO: Fixed non-continuous memory strides. This will result in poor performance.
         for ix, i in enumerate(np.arange(self.bnds[0,0],self.bnds[1,0] + 1,self.strides[0])):
@@ -116,6 +127,9 @@ class keras_convolution_2d(Brick):
                 graph.add_node(f'{self.name}g{i}{j}', index=(ix,jx), threshold=self.thresholds[ix,jx], decay=1.0, p=1.0, potential=0.0)
                 output_lists[0].append(f'{self.name}g{i}{j}')
 
+        return output_lists
+
+    def create_biases_nodes_and_synapses(self,graph):
         # Biases for convolution
         if self.biases is not None:
             # biases neurons/nodes; one node per kernel/channel in filter
@@ -125,12 +139,6 @@ class keras_convolution_2d(Brick):
             for i in np.arange(self.bnds[0,0],self.bnds[1,0] + 1,self.strides[0]):
                 for j in np.arange(self.bnds[0,1],self.bnds[1,1] + 1,self.strides[1]):
                     graph.add_edge(f'{self.name}b',f'{self.name}g{i}{j}', weight=self.biases, delay=1)
-
-        self.connect_input_and_output_neurons_alt(input_lists,graph)
-
-        self.is_built=True
-
-        return (graph, self.metadata, [{'complete': complete_node, 'begin': begin_node}], output_lists, output_codings)
 
     def connect_input_and_output_neurons(self,input_lists,graph):
         # Get size/shape information from input arrays
