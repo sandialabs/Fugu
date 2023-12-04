@@ -350,6 +350,40 @@ class Test_Convolution2D:
         calculated_spikes = list(result[output_mask].to_numpy()[:, 0])
         assert expected_spikes == calculated_spikes
 
+    @pytest.mark.parametrize("nSpikes", [0, 1, 2, 3, 4])
+    def test_same_mode_2x2(self, nSpikes):
+        self.mode = "same"
+        self.basep = 3
+        self.bits = 2
+        self.pvector = [[1, 2], [3, 4]]
+        self.filters = [[1, 2], [3, 4]]
+        self.pshape = np.array(self.pvector).shape
+        self.filters_shape = np.array(self.filters).shape
+        # nSpikes = 0
+        subt = np.zeros(4)
+        subt[:nSpikes] = 0.1
+        subt = np.reshape(subt, (2, 2))
+        thresholds = (
+            np.array([[1, 4], [6, 20]]) - subt
+        )  # 2d convolution answer is [[1,4],[6,20]]. Spikes fire when less than threshold. Thus subtract 0.1 so that spikes fire
+
+        result = self.run_convolution_2d(thresholds)
+
+        # get output positions in result
+        output_positions = self.output_spike_positions(
+            self.basep, self.bits, self.pvector, self.filters, thresholds
+        )
+        output_mask = self.output_mask(output_positions, result)
+
+        # Check calculations
+        if nSpikes == 0:
+            expected_spikes = list(np.array([]))
+        else:
+            expected_spikes = list(np.ones((nSpikes,)))
+
+        calculated_spikes = list(result[output_mask].to_numpy()[:, 0])
+        assert expected_spikes == calculated_spikes
+
     @pytest.mark.parametrize("mode", ["full", "valid", "same"])
     def test_thresholds_shape(self, mode):
         self.mode = mode

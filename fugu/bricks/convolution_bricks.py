@@ -92,16 +92,12 @@ class convolution_1d(Brick):
         I = input_lists[0]
                
         # Construct edges connecting input and output nodes
-        pwr = -1
         for i in np.arange(num_input_neurons):  # loop over input neurons
-            coeff_i = np.mod(i, self.basep)
+
+            row, pwr, coeff_i = np.unravel_index(i, (input_length, self.bits, self.basep))
             if coeff_i == 0:
-                pwr = pwr + 1
-                if np.mod(pwr, self.bits) == 0:
-                    pwr = 0
                 continue
 
-            row = np.unravel_index(i, (input_length, self.bits * self.basep))[0]
             for j in self.get_output_neurons(row, filter_length):  # loop over output neurons
                 ix = j - row
                 graph.add_edge(I[i], f'{self.name}g{j}', weight=coeff_i * self.basep**pwr * self.filters[ix], delay=1)
@@ -240,25 +236,22 @@ class convolution_2d(Brick):
         I = input_lists[0]
                
         # Construct edges connecting input and output nodes
-        pwr = -1
         cnt = -1
         for k in np.arange(num_input_neurons):  # loop over input neurons
-            coeff_i = np.mod(k, self.basep)
-            if coeff_i == 0:
-                pwr = pwr + 1
-                if np.mod(pwr, self.bits) == 0:
-                    pwr = 0
-                continue
 
             # loop over output neurons
-            row, col = np.unravel_index(k, (Am, An, self.bits * self.basep))[0:2]
+            row, col, pwr, coeff_i = np.unravel_index(k, (Am, An, self.bits, self.basep))
+            if coeff_i == 0:
+                continue
+
             for i, j in self.get_output_neurons(row, col, Bm, Bn):
                 ix = i - row
                 jx = j - col
 
                 cnt += 1
                 graph.add_edge(I[k], f'{self.name}g{i}{j}', weight=coeff_i * self.basep**pwr * self.filters[ix][jx], delay=1)
-                logging.debug(f'{cnt}     coeff_i: {coeff_i}    power: {pwr}    input: {k}      output: {i}{j}     filter: {self.filters[ix][jx]}     I(row,col,Ck): {np.unravel_index(k,(Am,An,self.bits*self.basep))}     I[index]: {graph.nodes[I[k]]["index"]}')
+                # logging.debug(f'{cnt}     coeff_i: {coeff_i}    power: {pwr}    input: {k}      output: {i}{j}     filter: {self.filters[ix][jx]}     I(row,col,Ck): {np.unravel_index(k,(Am,An,self.bits*self.basep))}     I[index]: {graph.nodes[I[k]]["index"]}')
+                print(f'{cnt:3d}  A[m,n]: ({row:2d},{col:2d})   power: {pwr}    coeff_i: {coeff_i}    input: {k:3d}      output: {i}{j}   B[m,n]: ({ix:2d},{jx:2d})   filter: {self.filters[ix][jx]}     I(row,col,bit-pwr,basep-coeff): {np.unravel_index(k,(Am,An,self.bits,self.basep))}     I[index]: {graph.nodes[I[k]]["index"]}')
                 
         self.is_built=True
         
