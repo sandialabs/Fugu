@@ -314,22 +314,122 @@ class Test_KerasConvolution2D:
         result = self.run_convolution_2d(thresholds)
         assert expected_spikes == self.calculated_spikes(thresholds,result)
 
-    def test_2x2_image_same_mode_with_strides_12(self):
+    @pytest.mark.parametrize("strides", [(1,1),(1,2),(2,1),(2,2),(1,3),(3,1),(2,3),(3,2),(3,3)])
+    def test_5x5_image_same_mode_with_strides(self,strides):
+        '''
+      [[ 29,  39,  49,  59,  40],
+       [ 79,  89,  99, 109,  70],
+       [129, 139, 149, 159, 100],
+       [179, 189, 199, 209, 130],
+       [150, 157, 164, 171, 100]]
+        '''
         self.basep = 3
-        self.bits = 2
-        self.pvector = [[1 ,2] ,[3, 4]]
+        self.bits = 4
+        self.pvector = generate_mock_image(5,5,1)[0,:,:,0]
         self.pshape = np.array(self.pvector).shape
         self.filters = [[1, 2], [3, 4]]
         self.filters_shape = np.array(self.filters).shape
-        self.biases = 0.0
+        self.strides = strides
 
-        self.strides = (1,2) # answer is [[20],[24]]
         keras_convolution_answer = keras_convolve2d(self.pvector,self.filters,strides=self.strides,mode=self.mode)
-        thresholds = np.array([[19.9],[23.9]])
-        # thresholds = np.array([[29.9],[10.9]])
-        expected_spikes = [1, 1]
-        result = self.run_convolution_2d(thresholds)
-        assert expected_spikes == self.calculated_spikes(thresholds,result)
+
+        num_matrix_elements = keras_convolution_answer.size
+        for nSpikes in np.arange(num_matrix_elements):
+            subt = np.zeros(keras_convolution_answer.size)
+            subt[:nSpikes] = 0.1
+            subt = np.reshape(subt,keras_convolution_answer.shape)
+
+            thresholds = keras_convolution_answer - subt
+            result = self.run_convolution_2d(thresholds)
+            assert self.expected_spikes(nSpikes) == self.calculated_spikes(thresholds,result)
+
+    @pytest.mark.parametrize("strides", [(1,1),(1,2),(2,1),(2,2),(1,3),(3,1),(2,3),(3,2),(3,3)])
+    def test_5x5_image_same_mode_with_strides_and_biases(self,strides):
+        '''
+      [[ 29,  39,  49,  59,  40],
+       [ 79,  89,  99, 109,  70],
+       [129, 139, 149, 159, 100],
+       [179, 189, 199, 209, 130],
+       [150, 157, 164, 171, 100]]
+        '''
+        self.basep = 3
+        self.bits = 4
+        self.pvector = generate_mock_image(5,5,1)[0,:,:,0]
+        self.pshape = np.array(self.pvector).shape
+        self.filters = [[1, 2], [3, 4]]
+        self.filters_shape = np.array(self.filters).shape
+        self.strides = strides
+
+        keras_convolution_answer = keras_convolve2d(self.pvector,self.filters,strides=self.strides,mode=self.mode)
+        thresholds = 0.5*np.ones(keras_convolution_answer.shape)
+
+        biases_list = np.sort(keras_convolution_answer,axis=None)
+        biases_list = np.flip(np.append(biases_list, biases_list[-1])).astype(float)
+        biases_list[1:] -= 0.6
+        for k, bias in enumerate(biases_list):
+            self.biases = -bias
+            result = self.run_convolution_2d(thresholds)
+
+            nSpikes = (keras_convolution_answer > bias).sum()
+            assert self.expected_spikes(nSpikes) == self.calculated_spikes(thresholds,result)
+
+    @pytest.mark.parametrize("strides", [(1,1),(1,2),(2,1),(2,2),(1,3),(3,1),(2,3),(3,2),(3,3)])
+    def test_5x5_image_valid_mode_with_strides(self,strides):
+        '''
+      [[ 29,  39,  49,  59],
+       [ 79,  89,  99, 109],
+       [129, 139, 149, 159],
+       [179, 189, 199, 209]]
+        '''
+        self.basep = 3
+        self.bits = 4
+        self.pvector = generate_mock_image(5,5,1)[0,:,:,0]
+        self.pshape = np.array(self.pvector).shape
+        self.filters = [[1, 2], [3, 4]]
+        self.filters_shape = np.array(self.filters).shape
+        self.strides = strides
+        self.mode = "valid"
+
+        keras_convolution_answer = keras_convolve2d(self.pvector,self.filters,strides=self.strides,mode=self.mode)
+
+        num_matrix_elements = keras_convolution_answer.size
+        for nSpikes in np.arange(num_matrix_elements):
+            subt = np.zeros(keras_convolution_answer.size)
+            subt[:nSpikes] = 0.1
+            subt = np.reshape(subt,keras_convolution_answer.shape)
+
+            thresholds = keras_convolution_answer - subt
+            result = self.run_convolution_2d(thresholds)
+            assert self.expected_spikes(nSpikes) == self.calculated_spikes(thresholds,result)
+
+    @pytest.mark.parametrize("strides", [(1,1),(1,2),(2,1),(2,2),(1,3),(3,1),(2,3),(3,2),(3,3)])
+    def test_5x5_image_valid_mode_with_strides_and_biases(self,strides):
+        '''
+      [[ 29,  39,  49,  59],
+       [ 79,  89,  99, 109],
+       [129, 139, 149, 159],
+       [179, 189, 199, 209]]
+        '''
+        self.basep = 3
+        self.bits = 4
+        self.pvector = generate_mock_image(5,5,1)[0,:,:,0]
+        self.pshape = np.array(self.pvector).shape
+        self.filters = [[1, 2], [3, 4]]
+        self.filters_shape = np.array(self.filters).shape
+        self.strides = strides
+
+        keras_convolution_answer = keras_convolve2d(self.pvector,self.filters,strides=self.strides,mode=self.mode)
+        thresholds = 0.5*np.ones(keras_convolution_answer.shape)
+
+        biases_list = np.sort(keras_convolution_answer,axis=None)
+        biases_list = np.flip(np.append(biases_list, biases_list[-1])).astype(float)
+        biases_list[1:] -= 0.6
+        for k, bias in enumerate(biases_list):
+            self.biases = -bias
+            result = self.run_convolution_2d(thresholds)
+
+            nSpikes = (keras_convolution_answer > bias).sum()
+            assert self.expected_spikes(nSpikes) == self.calculated_spikes(thresholds,result)
 
     def test_explicit_valid_mode_with_strides(self):
         '''

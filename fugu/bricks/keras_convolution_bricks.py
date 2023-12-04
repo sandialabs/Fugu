@@ -186,7 +186,6 @@ class keras_convolution_2d(Brick):
 
         # Construct edges connecting input and output nodes
         cnt = -1
-        print("")
         for k in np.arange(num_input_neurons):  # loop over input neurons
             # loop over output neurons
             row, col, pwr, Ck = np.unravel_index(k, (Am, An, self.bits, self.basep))
@@ -204,9 +203,7 @@ class keras_convolution_2d(Brick):
 
                 cnt += 1
                 graph.add_edge(I[k], f'{self.name}g{i}{j}', weight=Ck * self.basep**pwr * self.filters[ix][jx], delay=1)
-                print(f'{cnt:3d}  A[m,n]: ({row:2d},{col:2d})   power: {pwr}    coeff_i: {Ck}    input: {k:3d}      output: {i}{j}   B[m,n]: ({ix:2d},{jx:2d})   filter: {self.filters[ix][jx]}     I(row,col,bit-pwr,basep-coeff): {np.unravel_index(k,(Am,An,self.bits,self.basep))}     I[index]: {graph.nodes[I[k]]["index"]}')
-
-        pass
+                logging.debug(f'{cnt:3d}  A[m,n]: ({row:2d},{col:2d})   power: {pwr}    coeff_i: {Ck}    input: {k:3d}      output: {i}{j}   B[m,n]: ({ix:2d},{jx:2d})   filter: {self.filters[ix][jx]}     I(row,col,bit-pwr,basep-coeff): {np.unravel_index(k,(Am,An,self.bits,self.basep))}     I[index]: {graph.nodes[I[k]]["index"]}')
 
     def connect_input_and_output_neurons_alt2(self,input_lists,output_lists,graph):
         # Get size/shape information from input arrays
