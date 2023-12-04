@@ -172,13 +172,29 @@ class Test_KerasConvolution2D:
 
         # manually set strides, thresholds, and expected values
         self.strides = (1,1) # answer is [[23,33,24],[53,63,42],[52,59,36]]
+        keras_convolution_answer = keras_convolve2d(self.pvector,self.filters,strides=self.strides,mode=self.mode)
         thresholds = np.array([[23,33,24],[53,62.9,42],[52,58.9,36]])
         expected_spikes = [1, 1]
         result = self.run_convolution_2d(thresholds)
         assert expected_spikes == self.calculated_spikes(thresholds,result)
 
+        self.strides = (1,2) # answer is [[23, 24],[53, 42],[52, 36]]
+        keras_convolution_answer = keras_convolve2d(self.pvector,self.filters,strides=self.strides,mode=self.mode)
+        thresholds = np.array([[23, 24],[52.9, 42],[52, 35.9]])
+        expected_spikes = [1, 1]
+        result = self.run_convolution_2d(thresholds)
+        assert expected_spikes == self.calculated_spikes(thresholds,result)
+
+        self.strides = (2,1) # answer is [[23,33,24],[52,59,36]]
+        keras_convolution_answer = keras_convolve2d(self.pvector,self.filters,strides=self.strides,mode=self.mode)
+        thresholds = np.array([[23,32.9,24],[52,58.9,36]])
+        expected_spikes = [1, 1]
+        result = self.run_convolution_2d(thresholds)
+        assert expected_spikes == self.calculated_spikes(thresholds,result)
+
         self.strides = (2,2) # answer is [[23,24],[52,36]]
-        thresholds = np.array([[23,23.9],[51.9,36]])
+        keras_convolution_answer = keras_convolve2d(self.pvector,self.filters,strides=self.strides,mode=self.mode)
+        thresholds = np.array([[22.9,24],[52,35.9]])
         expected_spikes = [1, 1]
         result = self.run_convolution_2d(thresholds)
         assert expected_spikes == self.calculated_spikes(thresholds,result)
@@ -192,32 +208,108 @@ class Test_KerasConvolution2D:
         self.filters_shape = np.array(self.filters).shape
         # self.biases = 0.0
 
-        keras_convolution_answer = keras_convolve2d(self.pvector,self.filters,strides=self.strides,mode=self.mode)
         # manually set strides, thresholds, and expected values
         self.strides = (1,1) # answer is [[20,16],[24,16]]; [[30, 14],[11,4]]
+        keras_convolution_answer = keras_convolve2d(self.pvector,self.filters,strides=self.strides,mode=self.mode)
         thresholds = np.array([[20,15.9],[24,15.9]])
-        # thresholds = np.array([[29.9,13.9],[10.9,3.9]])
         expected_spikes = [1, 1]
         result = self.run_convolution_2d(thresholds)
         assert expected_spikes == self.calculated_spikes(thresholds,result)
 
         self.strides = (1,2) # answer is [[20],[24]]
+        keras_convolution_answer = keras_convolve2d(self.pvector,self.filters,strides=self.strides,mode=self.mode)
         thresholds = np.array([[19.9],[23.9]])
-        # thresholds = np.array([[29.9],[10.9]])
         expected_spikes = [1, 1]
         result = self.run_convolution_2d(thresholds)
         assert expected_spikes == self.calculated_spikes(thresholds,result)
 
         self.strides = (2,1) # answer is [[20,16]]
+        keras_convolution_answer = keras_convolve2d(self.pvector,self.filters,strides=self.strides,mode=self.mode)
         thresholds = np.array([[20,15.9]])
-        # thresholds = np.array([[30,13.9]])
         expected_spikes = [1]
         result = self.run_convolution_2d(thresholds)
         assert expected_spikes == self.calculated_spikes(thresholds,result)
 
         self.strides = (2,2) # answer is [[20]]
+        keras_convolution_answer = keras_convolve2d(self.pvector,self.filters,strides=self.strides,mode=self.mode)
         thresholds = np.array([[19.9]])
-        # thresholds = np.array([[29.9]])
+        expected_spikes = [1]
+        result = self.run_convolution_2d(thresholds)
+        assert expected_spikes == self.calculated_spikes(thresholds,result)
+
+    def test_3x3_image_valid_mode_with_strides(self):
+        self.basep = 3
+        self.bits = 3
+        self.pvector = [[1,2,3],[4,5,6],[7,8,9]]
+        self.pshape = np.array(self.pvector).shape
+        self.filters = [[1, 2], [3, 4]]
+        self.filters_shape = np.array(self.filters).shape
+        self.mode = "valid"
+
+        # manually set strides, thresholds, and expected values
+        self.strides = (1,1) # answer is [[23,33],[53,63]]
+        keras_convolution_answer = keras_convolve2d(self.pvector,self.filters,strides=self.strides,mode=self.mode)
+        thresholds = np.array([[23,32.9],[53,62.9]])
+        expected_spikes = [1, 1]
+        result = self.run_convolution_2d(thresholds)
+        assert expected_spikes == self.calculated_spikes(thresholds,result)
+
+        self.strides = (1,2) # answer is [[23],[53]]
+        keras_convolution_answer = keras_convolve2d(self.pvector,self.filters,strides=self.strides,mode=self.mode)
+        thresholds = np.array([[23],[52.9]])
+        expected_spikes = [1]
+        result = self.run_convolution_2d(thresholds)
+        assert expected_spikes == self.calculated_spikes(thresholds,result)
+
+        self.strides = (2,1) # answer is [[23,33]]
+        keras_convolution_answer = keras_convolve2d(self.pvector,self.filters,strides=self.strides,mode=self.mode)
+        thresholds = np.array([[22.9,32.9]])
+        expected_spikes = [1, 1]
+        result = self.run_convolution_2d(thresholds)
+        assert expected_spikes == self.calculated_spikes(thresholds,result)
+
+        self.strides = (2,2) # answer is [[23]]
+        keras_convolution_answer = keras_convolve2d(self.pvector,self.filters,strides=self.strides,mode=self.mode)
+        thresholds = np.array([[22.9]])
+        expected_spikes = [1]
+        result = self.run_convolution_2d(thresholds)
+        assert expected_spikes == self.calculated_spikes(thresholds,result)
+
+    def test_2x2_image_valid_mode_with_strides(self):
+        self.basep = 3
+        self.bits = 2
+        self.pvector = [[1 ,2] ,[3, 4]]
+        self.pshape = np.array(self.pvector).shape
+        self.filters = [[1, 2], [3, 4]]
+        self.filters_shape = np.array(self.filters).shape
+        self.mode = "valid"
+        # self.biases = 0.0
+
+        # manually set strides, thresholds, and expected values
+        self.strides = (1,1) # answer is [[20]]
+        keras_convolution_answer = keras_convolve2d(self.pvector,self.filters,strides=self.strides,mode=self.mode)
+        thresholds = np.array([[20]])
+        expected_spikes = []
+        result = self.run_convolution_2d(thresholds)
+        assert expected_spikes == self.calculated_spikes(thresholds,result)
+
+        self.strides = (1,2) # answer is [[20]]
+        keras_convolution_answer = keras_convolve2d(self.pvector,self.filters,strides=self.strides,mode=self.mode)
+        thresholds = np.array([[19.9]])
+        expected_spikes = [1]
+        result = self.run_convolution_2d(thresholds)
+        assert expected_spikes == self.calculated_spikes(thresholds,result)
+
+        self.strides = (2,1) # answer is [[20]]
+        keras_convolution_answer = keras_convolve2d(self.pvector,self.filters,strides=self.strides,mode=self.mode)
+        thresholds = np.array([[20]])
+        expected_spikes = []
+        result = self.run_convolution_2d(thresholds)
+        assert expected_spikes == self.calculated_spikes(thresholds,result)
+
+        self.strides = (2,2) # answer is [[20]]
+        keras_convolution_answer = keras_convolve2d(self.pvector,self.filters,strides=self.strides,mode=self.mode)
+        thresholds = np.array([[19.9]])
         expected_spikes = [1]
         result = self.run_convolution_2d(thresholds)
         assert expected_spikes == self.calculated_spikes(thresholds,result)
@@ -232,6 +324,7 @@ class Test_KerasConvolution2D:
         self.biases = 0.0
 
         self.strides = (1,2) # answer is [[20],[24]]
+        keras_convolution_answer = keras_convolve2d(self.pvector,self.filters,strides=self.strides,mode=self.mode)
         thresholds = np.array([[19.9],[23.9]])
         # thresholds = np.array([[29.9],[10.9]])
         expected_spikes = [1, 1]

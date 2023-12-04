@@ -256,10 +256,10 @@ class keras_convolution_2d(Brick):
         Sm, Sn = self.strides
 
         for i in np.arange(row - Bm, row):
-            if i+1 < 0 or np.mod(i+1, Sm) != 0:
+            if i+1 < 0 or np.mod(i+1, Sm) != 0 or i+1 > self.bnds[1,0]:
                 continue
             for j in np.arange(col - Bn, col):
-                if j+1 < 0 or np.mod(j+1, Sn) != 0:
+                if j+1 < 0 or np.mod(j+1, Sn) != 0 or j+1 > self.bnds[1,1]:
                     continue
                 neuron_indices.append((i+1,j+1))
 
@@ -302,7 +302,7 @@ class keras_convolution_2d(Brick):
             lmins = np.minimum(input_shape, kernel_shape)
             lb = lmins - 1
             ub = np.array(full_output_shape) - lmins
-            self.bnds = np.array([lb, ub], dtype=int)
+            self.bnds = np.array([lb, ub], dtype=int) - 1
 
     def get_output_shape(self):
         strides_shape = np.array(self.strides)
