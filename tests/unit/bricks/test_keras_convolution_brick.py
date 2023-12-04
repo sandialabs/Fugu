@@ -190,8 +190,9 @@ class Test_KerasConvolution2D:
         self.pshape = np.array(self.pvector).shape
         self.filters = [[1, 2], [3, 4]]
         self.filters_shape = np.array(self.filters).shape
-        self.biases = 0.0
+        # self.biases = 0.0
 
+        keras_convolution_answer = keras_convolve2d(self.pvector,self.filters,strides=self.strides,mode=self.mode)
         # manually set strides, thresholds, and expected values
         self.strides = (1,1) # answer is [[20,16],[24,16]]; [[30, 14],[11,4]]
         thresholds = np.array([[20,15.9],[24,15.9]])
