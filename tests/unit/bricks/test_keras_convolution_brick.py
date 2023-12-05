@@ -794,7 +794,6 @@ class Test_KerasConvolution2D_4dinput:
         keras_convolution_answer = keras_convolve2d_4dinput(self.pvector,self.filters,strides=self.strides,mode=self.mode,filters=self.nFilters)
         result = self.run_convolution_2d(thresholds)
         assert self.expected_spikes(nSpikes) == self.calculated_spikes(thresholds,result)
-        assert False
 
     def test_explicit_2x2_simple_troubleshoot(self):
         '''
@@ -824,9 +823,8 @@ class Test_KerasConvolution2D_4dinput:
         keras_convolution_answer = keras_convolve2d_4dinput(self.pvector,self.filters,strides=self.strides,mode=self.mode,filters=self.nFilters)
         result = self.run_convolution_2d(thresholds)
         assert self.expected_spikes(nSpikes) == self.calculated_spikes(thresholds,result)
-        assert False
 
-    @pytest.mark.parametrize("nSpikes,biases,strides",[(16,[-320, -682, -1152],(1,2)),(13,[-298, -682, -1037],(2,1)),(0,[-472, -1208, -1944],(1,2)),(3,[-436, -1108, -1780],(2,1)),(0,[-328, -1208, -1944],(2,2))])
+    @pytest.mark.parametrize("nSpikes,biases,strides",[(7,[-320, -682, -1152],(1,2)),(12,[-298, -682, -1037],(2,1)),(0,[-472, -1208, -1944],(1,2)),(9,[-322, -736, -1066],(2,1)),(0,[-328, -1208, -1944],(2,2))])
     def test_explicit_same_convolution_with_bias_and_strides(self,nSpikes,biases,strides):
         '''
             Given image and kernel provided in setup_method, the convolution ("same") answer is

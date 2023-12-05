@@ -360,29 +360,28 @@ class keras_convolution_2d_4dinput(Brick):
         num_input_neurons_per_channel = Am * An * self.basep * self.bits
         num_input_neurons = len(input_lists[0])
 
+        output_neurons_alt = {(row,col): self.get_output_neurons_alt(row,col,Bm,Bn) for col in np.arange(An) for row in np.arange(Am)}
+
         # I = np.array(input_lists[0]).reshape(-1,num_input_neurons_per_channel)
         # Construct edges connecting input and output nodes
-        pwr = -1
         cnt = -1
         # for channel in np.arange(nChannels):
+        print("")
         for filter in np.arange(self.nFilters):
             for k in np.arange(num_input_neurons):  # loop over input neurons
-                coeff_i = np.mod(k, self.basep)
-                if coeff_i == 0:
-                    pwr = pwr + 1
-                    if np.mod(pwr, self.bits) == 0:
-                        pwr = 0
-                    continue
 
                 # loop over output neurons
-                row, col, channel = np.unravel_index(k, (Am, An, self.nChannels, self.bits * self.basep))[0:3]
-                for i, j in self.get_output_neurons(row, col, Bm, Bn):
-                    ix = i - row
-                    jx = j - col
+                row, col, channel, pwr, Ck = np.unravel_index(k, (Am, An, self.nChannels, self.bits,  self.basep))
+                if Ck == 0:
+                    continue
+
+                for i, j in output_neurons_alt[(row,col)]:
+                    ix = i - row + (Bm - 1)
+                    jx = j - col + (Bn - 1)
 
                     cnt += 1
-                    graph.add_edge(I[k], f'{self.name}g{i}{j}{filter}', weight=coeff_i * self.basep**pwr * self.filters[ix,jx,channel,filter], delay=1)
-                    print(f'{cnt}     coeff_i: {coeff_i}    power: {pwr}    input: {k}      output: {i}{j}{filter}     filter: {self.filters[ix,jx,channel,filter]}     I(row,col,Ck): {np.unravel_index(k,(Am,An,self.nChannels,self.bits*self.basep))}     I[index]: {graph.nodes[I[k]]["index"]}')
+                    graph.add_edge(I[k], f'{self.name}g{i}{j}{filter}', weight=Ck * self.basep**pwr * self.filters[ix,jx,channel,filter], delay=1)
+                    print(f'{cnt:3d}  A[m,n]: ({row:2d},{col:2d})   power: {pwr}    coeff_i: {Ck}    input: {k:3d}      output: {i}{j}{filter}   B[m,n]: ({ix:2d},{jx:2d})   filter: {self.filters[ix,jx,channel,filter]}     I(row,col,channel,bit-pwr,basep-coeff): {np.unravel_index(k,(Am,An,self.nChannels,self.bits,self.basep))}     I[index]: {graph.nodes[I[k]]["index"]}')
 
     def get_input_neurons(self,row,col,Bm,Bn):
         neuron_indices = []
@@ -417,13 +416,13 @@ class keras_convolution_2d_4dinput(Brick):
         Sm, Sn = self.strides
 
         for i in np.arange(row - Bm, row):
-
-            if i+1 < 0 or np.mod(i+1, Sm) != 0:
+            if i+1 < 0 or np.mod(i+1, Sm) != 0 or i+1 > self.bnds[1,0]:
                 continue
             for j in np.arange(col - Bn, col):
-                if j+1 < 0 or np.mod(j+1, Sn) != 0:
+                if j+1 < 0 or np.mod(j+1, Sn) != 0 or j+1 > self.bnds[1,1]:
                     continue
                 neuron_indices.append((i+1,j+1))
+
         return neuron_indices
 
     def get_output_bounds(self):
@@ -456,7 +455,7 @@ class keras_convolution_2d_4dinput(Brick):
             lmins = np.minimum(input_shape, kernel_shape)
             lb = lmins - 1
             ub = np.array(full_output_shape) - lmins
-            self.bnds = np.array([lb, ub], dtype=int)
+            self.bnds = np.array([lb, ub], dtype=int) - 1
 
     def get_output_shape(self):
         strides_shape = np.array(self.strides)
