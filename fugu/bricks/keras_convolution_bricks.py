@@ -80,7 +80,7 @@ class keras_convolution_2d(Brick):
         begin_node = new_begin_node_name
 
         # determine output neuron bounds based on the "mode"
-        self.get_output_bounds_alt()
+        self.get_output_bounds()
 
         # Check for scalar value for thresholds
         if not hasattr(self.thresholds, '__len__') and (not isinstance(self.thresholds, str)):
@@ -89,30 +89,11 @@ class keras_convolution_2d(Brick):
             if self.thresholds.shape != self.output_shape:
                 raise ValueError(f"Threshold shape {self.thresholds.shape} does not equal the output neuron shape {self.output_shape}.")
 
-        # # output neurons/nodes
-        # output_lists = [[]]
-        # for i in np.arange(self.bnds[0,0],self.bnds[1,0] + 1):
-        #     ix = i - self.bnds[0,0]
-        #     for j in np.arange(self.bnds[0,1],self.bnds[1,1] + 1):
-        #         jx = j - self.bnds[0,1]
-        #         graph.add_node(f'{self.name}g{i}{j}', index=(ix,jx), threshold=self.thresholds[ix][jx], decay=1.0, p=1.0, potential=0.0)
-        #         output_lists[0].append(f'{self.name}g{i}{j}')
-
-        # # Biases for convolution
-        # if self.biases is not None:
-        #     # biases neurons/nodes; one node per kernel/channel in filter
-        #     graph.add_node(f'{self.name}b', index=(99,0), threshold=-1.0, decay=1.0, p=1.0, potential=0.0)
-
-        #     # Construct edges connecting biases node(s) to output nodes
-        #     for i in np.arange(self.bnds[0,0],self.bnds[1,0] + 1):
-        #         for j in np.arange(self.bnds[0,1],self.bnds[1,1] + 1):
-        #             graph.add_edge(f'{self.name}b',f'{self.name}g{i}{j}', weight=self.biases, delay=1)
-
         # output neurons/nodes
         output_lists = self.create_output_neurons(graph)
 
         self.create_biases_nodes_and_synapses(graph)
-        self.connect_input_and_output_neurons_alt(input_lists,graph)
+        self.connect_input_and_output_neurons(input_lists,graph)
 
         self.is_built=True
 
@@ -150,39 +131,7 @@ class keras_convolution_2d(Brick):
         # Collect Inputs
         I = input_lists[0]
 
-        # Construct edges connecting input and output nodes
-        pwr = -1
-        cnt = -1
-        for k in np.arange(num_input_neurons):  # loop over input neurons
-            coeff_i = np.mod(k, self.basep)
-            if coeff_i == 0:
-                pwr = pwr + 1
-                if np.mod(pwr, self.bits) == 0:
-                    pwr = 0
-                continue
-
-            # loop over output neurons
-            row, col = np.unravel_index(k, (Am, An, self.bits * self.basep))[0:2]
-            for i, j in self.get_output_neurons(row, col, Bm, Bn):
-                ix = i - row
-                jx = j - col
-
-                cnt += 1
-                graph.add_edge(I[k], f'{self.name}g{i}{j}', weight=coeff_i * self.basep**pwr * self.filters[ix][jx], delay=1)
-                logging.debug(f'{cnt}     coeff_i: {coeff_i}    power: {pwr}    input: {k}      output: {i}{j}     filter: {self.filters[ix][jx]}     I(row,col,Ck): {np.unravel_index(k,(Am,An,self.bits*self.basep))}     I[index]: {graph.nodes[I[k]]["index"]}')
-
-    def connect_input_and_output_neurons_alt(self,input_lists,graph):
-        # Get size/shape information from input arrays
-        Am, An = self.pshape
-        Bm, Bn = self.filters.shape
-
-        num_input_neurons = len(input_lists[0])
-
-        # Collect Inputs
-        I = input_lists[0]
-
         output_neurons = {(row,col): self.get_output_neurons(row,col,Bm,Bn) for col in np.arange(An) for row in np.arange(Am)}
-        output_neurons_alt = {(row,col): self.get_output_neurons_alt(row,col,Bm,Bn) for col in np.arange(An) for row in np.arange(Am)}
 
         # Construct edges connecting input and output nodes
         cnt = -1
@@ -192,14 +141,9 @@ class keras_convolution_2d(Brick):
             if Ck == 0:
                 continue
 
-            for i, j in output_neurons_alt[(row,col)]:
-                # ix = i - row
-                # jx = j - col
+            for i, j in output_neurons[(row,col)]:
                 ix = i - row + (Bm - 1)
                 jx = j - col + (Bn - 1)
-                # ix = (Bm - 1) - i
-                # jx = (Bn - 1) - j
-                # need method to properly loop over kernel entries here
 
                 cnt += 1
                 graph.add_edge(I[k], f'{self.name}g{i}{j}', weight=Ck * self.basep**pwr * self.filters[ix][jx], delay=1)
@@ -234,22 +178,6 @@ class keras_convolution_2d(Brick):
 
     def get_output_neurons(self,row,col,Bm,Bn):
         neuron_indices = []
-        bnds = self.bnds
-        Sm, Sn = self.strides
-
-        #TODO: Do I need these conditions in this loop? Is it possible to simply use
-        # bnds[0,0] to bnds[1,0] as the range for i and
-        # bnds[0,1] to bnds[1,1] as the range for j here?
-        for i in np.arange(row, row + Bm):
-            if (i >= bnds[0, 0]) and (i <= bnds[1, 0]):
-                for j in np.arange(col, col + Bn):
-                    if (j >= bnds[0, 1]) and (j <= bnds[1, 1]):
-                        neuron_indices.append((i, j))
-
-        return neuron_indices
-
-    def get_output_neurons_alt(self,row,col,Bm,Bn):
-        neuron_indices = []
         Sm, Sn = self.strides
 
         for i in np.arange(row - Bm, row):
@@ -260,31 +188,9 @@ class keras_convolution_2d(Brick):
                     continue
                 neuron_indices.append((i+1,j+1))
 
-        # for i in np.arange(row, row - Bm, -1):
-        #     if i < 0 or np.mod(i, Sm) != 0:
-        #         continue
-        #     for j in np.arange(col, col - Bn, -1):
-        #         if j < 0 or np.mod(j, Sn) != 0:
-        #             continue
-        #         neuron_indices.append((i,j))
         return neuron_indices
 
     def get_output_bounds(self):
-        input_shape = np.array(self.pshape)
-        full_output_shape = np.array(self.pshape) + np.array(self.filters.shape) - 1
-        mode_output_shape = np.array(self.output_shape)
-
-        if self.mode == "same":
-            ub = np.floor(0.5 * (mode_output_shape + input_shape) - 1)
-            lb = ub - (mode_output_shape - 1)
-            self.bnds = np.array([lb,ub],dtype=int) + 1
-        elif self.mode == "valid":
-            lmins = np.minimum(self.pshape,self.filters.shape)
-            ub = full_output_shape - lmins
-            lb = ub - (mode_output_shape - 1)
-            self.bnds = np.array([lb,ub],dtype=int) - (np.array(self.strides) - 1)
-
-    def get_output_bounds_alt(self):
         input_shape = np.array(self.pshape)
         kernel_shape = np.array(self.filters.shape)
         full_output_shape = input_shape + kernel_shape - 1
