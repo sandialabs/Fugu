@@ -180,13 +180,13 @@ class keras_convolution_2d(Brick):
         neuron_indices = []
         Sm, Sn = self.strides
 
-        for i in np.arange(row - Bm, row):
-            if i+1 < 0 or np.mod(i+1, Sm) != 0 or i+1 > self.bnds[1,0]:
+        for i in np.arange(row - Bm + 1, row + 1):
+            if i < 0 or np.mod(i, Sm) != 0 or i > self.bnds[1,0]:
                 continue
-            for j in np.arange(col - Bn, col):
-                if j+1 < 0 or np.mod(j+1, Sn) != 0 or j+1 > self.bnds[1,1]:
+            for j in np.arange(col - Bn + 1, col + 1):
+                if j < 0 or np.mod(j, Sn) != 0 or j > self.bnds[1,1]:
                     continue
-                neuron_indices.append((i+1,j+1))
+                neuron_indices.append((i,j))
 
         return neuron_indices
 
@@ -338,15 +338,6 @@ class keras_convolution_2d_4dinput(Brick):
 
         self.connect_input_and_output_neurons(input_lists,graph)
 
-        # for filter in np.arange(self.nFilters):
-        #     for channel in np.arange(self.nChannels):
-        #         for i in np.arange(self.bnds[0,0],self.bnds[1,0] + 1,self.strides[0]):
-        #             for j in np.arange(self.bnds[0,1],self.bnds[1,1] + 1,self.strides[1]):
-        #                 for row, col in self.get_input_neurons(i, j, Bm, Bn):
-        #                     ix = i - row
-        #                     jx = j - col
-        #                     k = np.ravel_multi_index((i,j,))
-
         self.is_built=True
 
         return (graph, self.metadata, [{'complete': complete_node, 'begin': begin_node}], output_lists, output_codings)
@@ -366,7 +357,6 @@ class keras_convolution_2d_4dinput(Brick):
         # Construct edges connecting input and output nodes
         cnt = -1
         # for channel in np.arange(nChannels):
-        print("")
         for filter in np.arange(self.nFilters):
             for k in np.arange(num_input_neurons):  # loop over input neurons
 
@@ -381,7 +371,7 @@ class keras_convolution_2d_4dinput(Brick):
 
                     cnt += 1
                     graph.add_edge(I[k], f'{self.name}g{i}{j}{filter}', weight=Ck * self.basep**pwr * self.filters[ix,jx,channel,filter], delay=1)
-                    print(f'{cnt:3d}  A[m,n]: ({row:2d},{col:2d})   power: {pwr}    coeff_i: {Ck}    input: {k:3d}      output: {i}{j}{filter}   B[m,n]: ({ix:2d},{jx:2d})   filter: {self.filters[ix,jx,channel,filter]}     I(row,col,channel,bit-pwr,basep-coeff): {np.unravel_index(k,(Am,An,self.nChannels,self.bits,self.basep))}     I[index]: {graph.nodes[I[k]]["index"]}')
+                    logging.debug(f'{cnt:3d}  A[m,n]: ({row:2d},{col:2d})   power: {pwr}    coeff_i: {Ck}    input: {k:3d}      output: {i}{j}{filter}   B[m,n]: ({ix:2d},{jx:2d})   filter: {self.filters[ix,jx,channel,filter]}     I(row,col,channel,bit-pwr,basep-coeff): {np.unravel_index(k,(Am,An,self.nChannels,self.bits,self.basep))}     I[index]: {graph.nodes[I[k]]["index"]}')
 
     def get_input_neurons(self,row,col,Bm,Bn):
         neuron_indices = []
@@ -415,13 +405,13 @@ class keras_convolution_2d_4dinput(Brick):
         neuron_indices = []
         Sm, Sn = self.strides
 
-        for i in np.arange(row - Bm, row):
-            if i+1 < 0 or np.mod(i+1, Sm) != 0 or i+1 > self.bnds[1,0]:
+        for i in np.arange(row - Bm + 1, row + 1):
+            if i < 0 or np.mod(i, Sm) != 0 or i > self.bnds[1,0]:
                 continue
-            for j in np.arange(col - Bn, col):
-                if j+1 < 0 or np.mod(j+1, Sn) != 0 or j+1 > self.bnds[1,1]:
+            for j in np.arange(col - Bn + 1, col + 1):
+                if j < 0 or np.mod(j, Sn) != 0 or j > self.bnds[1,1]:
                     continue
-                neuron_indices.append((i+1,j+1))
+                neuron_indices.append((i,j))
 
         return neuron_indices
 

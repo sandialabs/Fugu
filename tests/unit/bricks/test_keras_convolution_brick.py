@@ -875,6 +875,113 @@ class Test_KerasConvolution2D_4dinput:
         result = self.run_convolution_2d(thresholds)
         assert self.expected_spikes(nSpikes) == self.calculated_spikes(thresholds,result)
 
+    @pytest.mark.parametrize("strides", [(1,1),(1,2),(2,1),(2,2),(1,3),(3,1),(2,3),(3,2),(3,3)])
+    def test_5x5_image_same_mode_with_strides_and_biases(self,strides):
+        '''
+            Filter 1 Out
+          [[ 772.,  808.,  844.,  880.,  490.],
+           [ 952.,  988., 1024., 1060.,  590.],
+           [1132., 1168., 1204., 1240.,  690.],
+           [1312., 1348., 1384., 1420.,  790.],
+           [ 847.,  869.,  891.,  913.,  500.]]
+
+            Filter 2 Out
+          [[1828., 1928., 2028., 2128., 1130.],
+           [2328., 2428., 2528., 2628., 1390.],
+           [2828., 2928., 3028., 3128., 1650.],
+           [3328., 3428., 3528., 3628., 1910.],
+           [1935., 1989., 2043., 2097., 1100.]]
+
+            Filter 3 Out
+          [[2884., 3048., 3212., 3376., 1770.],
+           [3704., 3868., 4032., 4196., 2190.],
+           [4524., 4688., 4852., 5016., 2610.],
+           [5344., 5508., 5672., 5836., 3030.],
+           [3023., 3109., 3195., 3281., 1700.]]
+        '''
+        image_height, image_width = 5, 5
+        kernel_height, kernel_width = 2, 2
+        nChannels = 2
+        nFilters = 3
+
+        self.basep = 4
+        self.bits = 4
+        self.pvector = generate_mock_image(image_height,image_width,nChannels)
+        self.filters = generate_keras_kernel(kernel_height,kernel_width,nFilters,nChannels)
+        self.pshape = np.array(self.pvector).shape
+        self.filters_shape = np.array(self.filters).shape
+        self.mode = "same"
+        self.strides = strides
+        self.biases = np.zeros((nFilters,))
+        self.nChannels = nChannels
+        self.nFilters = nFilters
+
+        keras_convolution_answer = keras_convolve2d_4dinput(self.pvector,self.filters,strides=self.strides,mode=self.mode,filters=self.nFilters)
+        thresholds = 0.5*np.ones(keras_convolution_answer.shape).reshape(1,*keras_convolution_answer.shape)
+
+        biases_list = np.sort(keras_convolution_answer,axis=None)
+        biases_list = np.flip(np.append(biases_list, biases_list[-1])).astype(float)
+        biases_list[1:] -= 0.6
+        for k, bias in enumerate(biases_list):
+            self.biases = -bias * np.ones((nFilters,))
+            result = self.run_convolution_2d(thresholds)
+
+            nSpikes = (keras_convolution_answer > bias).sum()
+            assert self.expected_spikes(nSpikes) == self.calculated_spikes(thresholds,result)
+
+    def generate_all_values_for_exhaustive_test(self):
+        class Empty:
+            pass
+
+        image_height, image_width = 5, 5
+        kernel_height, kernel_width = 2, 2
+        nChannels = 2
+        nFilters = 3
+
+        aself = Empty()
+        aself.basep = 4
+        aself.bits = 4
+        aself.pvector = generate_mock_image(image_height,image_width,nChannels)
+        aself.filters = generate_keras_kernel(kernel_height,kernel_width,nFilters,nChannels)
+        aself.pshape = np.array(aself.pvector).shape
+        aself.filters_shape = np.array(aself.filters).shape
+        aself.biases = np.zeros((nFilters,))
+        aself.nChannels = nChannels
+        aself.nFilters = nFilters
+
+        for mode in ["same", "valid"]:
+            aself.mode = mode
+            for strides in [(1,1),(1,2),(2,1),(2,2),(1,3),(3,1),(2,3),(3,2),(3,3)]:
+                aself.strides = strides
+                keras_convolution_answer = keras_convolve2d_4dinput(aself.pvector,aself.filters,strides=aself.strides,mode=aself.mode,filters=aself.nFilters)
+                thresholds = 0.5*np.ones(keras_convolution_answer.shape).reshape(1,*keras_convolution_answer.shape)
+
+                biases_list = np.sort(keras_convolution_answer,axis=None)
+                biases_list = np.flip(np.append(biases_list, biases_list[-1])).astype(float)
+                biases_list[1:] -= 0.6
+                for k, bias in enumerate(biases_list):
+                    nSpikes = (keras_convolution_answer > bias).sum()
+                    biases = -bias * np.ones((nFilters,))
+                    yield nSpikes, thresholds, biases, strides, mode, aself
+
+    @pytest.fixture
+    def get_self(self):
+        return self
+
+    @pytest.mark.parametrize("nSpikes,thresholds,biases,strides,mode,aself", generate_all_values_for_exhaustive_test(get_self))
+    def test_exhaustive_5x5_image_all_modes_strides_biases(self,nSpikes,thresholds,biases,strides,mode,aself):
+        for property, value in vars(aself).items():
+            if property[0] == '_':
+                continue
+            setattr(self,property,value)
+
+        self.biases = biases
+        self.strides = strides
+        self.mode = mode
+        result = self.run_convolution_2d(thresholds)
+        assert self.expected_spikes(nSpikes) == self.calculated_spikes(thresholds,result)
+
+
     @pytest.mark.xfail(reason="Not implemented.")
     def test_handling_of_4d_tensor_input(self):
         assert False
