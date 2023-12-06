@@ -875,6 +875,7 @@ class Test_KerasConvolution2D_4dinput:
         result = self.run_convolution_2d(thresholds)
         assert self.expected_spikes(nSpikes) == self.calculated_spikes(thresholds,result)
 
+    @pytest.mark.slow
     @pytest.mark.parametrize("strides", [(1,1),(1,2),(2,1),(2,2),(1,3),(3,1),(2,3),(3,2),(3,3)])
     def test_5x5_image_same_mode_with_strides_and_biases(self,strides):
         '''
@@ -920,7 +921,7 @@ class Test_KerasConvolution2D_4dinput:
         thresholds = 0.5*np.ones(keras_convolution_answer.shape).reshape(1,*keras_convolution_answer.shape)
 
         biases_list = np.sort(keras_convolution_answer,axis=None)
-        biases_list = np.flip(np.append(biases_list, biases_list[-1])).astype(float)
+        biases_list = np.flip(np.append(biases_list, biases_list)).astype(float)
         biases_list[1:] -= 0.6
         for k, bias in enumerate(biases_list):
             self.biases = -bias * np.ones((nFilters,))
@@ -968,6 +969,7 @@ class Test_KerasConvolution2D_4dinput:
     def get_self(self):
         return self
 
+    @pytest.mark.slow
     @pytest.mark.parametrize("nSpikes,thresholds,biases,strides,mode,aself", generate_all_values_for_exhaustive_test(get_self))
     def test_exhaustive_5x5_image_all_modes_strides_biases(self,nSpikes,thresholds,biases,strides,mode,aself):
         for property, value in vars(aself).items():
