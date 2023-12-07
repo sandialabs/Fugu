@@ -82,16 +82,8 @@ class keras_convolution_2d(Brick):
         # determine output neuron bounds based on the "mode"
         self.get_output_bounds()
 
-        # Check for scalar value for thresholds
-        if not hasattr(self.thresholds, '__len__') and (not isinstance(self.thresholds, str)):
-            self.thresholds = self.thresholds * np.ones(self.output_shape)
-        else:
-            if self.thresholds.shape != self.output_shape:
-                raise ValueError(f"Threshold shape {self.thresholds.shape} does not equal the output neuron shape {self.output_shape}.")
-
-        # output neurons/nodes
+        self.check_thresholds_shape()
         output_lists = self.create_output_neurons(graph)
-
         self.create_biases_nodes_and_synapses(graph)
         self.connect_input_and_output_neurons(input_lists,graph)
 
@@ -99,10 +91,17 @@ class keras_convolution_2d(Brick):
 
         return (graph, self.metadata, [{'complete': complete_node, 'begin': begin_node}], output_lists, output_codings)
 
+    def check_thresholds_shape(self):
+        # Check for scalar value for thresholds
+        if not hasattr(self.thresholds, '__len__') and (not isinstance(self.thresholds, str)):
+            self.thresholds = self.thresholds * np.ones(self.output_shape)
+        else:
+            if self.thresholds.shape != self.output_shape:
+                raise ValueError(f"Threshold shape {self.thresholds.shape} does not equal the output neuron shape {self.output_shape}.")
+
     def create_output_neurons(self,graph):
         # output neurons/nodes
         output_lists = [[]]
-        # TODO: Fixed non-continuous memory strides. This will result in poor performance.
         for ix, i in enumerate(np.arange(self.bnds[0,0],self.bnds[1,0] + 1,self.strides[0])):
             for jx, j in enumerate(np.arange(self.bnds[0,1],self.bnds[1,1] + 1,self.strides[1])):
                 graph.add_node(f'{self.name}g{i}{j}', index=(ix,jx), threshold=self.thresholds[ix,jx], decay=1.0, p=1.0, potential=0.0)
@@ -150,6 +149,11 @@ class keras_convolution_2d(Brick):
                 logging.debug(f'{cnt:3d}  A[m,n]: ({row:2d},{col:2d})   power: {pwr}    coeff_i: {Ck}    input: {k:3d}      output: {i}{j}   B[m,n]: ({ix:2d},{jx:2d})   filter: {self.filters[ix][jx]}     I(row,col,bit-pwr,basep-coeff): {np.unravel_index(k,(Am,An,self.bits,self.basep))}     I[index]: {graph.nodes[I[k]]["index"]}')
 
     def connect_input_and_output_neurons_alt2(self,input_lists,output_lists,graph):
+        '''
+            Construct the input/output synapses (edges) by looping over the output neurons (outer loop) and assigning their edges to the input neurons (inner loop).
+
+            This method is INCOMPLETE and may be removed later.
+        '''
         # Get size/shape information from input arrays
         Am, An = self.pshape
         Bm, Bn = self.filters.shape
@@ -163,7 +167,6 @@ class keras_convolution_2d(Brick):
 
         # Construct edges connecting input and output nodes
         cnt = -1
-        print("")
         # loop over output neurons
         for k in np.arange(num_output_neurons):
             row, col = np.unravel_index(k, (Gm, Gn))
@@ -173,7 +176,6 @@ class keras_convolution_2d(Brick):
                 ix = aa
                 jx = bb
                 graph.add_edge(I[j], f'{self.name}g{row}{col}', weight=Ck * self.basep**pwr * self.filters[ix][jx], delay=1)
-                pass
         pass
 
     def get_output_neurons(self,row,col,Bm,Bn):
@@ -240,6 +242,7 @@ class keras_convolution_2d_4dinput(Brick):
     """
 
     def __init__(self, input_shape, filters, thresholds, basep, bits, name=None, mode='same', strides=(1,1), biases=None):
+        # TODO: Add capability to handle Keras "data_format='channels_first'"
         super().__init__()
         self.is_built = False
         self.name = name
@@ -308,6 +311,16 @@ class keras_convolution_2d_4dinput(Brick):
         # determine output neuron bounds based on the "mode"
         self.get_output_bounds()
 
+        self.check_thresholds_shape()
+        output_lists = self.create_output_neurons(graph)
+        self.create_biases_nodes_and_synapses(graph)
+        self.connect_input_and_output_neurons(input_lists,graph)
+
+        self.is_built=True
+
+        return (graph, self.metadata, [{'complete': complete_node, 'begin': begin_node}], output_lists, output_codings)
+
+    def check_thresholds_shape(self):
         # Check for scalar value for thresholds
         if not hasattr(self.thresholds, '__len__') and (not isinstance(self.thresholds, str)):
             self.thresholds = self.thresholds * np.ones(self.output_shape)
@@ -315,15 +328,18 @@ class keras_convolution_2d_4dinput(Brick):
             if self.thresholds.shape != self.output_shape:
                 raise ValueError(f"Threshold shape {self.thresholds.shape} does not equal the output neuron shape {self.output_shape}.")
 
+    def create_output_neurons(self, graph):
         # output neurons/nodes
         output_lists = [[]]
-        # TODO: Fixed non-continuous memory strides. This will result in poor performance.
-        for kx in np.arange(self.nFilters):
-            for ix, i in enumerate(np.arange(self.bnds[0,0],self.bnds[1,0] + 1,self.strides[0])):
-                for jx, j in enumerate(np.arange(self.bnds[0,1],self.bnds[1,1] + 1,self.strides[1])):
+        for ix, i in enumerate(np.arange(self.bnds[0,0],self.bnds[1,0] + 1,self.strides[0])):
+            for jx, j in enumerate(np.arange(self.bnds[0,1],self.bnds[1,1] + 1,self.strides[1])):
+                for kx in np.arange(self.nFilters):
                     graph.add_node(f'{self.name}g{i}{j}{kx}', index=(ix,jx,kx), threshold=self.thresholds[0,ix,jx,kx], decay=1.0, p=1.0, potential=0.0)
                     output_lists[0].append(f'{self.name}g{i}{j}{kx}')
 
+        return output_lists
+
+    def create_biases_nodes_and_synapses(self, graph):
         # Biases for convolution
         if self.biases is not None:
             # biases neurons/nodes; one node per kernel/channel in filter
@@ -336,27 +352,18 @@ class keras_convolution_2d_4dinput(Brick):
                     for k in np.arange(self.nFilters):
                         graph.add_edge(f'{self.name}b{k}',f'{self.name}g{i}{j}{k}', weight=self.biases[k], delay=1)
 
-        self.connect_input_and_output_neurons(input_lists,graph)
-
-        self.is_built=True
-
-        return (graph, self.metadata, [{'complete': complete_node, 'begin': begin_node}], output_lists, output_codings)
-
     def connect_input_and_output_neurons(self,input_lists,graph):
         # Get size/shape information from input arrays
         batch_size, Am, An, nChannels = self.pshape
         Bm, Bn = self.filters.shape[:2]
 
         I = np.array(input_lists[0])
-        num_input_neurons_per_channel = Am * An * self.basep * self.bits
         num_input_neurons = len(input_lists[0])
 
         output_neurons = {(row,col): self.get_output_neurons(row,col,Bm,Bn) for col in np.arange(An) for row in np.arange(Am)}
 
-        # I = np.array(input_lists[0]).reshape(-1,num_input_neurons_per_channel)
         # Construct edges connecting input and output nodes
         cnt = -1
-        # for channel in np.arange(nChannels):
         for filter in np.arange(self.nFilters):
             for k in np.arange(num_input_neurons):  # loop over input neurons
 
