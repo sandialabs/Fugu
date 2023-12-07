@@ -334,8 +334,8 @@ class keras_convolution_2d_4dinput(Brick):
         for ix, i in enumerate(np.arange(self.bnds[0,0],self.bnds[1,0] + 1,self.strides[0])):
             for jx, j in enumerate(np.arange(self.bnds[0,1],self.bnds[1,1] + 1,self.strides[1])):
                 for kx in np.arange(self.nFilters):
-                    graph.add_node(f'{self.name}g{i}{j}{kx}', index=(ix,jx,kx), threshold=self.thresholds[0,ix,jx,kx], decay=1.0, p=1.0, potential=0.0)
-                    output_lists[0].append(f'{self.name}g{i}{j}{kx}')
+                    graph.add_node(f'{self.name}g{kx}{i}{j}', index=(ix,jx,kx), threshold=self.thresholds[0,ix,jx,kx], decay=1.0, p=1.0, potential=0.0)
+                    output_lists[0].append(f'{self.name}g{kx}{i}{j}')
 
         return output_lists
 
@@ -347,10 +347,10 @@ class keras_convolution_2d_4dinput(Brick):
                 graph.add_node(f'{self.name}b{k}', index=(99,k), threshold=-1.0, decay=1.0, p=1.0, potential=0.0)
 
             # Construct edges connecting biases node(s) to output nodes
-            for i in np.arange(self.bnds[0,0],self.bnds[1,0] + 1,self.strides[0]):
-                for j in np.arange(self.bnds[0,1],self.bnds[1,1] + 1,self.strides[1]):
-                    for k in np.arange(self.nFilters):
-                        graph.add_edge(f'{self.name}b{k}',f'{self.name}g{i}{j}{k}', weight=self.biases[k], delay=1)
+            for k in np.arange(self.nFilters):
+                for j in np.arange(self.bnds[0,0],self.bnds[1,0] + 1,self.strides[0]):
+                    for i in np.arange(self.bnds[0,1],self.bnds[1,1] + 1,self.strides[1]):
+                        graph.add_edge(f'{self.name}b{k}',f'{self.name}g{k}{j}{i}', weight=self.biases[k], delay=1)
 
     def connect_input_and_output_neurons(self,input_lists,graph):
         # Get size/shape information from input arrays
@@ -364,21 +364,21 @@ class keras_convolution_2d_4dinput(Brick):
 
         # Construct edges connecting input and output nodes
         cnt = -1
-        for filter in np.arange(self.nFilters):
-            for k in np.arange(num_input_neurons):  # loop over input neurons
+        for k in np.arange(num_input_neurons):  # loop over input neurons
 
-                # loop over output neurons
-                row, col, channel, pwr, Ck = np.unravel_index(k, (Am, An, self.nChannels, self.bits,  self.basep))
-                if Ck == 0:
-                    continue
+            # loop over output neurons
+            row, col, channel, pwr, Ck = np.unravel_index(k, (Am, An, self.nChannels, self.bits,  self.basep))
+            if Ck == 0:
+                continue
 
-                for i, j in output_neurons[(row,col)]:
-                    ix = i - row + (Bm - 1)
-                    jx = j - col + (Bn - 1)
+            for i, j in output_neurons[(row,col)]:
+                ix = i - row + (Bm - 1)
+                jx = j - col + (Bn - 1)
 
+                for filter in np.arange(self.nFilters):
                     cnt += 1
-                    graph.add_edge(I[k], f'{self.name}g{i}{j}{filter}', weight=Ck * self.basep**pwr * self.filters[ix,jx,channel,filter], delay=1)
-                    logging.debug(f'{cnt:3d}  A[m,n]: ({row:2d},{col:2d})   power: {pwr}    coeff_i: {Ck}    input: {k:3d}      output: {i}{j}{filter}   B[m,n]: ({ix:2d},{jx:2d})   filter: {self.filters[ix,jx,channel,filter]}     I(row,col,channel,bit-pwr,basep-coeff): {np.unravel_index(k,(Am,An,self.nChannels,self.bits,self.basep))}     I[index]: {graph.nodes[I[k]]["index"]}')
+                    graph.add_edge(I[k], f'{self.name}g{filter}{i}{j}', weight=Ck * self.basep**pwr * self.filters[ix,jx,channel,filter], delay=1)
+                    logging.debug(f'{cnt:3d}  A[m,n]: ({row:2d},{col:2d})   power: {pwr}    coeff_i: {Ck}    input: {k:3d}      output: {filter}{i}{j}   B[m,n]: ({ix:2d},{jx:2d})   filter: {self.filters[ix,jx,channel,filter]}     I(row,col,channel,bit-pwr,basep-coeff): {np.unravel_index(k,(Am,An,self.nChannels,self.bits,self.basep))}     I[index]: {graph.nodes[I[k]]["index"]}')
 
     def get_output_neurons(self,row,col,Bm,Bn):
         neuron_indices = []
