@@ -306,7 +306,7 @@ class keras_convolution_2d_4dinput(Brick):
         begin_node = new_begin_node_name
 
         # determine output neuron bounds based on the "mode"
-        self.get_output_bounds_alt()
+        self.get_output_bounds()
 
         # Check for scalar value for thresholds
         if not hasattr(self.thresholds, '__len__') and (not isinstance(self.thresholds, str)):
@@ -351,7 +351,7 @@ class keras_convolution_2d_4dinput(Brick):
         num_input_neurons_per_channel = Am * An * self.basep * self.bits
         num_input_neurons = len(input_lists[0])
 
-        output_neurons_alt = {(row,col): self.get_output_neurons_alt(row,col,Bm,Bn) for col in np.arange(An) for row in np.arange(Am)}
+        output_neurons = {(row,col): self.get_output_neurons(row,col,Bm,Bn) for col in np.arange(An) for row in np.arange(Am)}
 
         # I = np.array(input_lists[0]).reshape(-1,num_input_neurons_per_channel)
         # Construct edges connecting input and output nodes
@@ -365,7 +365,7 @@ class keras_convolution_2d_4dinput(Brick):
                 if Ck == 0:
                     continue
 
-                for i, j in output_neurons_alt[(row,col)]:
+                for i, j in output_neurons[(row,col)]:
                     ix = i - row + (Bm - 1)
                     jx = j - col + (Bn - 1)
 
@@ -373,35 +373,7 @@ class keras_convolution_2d_4dinput(Brick):
                     graph.add_edge(I[k], f'{self.name}g{i}{j}{filter}', weight=Ck * self.basep**pwr * self.filters[ix,jx,channel,filter], delay=1)
                     logging.debug(f'{cnt:3d}  A[m,n]: ({row:2d},{col:2d})   power: {pwr}    coeff_i: {Ck}    input: {k:3d}      output: {i}{j}{filter}   B[m,n]: ({ix:2d},{jx:2d})   filter: {self.filters[ix,jx,channel,filter]}     I(row,col,channel,bit-pwr,basep-coeff): {np.unravel_index(k,(Am,An,self.nChannels,self.bits,self.basep))}     I[index]: {graph.nodes[I[k]]["index"]}')
 
-    def get_input_neurons(self,row,col,Bm,Bn):
-        neuron_indices = []
-        Am, An = self.pshape[1:3]
-
-        for i in np.arange(row, row + Bm):
-            if (i <= Am):
-                for j in np.arange(col, col + Bn):
-                    if (j <= An):
-                        neuron_indices.append((i,j))
-
-        return neuron_indices
-
     def get_output_neurons(self,row,col,Bm,Bn):
-        neuron_indices = []
-        bnds = self.bnds
-        Sm, Sn = self.strides
-
-        #TODO: Do I need these conditions in this loop? Is it possible to simply use
-        # bnds[0,0] to bnds[1,0] as the range for i and
-        # bnds[0,1] to bnds[1,1] as the range for j here?
-        for i in np.arange(row, row + Bm):
-            if (i >= bnds[0, 0]) and (i <= bnds[1, 0]):
-                for j in np.arange(col, col + Bn):
-                    if (j >= bnds[0, 1]) and (j <= bnds[1, 1]):
-                        neuron_indices.append((i, j))
-
-        return neuron_indices
-
-    def get_output_neurons_alt(self,row,col,Bm,Bn):
         neuron_indices = []
         Sm, Sn = self.strides
 
@@ -417,24 +389,8 @@ class keras_convolution_2d_4dinput(Brick):
 
     def get_output_bounds(self):
         input_shape = np.array(self.pshape)[1:3]
-        full_output_shape = np.array(self.pshape)[1:3] + np.array(self.filters.shape)[:2] - 1
-        mode_output_shape = np.array(self.output_shape)[1:3]
-
-        if self.mode == "same":
-            ub = np.floor(0.5 * (mode_output_shape + input_shape) - 1)
-            lb = ub - (mode_output_shape - 1)
-            self.bnds = np.array([lb,ub],dtype=int) + 1
-        elif self.mode == "valid":
-            lmins = np.minimum(self.pshape[1:3],self.filters.shape[:2])
-            ub = full_output_shape - lmins
-            lb = ub - (mode_output_shape - 1)
-            self.bnds = np.array([lb,ub],dtype=int) - (np.array(self.strides) - 1)
-
-    def get_output_bounds_alt(self):
-        input_shape = np.array(self.pshape)[1:3]
         kernel_shape = np.array(self.filters.shape)[:2]
         full_output_shape = input_shape + kernel_shape - 1
-        mode_output_shape = np.array(self.output_shape)[1:3]
 
         if self.mode == "same":
             lb = np.floor(0.5 * (full_output_shape - input_shape))
