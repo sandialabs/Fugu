@@ -4,7 +4,7 @@ import pytest
 from scipy.signal import convolve2d
 
 from fugu.backends import snn_Backend
-from fugu.bricks.keras_convolution_bricks import keras_convolution_2d as convolution_2d
+from fugu.bricks.keras_convolution_bricks import keras_convolution_2d_4dinput as convolution_2d
 from fugu.bricks.dense_bricks import dense_layer_1d, dense_layer_2d
 from fugu.bricks.input_bricks import BaseP_Input, Vector_Input
 from fugu.bricks.pooling_bricks import pooling_1d, pooling_2d
@@ -85,7 +85,7 @@ class Test_Whetstone_2_Fugu_ConvolutionLayer:
         scaffold = Scaffold()
         scaffold.add_brick(Vector_Input(np.ones((28,28)), name="Input0"),"input")
         scaffold = whetstone_2_fugu(model,basep,bits,scaffold=scaffold)
-        self.graph = scaffold.lay_bricks()        
+        self.graph = scaffold.lay_bricks()
 
         assert False
 
@@ -116,30 +116,32 @@ class Test_Whetstone_2_Fugu_ConvolutionLayer:
         kernel_height, kernel_width = 2, 2
         nChannels = 1
         nFilters = 1
-        input_shape = (image_height,image_width,nChannels)
         strides = (1,1)
+        mode = "same"
+
+        input_shape = (image_height,image_width,nChannels)
+        mock_image = generate_mock_image(image_height,image_width,nChannels).astype(float)
         init_kernel = generate_keras_kernel(kernel_height,kernel_width,nFilters,nChannels)
         init_bias = bias*np.ones((nFilters,))
         kernel_initializer = initializers.constant(np.flip(init_kernel,(0,1))) # [METHOD 2] keras doesn't flip the filter during the convolution; so force the array flip manually.
         bias_initializer = initializers.constant(init_bias)
-        mode = "same"
 
         model = Sequential()
         model.add(Conv2D(nFilters, (kernel_height, kernel_width), strides=strides, padding=mode, activation=None, use_bias=True, input_shape=input_shape, name="one", kernel_initializer=kernel_initializer, bias_initializer=bias_initializer))
         model.add(Spiking_BRelu(input_shape=(3,3),sharpness=1.0,name="spike"))
-        mock_image = generate_mock_image(image_height,image_width,nChannels).astype(float)
         calculated = model.layers[0](mock_image)[0,:,:,0].numpy().tolist() # gives the output of the input through this layer only
         feature_extractor = Model(inputs=model.inputs, outputs=[layer.output for layer in model.layers]) # gives cumalative output of the input through this and previous layers.
 
         self.basep = 3
         self.bits = 3
-        self.pvector = mock_image.reshape(3,3)
+        self.pvector = mock_image
         self.pshape = self.pvector.shape
-        self.filters = init_kernel.reshape(2,2)
+        self.filters = init_kernel
         self.filters_shape = self.filters.shape
         self.strides = strides
+        self.nFilters = nFilters
         scaffold = Scaffold()
-        scaffold.add_brick(BaseP_Input(mock_image.reshape(image_height,image_width),p=self.basep,bits=self.bits,collapse_binary=False,name="I",time_dimension=False),"input")
+        scaffold.add_brick(BaseP_Input(mock_image,p=self.basep,bits=self.bits,collapse_binary=False,name="I",time_dimension=False),"input")
         scaffold = whetstone_2_fugu(model,self.basep,self.bits,scaffold=scaffold)
         scaffold.lay_bricks()
         scaffold.summary(verbose=1)
@@ -177,14 +179,16 @@ class Test_Whetstone_2_Fugu_ConvolutionLayer:
         kernel_height, kernel_width = 2, 2
         nChannels = 1
         nFilters = 1
-        input_shape = (image_height,image_width,nChannels)
         strides = (1,1)
+        mode = "same"
+        nSpikes = 2
+
+        input_shape = (image_height,image_width,nChannels)
+        mock_image = generate_mock_image(image_height,image_width,nChannels).astype(float)
         init_kernel = generate_keras_kernel(kernel_height,kernel_width,nFilters,nChannels)
         init_bias = -52.6*np.ones((nFilters,))
         kernel_initializer = initializers.constant(np.flip(init_kernel,(0,1))) # [METHOD 2] keras doesn't flip the filter during the convolution; so force the array flip manually.
         bias_initializer = initializers.constant(init_bias)
-        mode = "same"
-        nSpikes = 2
 
         model = Sequential()
         model.add(Conv2D(nFilters, (kernel_height, kernel_width), strides=strides, padding=mode, activation=None, use_bias=True, input_shape=input_shape, name="one", kernel_initializer=kernel_initializer, bias_initializer=bias_initializer))
@@ -195,13 +199,14 @@ class Test_Whetstone_2_Fugu_ConvolutionLayer:
 
         self.basep = 3
         self.bits = 3
-        self.pvector = mock_image.reshape(3,3)
+        self.pvector = mock_image.reshape(1,*input_shape)
         self.pshape = self.pvector.shape
-        self.filters = init_kernel.reshape(2,2)
+        self.filters = init_kernel
         self.filters_shape = self.filters.shape
         self.strides = strides
+        self.nFilters = nFilters
         scaffold = Scaffold()
-        scaffold.add_brick(BaseP_Input(mock_image.reshape(3,3),p=self.basep,bits=self.bits,collapse_binary=False,name="I",time_dimension=False),"input")
+        scaffold.add_brick(BaseP_Input(mock_image,p=self.basep,bits=self.bits,collapse_binary=False,name="I",time_dimension=False),"input")
         scaffold = whetstone_2_fugu(model,self.basep,self.bits,scaffold=scaffold)
         scaffold.lay_bricks()
 
@@ -383,8 +388,8 @@ class Test_Whetstone_2_Fugu_ConvolutionLayer:
 
     # Auxillary/helper functions
     def get_num_output_neurons(self, thresholds):
-        Am, An = self.pshape
-        Bm, Bn = self.filters_shape
+        Am, An = self.pshape[1:3]
+        Bm, Bn = self.filters_shape[:2]
         Gm, Gn = Am + Bm - 1, An + Bn - 1
 
         if not hasattr(thresholds, "__len__") and (not isinstance(thresholds, str)):
@@ -407,7 +412,7 @@ class Test_Whetstone_2_Fugu_ConvolutionLayer:
         else:
             thresholds_size = np.size(thresholds)
 
-        return thresholds_size
+        return thresholds_size * self.nFilters
 
     def output_spike_positions(self, basep, bits, pvector, filters, thresholds):
         thresholds_size = self.get_num_output_neurons(thresholds)

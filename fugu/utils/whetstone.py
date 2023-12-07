@@ -1,7 +1,7 @@
 # isort: skip_file
 import numpy as np
 
-from fugu.bricks.keras_convolution_bricks import keras_convolution_2d as convolution_2d
+from fugu.bricks.keras_convolution_bricks import keras_convolution_2d_4dinput as convolution_2d
 from fugu.bricks.input_bricks import BaseP_Input
 from fugu.bricks.pooling_bricks import pooling_1d, pooling_2d
 from fugu.bricks.dense_bricks import dense_layer_2d
@@ -40,16 +40,23 @@ def whetstone_2_fugu(keras_model, basep, bits, scaffold=None):
                 kernel = layer.get_weights()[0]
                 biases = layer.get_weights()[1]
 
-            input_shape = layer.input_shape
-            output_shape = layer.output_shape
+            if layer.data_format == 'channels_last':
+                batch_size = layer.input_shape[:-3]
+                if len(batch_size) == 1 and batch_size[0] is None:
+                    batch_size = 1
+                else:
+                    batch_size = batch_size[0]
+            elif layer.data_format == 'channels_first':
+                #TODO : Handle this scenario later
+                pass
+
+            input_shape = tuple([batch_size if value == None else value for value in layer.input_shape])
+            output_shape = tuple([batch_size if value == None else value for value in layer.output_shape])
             mode = layer.padding
             strides = layer.strides
-            # Add a brick for each channel
-            for channel in np.arange(input_shape[-1]):
-                for filter in np.arange(layer.filters):
-                    print(f"Conv2D:: Channel: {channel} Filter: {filter}")
-                    scaffold.add_brick(convolution_2d(input_shape[1:-1],np.flip(kernel[:,:,channel,filter]),0.5,basep,bits,name=f"convolution_layer_{layerID}",mode=mode,strides=strides,biases=biases[channel]),[(layerID, 0)],output=True)
-                    layerID += 1
+            print(f"Conv2D:: LayerID: {layerID+1}")
+            scaffold.add_brick(convolution_2d(input_shape,np.flip(kernel),0.5,basep,bits,name=f"convolution_layer{layerID}_",mode=mode,strides=strides,biases=biases),[(layerID, 0)],output=True)
+            layerID += 1
 
         if type(layer) is Spiking_BRelu:
             pass

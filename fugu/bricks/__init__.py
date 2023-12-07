@@ -13,4 +13,4 @@ from .adder_bricks import streaming_adder, temporal_shift, streaming_scalar_mult
 from .convolution_bricks import convolution_1d, convolution_2d
 from .pooling_bricks import pooling_1d, pooling_2d
 from .dense_bricks import dense_layer_1d, dense_layer_2d
-from .keras_convolution_bricks import keras_convolution_2d
+from .keras_convolution_bricks import keras_convolution_2d, keras_convolution_2d_4dinput
