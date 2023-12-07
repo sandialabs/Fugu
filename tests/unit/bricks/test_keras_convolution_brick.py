@@ -875,7 +875,7 @@ class Test_KerasConvolution2D_4dinput:
         result = self.run_convolution_2d(thresholds)
         assert self.expected_spikes(nSpikes) == self.calculated_spikes(thresholds,result)
 
-    @pytest.mark.slow
+    @pytest.mark.skip(reason="Slow test. Doesn't show 'dots' as one dot tests all matrix entries per stride value. Additionally, this is a duplicate of exhaustive test below, which does show 'dots' for each matrix entry per mode, but demonstrates the explicit version of that (exhaustive) test.")
     @pytest.mark.parametrize("strides", [(1,1),(1,2),(2,1),(2,2),(1,3),(3,1),(2,3),(3,2),(3,3)])
     def test_5x5_image_same_mode_with_strides_and_biases(self,strides):
         '''
@@ -931,6 +931,11 @@ class Test_KerasConvolution2D_4dinput:
             assert self.expected_spikes(nSpikes) == self.calculated_spikes(thresholds,result)
 
     def generate_all_values_for_exhaustive_test(self):
+        '''
+            Helper function to generate all the possible parameters for a 5x5 image with 2 channels and a 3 filters with a 2x2 kernel at different strides and modes{"same","valid"}.
+        '''
+        runSubsetOn = True # Run only a subset of the full exhaustive parameter space; otherwise runs every parameter sequence
+        subset_size = 100  # Note: Full parameter space size is 510
         class Empty:
             pass
 
@@ -950,6 +955,7 @@ class Test_KerasConvolution2D_4dinput:
         aself.nChannels = nChannels
         aself.nFilters = nFilters
 
+        arguments = []
         for mode in ["same", "valid"]:
             aself.mode = mode
             for strides in [(1,1),(1,2),(2,1),(2,2),(1,3),(3,1),(2,3),(3,2),(3,3)]:
@@ -963,15 +969,31 @@ class Test_KerasConvolution2D_4dinput:
                 for k, bias in enumerate(biases_list):
                     nSpikes = (keras_convolution_answer > bias).sum()
                     biases = -bias * np.ones((nFilters,))
-                    yield nSpikes, thresholds, biases, strides, mode, aself
+                    if runSubsetOn:
+                        arguments.append((nSpikes, thresholds, biases, strides, mode, aself))
+                    else:
+                        yield (nSpikes, thresholds, biases, strides, mode, aself)
+
+
+        if runSubsetOn:
+            # randomly chose a subset of the full parameter space for the unit tests
+            yield_list = np.array(arguments,dtype=[('nSpikes',int),('thresholds',object),('biases',object),('strides',tuple),('mode','<U10'),('aself',object)])
+            yield_subset = np.random.choice(yield_list,subset_size,replace=False)
+            for nSpikes, thresholds, biases, strides, mode, aself in yield_subset:
+                yield nSpikes, thresholds, biases, strides, mode, aself
+
 
     @pytest.fixture
     def get_self(self):
         return self
 
-    @pytest.mark.slow
-    @pytest.mark.parametrize("nSpikes,thresholds,biases,strides,mode,aself", generate_all_values_for_exhaustive_test(get_self))
+    # @pytest.mark.slow
+    @pytest.mark.parametrize("nSpikes, thresholds, biases, strides, mode, aself", generate_all_values_for_exhaustive_test(get_self))
     def test_exhaustive_5x5_image_all_modes_strides_biases(self,nSpikes,thresholds,biases,strides,mode,aself):
+        '''
+            Exhaustive test that check each matrix element in the convolution answer for correctness. This is accomplished by setting the biases to the value of the exact answer, thereby, 
+            shifting the neuron voltage to 0. An output neuron spike when the neuron voltage is > 0.5.
+        '''
         for property, value in vars(aself).items():
             if property[0] == '_':
                 continue
