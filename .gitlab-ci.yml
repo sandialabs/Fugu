@@ -23,7 +23,7 @@ black:
     - python -m pip install --upgrade .
     - python -m pip install black
   script:
-    - black --check tests fugu/utils/validation.py fugu/simulators --exclude=tests/unit/bricks/
+    - black --check tests fugu/utils/validation.py fugu/simulators --exclude="(tests/unit/bricks/|tests/unit/utils/test_whetstone*|tests/unit/utils/test_keras*)"
 
 tests:
   stage: testing
