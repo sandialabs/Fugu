@@ -68,7 +68,11 @@ def generate_keras_kernel(nRows,nCols,nFilters,nChannels):
 
         Returns a 4d tensor
     '''
-    column_permutations = np.concatenate((np.arange(0,nFilters*nChannels,2),np.arange(1,nFilters*nChannels,2)))
+    if nFilters == 1 or nChannels == 1:
+        # Keep columns in their original positions
+        column_permutations = np.arange(nFilters*nChannels)
+    else:
+        column_permutations = np.concatenate((np.arange(0,nFilters*nChannels,2),np.arange(1,nFilters*nChannels,2)))
     return np.arange(1,nFilters*nChannels*nRows*nCols+1).reshape(nRows*nCols,nFilters*nChannels,order='F')[:,column_permutations].reshape(nRows,nCols,nChannels,nFilters)
 
 def generate_mock_image(nRows,nCols,nChannels):

@@ -219,42 +219,52 @@ class Test_Whetstone_2_Fugu_ConvolutionLayer:
         new_fugu_thresholds = 0.5*np.ones(feature_extractor(mock_image)[0][0,:,:,0].numpy().shape)
         assert self.expected_spikes(nSpikes) == self.calculated_spikes(new_fugu_thresholds, result)
 
-    @pytest.mark.xfail(reason="Not implemented.")
     def test_explicit_whetstone_2_fugu_conv2d_layer_multichannel_multifilter(self):
         '''
-            [[1,2,3]                  [[ 4,11,18, 9]
-             [4,5,6]  *  [[1,2]  =     [18,37,47,21]
-             [7,8,9]]     [3,4]]       [36,67,77,33]
-                                       [14,23,26, 9]]
+            Mode="same", Strides=(1,1)
 
-            *** Note ***
-            [METHOD 1]
-            If you don't flip the kernel for Keras then don't "flip" the kernel when doing convolution by hand. Moreover this result is equivalent 
-            to performing scipy.signal.convolve2d([[1,2,3],[4,5,6],[7,8,9]],np.flip( [[1,2],[3,4]] ), mode="full").
+            Image:
+                   Channel 1         Channel 2
+                [[1., 2., 3.],  [[10., 11., 12.],
+                 [4., 5., 6.],   [13., 14., 15.],
+                 [7., 8., 9.]]   [16., 17., 18.]]
 
-            [METHOD 2]
-            Otherwise, "flip" the kernel (filter) for keras and then perform the traditional convolution practice when calculating convolution by hand.
-            The below result is equivalent to scipy.signal.convolve2d([[1,2,3],[4,5,6],[7,8,9]],[[1,2],[3,4]], mode="full")
+            Filters:
+              Filter 1
+                Channel 1   Channel 2
+                [[ 1,  2],  [[5, 6],
+                 [ 3,  4]]   [7, 8]]
 
-            [[1,2,3]                  [[ 1, 4, 7, 6]
-             [4,5,6]  *  [[1,2]  =     [ 7,23,33,24]
-             [7,8,9]]     [3,4]]       [19,53,63,42]
-                                       [21,52,59,36]]
+              Filter 2
+                Channel 1   Channel 2
+                [[ 9, 10],  [[13, 14],
+                 [11, 12]]   [15, 16]]
+
+              Filter 3
+                Channel 1   Channel 2
+                [[17, 18],  [[21, 22],
+                 [19, 20]]   [23, 24]]
+
+            Convolution Answer:
+                  Filter 1 Out              Filter 2 Out              Filter 3 Out
+            [[ 328.,  364.,  210.],   [[ 808.,  908.,  498.],   [[1288., 1452.,  786.],
+             [ 436.,  472.,  270.],    [1108., 1208.,  654.],    [1780., 1944., 1038.],
+             [ 299.,  321.,  180.]]    [ 683.,  737.,  396.]]    [1067., 1153.,  612.]]
         '''
         from tensorflow.keras import Model, initializers
         image_height, image_width = 3, 3
         kernel_height, kernel_width = 2, 2
-        nChannels = 1
+        nChannels = 2
         nFilters = 3
         input_shape = (image_height,image_width,nChannels)
         strides = (1,1)
         init_kernel = generate_keras_kernel(kernel_height,kernel_width,nFilters,nChannels)
-        init_bias = np.array([1799.4,1063.4,327.4]).reshape((nFilters,))#-52.6*np.ones((nFilters,))
+        init_bias = np.array([-320., -653., -786.]).reshape((nFilters,))
         kernel_initializer = initializers.constant(np.flip(init_kernel,(0,1))) # [METHOD 2] keras doesn't flip the filter during the convolution; so force the array flip manually.
         bias_initializer = initializers.constant(init_bias)
         mock_image = generate_mock_image(image_height,image_width,nChannels).astype(float)
         mode = "same"
-        nSpikes = 2
+        nSpikes = 5 + 7 + 7
         basep = 3
         bits = 4
 
@@ -274,7 +284,15 @@ class Test_Whetstone_2_Fugu_ConvolutionLayer:
         backend.compile(scaffold, backend_args)
         result = backend.run(5)
 
-        new_fugu_thresholds = 0.5*np.ones(feature_extractor(mock_image)[0][0,:,:,0].numpy().shape)
+        self.basep = 3
+        self.bits = 3
+        self.pvector = mock_image.reshape(1,*input_shape)
+        self.pshape = self.pvector.shape
+        self.filters = init_kernel
+        self.filters_shape = self.filters.shape
+        self.strides = strides
+        self.nFilters = nFilters
+        new_fugu_thresholds = 0.5*np.ones(feature_extractor(mock_image)[0].numpy().shape)
         assert self.expected_spikes(nSpikes) == self.calculated_spikes(new_fugu_thresholds, result)
 
     @pytest.mark.xfail(reason="Not implemented.")

@@ -55,7 +55,7 @@ def whetstone_2_fugu(keras_model, basep, bits, scaffold=None):
             mode = layer.padding
             strides = layer.strides
             print(f"Conv2D:: LayerID: {layerID+1}")
-            scaffold.add_brick(convolution_2d(input_shape,np.flip(kernel),0.5,basep,bits,name=f"convolution_layer{layerID}_",mode=mode,strides=strides,biases=biases),[(layerID, 0)],output=True)
+            scaffold.add_brick(convolution_2d(input_shape,np.flip(kernel,(0,1)),0.5,basep,bits,name=f"convolution_layer{layerID}_",mode=mode,strides=strides,biases=biases),[(layerID, 0)],output=True)
             layerID += 1
 
         if type(layer) is Spiking_BRelu:
