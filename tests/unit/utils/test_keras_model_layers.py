@@ -1,4 +1,5 @@
 # isort: skip_file
+# fmt: off
 import numpy as np
 import pytest
 

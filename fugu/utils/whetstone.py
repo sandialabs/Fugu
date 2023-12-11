@@ -1,4 +1,5 @@
 # isort: skip_file
+# fmt: off
 import numpy as np
 
 from fugu.bricks.keras_convolution_bricks import keras_convolution_2d_4dinput as convolution_2d
@@ -8,11 +9,16 @@ from fugu.bricks.dense_bricks import dense_layer_2d
 from fugu.scaffold import Scaffold
 
 from tensorflow.keras.layers import Dense, Conv2D, Flatten, MaxPooling2D, BatchNormalization
-from whetstone.layers import Spiking_BRelu
-from whetstone.utils.export_utils import copy_remove_batchnorm
+try:
+    from whetstone.layers import Spiking_BRelu
+    from whetstone.utils.export_utils import copy_remove_batchnorm
+except ImportError as e:
+    import sys
+    if "pytest" in sys.modules:
+        pass
+    else:
+        raise SystemExit('\n *** Whetstone package is not installed. *** \n')
 
-# Turn off black formatting for this file
-# fmt: off
 
 def whetstone_2_fugu(keras_model, basep, bits, scaffold=None):
     '''

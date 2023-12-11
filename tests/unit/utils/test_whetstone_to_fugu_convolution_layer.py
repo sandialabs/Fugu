@@ -1,4 +1,5 @@
 # isort: skip_file
+# fmt: off
 import numpy as np
 import pytest
 from scipy.signal import convolve2d
@@ -15,11 +16,9 @@ from fugu.utils.whetstone import whetstone_2_fugu
 import pandas as pd
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense, Conv2D, Flatten, MaxPooling2D, BatchNormalization
-from whetstone.layers import Spiking_BRelu
-from whetstone.utils import layer_utils
 
-# Turn off black formatting for this file
-# fmt: off
+Spiking_BRelu = pytest.importorskip("whetstone.layers", reason=f"Whetstone package not installed. Skipping test file {__file__} because of module dependency.").Spiking_BRelu
+layer_utils = pytest.importorskip("whetstone.utils", reason=f"Whetstone package not installed. Skipping test file {__file__} because of module dependency.").layer_utils
 
 def mock_keras_model(filename):
     '''
