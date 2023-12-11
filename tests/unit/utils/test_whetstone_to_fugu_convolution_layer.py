@@ -283,8 +283,8 @@ class Test_Whetstone_2_Fugu_ConvolutionLayer:
         backend.compile(scaffold, backend_args)
         result = backend.run(5)
 
-        self.basep = 3
-        self.bits = 3
+        self.basep = basep
+        self.bits = bits
         self.pvector = mock_image.reshape(1,*input_shape)
         self.pshape = self.pvector.shape
         self.filters = init_kernel
@@ -294,8 +294,8 @@ class Test_Whetstone_2_Fugu_ConvolutionLayer:
         new_fugu_thresholds = 0.5*np.ones(feature_extractor(mock_image)[0].numpy().shape)
         assert self.expected_spikes(nSpikes) == self.calculated_spikes(new_fugu_thresholds, result)
 
-    @pytest.mark.xfail(reason="Not implemented.")
-    def test_whetstone_2_fugu_conv2d_layer_with_batchnormalization(self):
+    @pytest.mark.parametrize("mode",["same","valid"])
+    def test_whetstone_2_fugu_conv2d_layer_with_batchnormalization(self,mode):
         '''
             [[1,2,3]                  [[ 4,11,18, 9]
              [4,5,6]  *  [[1,2]  =     [18,37,47,21]
@@ -319,18 +319,17 @@ class Test_Whetstone_2_Fugu_ConvolutionLayer:
         from tensorflow.keras import Model, initializers
         image_height, image_width = 3, 3
         kernel_height, kernel_width = 2, 2
-        nChannels = 1
-        nFilters = 1
+        nChannels = 2
+        nFilters = 3
         input_shape = (image_height,image_width,nChannels)
         strides = (1,1)
         init_kernel = generate_keras_kernel(kernel_height,kernel_width,nFilters,nChannels)
-        init_bias = -52.6*np.ones((nFilters,))
+        init_bias = np.array([-320., -653., -786.]).reshape((nFilters,))
         kernel_initializer = initializers.constant(np.flip(init_kernel,(0,1))) # [METHOD 2] keras doesn't flip the filter during the convolution; so force the array flip manually.
         bias_initializer = initializers.constant(init_bias)
-        mode = "same"
-        nSpikes = 2
+        mock_image = generate_mock_image(image_height,image_width,nChannels).astype(float)
         basep = 3
-        bits = 3
+        bits = 4
 
         gamma_initializer = initializers.constant(2.)
         beta_initializer = initializers.constant(3.)
@@ -340,11 +339,20 @@ class Test_Whetstone_2_Fugu_ConvolutionLayer:
         model = Sequential()
         model.add(Conv2D(nFilters, (kernel_height, kernel_width), strides=strides, padding=mode, activation=None, use_bias=True, input_shape=input_shape, name="one", kernel_initializer=kernel_initializer, bias_initializer=bias_initializer))
         model.add(BatchNormalization(beta_initializer=beta_initializer, gamma_initializer=gamma_initializer, moving_mean_initializer=moving_mean_initializer, moving_variance_initializer=moving_variance_initializer))
-        mock_image = generate_mock_image(image_height,image_width,nChannels).astype(float)
         feature_extractor = Model(inputs=model.inputs, outputs=[layer.output for layer in model.layers]) # gives cumalative output of the input through this and previous layers.
 
+        conv2d_layer = model.layers[0]
+        bnorm_layer = model.layers[1]
+        new_weights, new_biases = merge_layers(conv2d_layer,bnorm_layer)
+        new_kernel_initializer = initializers.constant(new_weights)
+        new_biases_initializer = initializers.constant(new_biases)
+
+        merged_model = Sequential()
+        merged_model.add(Conv2D(nFilters, (kernel_height, kernel_width), strides=strides, padding=mode, activation=None, use_bias=True, input_shape=input_shape, name="merged", kernel_initializer=new_kernel_initializer, bias_initializer=new_biases_initializer))
+        merged_calculated = merged_model.layers[0](mock_image)[0,:,:,:].numpy()
+
         scaffold = Scaffold()
-        scaffold.add_brick(BaseP_Input(mock_image.reshape(3,3),p=basep,bits=bits,collapse_binary=False,name="I",time_dimension=False),"input")
+        scaffold.add_brick(BaseP_Input(mock_image.reshape(input_shape),p=basep,bits=bits,collapse_binary=False,name="I",time_dimension=False),"input")
         scaffold = whetstone_2_fugu(model,basep,bits,scaffold=scaffold)
         scaffold.lay_bricks()
 
@@ -354,7 +362,17 @@ class Test_Whetstone_2_Fugu_ConvolutionLayer:
         backend.compile(scaffold, backend_args)
         result = backend.run(5)
 
-        new_fugu_thresholds = 0.5*np.ones(feature_extractor(mock_image)[0][0,:,:,0].numpy().shape)
+        self.basep = basep
+        self.bits = bits
+        self.pvector = mock_image.reshape(1,*input_shape)
+        self.pshape = self.pvector.shape
+        self.filters = init_kernel
+        self.filters_shape = self.filters.shape
+        self.strides = strides
+        self.nFilters = nFilters
+        self.mode = mode
+        new_fugu_thresholds =  0.5*np.ones(feature_extractor(mock_image)[1].numpy().shape)
+        nSpikes = (merged_calculated > 0.5).sum()
         assert self.expected_spikes(nSpikes) == self.calculated_spikes(new_fugu_thresholds, result)
 
     @pytest.mark.parametrize("strides",[(1,1),(1,2),(2,1),(2,2)])
@@ -405,29 +423,30 @@ class Test_Whetstone_2_Fugu_ConvolutionLayer:
 
     # Auxillary/helper functions
     def get_num_output_neurons(self, thresholds):
-        Am, An = self.pshape[1:3]
-        Bm, Bn = self.filters_shape[:2]
-        Gm, Gn = Am + Bm - 1, An + Bn - 1
+        input_shape = np.array(self.pshape)[1:3]
+        kernel_shape = np.array(self.filters.shape)[:2]
+        full_output_shape = input_shape + kernel_shape - 1
 
+        #TODO: Do I need this conditional statement here?
         if not hasattr(thresholds, "__len__") and (not isinstance(thresholds, str)):
             if self.mode == "full":
-                thresholds_size = (Gm) * (Gn)
+                thresholds_size = full_output_shape.prod()
 
             if self.mode == "valid":
-                lmins = np.minimum((Am, An), (Bm, Bn))
+                lmins = np.minimum(input_shape, kernel_shape)
                 lb = lmins - 1
-                ub = np.array([Gm, Gn]) - lmins
+                ub = np.array(full_output_shape) - lmins
                 thresholds_size = (ub[0] - lb[0] + 1) * (ub[1] - lb[1] + 1)
 
             if self.mode == "same":
-                apos = np.array([Am, An])
-                gpos = np.array([Gm, Gn])
-
-                lb = np.floor(0.5 * (gpos - apos))
-                ub = np.floor(0.5 * (gpos + apos) - 1)
+                lb = np.floor(0.5 * (full_output_shape - input_shape))
+                ub = np.floor(0.5 * (full_output_shape + input_shape) - 1)
                 thresholds_size = (ub[0] - lb[0] + 1) * (ub[1] - lb[1] + 1)
         else:
-            thresholds_size = np.size(thresholds)
+            if thresholds.ndim == 2:
+                thresholds_size = np.size(thresholds)
+            elif thresholds.ndim ==4:
+                thresholds_size = np.size(thresholds[0,:,:,0])
 
         return thresholds_size * self.nFilters
 
