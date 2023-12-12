@@ -139,16 +139,9 @@ class Test_Whetstone_2_Fugu_ConvolutionLayer:
         self.filters_shape = self.filters.shape
         self.strides = strides
         self.nFilters = nFilters
-        scaffold = Scaffold()
-        scaffold.add_brick(BaseP_Input(mock_image,p=self.basep,bits=self.bits,collapse_binary=False,name="I",time_dimension=False),"input")
-        scaffold = whetstone_2_fugu(model,self.basep,self.bits,scaffold=scaffold)
-        scaffold.lay_bricks()
-        scaffold.summary(verbose=1)
+        self.mode = mode
+        result = self.run_whetstone_to_fugu_utility(model)
 
-        backend = snn_Backend()
-        backend_args = {}
-        backend.compile(scaffold, backend_args)
-        result = backend.run(5)
         new_fugu_thresholds = 0.5*np.ones(feature_extractor(mock_image)[0][0,:,:,0].numpy().shape)
         assert self.expected_spikes(nSpikes) == self.calculated_spikes(new_fugu_thresholds, result)
 
@@ -198,22 +191,14 @@ class Test_Whetstone_2_Fugu_ConvolutionLayer:
 
         self.basep = 3
         self.bits = 3
-        self.pvector = mock_image.reshape(1,*input_shape)
+        self.pvector = mock_image
         self.pshape = self.pvector.shape
         self.filters = init_kernel
         self.filters_shape = self.filters.shape
         self.strides = strides
         self.nFilters = nFilters
-        scaffold = Scaffold()
-        scaffold.add_brick(BaseP_Input(mock_image,p=self.basep,bits=self.bits,collapse_binary=False,name="I",time_dimension=False),"input")
-        scaffold = whetstone_2_fugu(model,self.basep,self.bits,scaffold=scaffold)
-        scaffold.lay_bricks()
-
-        scaffold.summary(verbose=1)
-        backend = snn_Backend()
-        backend_args = {}
-        backend.compile(scaffold, backend_args)
-        result = backend.run(5)
+        self.mode = mode
+        result = self.run_whetstone_to_fugu_utility(model)
 
         new_fugu_thresholds = 0.5*np.ones(feature_extractor(mock_image)[0][0,:,:,0].numpy().shape)
         assert self.expected_spikes(nSpikes) == self.calculated_spikes(new_fugu_thresholds, result)
@@ -272,49 +257,24 @@ class Test_Whetstone_2_Fugu_ConvolutionLayer:
         model.add(Spiking_BRelu(sharpness=1.0,name="spike"))
         feature_extractor = Model(inputs=model.inputs, outputs=[layer.output for layer in model.layers]) # gives cumalative output of the input through this and previous layers.
 
-        scaffold = Scaffold()
-        scaffold.add_brick(BaseP_Input(mock_image.reshape(input_shape),p=basep,bits=bits,collapse_binary=False,name="I",time_dimension=False),"input")
-        scaffold = whetstone_2_fugu(model,basep,bits,scaffold=scaffold)
-        scaffold.lay_bricks()
-
-        scaffold.summary(verbose=1)
-        backend = snn_Backend()
-        backend_args = {}
-        backend.compile(scaffold, backend_args)
-        result = backend.run(5)
-
         self.basep = basep
         self.bits = bits
-        self.pvector = mock_image.reshape(1,*input_shape)
+        self.pvector = mock_image
         self.pshape = self.pvector.shape
         self.filters = init_kernel
         self.filters_shape = self.filters.shape
         self.strides = strides
         self.nFilters = nFilters
+        self.mode = mode
+        result = self.run_whetstone_to_fugu_utility(model)
+
         new_fugu_thresholds = 0.5*np.ones(feature_extractor(mock_image)[0].numpy().shape)
         assert self.expected_spikes(nSpikes) == self.calculated_spikes(new_fugu_thresholds, result)
 
     @pytest.mark.parametrize("mode",["same","valid"])
     def test_whetstone_2_fugu_conv2d_layer_with_batchnormalization(self,mode):
         '''
-            [[1,2,3]                  [[ 4,11,18, 9]
-             [4,5,6]  *  [[1,2]  =     [18,37,47,21]
-             [7,8,9]]     [3,4]]       [36,67,77,33]
-                                       [14,23,26, 9]]
-
-            *** Note ***
-            [METHOD 1]
-            If you don't flip the kernel for Keras then don't "flip" the kernel when doing convolution by hand. Moreover this result is equivalent 
-            to performing scipy.signal.convolve2d([[1,2,3],[4,5,6],[7,8,9]],np.flip( [[1,2],[3,4]] ), mode="full").
-
-            [METHOD 2]
-            Otherwise, "flip" the kernel (filter) for keras and then perform the traditional convolution practice when calculating convolution by hand.
-            The below result is equivalent to scipy.signal.convolve2d([[1,2,3],[4,5,6],[7,8,9]],[[1,2],[3,4]], mode="full")
-
-            [[1,2,3]                  [[ 1, 4, 7, 6]
-             [4,5,6]  *  [[1,2]  =     [ 7,23,33,24]
-             [7,8,9]]     [3,4]]       [19,53,63,42]
-                                       [21,52,59,36]]
+            TODO: Add test information here
         '''
         from tensorflow.keras import Model, initializers
         image_height, image_width = 3, 3
@@ -351,26 +311,17 @@ class Test_Whetstone_2_Fugu_ConvolutionLayer:
         merged_model.add(Conv2D(nFilters, (kernel_height, kernel_width), strides=strides, padding=mode, activation=None, use_bias=True, input_shape=input_shape, name="merged", kernel_initializer=new_kernel_initializer, bias_initializer=new_biases_initializer))
         merged_calculated = merged_model.layers[0](mock_image)[0,:,:,:].numpy()
 
-        scaffold = Scaffold()
-        scaffold.add_brick(BaseP_Input(mock_image.reshape(input_shape),p=basep,bits=bits,collapse_binary=False,name="I",time_dimension=False),"input")
-        scaffold = whetstone_2_fugu(model,basep,bits,scaffold=scaffold)
-        scaffold.lay_bricks()
-
-        scaffold.summary(verbose=1)
-        backend = snn_Backend()
-        backend_args = {}
-        backend.compile(scaffold, backend_args)
-        result = backend.run(5)
-
         self.basep = basep
         self.bits = bits
-        self.pvector = mock_image.reshape(1,*input_shape)
+        self.pvector = mock_image
         self.pshape = self.pvector.shape
         self.filters = init_kernel
         self.filters_shape = self.filters.shape
         self.strides = strides
         self.nFilters = nFilters
         self.mode = mode
+        result = self.run_whetstone_to_fugu_utility(model)
+
         new_fugu_thresholds =  0.5*np.ones(feature_extractor(mock_image)[1].numpy().shape)
         nSpikes = (merged_calculated > 0.5).sum()
         assert self.expected_spikes(nSpikes) == self.calculated_spikes(new_fugu_thresholds, result)
@@ -380,6 +331,9 @@ class Test_Whetstone_2_Fugu_ConvolutionLayer:
     @pytest.mark.parametrize("nChannels", [1,2,3])
     @pytest.mark.parametrize("nFilters", [1,2,3])
     def test_batch_normalization_removal(self,strides,mode,nChannels,nFilters):
+        '''
+            TODO: Add test information here
+        '''
         from tensorflow.keras import Model, initializers
 
         image_height, image_width = 3, 3
@@ -417,9 +371,17 @@ class Test_Whetstone_2_Fugu_ConvolutionLayer:
         calculated = new_model.layers[0](mock_image)[0,:,:,:].numpy()
         assert np.allclose(calculated,expected,rtol=1e-6,atol=1e-5)
 
-    @pytest.mark.xfail(reason="Not implemented.")
-    def test_4d_tensor_input_whetstone_2_fugu_conv2d_layer(self):
-        assert False
+    def run_whetstone_to_fugu_utility(self, keras_model):
+        scaffold = Scaffold()
+        scaffold.add_brick(BaseP_Input(self.pvector,p=self.basep,bits=self.bits,collapse_binary=False,name="I",time_dimension=False),"input")
+        scaffold = whetstone_2_fugu(keras_model,self.basep,self.bits,scaffold=scaffold)
+        scaffold.lay_bricks()
+        scaffold.summary(verbose=1)
+        backend = snn_Backend()
+        backend_args = {}
+        backend.compile(scaffold, backend_args)
+        result = backend.run(5)
+        return result
 
     # Auxillary/helper functions
     def get_num_output_neurons(self, thresholds):
