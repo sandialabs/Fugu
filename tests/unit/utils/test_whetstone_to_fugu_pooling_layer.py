@@ -7,7 +7,7 @@ from fugu.backends import snn_Backend
 from fugu.bricks.keras_convolution_bricks import keras_convolution_2d as convolution_2d
 from fugu.bricks.dense_bricks import dense_layer_1d, dense_layer_2d
 from fugu.bricks.input_bricks import BaseP_Input, Vector_Input
-from fugu.bricks.pooling_bricks import pooling_1d, pooling_2d
+from fugu.bricks.keras_pooling_bricks import keras_pooling_2d_4dinput as pooling_2d
 from fugu.scaffold import Scaffold
 from fugu.utils.keras_helpers import keras_convolve2d, keras_convolve2d_4dinput, generate_keras_kernel, generate_mock_image, keras_convolution2d_output_shape, keras_convolution2d_output_shape_4dinput
 from fugu.utils.whetstone import whetstone_2_fugu

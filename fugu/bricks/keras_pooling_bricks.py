@@ -7,7 +7,7 @@ from .bricks import Brick
 # Turn off black formatting for this file
 # fmt: off
 
-class keras_pooling_2d(Brick):
+class keras_pooling_2d_4dinput(Brick):
     'Pooling Layer brick'
     """
     Pooling Layer Function
@@ -16,15 +16,31 @@ class keras_pooling_2d(Brick):
     
     """
     
-    def __init__(self, pool_size, strides=2, thresholds=0.9, name=None, method="max"):
+    def __init__(self, pool_size, strides=None, thresholds=0.9, name=None, method="max", data_format="channels_last"):
         super().__init__()
         self.is_built = False
         self.name = name
         self.supported_codings = ['binary-L']
+
+        if hasattr(pool_size,"__len__"):
+            if len(pool_size) != 2:
+                raise ValueError("'pool_size' must be an integer or tuple of 2 integers.")
+        else:
+            pool_size = (pool_size, pool_size)
+
+        if strides is None:
+            strides = pool_size
+        elif hasattr(strides, "__len__"):
+            if len(strides) != 2:
+                raise ValueError("'strides' must be an integer, tuple of 2 integers, or None. If None then defaults to 'pool_size'")
+        else:
+            strides = (strides, strides)
+
         self.pool_size = pool_size
         self.strides = strides
         self.thresholds = thresholds
         self.method = method
+        self.data_format = data_format
         self.metadata = {'pooling_size': pool_size, 'pooling_strides': strides, 'pooling_method': method}
         
     def build(self, graph, metadata, control_nodes, input_lists, input_codings):
@@ -65,6 +81,11 @@ class keras_pooling_2d(Brick):
         graph.add_edge(control_nodes[0]['begin']   , begin_node   , weight=0.0, delay=1)
 
         num_input_neurons = len(input_lists[0])
+
+        if self.data_format.lower() == "channels_last":
+            nChannels = self.input_shape[-1]
+        else:
+            nChannels = self.input_shape[1]
 
         # determine output neuron bounds based on "input length", "pool_size", and "strides"
         # floor(1 + [Am + 2*pad_length - Bm ] / stride)
@@ -119,7 +140,7 @@ class keras_pooling_2d(Brick):
                 #         print(f" g{rowpos+kx}{colpos+ky} --> p{row}{col}")    
 
                 # method 2
-                tmp = pixels[rowpos:rowpos+self.pool_size,colpos:colpos+self.pool_size]
+                tmp = pixels[rowpos:rowpos+self.pool_size[0],colpos:colpos+self.pool_size[1]]
                 for pixel in tmp.flatten():
                     graph.add_edge(pixel, f'{self.name}p{row}{col}', weight=edge_weights, delay=1)
                     print(f" {pixel.split('_')[1]} --> p{row}{col}")                        

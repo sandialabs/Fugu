@@ -4,7 +4,7 @@ import numpy as np
 
 from fugu.bricks.keras_convolution_bricks import keras_convolution_2d_4dinput as convolution_2d
 from fugu.bricks.input_bricks import BaseP_Input
-from fugu.bricks.pooling_bricks import pooling_1d, pooling_2d
+from fugu.bricks.keras_pooling_bricks import keras_pooling_2d_4dinput as pooling_2d
 from fugu.bricks.dense_bricks import dense_layer_2d
 from fugu.scaffold import Scaffold
 
