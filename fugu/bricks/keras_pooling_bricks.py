@@ -36,8 +36,13 @@ class keras_pooling_2d_4dinput(Brick):
         if strides is None:
             strides = pool_size
         elif hasattr(strides, "__len__"):
+            if type(strides) is not tuple:
+                raise ValueError("'strides' must be an integer, tuple of 2 integers, or None. If None then defaults to 'pool_size'")
+
             if len(strides) != 2:
                 raise ValueError("'strides' must be an integer, tuple of 2 integers, or None. If None then defaults to 'pool_size'")
+        elif isinstance(strides, float):
+            raise ValueError("'strides' must be an integer, tuple of 2 integers, or None. If None then defaults to 'pool_size'")
         else:
             strides = (strides, strides)
 
@@ -47,7 +52,7 @@ class keras_pooling_2d_4dinput(Brick):
         self.thresholds = thresholds
         self.method = method
         self.data_format = data_format
-        self.metadata = {'pooling_size': pool_size, 'pooling_strides': strides, 'pooling_method': method}
+        self.metadata = {'pooling_size': pool_size, 'pooling_strides': strides, 'pooling_padding': padding, 'pooling_method': method}
         
     def build(self, graph, metadata, control_nodes, input_lists, input_codings):
         """
@@ -85,13 +90,6 @@ class keras_pooling_2d_4dinput(Brick):
         
         graph.add_edge(control_nodes[0]['complete'], complete_node, weight=0.0, delay=1)
         graph.add_edge(control_nodes[0]['begin']   , begin_node   , weight=0.0, delay=1)
-
-        num_input_neurons = len(input_lists[0])
-
-        if self.data_format.lower() == "channels_last":
-            nChannels = self.input_shape[-1]
-        else:
-            nChannels = self.input_shape[1]
 
         # determine output neuron bounds based on "input length", "pool_size", and "strides"
         # floor(1 + [Am + 2*pad_length - Bm ] / stride)

@@ -13,6 +13,9 @@ from fugu.scaffold import Scaffold
 from fugu.utils.keras_helpers import keras_convolve2d, keras_convolve2d_4dinput, generate_keras_kernel, generate_mock_image, keras_convolution2d_output_shape_4dinput
 
 def get_pool_output_shape(input_shape, pool_size, pool_strides, pool_padding, data_format="channels_last"):
+    if pool_strides is None:
+        pool_strides = pool_size
+
     batch_size, image_height, image_width, nChannels = get_pool_input_shape_params(input_shape,data_format)
     spatial_input_shape = (image_height, image_width)
 
@@ -32,6 +35,9 @@ def valid_padding_spatial_output_shape(spatial_input_shape, pool_size, pool_stri
     return np.floor((np.array(spatial_input_shape) - np.array(pool_size)) / np.array(pool_strides)) + 1
 
 def get_padding_output_shape(spatial_input_shape,pool_size,pool_strides,pool_padding):
+    if pool_strides is None:
+        pool_strides = pool_size
+
     if pool_padding.lower() == "same":
         spatial_output_shape = same_padding_spatial_output_shape(spatial_input_shape,pool_strides)
     elif pool_padding.lower() == "valid":
@@ -117,14 +123,16 @@ class Test_KerasPooling2D:
     @pytest.mark.parametrize("pooling_size,expectation", [(2,does_not_raise()),((2,2),does_not_raise()),(2.0,pytest.raises(ValueError)),((2,2,1),pytest.raises(ValueError)),([2,2],pytest.raises(ValueError))])
     def test_pooling_size_input(self, default_pooling_params, pooling_size, expectation):
         self.pool_size = pooling_size
-        self.pool_output_shape = get_pool_output_shape(self.pool_input_shape,self.pool_size,self.pool_strides,self.pool_padding,data_format=self.data_format)
-        self.pool_thresholds = 0.9*np.ones(self.pool_output_shape)
+        self.pool_thresholds = 0.9
         with expectation:
-            result = self.run_pooling_2d()
+            self.run_pooling_2d()
 
-    @pytest.mark.xfail(reason="Not implemented.")
-    def test_pooling_strides_input(self, default_pooling_params):
-        assert False
+    @pytest.mark.parametrize("pool_strides,expectation", [(None,does_not_raise()),(2,does_not_raise()),((2,2),does_not_raise()),(2.0,pytest.raises(ValueError)),((2,2,1),pytest.raises(ValueError)),([2,2],pytest.raises(ValueError))])
+    def test_pooling_strides_input(self, default_pooling_params, pool_strides, expectation):
+        self.pool_strides = pool_strides
+        self.pool_thresholds = 0.9
+        with expectation:
+            self.run_pooling_2d()
 
     @pytest.mark.xfail(reason="Not implemented.")
     def test_max_pooling(self, default_pooling_params):
