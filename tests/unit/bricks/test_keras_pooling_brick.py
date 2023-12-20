@@ -1,45 +1,102 @@
 # isort: skip_file
+# fmt: off
 import numpy as np
 import pytest
+from contextlib import nullcontext as does_not_raise
 
 from fugu.backends import snn_Backend
-from fugu.bricks.convolution_bricks import convolution_1d, convolution_2d
+from fugu.bricks.keras_convolution_bricks import keras_convolution_2d_4dinput as keras_convolution_2d
 from fugu.bricks.input_bricks import BaseP_Input
-from fugu.bricks.pooling_bricks import pooling_1d, pooling_2d
+from fugu.bricks.keras_pooling_bricks import keras_pooling_2d_4dinput as keras_pooling_2d
 from fugu.scaffold import Scaffold
 
-# Turn off black formatting for this file
-# fmt: off
+from fugu.utils.keras_helpers import keras_convolve2d, keras_convolve2d_4dinput, generate_keras_kernel, generate_mock_image, keras_convolution2d_output_shape_4dinput
 
-convolve2d = pytest.importorskip("scipy.signal", reason=f"Scipy package not installed. Skipping test file {__file__} because of module dependency.").convolve2d
+def get_pool_output_shape(input_shape, pool_size, pool_strides, pool_padding, data_format="channels_last"):
+    batch_size, image_height, image_width, nChannels = get_pool_input_shape_params(input_shape,data_format)
+    spatial_input_shape = (image_height, image_width)
 
-@pytest.mark.skip(reason="All test need to be updated for the keras pooling brick.")
+    spatial_output_shape = get_padding_output_shape(spatial_input_shape,pool_size,pool_strides,pool_padding)
+
+    if data_format.lower() == "channels_last":
+        output_shape = (batch_size, *spatial_output_shape, nChannels)
+    else:
+        output_shape = (batch_size, nChannels, *spatial_output_shape)
+
+    return output_shape
+
+def same_padding_spatial_output_shape(spatial_input_shape,  pool_strides):
+    return np.floor((np.array(spatial_input_shape) - 1) / np.array(pool_strides)) + 1
+
+def valid_padding_spatial_output_shape(spatial_input_shape, pool_size, pool_strides):
+    return np.floor((np.array(spatial_input_shape) - np.array(pool_size)) / np.array(pool_strides)) + 1
+
+def get_padding_output_shape(spatial_input_shape,pool_size,pool_strides,pool_padding):
+    if pool_padding.lower() == "same":
+        spatial_output_shape = same_padding_spatial_output_shape(spatial_input_shape,pool_strides)
+    elif pool_padding.lower() == "valid":
+        spatial_output_shape = valid_padding_spatial_output_shape(spatial_input_shape,pool_size,pool_strides)
+    else:
+        raise ValueError(f"'pool_padding' is one of 'same' or 'valid'. Received {pool_padding}.")
+
+    spatial_output_shape = list(map(int,spatial_output_shape))
+    return spatial_output_shape
+
+def get_pool_input_shape_params(input_shape, data_format):
+    if data_format.lower() == "channels_last":
+        batch_size, image_height, image_width, nChannels = input_shape
+    elif data_format.lower() == "channels_first":
+        batch_size, nChannels, image_height, image_width = input_shape
+    else:
+        raise ValueError(f"'data_format' is either 'channels_first' or 'channels_last'. Received {data_format}")
+
+    return batch_size, image_height, image_width, nChannels
+
 class Test_KerasPooling2D:
 
-    @pytest.fixture
-    def convolution_mode(self):
-        return "same"
+    def setup_method(self):
+        image_height, image_width, nChannels = 3, 3, 2
+        kernel_height, kernel_width, nFilters = 2, 2, 3
+        pool_height, pool_width = 2, 2
 
-    @pytest.fixture
-    def default_convolution_params(self, convolution_mode):
         self.basep = 3
         self.bits = 3
         self.filters = [[2, 3],[4,5]]
-        self.mode = convolution_mode
-        self.pvector = [[1,1,4,6],[6,2,4,2],[2,3,5,4],[6,1,6,3]]
-        self.pshape = np.array(self.pvector).shape
+        self.mock_input = generate_mock_image(image_height,image_width,nChannels=nChannels)
+        self.input_shape = self.mock_input.shape
 
     @pytest.fixture
-    def numpy_convolution_result(self, default_convolution_params, spike_positions_vector):
-        self.conv_ans = convolve2d(self.pvector, self.filters, mode=self.mode)
-        self.pixel_shape = self.conv_ans.shape
-        self.pixel_dim1 = self.pixel_shape[0]
-        self.pixel_dim2 = self.pixel_shape[1]
-        self.conv_spike_pos = self.make_convolution_spike_positions_vector(spike_positions_vector)
-        self.conv_thresholds = self.conv_ans - self.conv_spike_pos
-        return self.conv_ans > self.conv_thresholds        
+    def default_pooling_params(self, default_convolution_params):
+        pool_height, pool_width = 2, 2
 
-    @pytest.fixture(params=["fixed", "random"])
+        self.pool_size = (pool_height, pool_width)
+        self.pool_padding = "same"
+        self.pool_method = "max"
+        self.pool_strides = (1,1)
+        self.data_format = "channels_last"
+        self.output_shape = get_pool_output_shape(self.convolution_input_shape,self.pool_size,self.pool_strides,self.pool_padding,data_format=self.data_format)
+        self.pool_thresholds = 0.9*np.ones(self.output_shape)
+
+    @pytest.fixture
+    def convolution_mode_fixture(self):
+        return "same"
+
+    @pytest.fixture
+    def default_convolution_params(self, convolution_mode_fixture):
+        image_height, image_width, nChannels = 3, 3, 2
+        kernel_height, kernel_width, nFilters = 2, 2, 3
+
+        self.basep = 3
+        self.bits = 4
+        self.convolution_strides = (1,1)
+        self.convolution_mode = convolution_mode_fixture
+        self.convolution_mock_image = generate_mock_image(image_height, image_width, nChannels=nChannels)
+        self.convolution_input_shape = self.convolution_mock_image.shape
+        self.convolution_filters = generate_keras_kernel(kernel_height,kernel_width,nFilters,nChannels)
+        self.convolution_thresholds = 0.5
+        self.convolution_biases = np.array([-471., -1207., -1943.])
+
+    @pytest.fixture(params=["fixed"])
     def spike_positions_vector(self, request):
         return request.param
     
@@ -54,21 +111,30 @@ class Test_KerasPooling2D:
     @pytest.fixture
     def pooling_method(self):
         return "max"
-    
-    @pytest.fixture
-    def default_pooling_params(self, pooling_size, pooling_stride, pooling_method):
+
+    @pytest.mark.parametrize("pooling_size,expectation", [(2,does_not_raise()),(2,pytest.raises(ValueError))])
+    def test_pooling_size_input(self, default_pooling_params, pooling_size, expectation):
         self.pool_size = pooling_size
-        self.strides = pooling_stride
-        self.thresholds = 0.9
-        self.method = pooling_method
+        self.output_shape = get_pool_output_shape(self.input_shape,self.pool_size,self.pool_strides,self.pool_padding,data_format=self.data_format)
+        self.pool_thresholds = 0.9*np.ones(self.output_shape)
+        with expectation:
+            result = self.run_pooling_2d()
+            assert False
 
     @pytest.mark.xfail(reason="Not implemented.")
-    def test_max_pooling(self, numpy_convolution_result, default_pooling_params):
+    def test_pooling_strides_input(self, default_pooling_params):
         assert False
 
     @pytest.mark.xfail(reason="Not implemented.")
-    def test_average_pooling(self, numpy_convolution_result, default_pooling_params):
+    def test_max_pooling(self, default_pooling_params):
         assert False
+
+    @pytest.mark.xfail(reason="Not implemented.")
+    def test_average_pooling(self, default_pooling_params):
+        assert False
+
+    def get_pool_output_shape(self):
+        return np.floor((self.input_shape - 1) / self.pool_strides) + 1
 
     def get_output_neuron_numbers(self):
         neuron_numbers = []
@@ -95,9 +161,9 @@ class Test_KerasPooling2D:
 
     def run_pooling_2d(self):
         scaffold = Scaffold()
-        scaffold.add_brick(BaseP_Input(np.array([self.pvector]),p=self.basep,bits=self.bits,collapse_binary=False,name="I",time_dimension=False),"input")
-        scaffold.add_brick(convolution_2d(self.pshape,self.filters,self.conv_thresholds,self.basep,self.bits,name="convolution_",mode=self.mode),[(0, 0)],output=True)
-        scaffold.add_brick(pooling_2d(self.pool_size,self.strides,thresholds=self.thresholds,name="pool_",method=self.method),[(1,0)],output=True)
+        scaffold.add_brick(BaseP_Input(self.mock_input,p=self.basep,bits=self.bits,collapse_binary=False,name="I",time_dimension=False),"input")
+        scaffold.add_brick(keras_convolution_2d(self.convolution_input_shape,self.convolution_filters,self.convolution_thresholds,self.basep,self.bits,name="convolution_",mode=self.convolution_mode,strides=self.convolution_strides,biases=self.convolution_biases),[(0, 0)],output=True)
+        scaffold.add_brick(keras_pooling_2d(self.pool_size,self.pool_strides,thresholds=self.pool_thresholds,name="pool_",method=self.pool_method),[(1,0)],output=True)
 
         self.graph = scaffold.lay_bricks()
         scaffold.summary(verbose=1)
