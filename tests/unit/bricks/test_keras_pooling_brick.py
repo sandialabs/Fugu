@@ -74,8 +74,9 @@ class Test_KerasPooling2D:
         self.pool_method = "max"
         self.pool_strides = (1,1)
         self.data_format = "channels_last"
-        self.output_shape = get_pool_output_shape(self.convolution_input_shape,self.pool_size,self.pool_strides,self.pool_padding,data_format=self.data_format)
-        self.pool_thresholds = 0.9*np.ones(self.output_shape)
+        self.pool_output_shape = get_pool_output_shape(self.convolution_input_shape,self.pool_size,self.pool_strides,self.pool_padding,data_format=self.data_format)
+        self.pool_thresholds = 0.9*np.ones(self.pool_output_shape)
+        self.pool_input_shape = self.convolution_output_shape
 
     @pytest.fixture
     def convolution_mode_fixture(self):
@@ -95,6 +96,7 @@ class Test_KerasPooling2D:
         self.convolution_filters = generate_keras_kernel(kernel_height,kernel_width,nFilters,nChannels)
         self.convolution_thresholds = 0.5
         self.convolution_biases = np.array([-471., -1207., -1943.])
+        self.convolution_output_shape = (1,*keras_convolution2d_output_shape_4dinput(self.convolution_mock_image,self.convolution_filters,self.convolution_strides,self.convolution_mode,nFilters=nFilters))
 
     @pytest.fixture(params=["fixed"])
     def spike_positions_vector(self, request):
@@ -112,14 +114,13 @@ class Test_KerasPooling2D:
     def pooling_method(self):
         return "max"
 
-    @pytest.mark.parametrize("pooling_size,expectation", [(2,does_not_raise()),(2,pytest.raises(ValueError))])
+    @pytest.mark.parametrize("pooling_size,expectation", [(2,does_not_raise()),((2,2),does_not_raise()),(2.0,pytest.raises(ValueError)),((2,2,1),pytest.raises(ValueError)),([2,2],pytest.raises(ValueError))])
     def test_pooling_size_input(self, default_pooling_params, pooling_size, expectation):
         self.pool_size = pooling_size
-        self.output_shape = get_pool_output_shape(self.input_shape,self.pool_size,self.pool_strides,self.pool_padding,data_format=self.data_format)
-        self.pool_thresholds = 0.9*np.ones(self.output_shape)
+        self.pool_output_shape = get_pool_output_shape(self.pool_input_shape,self.pool_size,self.pool_strides,self.pool_padding,data_format=self.data_format)
+        self.pool_thresholds = 0.9*np.ones(self.pool_output_shape)
         with expectation:
             result = self.run_pooling_2d()
-            assert False
 
     @pytest.mark.xfail(reason="Not implemented.")
     def test_pooling_strides_input(self, default_pooling_params):
@@ -163,7 +164,7 @@ class Test_KerasPooling2D:
         scaffold = Scaffold()
         scaffold.add_brick(BaseP_Input(self.mock_input,p=self.basep,bits=self.bits,collapse_binary=False,name="I",time_dimension=False),"input")
         scaffold.add_brick(keras_convolution_2d(self.convolution_input_shape,self.convolution_filters,self.convolution_thresholds,self.basep,self.bits,name="convolution_",mode=self.convolution_mode,strides=self.convolution_strides,biases=self.convolution_biases),[(0, 0)],output=True)
-        scaffold.add_brick(keras_pooling_2d(self.pool_size,self.pool_strides,thresholds=self.pool_thresholds,name="pool_",method=self.pool_method),[(1,0)],output=True)
+        scaffold.add_brick(keras_pooling_2d(self.pool_size,self.pool_strides,thresholds=self.pool_thresholds,name="pool_",padding=self.pool_padding,method=self.pool_method),[(1,0)],output=True)
 
         self.graph = scaffold.lay_bricks()
         scaffold.summary(verbose=1)

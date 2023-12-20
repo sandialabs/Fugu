@@ -16,15 +16,20 @@ class keras_pooling_2d_4dinput(Brick):
     
     """
     
-    def __init__(self, pool_size, strides=None, thresholds=0.9, name=None, method="max", data_format="channels_last"):
+    def __init__(self, pool_size, strides=None, thresholds=0.9, name=None, padding="same", method="max", data_format="channels_last"):
         super().__init__()
         self.is_built = False
         self.name = name
         self.supported_codings = ['binary-L']
 
         if hasattr(pool_size,"__len__"):
+            if type(pool_size) is not tuple:
+                raise ValueError("'pool_size' must be an integer or tuple of 2 integers.")
+
             if len(pool_size) != 2:
                 raise ValueError("'pool_size' must be an integer or tuple of 2 integers.")
+        elif isinstance(pool_size,float):
+            raise ValueError("'pool_size' must be an integer or tuple of 2 integers.")
         else:
             pool_size = (pool_size, pool_size)
 
@@ -37,6 +42,7 @@ class keras_pooling_2d_4dinput(Brick):
             strides = (strides, strides)
 
         self.pool_size = pool_size
+        self.padding = padding
         self.strides = strides
         self.thresholds = thresholds
         self.method = method
@@ -92,10 +98,8 @@ class keras_pooling_2d_4dinput(Brick):
         # Am = Convolution Output Length
         # Bm = pool_size
         # pad_length = 0 (padding is taken care in the convolution brick)
-        self.output_shape = self.get_output_shape()
+        self.output_shape = self.get_pool_output_shape()
         self.metadata['pooling_output_shape'] = self.output_shape
-        num_output_neurons = self.output_shape[0] * self.output_shape[1]
-
 
         # Restrict max pooling threshold value to 0.9. Otherwise, the neuron circuit will not behave like an OR operation.
         if self.method.lower() == "max" and not np.any(np.array(self.thresholds) < 1.0):
@@ -107,53 +111,96 @@ class keras_pooling_2d_4dinput(Brick):
             self.thresholds = self.thresholds * np.ones(self.output_shape)
         else:
             if self.thresholds.shape != self.output_shape:
-                raise ValueError(f"Threshold length {self.thresholds.shape} does not equal the output neuron length ({num_output_neurons},)."
+                raise ValueError(f"Threshold shape {self.thresholds.shape} does not equal the output neuron shape {self.output_shape}."
                 )
             
         # output neurons/nodes
         output_lists = [[]]
-        for row in np.arange(self.output_shape[0]):
-            for col in np.arange(self.output_shape[1]):
-                graph.add_node(f'{self.name}p{row}{col}', index=(row,col), threshold=self.thresholds[row,col], decay=1.0, p=1.0, potential=0.0)
-                output_lists[0].append(f'{self.name}p{row}{col}')
+        for row in np.arange(0, self.spatial_output_shape[0], self.strides[0]):
+            for col in np.arange(0, self.spatial_output_shape[1], self.strides[1]):
+                for channel in np.arange(self.nChannels):
+                    graph.add_node(f'{self.name}p{channel}{row}{col}', index=(row,col,channel), threshold=self.thresholds[0,row,col,channel], decay=1.0, p=1.0, potential=0.0)
+                    output_lists[0].append(f'{self.name}p{channel}{row}{col}')
 
         # Collect Inputs
-        pixels = input_lists[0]
         pixels = np.reshape(input_lists[0], self.input_shape)
 
         edge_weights = 1.0
         if self.method == 'average':
-            edge_weights = 1.0 / self.pool_size ** 2
+            edge_weights = 1.0 / np.prod(self.pool_size, dtype=float)
 
         # Construct edges connecting input and output nodes
-        row_stride_positions = self.get_stride_positions(self.input_shape[0])
-        col_stride_positions = self.get_stride_positions(self.input_shape[1])
-        for row in np.arange(self.output_shape[0]):
+        row_stride_positions, col_stride_positions = self.get_stride_positions()
+        for row in np.arange(self.spatial_output_shape[0]):
             rowpos = row_stride_positions[row]
-            for col in np.arange(self.output_shape[1]):
+            for col in np.arange(self.spatial_output_shape[1]):
                 colpos = col_stride_positions[col]
+                for channel in np.arange(self.nChannels):
+                    # method 1
+                    # for kx in np.arange(self.pool_size):
+                    #     for ky in np.arange(self.pool_size):
+                    #         graph.add_edge(pixels[rowpos+kx,colpos+ky], f'{self.name}p{row}{col}', weight=edge_weights, delay=1)
+                    #         print(f" g{rowpos+kx}{colpos+ky} --> p{row}{col}")
 
-                # method 1
-                # for kx in np.arange(self.pool_size):
-                #     for ky in np.arange(self.pool_size):
-                #         graph.add_edge(pixels[rowpos+kx,colpos+ky], f'{self.name}p{row}{col}', weight=edge_weights, delay=1)
-                #         print(f" g{rowpos+kx}{colpos+ky} --> p{row}{col}")    
-
-                # method 2
-                tmp = pixels[rowpos:rowpos+self.pool_size[0],colpos:colpos+self.pool_size[1]]
-                for pixel in tmp.flatten():
-                    graph.add_edge(pixel, f'{self.name}p{row}{col}', weight=edge_weights, delay=1)
-                    print(f" {pixel.split('_')[1]} --> p{row}{col}")                        
+                    # method 2
+                    pixels_subset = pixels[0,rowpos:rowpos+self.pool_size[0],colpos:colpos+self.pool_size[1],channel]
+                    for pixel in pixels_subset.flatten():
+                        graph.add_edge(pixel, f'{self.name}p{channel}{row}{col}', weight=edge_weights, delay=1)
+                        print(f" {pixel.split('_')[1]} --> p{channel}{row}{col}")
 
         self.is_built = True        
         return (graph, self.metadata, [{'complete': complete_node, 'begin': begin_node}], output_lists, output_codings)
     
-    def get_stride_positions(self, pixel_dim):
-        return np.arange(0, pixel_dim, self.strides, dtype=int)
-    
-    def get_output_size(self, pixel_dim):
-        return int(np.floor(1.0 + (np.float64(pixel_dim) - self.pool_size)/self.strides))
-    
-    def get_output_shape(self):
-        pixel_dim1, pixel_dim2 = self.input_shape
-        return (self.get_output_size(pixel_dim1), self.get_output_size(pixel_dim2))
+    def stride_positions(self, pixel_dim, stride_len):
+        return np.arange(0, pixel_dim, stride_len, dtype=int)
+
+    def get_stride_positions(self):
+        return [self.stride_positions(self.spatial_input_shape[0],self.strides[0]), self.stride_positions(self.spatial_input_shape[1],self.strides[1])]
+
+    def get_pool_output_shape(self):
+        self.spatial_output_shape = self.get_spatial_output_shape()
+
+        if self.data_format.lower() == "channels_last":
+            output_shape = (self.batch_size, *self.spatial_output_shape, self.nChannels)
+        else:
+            output_shape = (self.batch_size, self.nChannels, *self.spatial_output_shape)
+
+        return output_shape
+
+    def get_spatial_input_shape(self):
+        self.batch_size, self.image_height, self.image_width, self.nChannels = self.get_pool_input_shape_params()
+        spatial_input_shape = (self.image_height, self.image_width)
+        return spatial_input_shape
+
+    def same_padding_spatial_output_shape(self):
+        if not hasattr(self,"spatial_input_shape"):
+            self.spatial_input_shape = self.get_spatial_input_shape()
+
+        return np.floor((np.array(self.spatial_input_shape) - 1) / np.array(self.strides)) + 1
+
+    def valid_padding_spatial_output_shape(self):
+        if not hasattr(self,"spatial_input_shape"):
+            self.spatial_input_shape = self.get_spatial_input_shape()
+
+        return np.floor((np.array(self.spatial_input_shape) - np.array(self.pool_size)) / np.array(self.strides)) + 1
+
+    def get_spatial_output_shape(self):
+        if self.padding.lower() == "same":
+            spatial_output_shape = self.same_padding_spatial_output_shape()
+        elif self.padding.lower() == "valid":
+            spatial_output_shape = self.valid_padding_spatial_output_shape()
+        else:
+            raise ValueError(f"'pool_padding' is one of 'same' or 'valid'. Received {self.padding}.")
+
+        spatial_output_shape = list(map(int,spatial_output_shape))
+        return spatial_output_shape
+
+    def get_pool_input_shape_params(self):
+        if self.data_format.lower() == "channels_last":
+            batch_size, image_height, image_width, nChannels = self.input_shape
+        elif self.data_format.lower() == "channels_first":
+            batch_size, nChannels, image_height, image_width = self.input_shape
+        else:
+            raise ValueError(f"'data_format' is either 'channels_first' or 'channels_last'. Received {self.data_format}")
+
+        return batch_size, image_height, image_width, nChannels
