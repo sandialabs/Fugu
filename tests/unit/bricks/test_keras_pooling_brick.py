@@ -12,6 +12,16 @@ from fugu.scaffold import Scaffold
 
 from fugu.utils.keras_helpers import keras_convolve2d, keras_convolve2d_4dinput, generate_keras_kernel, generate_mock_image, keras_convolution2d_output_shape_4dinput
 
+def get_pool_input_shape_params(input_shape,data_format):
+    if data_format.lower() == "channels_last":
+        batch_size, image_height, image_width, nChannels = input_shape
+    elif data_format.lower() == "channels_first":
+        batch_size, nChannels, image_height, image_width = input_shape
+    else:
+        raise ValueError(f"'data_format' is either 'channels_first' or 'channels_last'. Received {data_format}")
+
+    return batch_size, image_height, image_width, nChannels
+
 def get_pool_output_shape(input_shape, pool_size, pool_strides, pool_padding, data_format="channels_last"):
     if pool_strides is None:
         pool_strides = pool_size
@@ -28,6 +38,23 @@ def get_pool_output_shape(input_shape, pool_size, pool_strides, pool_padding, da
 
     return output_shape
 
+def get_spatial_input_shape(input_shape,data_format):
+    batch_size, image_height, image_width, nChannels = get_pool_input_shape_params(input_shape,data_format)
+    spatial_input_shape = (image_height, image_width)
+    return spatial_input_shape
+
+def get_spatial_output_shape(input_shape,data_format,pool_size,pool_padding,pool_strides):
+    spatial_input_shape = get_spatial_input_shape(input_shape,data_format)
+    if pool_padding.lower() == "same":
+        spatial_output_shape = same_padding_spatial_output_shape(spatial_input_shape,pool_strides)
+    elif pool_padding.lower() == "valid":
+        spatial_output_shape = valid_padding_spatial_output_shape(spatial_input_shape,pool_size,pool_strides)
+    else:
+        raise ValueError(f"'pool_padding' is one of 'same' or 'valid'. Received {pool_padding}.")
+
+    spatial_output_shape = list(map(int,spatial_output_shape))
+    return spatial_output_shape
+    
 def same_padding_spatial_output_shape(spatial_input_shape,  pool_strides):
     return np.floor((np.array(spatial_input_shape) - 1) / np.array(pool_strides)) + 1
 
@@ -48,16 +75,12 @@ def get_padding_output_shape(spatial_input_shape,pool_size,pool_strides,pool_pad
     spatial_output_shape = list(map(int,spatial_output_shape))
     return spatial_output_shape
 
-def get_pool_input_shape_params(input_shape, data_format):
-    if data_format.lower() == "channels_last":
-        batch_size, image_height, image_width, nChannels = input_shape
-    elif data_format.lower() == "channels_first":
-        batch_size, nChannels, image_height, image_width = input_shape
-    else:
-        raise ValueError(f"'data_format' is either 'channels_first' or 'channels_last'. Received {data_format}")
+def stride_positions(pixel_dim, stride_len):
+    return np.arange(0, pixel_dim, stride_len, dtype=int)
 
-    return batch_size, image_height, image_width, nChannels
-
+def get_stride_positions(spatial_input_shape, strides):
+    return [stride_positions(spatial_input_shape[0],strides[0]), stride_positions(spatial_input_shape[1],strides[1])]
+    
 class Test_KerasPooling2D:
 
     def setup_method(self):
@@ -70,6 +93,7 @@ class Test_KerasPooling2D:
         self.filters = [[2, 3],[4,5]]
         self.mock_input = generate_mock_image(image_height,image_width,nChannels=nChannels)
         self.input_shape = self.mock_input.shape
+        self.data_format = "channels_last"
 
     @pytest.fixture
     def default_pooling_params(self, default_convolution_params):
@@ -79,7 +103,6 @@ class Test_KerasPooling2D:
         self.pool_padding = "same"
         self.pool_method = "max"
         self.pool_strides = (1,1)
-        self.data_format = "channels_last"
         self.pool_output_shape = get_pool_output_shape(self.convolution_input_shape,self.pool_size,self.pool_strides,self.pool_padding,data_format=self.data_format)
         self.pool_thresholds = 0.9*np.ones(self.pool_output_shape)
         self.pool_input_shape = self.convolution_output_shape
@@ -103,6 +126,7 @@ class Test_KerasPooling2D:
         self.convolution_thresholds = 0.5
         self.convolution_biases = np.array([-471., -1207., -1943.])
         self.convolution_output_shape = (1,*keras_convolution2d_output_shape_4dinput(self.convolution_mock_image,self.convolution_filters,self.convolution_strides,self.convolution_mode,nFilters=nFilters))
+        self.convolution_answer = keras_convolve2d_4dinput(self.convolution_mock_image, self.convolution_filters, self.convolution_strides, self.convolution_mode, self.data_format,filters=nFilters).reshape(self.convolution_output_shape)
 
     @pytest.fixture(params=["fixed"])
     def spike_positions_vector(self, request):
@@ -134,8 +158,14 @@ class Test_KerasPooling2D:
         with expectation:
             self.run_pooling_2d()
 
-    @pytest.mark.xfail(reason="Not implemented.")
-    def test_max_pooling(self, default_pooling_params):
+    def test_explicit_max_pooling_same_mode_strides_11(self, default_pooling_params):
+        self.pool_strides = (1,1)
+        self.pool_thresholds = 0.9
+
+        self.convolution_answer_boolean = self.convolution_answer + self.convolution_biases > 0.5
+        expected_pool_answer = self.get_expected_pooling_answer(self.convolution_answer_boolean)
+        result = self.run_pooling_2d()
+
         assert False
 
     @pytest.mark.xfail(reason="Not implemented.")
@@ -209,34 +239,30 @@ class Test_KerasPooling2D:
         
         return conv_spike_pos
     
-    def get_stride_positions(self, pixel_dim):
-        return np.arange(0, pixel_dim, self.strides, dtype=int)
-    
-    def get_output_size(self, pixel_dim):
-        return int(np.floor(1.0 + (np.float64(pixel_dim) - self.pool_size)/self.strides))
-
-    def get_output_shape(self):
-        return (self.get_output_size(self.pixel_dim1), self.get_output_size(self.pixel_dim2))
-    
     def get_expected_pooling_answer(self, pool_input):
-        row_stride_positions = self.get_stride_positions(self.pixel_dim1)
-        col_stride_positions = self.get_stride_positions(self.pixel_dim2)
-        output_shape = self.get_output_shape()
+        batch_size, image_height, image_width, nChannels = get_pool_input_shape_params(self.convolution_output_shape, self.data_format)
+        spatial_input_shape = get_spatial_input_shape(self.convolution_output_shape,self.data_format)
+        row_stride_positions, col_stride_positions = get_stride_positions(spatial_input_shape, self.pool_strides)
+        spatial_output_shape = get_spatial_output_shape(self.convolution_input_shape,self.data_format,self.pool_size,self.pool_padding,self.pool_strides)
+        output_shape = get_pool_output_shape(self.convolution_output_shape,self.pool_size, self.pool_strides, self.pool_padding, self.data_format)
         expected = []
 
-        if self.method == "max":
-            for row in row_stride_positions[:output_shape[0]]:
-                for col in col_stride_positions[:output_shape[1]]:
-                    expected.append(np.any(pool_input[row:row+self.pool_size,col:col+self.pool_size]))
+
+        if self.pool_method == "max":
+            for row in row_stride_positions[:spatial_output_shape[0]]:
+                for col in col_stride_positions[:spatial_output_shape[1]]:
+                    for channel in np.arange(nChannels):
+                        expected.append(np.any(pool_input[0,row:row+self.pool_size[0],col:col+self.pool_size[1],channel]))
 
             expected = np.reshape(expected, output_shape).astype(int)
-            expected = (np.array(expected, dtype=int) > self.thresholds).astype(float)
+            expected = (np.array(expected, dtype=int) > 0.9).astype(float)
 
-        elif self.method == "average": #TODO : fix this code. 
-            weights = np.ones((self.pool_size,self.pool_size),dtype=float) / float(self.pool_size*self.pool_size)
-            for row in row_stride_positions[:output_shape[0]]:
-                for col in col_stride_positions[:output_shape[1]]:
-                    expected.append(np.dot(weights.flatten(),pool_input[row:row+self.pool_size,col:col+self.pool_size].astype(int).flatten()))
+        elif self.pool_method == "average": #TODO : fix this code. 
+            weights = np.ones(output_shape,dtype=float) / np.prod(self.pool_size)
+            for row in row_stride_positions[:spatial_output_shape[0]]:
+                for col in col_stride_positions[:spatial_output_shape[1]]:
+                    for channel in np.arange(nChannels):
+                        expected.append(np.dot(weights.flatten(),pool_input[0,row:row+self.pool_size[0],col:col+self.pool_size[1],channel].astype(int).flatten()))
 
             expected = np.reshape(expected, output_shape).astype(float)
         else:
