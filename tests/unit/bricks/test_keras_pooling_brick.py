@@ -11,6 +11,7 @@ from fugu.bricks.keras_pooling_bricks import keras_pooling_2d_4dinput as keras_p
 from fugu.scaffold import Scaffold
 
 from fugu.utils.keras_helpers import keras_convolve2d, keras_convolve2d_4dinput, generate_keras_kernel, generate_mock_image, keras_convolution2d_output_shape_4dinput
+from helpers import ConvolutionParams, PoolingParams
 
 def get_pool_input_shape_params(input_shape,data_format):
     if data_format.lower() == "channels_last":
@@ -145,32 +146,42 @@ class Test_KerasPooling2D:
         return "max"
 
     @pytest.mark.parametrize("pooling_size,expectation", [(2,does_not_raise()),((2,2),does_not_raise()),(2.0,pytest.raises(ValueError)),((2,2,1),pytest.raises(ValueError)),([2,2],pytest.raises(ValueError))])
-    def test_pooling_size_input(self, default_pooling_params, pooling_size, expectation):
-        self.pool_size = pooling_size
-        self.pool_thresholds = 0.9
+    def test_pooling_size_input(self, pooling_size, expectation):
+        convo_obj = ConvolutionParams(biases=np.array([-471., -1207., -1943.]))
+        pool_obj = PoolingParams(convo_obj)
+        pool_obj.pool_size = pooling_size
         with expectation:
-            self.run_pooling_2d()
+            self.run_pooling_2d(convo_obj,pool_obj)
 
     @pytest.mark.parametrize("pool_strides,expectation", [(None,does_not_raise()),(2,does_not_raise()),((2,2),does_not_raise()),(2.0,pytest.raises(ValueError)),((2,2,1),pytest.raises(ValueError)),([2,2],pytest.raises(ValueError))])
-    def test_pooling_strides_input(self, default_pooling_params, pool_strides, expectation):
-        self.pool_strides = pool_strides
-        self.pool_thresholds = 0.9
+    def test_pooling_strides_input(self, pool_strides, expectation):
+        convo_obj = ConvolutionParams(biases=np.array([-471., -1207., -1943.]))
+        pool_obj = PoolingParams(convo_obj)
+        pool_obj.pool_strides = pool_strides
         with expectation:
-            self.run_pooling_2d()
+            self.run_pooling_2d(convo_obj,pool_obj)
 
-    def test_explicit_max_pooling_same_mode_strides_11(self, default_pooling_params):
-        self.pool_strides = (1,1)
-        self.pool_thresholds = 0.9
+    def test_explicit_max_pooling_same_mode_strides_11(self):
+        convo_obj = ConvolutionParams(biases=np.array([-471., -1207., -1943.]))
+        pool_obj = PoolingParams(convo_obj)
 
-        self.convolution_answer_boolean = self.convolution_answer + self.convolution_biases > 0.5
-        expected_pool_answer = self.get_expected_pooling_answer(self.convolution_answer_boolean)
-        result = self.run_pooling_2d()
+        expected_pool_answer = self.get_expected_pooling_answer(convo_obj.answer_bool, pool_obj)
+        expected_spike_count = (expected_pool_answer > pool_obj.pool_thresholds).sum().astype(int)
 
-        assert False
+        result = self.run_pooling_2d(convo_obj,pool_obj)
+        calculated_spike_count = len(result[result['time'] > 1].index)
+        assert expected_spike_count == calculated_spike_count
 
-    @pytest.mark.xfail(reason="Not implemented.")
-    def test_average_pooling(self, default_pooling_params):
-        assert False
+    def test_explicit_average_pooling_same_mode_strides_11(self):
+        convo_obj = ConvolutionParams(biases=np.array([-471., -1207., -1943.]))
+        pool_obj = PoolingParams(convo_obj,pool_method="average")
+
+        expected_pool_answer = self.get_expected_pooling_answer(convo_obj.answer_bool, pool_obj)
+        expected_spike_count = (expected_pool_answer > pool_obj.pool_thresholds).sum().astype(int)
+
+        result = self.run_pooling_2d(convo_obj,pool_obj)
+        calculated_spike_count = len(result[result['time'] > 1].index)
+        assert expected_spike_count == calculated_spike_count
 
     def get_pool_output_shape(self):
         return np.floor((self.input_shape - 1) / self.pool_strides) + 1
@@ -198,11 +209,11 @@ class Test_KerasPooling2D:
         end = output_positions[1]
         return (result["neuron_number"] >= ini) & (result["neuron_number"] <= end)
 
-    def run_pooling_2d(self):
+    def run_pooling_2d(self,convo_obj, pool_obj):
         scaffold = Scaffold()
-        scaffold.add_brick(BaseP_Input(self.mock_input,p=self.basep,bits=self.bits,collapse_binary=False,name="I",time_dimension=False),"input")
-        scaffold.add_brick(keras_convolution_2d(self.convolution_input_shape,self.convolution_filters,self.convolution_thresholds,self.basep,self.bits,name="convolution_",mode=self.convolution_mode,strides=self.convolution_strides,biases=self.convolution_biases),[(0, 0)],output=True)
-        scaffold.add_brick(keras_pooling_2d(self.pool_size,self.pool_strides,thresholds=self.pool_thresholds,name="pool_",padding=self.pool_padding,method=self.pool_method),[(1,0)],output=True)
+        scaffold.add_brick(BaseP_Input(convo_obj.mock_image,p=self.basep,bits=self.bits,collapse_binary=False,name="I",time_dimension=False),"input")
+        scaffold.add_brick(keras_convolution_2d(convo_obj.input_shape,convo_obj.filters,convo_obj.thresholds,self.basep,self.bits,name="convolution_",mode=convo_obj.mode,strides=convo_obj.strides,biases=convo_obj.biases),[(0, 0)],output=True)
+        scaffold.add_brick(keras_pooling_2d(pool_obj.pool_size,pool_obj.pool_strides,thresholds=pool_obj.pool_thresholds,name="pool_",padding=pool_obj.pool_padding,method=pool_obj.pool_method),[(1,0)],output=True)
 
         self.graph = scaffold.lay_bricks()
         scaffold.summary(verbose=1)
@@ -239,34 +250,29 @@ class Test_KerasPooling2D:
         
         return conv_spike_pos
     
-    def get_expected_pooling_answer(self, pool_input):
-        batch_size, image_height, image_width, nChannels = get_pool_input_shape_params(self.convolution_output_shape, self.data_format)
-        spatial_input_shape = get_spatial_input_shape(self.convolution_output_shape,self.data_format)
-        row_stride_positions, col_stride_positions = get_stride_positions(spatial_input_shape, self.pool_strides)
-        spatial_output_shape = get_spatial_output_shape(self.convolution_input_shape,self.data_format,self.pool_size,self.pool_padding,self.pool_strides)
-        output_shape = get_pool_output_shape(self.convolution_output_shape,self.pool_size, self.pool_strides, self.pool_padding, self.data_format)
+    def get_expected_pooling_answer(self, pool_input, pool_obj):
+        row_stride_positions, col_stride_positions = get_stride_positions(pool_obj.spatial_input_shape, pool_obj.pool_strides)
         expected = []
 
+        if pool_obj.pool_method == "max":
+            for row in row_stride_positions[:pool_obj.spatial_output_shape[0]]:
+                for col in col_stride_positions[:pool_obj.spatial_output_shape[1]]:
+                    for channel in np.arange(pool_obj.nChannels):
+                        expected.append(np.any(pool_input[0,row:row+pool_obj.pool_size[0],col:col+pool_obj.pool_size[1],channel]))
 
-        if self.pool_method == "max":
-            for row in row_stride_positions[:spatial_output_shape[0]]:
-                for col in col_stride_positions[:spatial_output_shape[1]]:
-                    for channel in np.arange(nChannels):
-                        expected.append(np.any(pool_input[0,row:row+self.pool_size[0],col:col+self.pool_size[1],channel]))
-
-            expected = np.reshape(expected, output_shape).astype(int)
+            expected = np.reshape(expected, pool_obj.output_shape).astype(int)
             expected = (np.array(expected, dtype=int) > 0.9).astype(float)
 
-        elif self.pool_method == "average": #TODO : fix this code. 
-            weights = np.ones(output_shape,dtype=float) / np.prod(self.pool_size)
-            for row in row_stride_positions[:spatial_output_shape[0]]:
-                for col in col_stride_positions[:spatial_output_shape[1]]:
-                    for channel in np.arange(nChannels):
-                        expected.append(np.dot(weights.flatten(),pool_input[0,row:row+self.pool_size[0],col:col+self.pool_size[1],channel].astype(int).flatten()))
+        elif pool_obj.pool_method == "average":
+            weights = 1.0 / np.prod(pool_obj.pool_size)
+            for row in row_stride_positions[:pool_obj.spatial_output_shape[0]]:
+                for col in col_stride_positions[:pool_obj.spatial_output_shape[1]]:
+                    for channel in np.arange(pool_obj.nChannels):
+                        expected.append( (weights * pool_input[0,row:row+pool_obj.pool_size[0],col:col+pool_obj.pool_size[1],channel].astype(int)).sum() )
 
-            expected = np.reshape(expected, output_shape).astype(float)
+            expected = np.reshape(expected, pool_obj.output_shape).astype(float)
         else:
-            print(f"'method' class member variable must be either 'max' or 'average'. But it is {self.method}.")
+            print(f"'method' class member variable must be either 'max' or 'average'. But it is {pool_obj.pool_method}.")
             raise ValueError("Unrecognized 'method' class member variable.")
             
         return np.array(expected)
