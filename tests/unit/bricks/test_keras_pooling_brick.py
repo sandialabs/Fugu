@@ -89,8 +89,8 @@ class Test_KerasPooling2D:
         kernel_height, kernel_width, nFilters = 2, 2, 3
         pool_height, pool_width = 2, 2
 
-        self.basep = 3
-        self.bits = 3
+        self.basep = 4
+        self.bits = 4
         self.filters = [[2, 3],[4,5]]
         self.mock_input = generate_mock_image(image_height,image_width,nChannels=nChannels)
         self.input_shape = self.mock_input.shape
@@ -212,6 +212,21 @@ class Test_KerasPooling2D:
     def test_explicit_max_pooling_valid_mode_strides_22(self):
         convo_obj = ConvolutionParams(biases=np.array([-471., -1207., -1943.]))
         pool_obj = PoolingParams(convo_obj, pool_strides=(2,2), pool_padding="valid")
+
+        expected_pool_answer = self.get_expected_pooling_answer(convo_obj.answer_bool, pool_obj)
+        expected_spike_count = (expected_pool_answer > pool_obj.pool_thresholds).sum().astype(int)
+
+        result = self.run_pooling_2d(convo_obj,pool_obj)
+        calculated_spike_count = len(result[result['time'] > 1].index)
+        assert expected_spike_count == calculated_spike_count
+
+    @pytest.mark.parametrize("pool_strides", [(1,1),(1,2),(2,1),(2,2)])
+    @pytest.mark.parametrize("pool_padding", ["same", "valid"])
+    def test_max_pooling(self, pool_strides, pool_padding):
+        # biases = np.array([-471., -1207., -1943.])
+        biases = np.array([-1204.,-3028.,-4852.])
+        convo_obj = ConvolutionParams(image_height=5, image_width=5, nChannels=2, kernel_height=2, kernel_width=2, nFilters=3, biases=biases)
+        pool_obj = PoolingParams(convo_obj, pool_strides=pool_strides, pool_padding=pool_padding, pool_method="max")
 
         expected_pool_answer = self.get_expected_pooling_answer(convo_obj.answer_bool, pool_obj)
         expected_spike_count = (expected_pool_answer > pool_obj.pool_thresholds).sum().astype(int)

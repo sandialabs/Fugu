@@ -114,8 +114,8 @@ class keras_pooling_2d_4dinput(Brick):
             
         # output neurons/nodes
         output_lists = [[]]
-        for row in np.arange(0, self.spatial_output_shape[0], self.strides[0]):
-            for col in np.arange(0, self.spatial_output_shape[1], self.strides[1]):
+        for row in np.arange(0, self.spatial_output_shape[0]):
+            for col in np.arange(0, self.spatial_output_shape[1]):
                 for channel in np.arange(self.nChannels):
                     graph.add_node(f'{self.name}p{channel}{row}{col}', index=(row,col,channel), threshold=self.thresholds[0,row,col,channel], decay=1.0, p=1.0, potential=0.0)
                     output_lists[0].append(f'{self.name}p{channel}{row}{col}')

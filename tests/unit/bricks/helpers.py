@@ -35,12 +35,12 @@ class ConvolutionParams:
         
 
     def _get_input_shape_params(self):
-        if data_format.lower() == "channels_last":
+        if self.data_format.lower() == "channels_last":
             batch_size, image_height, image_width, nChannels = self.input_shape
-        elif data_format.lower() == "channels_first":
+        elif self.data_format.lower() == "channels_first":
             batch_size, nChannels, image_height, image_width = self.input_shape
         else:
-            raise ValueError(f"'data_format' is either 'channels_first' or 'channels_last'. Received {data_format}")
+            raise ValueError(f"'data_format' is either 'channels_first' or 'channels_last'. Received {self.data_format}")
         
         return batch_size, image_height, image_width, nChannels
 
@@ -69,7 +69,7 @@ class ConvolutionParams:
             raise ValueError(f"'data_format' is either 'channels_first' or 'channels_last'. Received {self.data_format}")
         
     def _get_spatial_input_shape(self):
-        batch_size, image_height, image_width, nChannels = get_pool_input_shape_params(input_shape,data_format)
+        batch_size, image_height, image_width, nChannels = self._get_input_shape_params()
         spatial_input_shape = (image_height, image_width)
         return spatial_input_shape
     
@@ -196,13 +196,12 @@ class PoolingParams:
         return [self.stride_positions(self.spatial_input_shape[0],self.pool_strides[0]), self.stride_positions(self.spatial_input_shape[1],self.pool_strides[1])]
     
     def _set_pooling_answer(self):
-        row_stride_positions, col_stride_positions = self.get_stride_positions()
         answer = []
 
         if self.pool_method == "max":
-            self.get_max_pooling_answer(self.pool_input)
+            answer = self.get_max_pooling_answer(self.pool_input)
         elif self.pool_method == "average": 
-            self.get_average_pooling_answer(self.pool_input)
+            answer = self.get_average_pooling_answer(self.pool_input)
         else:
             print(f"'method' class member variable must be either 'max' or 'average'. But it is {self.pool_method}.")
             raise ValueError("Unrecognized 'method' class member variable.")
