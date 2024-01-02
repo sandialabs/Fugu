@@ -97,37 +97,8 @@ class Test_KerasPooling2D:
         self.data_format = "channels_last"
 
     @pytest.fixture
-    def default_pooling_params(self, default_convolution_params):
-        pool_height, pool_width = 2, 2
-
-        self.pool_size = (pool_height, pool_width)
-        self.pool_padding = "same"
-        self.pool_method = "max"
-        self.pool_strides = (1,1)
-        self.pool_output_shape = get_pool_output_shape(self.convolution_input_shape,self.pool_size,self.pool_strides,self.pool_padding,data_format=self.data_format)
-        self.pool_thresholds = 0.9*np.ones(self.pool_output_shape)
-        self.pool_input_shape = self.convolution_output_shape
-
-    @pytest.fixture
     def convolution_mode_fixture(self):
         return "same"
-
-    @pytest.fixture
-    def default_convolution_params(self, convolution_mode_fixture):
-        image_height, image_width, nChannels = 3, 3, 2
-        kernel_height, kernel_width, nFilters = 2, 2, 3
-
-        self.basep = 3
-        self.bits = 4
-        self.convolution_strides = (1,1)
-        self.convolution_mode = convolution_mode_fixture
-        self.convolution_mock_image = generate_mock_image(image_height, image_width, nChannels=nChannels)
-        self.convolution_input_shape = self.convolution_mock_image.shape
-        self.convolution_filters = generate_keras_kernel(kernel_height,kernel_width,nFilters,nChannels)
-        self.convolution_thresholds = 0.5
-        self.convolution_biases = np.array([-471., -1207., -1943.])
-        self.convolution_output_shape = (1,*keras_convolution2d_output_shape_4dinput(self.convolution_mock_image,self.convolution_filters,self.convolution_strides,self.convolution_mode,nFilters=nFilters))
-        self.convolution_answer = keras_convolve2d_4dinput(self.convolution_mock_image, self.convolution_filters, self.convolution_strides, self.convolution_mode, self.data_format,filters=nFilters).reshape(self.convolution_output_shape)
 
     @pytest.fixture(params=["fixed"])
     def spike_positions_vector(self, request):
@@ -163,7 +134,84 @@ class Test_KerasPooling2D:
 
     def test_explicit_max_pooling_same_mode_strides_11(self):
         convo_obj = ConvolutionParams(biases=np.array([-471., -1207., -1943.]))
-        pool_obj = PoolingParams(convo_obj)
+        pool_obj = PoolingParams(convo_obj, pool_strides=(1,1), pool_padding="same")
+
+        expected_pool_answer = self.get_expected_pooling_answer(convo_obj.answer_bool, pool_obj)
+        expected_spike_count = (expected_pool_answer > pool_obj.pool_thresholds).sum().astype(int)
+
+        result = self.run_pooling_2d(convo_obj,pool_obj)
+        calculated_spike_count = len(result[result['time'] > 1].index)
+        assert expected_spike_count == calculated_spike_count
+
+    def test_explicit_max_pooling_same_mode_strides_12(self):
+        convo_obj = ConvolutionParams(biases=np.array([-471., -1207., -1943.]))
+        pool_obj = PoolingParams(convo_obj, pool_strides=(1,2), pool_padding="same")
+
+        expected_pool_answer = self.get_expected_pooling_answer(convo_obj.answer_bool, pool_obj)
+        expected_spike_count = (expected_pool_answer > pool_obj.pool_thresholds).sum().astype(int)
+
+        result = self.run_pooling_2d(convo_obj,pool_obj)
+        calculated_spike_count = len(result[result['time'] > 1].index)
+        assert expected_spike_count == calculated_spike_count
+
+    def test_explicit_max_pooling_same_mode_strides_21(self):
+        convo_obj = ConvolutionParams(biases=np.array([-471., -1207., -1943.]))
+        pool_obj = PoolingParams(convo_obj, pool_strides=(2,1), pool_padding="same")
+
+        expected_pool_answer = self.get_expected_pooling_answer(convo_obj.answer_bool, pool_obj)
+        expected_spike_count = (expected_pool_answer > pool_obj.pool_thresholds).sum().astype(int)
+
+        result = self.run_pooling_2d(convo_obj,pool_obj)
+        calculated_spike_count = len(result[result['time'] > 1].index)
+        assert expected_spike_count == calculated_spike_count
+
+    def test_explicit_max_pooling_same_mode_strides_22(self):
+        convo_obj = ConvolutionParams(biases=np.array([-471., -1207., -1943.]))
+        pool_obj = PoolingParams(convo_obj, pool_strides=(2,2), pool_padding="same")
+
+        expected_pool_answer = self.get_expected_pooling_answer(convo_obj.answer_bool, pool_obj)
+        expected_spike_count = (expected_pool_answer > pool_obj.pool_thresholds).sum().astype(int)
+
+        result = self.run_pooling_2d(convo_obj,pool_obj)
+        calculated_spike_count = len(result[result['time'] > 1].index)
+        assert expected_spike_count == calculated_spike_count
+
+    def test_explicit_max_pooling_valid_mode_strides_11(self):
+        convo_obj = ConvolutionParams(biases=np.array([-471., -1207., -1943.]))
+        pool_obj = PoolingParams(convo_obj, pool_strides=(1,1), pool_padding="valid")
+
+        expected_pool_answer = self.get_expected_pooling_answer(convo_obj.answer_bool, pool_obj)
+        expected_spike_count = (expected_pool_answer > pool_obj.pool_thresholds).sum().astype(int)
+
+        result = self.run_pooling_2d(convo_obj,pool_obj)
+        calculated_spike_count = len(result[result['time'] > 1].index)
+        assert expected_spike_count == calculated_spike_count
+
+    def test_explicit_max_pooling_valid_mode_strides_12(self):
+        convo_obj = ConvolutionParams(biases=np.array([-471., -1207., -1943.]))
+        pool_obj = PoolingParams(convo_obj, pool_strides=(1,2), pool_padding="valid")
+
+        expected_pool_answer = self.get_expected_pooling_answer(convo_obj.answer_bool, pool_obj)
+        expected_spike_count = (expected_pool_answer > pool_obj.pool_thresholds).sum().astype(int)
+
+        result = self.run_pooling_2d(convo_obj,pool_obj)
+        calculated_spike_count = len(result[result['time'] > 1].index)
+        assert expected_spike_count == calculated_spike_count
+
+    def test_explicit_max_pooling_valid_mode_strides_21(self):
+        convo_obj = ConvolutionParams(biases=np.array([-471., -1207., -1943.]))
+        pool_obj = PoolingParams(convo_obj, pool_strides=(2,1), pool_padding="valid")
+
+        expected_pool_answer = self.get_expected_pooling_answer(convo_obj.answer_bool, pool_obj)
+        expected_spike_count = (expected_pool_answer > pool_obj.pool_thresholds).sum().astype(int)
+
+        result = self.run_pooling_2d(convo_obj,pool_obj)
+        calculated_spike_count = len(result[result['time'] > 1].index)
+        assert expected_spike_count == calculated_spike_count
+
+    def test_explicit_max_pooling_valid_mode_strides_22(self):
+        convo_obj = ConvolutionParams(biases=np.array([-471., -1207., -1943.]))
+        pool_obj = PoolingParams(convo_obj, pool_strides=(2,2), pool_padding="valid")
 
         expected_pool_answer = self.get_expected_pooling_answer(convo_obj.answer_bool, pool_obj)
         expected_spike_count = (expected_pool_answer > pool_obj.pool_thresholds).sum().astype(int)
@@ -174,7 +222,84 @@ class Test_KerasPooling2D:
 
     def test_explicit_average_pooling_same_mode_strides_11(self):
         convo_obj = ConvolutionParams(biases=np.array([-471., -1207., -1943.]))
-        pool_obj = PoolingParams(convo_obj,pool_method="average")
+        pool_obj = PoolingParams(convo_obj, pool_method="average", pool_strides=(1,1), pool_padding="same")
+
+        expected_pool_answer = self.get_expected_pooling_answer(convo_obj.answer_bool, pool_obj)
+        expected_spike_count = (expected_pool_answer > pool_obj.pool_thresholds).sum().astype(int)
+
+        result = self.run_pooling_2d(convo_obj,pool_obj)
+        calculated_spike_count = len(result[result['time'] > 1].index)
+        assert expected_spike_count == calculated_spike_count
+
+    def test_explicit_average_pooling_same_mode_strides_12(self):
+        convo_obj = ConvolutionParams(biases=np.array([-471., -1207., -1943.]))
+        pool_obj = PoolingParams(convo_obj, pool_method="average", pool_strides=(1,2), pool_padding="same")
+
+        expected_pool_answer = self.get_expected_pooling_answer(convo_obj.answer_bool, pool_obj)
+        expected_spike_count = (expected_pool_answer > pool_obj.pool_thresholds).sum().astype(int)
+
+        result = self.run_pooling_2d(convo_obj,pool_obj)
+        calculated_spike_count = len(result[result['time'] > 1].index)
+        assert expected_spike_count == calculated_spike_count
+
+    def test_explicit_average_pooling_same_mode_strides_21(self):
+        convo_obj = ConvolutionParams(biases=np.array([-471., -1207., -1943.]))
+        pool_obj = PoolingParams(convo_obj, pool_method="average", pool_strides=(2,1), pool_padding="same")
+
+        expected_pool_answer = self.get_expected_pooling_answer(convo_obj.answer_bool, pool_obj)
+        expected_spike_count = (expected_pool_answer > pool_obj.pool_thresholds).sum().astype(int)
+
+        result = self.run_pooling_2d(convo_obj,pool_obj)
+        calculated_spike_count = len(result[result['time'] > 1].index)
+        assert expected_spike_count == calculated_spike_count
+
+    def test_explicit_average_pooling_same_mode_strides_22(self):
+        convo_obj = ConvolutionParams(biases=np.array([-471., -1207., -1943.]))
+        pool_obj = PoolingParams(convo_obj, pool_method="average", pool_strides=(2,2), pool_padding="same")
+
+        expected_pool_answer = self.get_expected_pooling_answer(convo_obj.answer_bool, pool_obj)
+        expected_spike_count = (expected_pool_answer > pool_obj.pool_thresholds).sum().astype(int)
+
+        result = self.run_pooling_2d(convo_obj,pool_obj)
+        calculated_spike_count = len(result[result['time'] > 1].index)
+        assert expected_spike_count == calculated_spike_count
+
+    def test_explicit_average_pooling_valid_mode_strides_11(self):
+        convo_obj = ConvolutionParams(biases=np.array([-471., -1207., -1943.]))
+        pool_obj = PoolingParams(convo_obj, pool_method="average", pool_strides=(1,1), pool_padding="valid")
+
+        expected_pool_answer = self.get_expected_pooling_answer(convo_obj.answer_bool, pool_obj)
+        expected_spike_count = (expected_pool_answer > pool_obj.pool_thresholds).sum().astype(int)
+
+        result = self.run_pooling_2d(convo_obj,pool_obj)
+        calculated_spike_count = len(result[result['time'] > 1].index)
+        assert expected_spike_count == calculated_spike_count
+
+    def test_explicit_average_pooling_valid_mode_strides_12(self):
+        convo_obj = ConvolutionParams(biases=np.array([-471., -1207., -1943.]))
+        pool_obj = PoolingParams(convo_obj, pool_method="average", pool_strides=(1,2), pool_padding="valid")
+
+        expected_pool_answer = self.get_expected_pooling_answer(convo_obj.answer_bool, pool_obj)
+        expected_spike_count = (expected_pool_answer > pool_obj.pool_thresholds).sum().astype(int)
+
+        result = self.run_pooling_2d(convo_obj,pool_obj)
+        calculated_spike_count = len(result[result['time'] > 1].index)
+        assert expected_spike_count == calculated_spike_count
+
+    def test_explicit_average_pooling_valid_mode_strides_21(self):
+        convo_obj = ConvolutionParams(biases=np.array([-471., -1207., -1943.]))
+        pool_obj = PoolingParams(convo_obj, pool_method="average", pool_strides=(2,1), pool_padding="valid")
+
+        expected_pool_answer = self.get_expected_pooling_answer(convo_obj.answer_bool, pool_obj)
+        expected_spike_count = (expected_pool_answer > pool_obj.pool_thresholds).sum().astype(int)
+
+        result = self.run_pooling_2d(convo_obj,pool_obj)
+        calculated_spike_count = len(result[result['time'] > 1].index)
+        assert expected_spike_count == calculated_spike_count
+
+    def test_explicit_average_pooling_valid_mode_strides_22(self):
+        convo_obj = ConvolutionParams(biases=np.array([-471., -1207., -1943.]))
+        pool_obj = PoolingParams(convo_obj, pool_method="average", pool_strides=(2,2), pool_padding="valid")
 
         expected_pool_answer = self.get_expected_pooling_answer(convo_obj.answer_bool, pool_obj)
         expected_spike_count = (expected_pool_answer > pool_obj.pool_thresholds).sum().astype(int)
