@@ -128,6 +128,7 @@ class keras_pooling_2d_4dinput(Brick):
             edge_weights = 1.0 / np.prod(self.pool_size, dtype=float)
 
         # Construct edges connecting input and output nodes
+        # TODO: Handle cases where batch_size != 1; (i.e., index 0 in pixel[0,:,:,:] should not be hardcoded.)
         row_stride_positions, col_stride_positions = self.get_stride_positions()
         for row in np.arange(self.spatial_output_shape[0]):
             rowpos = row_stride_positions[row]
@@ -137,14 +138,14 @@ class keras_pooling_2d_4dinput(Brick):
                     # method 1
                     # for kx in np.arange(self.pool_size):
                     #     for ky in np.arange(self.pool_size):
-                    #         graph.add_edge(pixels[rowpos+kx,colpos+ky], f'{self.name}p{row}{col}', weight=edge_weights, delay=1)
-                    #         print(f" g{rowpos+kx}{colpos+ky} --> p{row}{col}")
+                    #         graph.add_edge(pixels[0,rowpos+kx,colpos+ky], f'{self.name}p{channel}{row}{col}', weight=edge_weights, delay=1)
+                    #         print(f" g{rowpos+kx}{colpos+ky} --> p{channel}{row}{col}")
 
                     # method 2
                     pixels_subset = pixels[0,rowpos:rowpos+self.pool_size[0],colpos:colpos+self.pool_size[1],channel]
                     for pixel in pixels_subset.flatten():
                         graph.add_edge(pixel, f'{self.name}p{channel}{row}{col}', weight=edge_weights, delay=1)
-                        print(f" {pixel.split('_')[1]} --> p{channel}{row}{col}")
+                        logging.debug(f" {pixel.split('_')[1]} --> p{channel}{row}{col}")
 
         self.is_built = True        
         return (graph, self.metadata, [{'complete': complete_node, 'begin': begin_node}], output_lists, output_codings)

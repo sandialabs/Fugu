@@ -220,21 +220,6 @@ class Test_KerasPooling2D:
         calculated_spike_count = len(result[result['time'] > 1].index)
         assert expected_spike_count == calculated_spike_count
 
-    @pytest.mark.parametrize("pool_strides", [(1,1),(1,2),(2,1),(2,2)])
-    @pytest.mark.parametrize("pool_padding", ["same", "valid"])
-    def test_max_pooling(self, pool_strides, pool_padding):
-        # biases = np.array([-471., -1207., -1943.])
-        biases = np.array([-1204.,-3028.,-4852.])
-        convo_obj = ConvolutionParams(image_height=5, image_width=5, nChannels=2, kernel_height=2, kernel_width=2, nFilters=3, biases=biases)
-        pool_obj = PoolingParams(convo_obj, pool_strides=pool_strides, pool_padding=pool_padding, pool_method="max")
-
-        expected_pool_answer = self.get_expected_pooling_answer(convo_obj.answer_bool, pool_obj)
-        expected_spike_count = (expected_pool_answer > pool_obj.pool_thresholds).sum().astype(int)
-
-        result = self.run_pooling_2d(convo_obj,pool_obj)
-        calculated_spike_count = len(result[result['time'] > 1].index)
-        assert expected_spike_count == calculated_spike_count
-
     def test_explicit_average_pooling_same_mode_strides_11(self):
         convo_obj = ConvolutionParams(biases=np.array([-471., -1207., -1943.]))
         pool_obj = PoolingParams(convo_obj, pool_method="average", pool_strides=(1,1), pool_padding="same")
@@ -322,6 +307,32 @@ class Test_KerasPooling2D:
         result = self.run_pooling_2d(convo_obj,pool_obj)
         calculated_spike_count = len(result[result['time'] > 1].index)
         assert expected_spike_count == calculated_spike_count
+
+    @pytest.mark.parametrize("pool_size", [(1,2),(2,1),(2,2),(2,3),(3,2),(3,3)])
+    @pytest.mark.parametrize("pool_strides", [(1,1),(1,2),(2,1),(2,2),(1,3),(3,1),(2,3),(3,2),(3,3)])
+    @pytest.mark.parametrize("pool_padding", ["same", "valid"])
+    @pytest.mark.parametrize("pool_method", ["max", "average"])
+    @pytest.mark.parametrize("nChannels,nFilters", [(2,3), (1,1)])
+    def test_pooling_exhaustively_with_random_biases(self, pool_size, pool_strides, pool_padding, pool_method, nChannels, nFilters):
+        self.basep = 4
+        self.bits = 3
+
+        convo_obj = ConvolutionParams(image_height=5, image_width=5, nChannels=nChannels, kernel_height=2, kernel_width=2, nFilters=nFilters, biases=None)
+        convo_obj.biases = convo_obj.get_random_biases_within_answer_range()
+        convo_obj._set_convolution_answer_boolean()
+
+        pool_obj = PoolingParams(convo_obj, pool_size=pool_size, pool_strides=pool_strides, pool_padding=pool_padding, pool_method=pool_method)
+
+        expected_pool_answer = self.get_expected_pooling_answer(convo_obj.answer_bool, pool_obj)
+        expected_spike_count = (expected_pool_answer > pool_obj.pool_thresholds).sum().astype(int)
+
+        result = self.run_pooling_2d(convo_obj,pool_obj)
+        calculated_spike_count = len(result[result['time'] > 1].index)
+        assert expected_spike_count == calculated_spike_count
+
+    @pytest.mark.xfail(reason="Not implemented.")
+    def test_data_format_channels_last(self):
+        assert False
 
     def get_pool_output_shape(self):
         return np.floor((self.input_shape - 1) / self.pool_strides) + 1

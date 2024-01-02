@@ -31,8 +31,7 @@ class ConvolutionParams:
         self._set_input_shape()
         self._set_output_shape()
         self._set_convolution_answer()
-        self.answer_bool = self.answer + self.biases > 0.5
-        
+        self._set_convolution_answer_boolean()
 
     def _get_input_shape_params(self):
         if self.data_format.lower() == "channels_last":
@@ -75,7 +74,34 @@ class ConvolutionParams:
     
     def _set_convolution_answer(self):
         self.answer = keras_convolve2d_4dinput(self.mock_image, self.filters, self.strides, self.mode, self.data_format, filters=self.nFilters).reshape(self.output_shape)
-    
+
+    def _set_convolution_answer_boolean(self):
+        if not hasattr(self,"answer"):
+            self._set_convolution_answer()
+
+        self.answer_bool = self.answer + self.biases > 0.5
+
+    def set_convolution_answer_boolean(self, biases):
+        if not hasattr(self,"answer"):
+            self._set_convolution_answer()
+
+        self.answer_bool = self.answer + biases > 0.5
+
+    def get_random_biases_within_answer_range(self, nSamples=1):
+        mins = np.min(self.answer, axis=(0,1,2))
+        maxs = np.max(self.answer, axis=(0,1,2))
+        if nSamples == 1:
+            size = (self.nFilters,)
+        else:
+            size = (nSamples,self.nFilters)
+        return -np.random.randint(mins,maxs,size=size).astype(float)
+
+    def calculate_convolution_answer_boolean(self, biases):
+        if not hasattr(self,"answer"):
+            self._set_convolution_answer()
+
+        return self.answer + biases > 0.5
+
     def calculate_convolution(self, image):
         return keras_convolve2d_4dinput(image, self.filters, self.strides, self.mode, self.data_format, filters=self.nFilters).reshape(self.output_shape)
     
