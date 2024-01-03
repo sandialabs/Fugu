@@ -330,6 +330,23 @@ class Test_KerasPooling2D:
         calculated_spike_count = len(result[result['time'] > 1].index)
         assert expected_spike_count == calculated_spike_count
 
+    def test_pooling_one_off(self):
+        self.basep = 4
+        self.bits = 3
+
+        convo_obj = ConvolutionParams(image_height=5, image_width=5, nChannels=2, kernel_height=2, kernel_width=2, nFilters=3, biases=None)
+        convo_obj.biases = convo_obj.get_random_biases_within_answer_range()
+        convo_obj._set_convolution_answer_boolean()
+
+        pool_obj = PoolingParams(convo_obj, pool_size=(2,3), pool_strides=(1,1), pool_padding="same", pool_method="max")
+
+        expected_pool_answer = self.get_expected_pooling_answer(convo_obj.answer_bool, pool_obj)
+        expected_spike_count = (expected_pool_answer > pool_obj.pool_thresholds).sum().astype(int)
+
+        result = self.run_pooling_2d(convo_obj,pool_obj)
+        calculated_spike_count = len(result[result['time'] > 1].index)
+        assert expected_spike_count == calculated_spike_count
+
     @pytest.mark.xfail(reason="Not implemented.")
     def test_data_format_channels_last(self):
         assert False

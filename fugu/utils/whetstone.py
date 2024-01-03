@@ -74,11 +74,10 @@ def whetstone_2_fugu(keras_model, basep, bits, scaffold=None):
             output_shape = layer.output_shape
             padding = layer.padding
             strides = layer.strides
-            # Add a brick for each channel
-            for channel in np.arange(input_shape[-1]):
-                # TODO: update pooling brick to accept 2D tuples for pool size and strides. For now, the brick assumes the pool size/strides is constant in both directions
-                scaffold.add_brick(pooling_2d(pool_size[0],strides[0],name=f"pool_layer_{layerID}",method="max"),[(layerID,0)],output=True)
-                layerID += 1
+
+            # TODO: update pooling brick to accept 2D tuples for pool size and strides. For now, the brick assumes the pool size/strides is constant in both directions
+            scaffold.add_brick(pooling_2d(pool_size,strides,name=f"pool_layer_{layerID}",padding=padding,method="max"),[(layerID,0)],output=True)
+            layerID += 1
 
         if type(layer) is Dense:
             # need output shape, weights, thresholds 

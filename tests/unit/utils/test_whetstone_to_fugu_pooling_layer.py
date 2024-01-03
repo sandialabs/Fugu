@@ -18,13 +18,16 @@ from tensorflow.keras import Model, initializers
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense, Conv2D, Flatten, MaxPooling2D, BatchNormalization
 
-from ..helpers import ConvolutionParams, PoolingParams
+from ..helpers import ConvolutionParams, PoolingParams, KerasParams
 
 Spiking_BRelu = pytest.importorskip("whetstone.layers", reason=f"Whetstone package not installed. Skipping test file {__file__} because of module dependency.").Spiking_BRelu
 layer_utils = pytest.importorskip("whetstone.utils", reason=f"Whetstone package not installed. Skipping test file {__file__} because of module dependency.").layer_utils
 
 class Test_Whetstone_2_Fugu_MaxPoolingLayer:
     def setup_method(self):
+        self.basep = 4
+        self.bits = 3
+
         image_height, image_width, nChannels = 3, 3, 2
         kernel_height, kernel_width, nFilters = 2, 2, 3
 
@@ -54,29 +57,17 @@ class Test_Whetstone_2_Fugu_MaxPoolingLayer:
         calculated = model.layers[0](mock_image)[0,:,:,0].numpy().tolist()
         assert False
 
-    @pytest.mark.xfail(reason="Not implemented.")
     def test_keras_max_pooling_layer_same_padding_strides_11_pool_size_22(self):
-        image_height, image_width, nChannels = 3, 3, 2
-        kernel_height, kernel_width, nFilters = 2, 2, 3
-        pool_height, pool_width = 2, 2
+        convo_obj = ConvolutionParams(biases=np.array([-471., -1207., -1943.]))
+        pool_obj = PoolingParams(convo_obj, pool_strides=(2,2), pool_padding="same")
 
-        pool_strides = (1,1)
-        pool_size = (pool_height, pool_width)
-        pool_padding = "same"
+        keras_obj = KerasParams([convo_obj,pool_obj])
+        expected_spike_count = (keras_obj.features_extractor(convo_obj.mock_image)[1].numpy() > 0.5).astype(int).sum()
 
-        input_shape = (image_height,image_width,nChannels)
-        mock_image = generate_mock_image(image_height,image_width,nChannels).astype(float)
+        result = run_whetstone_to_fugu_utility(convo_obj.mock_image, self.basep, self. bits, keras_obj.model)
+        calculated_spike_count = len(result[result['time'] > 1].index)
 
-        model = Sequential()
-        model.add(MaxPooling2D(pool_size=pool_size, strides=pool_strides, padding=pool_padding, input_shape=input_shape))
-        feature_extractor = Model(inputs=model.inputs, outputs=[layer.output for layer in model.layers]) # gives cumalative output of the input through this and previous layers.
-        features = feature_extractor(mock_image)
-
-        basep = 3
-        bits = 4
-        result = run_whetstone_to_fugu_utility(mock_image,basep,bits,model)
-
-        assert False
+        assert expected_spike_count == calculated_spike_count
 
     @pytest.mark.xfail(reason="Not implemented.")
     def test_keras_max_pooling_layer_same_padding_strides_12_pool_size_22(self):
@@ -90,10 +81,40 @@ class Test_Whetstone_2_Fugu_MaxPoolingLayer:
     def test_keras_max_pooling_layer_same_padding_strides_22_pool_size_22(self):
         assert False
 
-    @pytest.mark.xfail(reason="Not implemented.")
     def test_keras_max_pooling_layer_same_padding_strides_12_pool_size_32(self):
-        assert False
+        convo_obj = ConvolutionParams(image_height=5, image_width=5, nChannels=2, kernel_height=2, kernel_width=2, nFilters=3, biases=None)
+        convo_obj.biases = convo_obj.get_random_biases_within_answer_range()
+        convo_obj._set_convolution_answer_boolean()
+        pool_obj = PoolingParams(convo_obj, pool_size=(2,3), pool_strides=(1,1), pool_padding="same", pool_method="max")
 
+        keras_obj = KerasParams([convo_obj,pool_obj])
+        keras_pool_result = (keras_obj.features_extractor(convo_obj.mock_image)[1].numpy() > 0.5).astype(int)
+        expected_spike_count = keras_pool_result.sum()
+
+        result = run_whetstone_to_fugu_utility(convo_obj.mock_image, self.basep, self. bits, keras_obj.model)
+        calculated_spike_count = len(result[result['time'] > 1].index)
+
+        assert expected_spike_count == calculated_spike_count
+
+    @pytest.mark.parametrize("pool_size", [(1,2),(2,1),(2,2),(2,3),(3,2),(3,3)])
+    @pytest.mark.parametrize("pool_strides", [(1,1),(1,2),(2,1),(2,2),(1,3),(3,1),(2,3),(3,2),(3,3)])
+    @pytest.mark.parametrize("pool_padding", ["same", "valid"])
+    @pytest.mark.parametrize("pool_method", ["max", "average"])
+    @pytest.mark.parametrize("nChannels,nFilters", [(2,3), (1,1)])
+    def test_keras_max_pooling_layer(self, pool_size, pool_strides, pool_padding, pool_method, nChannels, nFilters):
+
+        convo_obj = ConvolutionParams(image_height=5, image_width=5, nChannels=nChannels, kernel_height=2, kernel_width=2, nFilters=nFilters, biases=None)
+        convo_obj.biases = convo_obj.get_random_biases_within_answer_range()
+        convo_obj._set_convolution_answer_boolean()
+        pool_obj = PoolingParams(convo_obj, pool_size=pool_size, pool_strides=pool_strides, pool_padding=pool_padding, pool_method=pool_method)
+
+        keras_obj = KerasParams([convo_obj,pool_obj])
+        expected_spike_count = (keras_obj.features_extractor(convo_obj.mock_image)[1].numpy() > 0.5).astype(int).sum()
+
+        result = run_whetstone_to_fugu_utility(convo_obj.mock_image, self.basep, self. bits, keras_obj.model)
+        calculated_spike_count = len(result[result['time'] > 1].index)
+
+        assert expected_spike_count == calculated_spike_count
 
 def run_whetstone_to_fugu_utility(mock_image, basep, bits, keras_model):
     scaffold = Scaffold()

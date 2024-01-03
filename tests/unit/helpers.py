@@ -3,6 +3,10 @@
 import numpy as np
 from fugu.utils.keras_helpers import keras_convolve2d, keras_convolve2d_4dinput, generate_keras_kernel, generate_mock_image, keras_convolution2d_output_shape, keras_convolution2d_output_shape_4dinput
 
+from tensorflow.keras.models import Sequential
+from tensorflow.keras import Model, initializers
+from tensorflow.keras.layers import Dense, Conv2D, MaxPooling2D
+
 class ConvolutionParams:
 
     def __init__(self, image_height=3, image_width=3, nChannels=2, kernel_height=2, kernel_width=2, nFilters=3, strides=(1,1), mode="same", data_format="channels_last", batch_size=1, biases=None):
@@ -246,9 +250,11 @@ class PoolingParams:
             
         return answer
     
-    def get_max_pooling_answer(self, pool_input):
+    def get_max_pooling_answer(self, pool_input, flip=False):
         row_stride_positions, col_stride_positions = self.get_stride_positions()
         answer = []
+        if flip:
+            pool_input = np.flip(pool_input,axis=2)
 
         for row in row_stride_positions[:self.spatial_output_shape[0]]:
             for col in col_stride_positions[:self.spatial_output_shape[1]]:
@@ -278,3 +284,67 @@ class PoolingParams:
         subset_ids = np.random.choice(np.prod(self.input_shape),nvals,replace=False)
         input[subset_ids] = 1
         return input.reshape(self.input_shape)
+
+class DenseParams:
+    pass
+
+class KerasParams:
+    def __init__(self,params_layers_list):
+        model = Sequential()
+        for layerID, params_layer in enumerate(params_layers_list):
+
+            if layerID == 0:
+                if params_layer.data_format == "channels_last":
+                    input_shape = tuple(list(params_layer.input_shape)[1:])
+                elif params_layer.data_format == "channels_first":
+                    input_shape = None
+
+            if isinstance(params_layer, ConvolutionParams):
+                model = self.add_convolution_layer(model,params_layer,layerID,input_shape)
+
+            if isinstance(params_layer, PoolingParams):
+                model = self.add_pooling_layer(model, params_layer, layerID, input_shape)
+
+            if isinstance(params_layer, DenseParams):
+                if layerID == 0:
+                    pass
+                else:
+                    pass
+
+        feature_extractor = Model(inputs=model.inputs, outputs=[layer.output for layer in model.layers])
+        self.model = model
+        self.features_extractor = feature_extractor
+
+    def add_convolution_layer(self, model, params_layer, layerID, input_shape=None):
+        if input_shape is None:
+            model.add(Conv2D(params_layer.nFilters,
+                            (params_layer.kernel_height, params_layer.kernel_width),
+                            strides=params_layer.strides,
+                            padding=params_layer.mode,
+                            activation=None,
+                            use_bias=True,
+                            name=str(layerID),
+                            kernel_initializer=initializers.constant(np.flip(params_layer.filters,(0,1))),
+                            bias_initializer=initializers.constant(np.array(params_layer.biases).reshape((params_layer.nFilters,)))))
+        else:
+            model.add(Conv2D(params_layer.nFilters,
+                            (params_layer.kernel_height, params_layer.kernel_width),
+                            strides=params_layer.strides,
+                            padding=params_layer.mode,
+                            activation=None,
+                            use_bias=True,
+                            input_shape=input_shape,
+                            name=str(layerID),
+                            kernel_initializer=initializers.constant(np.flip(params_layer.filters,(0,1))),
+                            bias_initializer=initializers.constant(params_layer.biases)))
+        return model
+
+    def add_pooling_layer(self, model, params_layer, layerID, input_shape=None):
+        if input_shape is None:
+            model.add(MaxPooling2D(pool_size=params_layer.pool_size, strides=params_layer.pool_strides, padding=params_layer.pool_padding, name=str(layerID)))
+        else:
+            model.add(MaxPooling2D(pool_size=params_layer.pool_size, strides=params_layer.pool_strides, padding=params_layer.pool_padding, name=str(layerID), input_shape=input_shape))
+        return model
+
+    def add_dense_layer(self, model, params_layer, layerID, input_shape=None):
+        return model
