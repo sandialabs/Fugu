@@ -136,8 +136,7 @@ class Test_KerasPooling2D:
         convo_obj = ConvolutionParams(biases=np.array([-471., -1207., -1943.]))
         pool_obj = PoolingParams(convo_obj, pool_strides=(1,1), pool_padding="same")
 
-        expected_pool_answer = self.get_expected_pooling_answer(convo_obj.answer_bool, pool_obj)
-        expected_spike_count = (expected_pool_answer > pool_obj.pool_thresholds).sum().astype(int)
+        expected_spike_count = (pool_obj.pool_answer > pool_obj.pool_thresholds).sum().astype(int)
 
         result = self.run_pooling_2d(convo_obj,pool_obj)
         calculated_spike_count = len(result[result['time'] > 1].index)
@@ -147,8 +146,7 @@ class Test_KerasPooling2D:
         convo_obj = ConvolutionParams(biases=np.array([-471., -1207., -1943.]))
         pool_obj = PoolingParams(convo_obj, pool_strides=(1,2), pool_padding="same")
 
-        expected_pool_answer = self.get_expected_pooling_answer(convo_obj.answer_bool, pool_obj)
-        expected_spike_count = (expected_pool_answer > pool_obj.pool_thresholds).sum().astype(int)
+        expected_spike_count = (pool_obj.pool_answer > pool_obj.pool_thresholds).sum().astype(int)
 
         result = self.run_pooling_2d(convo_obj,pool_obj)
         calculated_spike_count = len(result[result['time'] > 1].index)
@@ -158,8 +156,7 @@ class Test_KerasPooling2D:
         convo_obj = ConvolutionParams(biases=np.array([-471., -1207., -1943.]))
         pool_obj = PoolingParams(convo_obj, pool_strides=(2,1), pool_padding="same")
 
-        expected_pool_answer = self.get_expected_pooling_answer(convo_obj.answer_bool, pool_obj)
-        expected_spike_count = (expected_pool_answer > pool_obj.pool_thresholds).sum().astype(int)
+        expected_spike_count = (pool_obj.pool_answer > pool_obj.pool_thresholds).sum().astype(int)
 
         result = self.run_pooling_2d(convo_obj,pool_obj)
         calculated_spike_count = len(result[result['time'] > 1].index)
@@ -169,8 +166,7 @@ class Test_KerasPooling2D:
         convo_obj = ConvolutionParams(biases=np.array([-471., -1207., -1943.]))
         pool_obj = PoolingParams(convo_obj, pool_strides=(2,2), pool_padding="same")
 
-        expected_pool_answer = self.get_expected_pooling_answer(convo_obj.answer_bool, pool_obj)
-        expected_spike_count = (expected_pool_answer > pool_obj.pool_thresholds).sum().astype(int)
+        expected_spike_count = (pool_obj.pool_answer > pool_obj.pool_thresholds).sum().astype(int)
 
         result = self.run_pooling_2d(convo_obj,pool_obj)
         calculated_spike_count = len(result[result['time'] > 1].index)
@@ -180,8 +176,7 @@ class Test_KerasPooling2D:
         convo_obj = ConvolutionParams(biases=np.array([-471., -1207., -1943.]))
         pool_obj = PoolingParams(convo_obj, pool_strides=(1,1), pool_padding="valid")
 
-        expected_pool_answer = self.get_expected_pooling_answer(convo_obj.answer_bool, pool_obj)
-        expected_spike_count = (expected_pool_answer > pool_obj.pool_thresholds).sum().astype(int)
+        expected_spike_count = (pool_obj.pool_answer > pool_obj.pool_thresholds).sum().astype(int)
 
         result = self.run_pooling_2d(convo_obj,pool_obj)
         calculated_spike_count = len(result[result['time'] > 1].index)
@@ -191,8 +186,7 @@ class Test_KerasPooling2D:
         convo_obj = ConvolutionParams(biases=np.array([-471., -1207., -1943.]))
         pool_obj = PoolingParams(convo_obj, pool_strides=(1,2), pool_padding="valid")
 
-        expected_pool_answer = self.get_expected_pooling_answer(convo_obj.answer_bool, pool_obj)
-        expected_spike_count = (expected_pool_answer > pool_obj.pool_thresholds).sum().astype(int)
+        expected_spike_count = (pool_obj.pool_answer > pool_obj.pool_thresholds).sum().astype(int)
 
         result = self.run_pooling_2d(convo_obj,pool_obj)
         calculated_spike_count = len(result[result['time'] > 1].index)
@@ -202,8 +196,7 @@ class Test_KerasPooling2D:
         convo_obj = ConvolutionParams(biases=np.array([-471., -1207., -1943.]))
         pool_obj = PoolingParams(convo_obj, pool_strides=(2,1), pool_padding="valid")
 
-        expected_pool_answer = self.get_expected_pooling_answer(convo_obj.answer_bool, pool_obj)
-        expected_spike_count = (expected_pool_answer > pool_obj.pool_thresholds).sum().astype(int)
+        expected_spike_count = (pool_obj.pool_answer > pool_obj.pool_thresholds).sum().astype(int)
 
         result = self.run_pooling_2d(convo_obj,pool_obj)
         calculated_spike_count = len(result[result['time'] > 1].index)
@@ -213,8 +206,7 @@ class Test_KerasPooling2D:
         convo_obj = ConvolutionParams(biases=np.array([-471., -1207., -1943.]))
         pool_obj = PoolingParams(convo_obj, pool_strides=(2,2), pool_padding="valid")
 
-        expected_pool_answer = self.get_expected_pooling_answer(convo_obj.answer_bool, pool_obj)
-        expected_spike_count = (expected_pool_answer > pool_obj.pool_thresholds).sum().astype(int)
+        expected_spike_count = (pool_obj.pool_answer > pool_obj.pool_thresholds).sum().astype(int)
 
         result = self.run_pooling_2d(convo_obj,pool_obj)
         calculated_spike_count = len(result[result['time'] > 1].index)
@@ -224,8 +216,7 @@ class Test_KerasPooling2D:
         convo_obj = ConvolutionParams(biases=np.array([-471., -1207., -1943.]))
         pool_obj = PoolingParams(convo_obj, pool_method="average", pool_strides=(1,1), pool_padding="same")
 
-        expected_pool_answer = self.get_expected_pooling_answer(convo_obj.answer_bool, pool_obj)
-        expected_spike_count = (expected_pool_answer > pool_obj.pool_thresholds).sum().astype(int)
+        expected_spike_count = (pool_obj.pool_answer > pool_obj.pool_thresholds).sum().astype(int)
 
         result = self.run_pooling_2d(convo_obj,pool_obj)
         calculated_spike_count = len(result[result['time'] > 1].index)
@@ -235,8 +226,7 @@ class Test_KerasPooling2D:
         convo_obj = ConvolutionParams(biases=np.array([-471., -1207., -1943.]))
         pool_obj = PoolingParams(convo_obj, pool_method="average", pool_strides=(1,2), pool_padding="same")
 
-        expected_pool_answer = self.get_expected_pooling_answer(convo_obj.answer_bool, pool_obj)
-        expected_spike_count = (expected_pool_answer > pool_obj.pool_thresholds).sum().astype(int)
+        expected_spike_count = (pool_obj.pool_answer > pool_obj.pool_thresholds).sum().astype(int)
 
         result = self.run_pooling_2d(convo_obj,pool_obj)
         calculated_spike_count = len(result[result['time'] > 1].index)
@@ -246,8 +236,7 @@ class Test_KerasPooling2D:
         convo_obj = ConvolutionParams(biases=np.array([-471., -1207., -1943.]))
         pool_obj = PoolingParams(convo_obj, pool_method="average", pool_strides=(2,1), pool_padding="same")
 
-        expected_pool_answer = self.get_expected_pooling_answer(convo_obj.answer_bool, pool_obj)
-        expected_spike_count = (expected_pool_answer > pool_obj.pool_thresholds).sum().astype(int)
+        expected_spike_count = (pool_obj.pool_answer > pool_obj.pool_thresholds).sum().astype(int)
 
         result = self.run_pooling_2d(convo_obj,pool_obj)
         calculated_spike_count = len(result[result['time'] > 1].index)
@@ -257,8 +246,7 @@ class Test_KerasPooling2D:
         convo_obj = ConvolutionParams(biases=np.array([-471., -1207., -1943.]))
         pool_obj = PoolingParams(convo_obj, pool_method="average", pool_strides=(2,2), pool_padding="same")
 
-        expected_pool_answer = self.get_expected_pooling_answer(convo_obj.answer_bool, pool_obj)
-        expected_spike_count = (expected_pool_answer > pool_obj.pool_thresholds).sum().astype(int)
+        expected_spike_count = (pool_obj.pool_answer > pool_obj.pool_thresholds).sum().astype(int)
 
         result = self.run_pooling_2d(convo_obj,pool_obj)
         calculated_spike_count = len(result[result['time'] > 1].index)
@@ -268,8 +256,7 @@ class Test_KerasPooling2D:
         convo_obj = ConvolutionParams(biases=np.array([-471., -1207., -1943.]))
         pool_obj = PoolingParams(convo_obj, pool_method="average", pool_strides=(1,1), pool_padding="valid")
 
-        expected_pool_answer = self.get_expected_pooling_answer(convo_obj.answer_bool, pool_obj)
-        expected_spike_count = (expected_pool_answer > pool_obj.pool_thresholds).sum().astype(int)
+        expected_spike_count = (pool_obj.pool_answer > pool_obj.pool_thresholds).sum().astype(int)
 
         result = self.run_pooling_2d(convo_obj,pool_obj)
         calculated_spike_count = len(result[result['time'] > 1].index)
@@ -279,8 +266,7 @@ class Test_KerasPooling2D:
         convo_obj = ConvolutionParams(biases=np.array([-471., -1207., -1943.]))
         pool_obj = PoolingParams(convo_obj, pool_method="average", pool_strides=(1,2), pool_padding="valid")
 
-        expected_pool_answer = self.get_expected_pooling_answer(convo_obj.answer_bool, pool_obj)
-        expected_spike_count = (expected_pool_answer > pool_obj.pool_thresholds).sum().astype(int)
+        expected_spike_count = (pool_obj.pool_answer > pool_obj.pool_thresholds).sum().astype(int)
 
         result = self.run_pooling_2d(convo_obj,pool_obj)
         calculated_spike_count = len(result[result['time'] > 1].index)
@@ -290,8 +276,7 @@ class Test_KerasPooling2D:
         convo_obj = ConvolutionParams(biases=np.array([-471., -1207., -1943.]))
         pool_obj = PoolingParams(convo_obj, pool_method="average", pool_strides=(2,1), pool_padding="valid")
 
-        expected_pool_answer = self.get_expected_pooling_answer(convo_obj.answer_bool, pool_obj)
-        expected_spike_count = (expected_pool_answer > pool_obj.pool_thresholds).sum().astype(int)
+        expected_spike_count = (pool_obj.pool_answer > pool_obj.pool_thresholds).sum().astype(int)
 
         result = self.run_pooling_2d(convo_obj,pool_obj)
         calculated_spike_count = len(result[result['time'] > 1].index)
@@ -301,8 +286,7 @@ class Test_KerasPooling2D:
         convo_obj = ConvolutionParams(biases=np.array([-471., -1207., -1943.]))
         pool_obj = PoolingParams(convo_obj, pool_method="average", pool_strides=(2,2), pool_padding="valid")
 
-        expected_pool_answer = self.get_expected_pooling_answer(convo_obj.answer_bool, pool_obj)
-        expected_spike_count = (expected_pool_answer > pool_obj.pool_thresholds).sum().astype(int)
+        expected_spike_count = (pool_obj.pool_answer > pool_obj.pool_thresholds).sum().astype(int)
 
         result = self.run_pooling_2d(convo_obj,pool_obj)
         calculated_spike_count = len(result[result['time'] > 1].index)
@@ -322,9 +306,7 @@ class Test_KerasPooling2D:
         convo_obj._set_convolution_answer_boolean()
 
         pool_obj = PoolingParams(convo_obj, pool_size=pool_size, pool_strides=pool_strides, pool_padding=pool_padding, pool_method=pool_method)
-
-        expected_pool_answer = self.get_expected_pooling_answer(convo_obj.answer_bool, pool_obj)
-        expected_spike_count = (expected_pool_answer > pool_obj.pool_thresholds).sum().astype(int)
+        expected_spike_count = (pool_obj.pool_answer > pool_obj.pool_thresholds).sum().astype(int)
 
         result = self.run_pooling_2d(convo_obj,pool_obj)
         calculated_spike_count = len(result[result['time'] > 1].index)
@@ -339,9 +321,7 @@ class Test_KerasPooling2D:
         convo_obj._set_convolution_answer_boolean()
 
         pool_obj = PoolingParams(convo_obj, pool_size=(2,3), pool_strides=(1,1), pool_padding="same", pool_method="max")
-
-        expected_pool_answer = self.get_expected_pooling_answer(convo_obj.answer_bool, pool_obj)
-        expected_spike_count = (expected_pool_answer > pool_obj.pool_thresholds).sum().astype(int)
+        expected_spike_count = (pool_obj.pool_answer > pool_obj.pool_thresholds).sum().astype(int)
 
         result = self.run_pooling_2d(convo_obj,pool_obj)
         calculated_spike_count = len(result[result['time'] > 1].index)
