@@ -109,11 +109,12 @@ class Test_Whetstone_2_Fugu_MaxPoolingLayer:
         pool_obj = PoolingParams(convo_obj, pool_size=pool_size, pool_strides=pool_strides, pool_padding=pool_padding, pool_method=pool_method)
 
         keras_obj = KerasParams([convo_obj,pool_obj])
-        expected_spike_count = (keras_obj.features_extractor(convo_obj.mock_image)[1].numpy() > 0.5).astype(int).sum()
+        keras_obj.pool_input = (keras_obj.features_extractor(convo_obj.mock_image)[0].numpy() > 0.5).astype(int)
+        keras_obj.pool_answer = (keras_obj.features_extractor(convo_obj.mock_image)[1].numpy() > 0.5).astype(int)
+        expected_spike_count = keras_obj.pool_answer.sum()
 
         result = run_whetstone_to_fugu_utility(convo_obj.mock_image, self.basep, self. bits, keras_obj.model)
         calculated_spike_count = len(result[result['time'] > 1].index)
-
         assert expected_spike_count == calculated_spike_count
 
 def run_whetstone_to_fugu_utility(mock_image, basep, bits, keras_model):
