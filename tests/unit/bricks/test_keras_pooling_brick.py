@@ -12,109 +12,12 @@ from fugu.scaffold import Scaffold
 
 from fugu.utils.keras_helpers import keras_convolve2d, keras_convolve2d_4dinput, generate_keras_kernel, generate_mock_image, keras_convolution2d_output_shape_4dinput
 from ..helpers import ConvolutionParams, PoolingParams
-
-def get_pool_input_shape_params(input_shape,data_format):
-    if data_format.lower() == "channels_last":
-        batch_size, image_height, image_width, nChannels = input_shape
-    elif data_format.lower() == "channels_first":
-        batch_size, nChannels, image_height, image_width = input_shape
-    else:
-        raise ValueError(f"'data_format' is either 'channels_first' or 'channels_last'. Received {data_format}")
-
-    return batch_size, image_height, image_width, nChannels
-
-def get_pool_output_shape(input_shape, pool_size, pool_strides, pool_padding, data_format="channels_last"):
-    if pool_strides is None:
-        pool_strides = pool_size
-
-    batch_size, image_height, image_width, nChannels = get_pool_input_shape_params(input_shape,data_format)
-    spatial_input_shape = (image_height, image_width)
-
-    spatial_output_shape = get_padding_output_shape(spatial_input_shape,pool_size,pool_strides,pool_padding)
-
-    if data_format.lower() == "channels_last":
-        output_shape = (batch_size, *spatial_output_shape, nChannels)
-    else:
-        output_shape = (batch_size, nChannels, *spatial_output_shape)
-
-    return output_shape
-
-def get_spatial_input_shape(input_shape,data_format):
-    batch_size, image_height, image_width, nChannels = get_pool_input_shape_params(input_shape,data_format)
-    spatial_input_shape = (image_height, image_width)
-    return spatial_input_shape
-
-def get_spatial_output_shape(input_shape,data_format,pool_size,pool_padding,pool_strides):
-    spatial_input_shape = get_spatial_input_shape(input_shape,data_format)
-    if pool_padding.lower() == "same":
-        spatial_output_shape = same_padding_spatial_output_shape(spatial_input_shape,pool_strides)
-    elif pool_padding.lower() == "valid":
-        spatial_output_shape = valid_padding_spatial_output_shape(spatial_input_shape,pool_size,pool_strides)
-    else:
-        raise ValueError(f"'pool_padding' is one of 'same' or 'valid'. Received {pool_padding}.")
-
-    spatial_output_shape = list(map(int,spatial_output_shape))
-    return spatial_output_shape
-    
-def same_padding_spatial_output_shape(spatial_input_shape,  pool_strides):
-    return np.floor((np.array(spatial_input_shape) - 1) / np.array(pool_strides)) + 1
-
-def valid_padding_spatial_output_shape(spatial_input_shape, pool_size, pool_strides):
-    return np.floor((np.array(spatial_input_shape) - np.array(pool_size)) / np.array(pool_strides)) + 1
-
-def get_padding_output_shape(spatial_input_shape,pool_size,pool_strides,pool_padding):
-    if pool_strides is None:
-        pool_strides = pool_size
-
-    if pool_padding.lower() == "same":
-        spatial_output_shape = same_padding_spatial_output_shape(spatial_input_shape,pool_strides)
-    elif pool_padding.lower() == "valid":
-        spatial_output_shape = valid_padding_spatial_output_shape(spatial_input_shape,pool_size,pool_strides)
-    else:
-        raise ValueError(f"'pool_padding' is one of 'same' or 'valid'. Received {pool_padding}.")
-
-    spatial_output_shape = list(map(int,spatial_output_shape))
-    return spatial_output_shape
-
-def stride_positions(pixel_dim, stride_len):
-    return np.arange(0, pixel_dim, stride_len, dtype=int)
-
-def get_stride_positions(spatial_input_shape, strides):
-    return [stride_positions(spatial_input_shape[0],strides[0]), stride_positions(spatial_input_shape[1],strides[1])]
     
 class Test_KerasPooling2D:
 
     def setup_method(self):
-        image_height, image_width, nChannels = 3, 3, 2
-        kernel_height, kernel_width, nFilters = 2, 2, 3
-        pool_height, pool_width = 2, 2
-
         self.basep = 4
         self.bits = 4
-        self.filters = [[2, 3],[4,5]]
-        self.mock_input = generate_mock_image(image_height,image_width,nChannels=nChannels)
-        self.input_shape = self.mock_input.shape
-        self.data_format = "channels_last"
-
-    @pytest.fixture
-    def convolution_mode_fixture(self):
-        return "same"
-
-    @pytest.fixture(params=["fixed"])
-    def spike_positions_vector(self, request):
-        return request.param
-    
-    @pytest.fixture
-    def pooling_size(self):
-        return 2
-    
-    @pytest.fixture
-    def pooling_stride(self):
-        return 2
-    
-    @pytest.fixture
-    def pooling_method(self):
-        return "max"
 
     @pytest.mark.parametrize("pooling_size,expectation", [(2,does_not_raise()),((2,2),does_not_raise()),(2.0,pytest.raises(ValueError)),((2,2,1),pytest.raises(ValueError)),([2,2],pytest.raises(ValueError))])
     def test_pooling_size_input(self, pooling_size, expectation):

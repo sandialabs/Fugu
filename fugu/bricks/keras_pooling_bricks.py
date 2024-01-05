@@ -98,7 +98,6 @@ class keras_pooling_2d_4dinput(Brick):
         # pad_length = 0 (padding is taken care in the convolution brick)
         self.output_shape = self.get_pool_output_shape()
         self.metadata['pooling_output_shape'] = self.output_shape
-        self.spatial_window_shape = self.get_spatial_window_shape()
 
         # Restrict max pooling threshold value to 0.9. Otherwise, the neuron circuit will not behave like an OR operation.
         if self.method.lower() == "max" and not np.any(np.array(self.thresholds) < 1.0):
@@ -165,10 +164,6 @@ class keras_pooling_2d_4dinput(Brick):
 
         return ipos, fpos
 
-    def get_padding_shape(self):
-        padding_shape = (self.pool_size[0] - 1, self.pool_size[1] - 1)
-        return padding_shape
-
     def get_padded_input_shape_bounds(self):
         '''
             padding_shape = (prow,pcol)
@@ -193,65 +188,33 @@ class keras_pooling_2d_4dinput(Brick):
         adjustments_array = np.array([np.floor(0.5*dim_length), np.ceil(0.5*dim_length)])
         return adjustments_array
 
-    def get_padding_amount(self, dim_length):
-        adjustments_array = np.array([np.floor(0.5*dim_length), np.ceil(0.5*dim_length)])
-        return adjustments_array
-
     def get_padded_zeros_count(self):
         '''
-            p = s*(g-1) + k - n
+            padding = strides*(output - 1) + kernel - input
         '''
-        n = np.array(self.spatial_input_shape)
-        k = np.array(self.pool_size)
-        s = np.array(self.strides)
-        g = np.array(self.spatial_output_shape)
+        spatial_input_shape = np.array(self.spatial_input_shape)
+        kernel_shape = np.array(self.pool_size)
+        strides_shape = np.array(self.strides)
+        spatial_output_shape = np.array(self.spatial_output_shape)
 
-        padding_count = (s*(g - 1) + k - n)
+        padding_count = (strides_shape*(spatial_output_shape - 1) + kernel_shape - spatial_input_shape)
         padding_count[padding_count < 0] = 0.
         return tuple(padding_count.astype(int))
 
     def check_padded_zeros_count(self, padding_count):
-        n = np.array(self.spatial_input_shape)
-        k = np.array(self.pool_size)
-        s = np.array(self.strides)
-        g = np.array(self.spatial_output_shape)
-        p = np.array(padding_count)
-        calculated_output_shape = np.floor((n-k+p+s)/s)
-        expected_output_shape = g
+        spatial_input_shape = np.array(self.spatial_input_shape)
+        kernel_shape = np.array(self.pool_size)
+        strides_shape = np.array(self.strides)
+        spatial_output_shape = np.array(self.spatial_output_shape)
+        padding_shape = np.array(padding_count)
+        calculated_output_shape = np.floor( (spatial_input_shape - kernel_shape + padding_shape + strides_shape) / strides_shape)
+        expected_output_shape = spatial_output_shape
         isSameOutputShape = expected_output_shape == calculated_output_shape
         return isSameOutputShape.all()
-
-    def get_stride_positions_for_window(self):
-        lb, ub = self.adjust_row_col_for_window_shape()
-        row_positions = np.arange(lb[0],ub[0],self.strides[0])
-        col_positions = np.arange(lb[1],ub[1],self.strides[1])
-        return row_positions, col_positions
-
-    def adjust_row_col_for_window_shape(self):
-        input_shape = np.array(self.spatial_input_shape)
-        window_shape = np.array(self.spatial_window_shape)
-        lb = np.ceil(0.5*(input_shape - window_shape)).astype(int)
-        ub = np.ceil(0.5*(input_shape + window_shape)).astype(int)
-        return lb, ub
-
-    def set_spatial_window_shape(self):
-        self.spatial_window_shape = (self.stride_positions(self.spatial_input_shape[0],self.strides[0])[-1] + self.pool_size[0],
-                                     self.stride_positions(self.spatial_input_shape[1],self.strides[1])[-1] + self.pool_size[1])
-
-    def get_spatial_window_shape(self):
-        spatial_window_shape = (self.stride_positions(self.spatial_input_shape[0],self.strides[0])[-1] + self.pool_size[0],
-                                self.stride_positions(self.spatial_input_shape[1],self.strides[1])[-1] + self.pool_size[1])
-        return spatial_window_shape
 
     def get_stride_positions_from_bounds(self, input_shape_bounds):
         return [np.arange(input_shape_bounds[0,0],input_shape_bounds[0,1],self.strides[0]),
                 np.arange(input_shape_bounds[1,0],input_shape_bounds[1,1],self.strides[1])]
-
-    def stride_positions(self, pixel_dim, stride_len):
-        return np.arange(0, pixel_dim, stride_len, dtype=int)
-
-    def get_stride_positions(self):
-        return [self.stride_positions(self.spatial_input_shape[0],self.strides[0]), self.stride_positions(self.spatial_input_shape[1],self.strides[1])]
 
     def get_pool_output_shape(self):
         self.spatial_output_shape = self.get_spatial_output_shape()

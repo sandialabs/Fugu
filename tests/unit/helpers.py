@@ -127,7 +127,6 @@ class PoolingParams:
         self.nChannels = self._get_pool_input_shape_params()[3]
         self._set_spatial_input_shape()
         self._set_spatial_output_shape()
-        self._set_spatial_window_shape()
         self._set_output_shape()
         self._set_pooling_answer()
 
@@ -198,15 +197,6 @@ class PoolingParams:
         self.batch_size, self.image_height, self.image_width, self.nChannels = self._get_pool_input_shape_params()
         self.spatial_input_shape = (self.image_height, self.image_width)
 
-    def _get_spatial_window_shape(self):
-        spatial_window_shape = (self.stride_positions(self.spatial_input_shape[0],self.pool_strides[0])[-1] + self.pool_size[0], 
-                                self.stride_positions(self.spatial_input_shape[1],self.pool_strides[1])[-1] + self.pool_size[1])
-        return spatial_window_shape
-
-    def _set_spatial_window_shape(self):
-        self.spatial_window_shape = (self.stride_positions(self.spatial_input_shape[0],self.pool_strides[0])[-1] + self.pool_size[0], 
-                                     self.stride_positions(self.spatial_input_shape[1],self.pool_strides[1])[-1] + self.pool_size[1])
-
     def _same_padding_spatial_output_shape(self):
         if not hasattr(self,"spatial_input_shape"):
             self.spatial_input_shape = self._get_spatial_input_shape()
@@ -228,12 +218,6 @@ class PoolingParams:
             raise ValueError(f"'data_format' is either 'channels_first' or 'channels_last'. Received {self.data_format}")
 
         return batch_size, image_height, image_width, nChannels
-    
-    def stride_positions(self,pixel_dim, stride_len):
-        return np.arange(0, pixel_dim, stride_len, dtype=int)
-
-    def get_stride_positions(self):
-        return [self.stride_positions(self.spatial_input_shape[0],self.pool_strides[0]), self.stride_positions(self.spatial_input_shape[1],self.pool_strides[1])]
     
     def _set_pooling_answer(self):
         answer = []
@@ -312,35 +296,11 @@ class PoolingParams:
 
         return ipos, fpos
 
-    def get_stride_positions_for_window(self):
-        lb, ub = self.adjust_row_col_for_window_shape()
-        row_positions = np.arange(lb[0],ub[0],self.pool_strides[0])
-        col_positions = np.arange(lb[1],ub[1],self.pool_strides[1])
-        return row_positions, col_positions
-
-    def adjust_row_col_for_window_shape(self):
-        input_shape = np.array(self.spatial_input_shape)
-        window_shape = np.array(self.spatial_window_shape)
-        lb = np.ceil(0.5*(input_shape - window_shape)).astype(int)
-        ub = np.ceil(0.5*(input_shape + window_shape)).astype(int)
-        return lb, ub
-
     def get_stride_positions_from_bounds(self, input_shape_bounds):
         return [np.arange(input_shape_bounds[0,0],input_shape_bounds[0,1],self.pool_strides[0]),
                 np.arange(input_shape_bounds[1,0],input_shape_bounds[1,1],self.pool_strides[1])]
 
-    def get_padding_shape(self):
-        padding_shape = (self.pool_size[0] - 1, self.pool_size[1] - 1)
-        return padding_shape
-
     def get_padded_input_shape_bounds(self):
-        '''
-            padding_shape = (prow,pcol)
-
-            If the kernel height is odd then we will pad prow/2 rows on top and bottom. However, if the kernel height 
-            is even then we pad floor(prow/2) rows on the top and ceil(prow/2) rows on the bottom. The width is padded
-            in a similar fashion.
-        '''
         padding_shape = self.get_padded_zeros_count()
         assert self.check_padded_zeros_count(padding_shape)
 
@@ -359,25 +319,25 @@ class PoolingParams:
 
     def get_padded_zeros_count(self):
         '''
-            p = s*(g-1) + k - n
+            padding = strides*(output - 1) + kernel - input
         '''
-        n = np.array(self.spatial_input_shape)
-        k = np.array(self.pool_size)
-        s = np.array(self.pool_strides)
-        g = np.array(self.spatial_output_shape)
+        spatial_input_shape = np.array(self.spatial_input_shape)
+        kernel_shape = np.array(self.pool_size)
+        strides_shape = np.array(self.pool_strides)
+        spatial_output_shape = np.array(self.spatial_output_shape)
 
-        padding_count = (s*(g - 1) + k - n)
+        padding_count = (strides_shape*(spatial_output_shape - 1) + kernel_shape - spatial_input_shape)
         padding_count[padding_count < 0] = 0.
         return tuple(padding_count.astype(int))
 
     def check_padded_zeros_count(self, padding_count):
-        n = np.array(self.spatial_input_shape)
-        k = np.array(self.pool_size)
-        s = np.array(self.pool_strides)
-        g = np.array(self.spatial_output_shape)
-        p = np.array(padding_count)
-        calculated_output_shape = np.floor((n-k+p+s)/s)
-        expected_output_shape = g
+        spatial_input_shape = np.array(self.spatial_input_shape)
+        kernel_shape = np.array(self.pool_size)
+        strides_shape = np.array(self.pool_strides)
+        spatial_output_shape = np.array(self.spatial_output_shape)
+        padding_shape = np.array(padding_count)
+        calculated_output_shape = np.floor( (spatial_input_shape - kernel_shape + padding_shape + strides_shape) / strides_shape)
+        expected_output_shape = spatial_output_shape
         isSameOutputShape = expected_output_shape == calculated_output_shape
         return isSameOutputShape.all()
 
