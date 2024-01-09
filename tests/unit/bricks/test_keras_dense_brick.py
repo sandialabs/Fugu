@@ -20,21 +20,25 @@ class Test_KerasDense2D:
         self.basep = 4
         self.bits = 4
 
-    @pytest.mark.parametrize("weights,expectation", [([1.0,1.0],pytest.raises(ValueError)),((1.0,1.0),pytest.raises(ValueError)),(1.0,does_not_raise()),(1.0*np.ones((1,3,3,3)),pytest.raises(ValueError)),(1.0*np.ones((3,3,3,3,3)),does_not_raise())])
-    def test_input_weights(self, weights, expectation):
+    @pytest.mark.parametrize("weights,output_shape,expectation", [([1.0,1.0],(1,3,3,3),pytest.raises(ValueError)),((1.0,1.0),(1,3,3,3),pytest.raises(ValueError)),(1.0,(1,3,3,3),does_not_raise()),(1.0*np.ones((1,3,3,3)),(1,3,3,3),pytest.raises(ValueError)),(1.0*np.ones((3,3,3,3,3)),(1,3,3,3),does_not_raise()),
+                                                                  ([1.0,1.0],(1,2,2,3),pytest.raises(ValueError)),((1.0,1.0),(1,2,2,3),pytest.raises(ValueError)),(1.0,(1,2,2,3),does_not_raise()),(1.0*np.ones((1,3,3,3)),(1,2,2,3),pytest.raises(ValueError)),(1.0*np.ones((2,2,3,3,3)),(1,2,2,3),does_not_raise())])
+    def test_input_weights(self, weights, output_shape, expectation):
         convo_obj = ConvolutionParams(biases=np.array([-471., -1207., -1943.]))
         pool_obj = PoolingParams(convo_obj)
         dense_obj = DenseParams(pool_obj)
         dense_obj.weights = weights
+        dense_obj.output_shape = output_shape
         with expectation:
             self.run_dense_2d(convo_obj,pool_obj,dense_obj)
 
-    @pytest.mark.parametrize("thresholds,expectation", [([0.9,0.9],pytest.raises(ValueError)),((0.9,0.9),pytest.raises(ValueError)),(0.9,does_not_raise()),(0.9*np.ones((1,3,3,3)),does_not_raise())])
-    def test_input_thresholds(self, thresholds, expectation):
+    @pytest.mark.parametrize("thresholds,output_shape,expectation", [([0.9,0.9],(1,3,3,3),pytest.raises(ValueError)),((0.9,0.9),(1,3,3,3),pytest.raises(ValueError)),(0.9,(1,3,3,3),does_not_raise()),(0.9*np.ones((1,3,3,3)),(1,3,3,3),does_not_raise()),
+                                                                     ([0.9,0.9],(1,2,2,3),pytest.raises(ValueError)),((0.9,0.9),(1,2,2,3),pytest.raises(ValueError)),(0.9,(1,2,2,3),does_not_raise()),(0.9*np.ones((1,2,2,3)),(1,2,2,3),does_not_raise())])
+    def test_input_thresholds(self, thresholds, output_shape, expectation):
         convo_obj = ConvolutionParams(biases=np.array([-471., -1207., -1943.]))
         pool_obj = PoolingParams(convo_obj)
         dense_obj = DenseParams(pool_obj)
         dense_obj.thresholds = thresholds
+        dense_obj.output_shape = output_shape
         with expectation:
             self.run_dense_2d(convo_obj,pool_obj,dense_obj)
 
@@ -47,12 +51,6 @@ class Test_KerasDense2D:
     def test_something(self):
         assert False
 
-
-    #TODO: Unit test that checks dense thresholds shape
-    #TODO: Unit test that checks dense weights shape
-    #TODO: Unit test that test dense brick with a scalar threshold value
-    #TODO: Unit test that test dense brick with a scalar weight value
-    #TODO: Unit test that uses different input/output neuron shapes
 
     def get_output_neuron_numbers(self):
         neuron_numbers = []
