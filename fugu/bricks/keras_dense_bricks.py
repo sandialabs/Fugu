@@ -81,13 +81,13 @@ class keras_dense_2d_4dinput(Brick):
 
         # Check for scalar value for weights or consistent weights shape
         if not hasattr(self.weights, '__len__') and (not isinstance(self.weights, str)):
-            self.weights = self.weights * np.ones((output_size, input_size, self.nChannels), dtype=float)
+            self.weights = self.weights * np.ones((*self.spatial_output_shape, *self.spatial_input_shape, self.nChannels), dtype=float)
         else:
             if not type(self.weights) is np.ndarray:
                 self.weights = np.array(self.weights)
 
-            if self.weights.shape != (output_size, input_size, self.nChannels):
-                raise ValueError(f"Weights shape {self.weights.shape} does not equal the necessary shape {(output_size, input_size, self.nChannels)}.")
+            if self.weights.shape != (*self.spatial_output_shape, *self.spatial_input_shape, self.nChannels):
+                raise ValueError(f"Weights shape {self.weights.shape} does not equal the necessary shape {(*self.spatial_output_shape, *self.spatial_input_shape, self.nChannels)}.")
 
         # output neurons/nodes
         output_lists = [[]]
@@ -101,17 +101,14 @@ class keras_dense_2d_4dinput(Brick):
         prev_layer = np.reshape(input_lists[0], self.input_shape)
 
         # Construct edges connecting input and output nodes
-        wrow = -1
         for outrow in np.arange(self.spatial_output_shape[0]):  # loop over output neurons
             for outcol in np.arange(self.spatial_output_shape[1]): # loop over output neurons
-                wcol = 0
-                wrow = wrow + 1
+
                 for inrow in np.arange(self.spatial_input_shape[0]):  # loop over input neurons
                     for incol in np.arange(self.spatial_input_shape[1]):  # loop over input neurons
                         for channel in np.arange(self.nChannels):
-                            graph.add_edge(prev_layer[0,inrow,incol,channel], f'{self.name}d{channel}{outrow}{outcol}', weight=self.weights[wrow,wcol,channel], delay=1)
-                            print(f" p{channel}{inrow}{incol} --> d{channel}{outrow}{outcol}   weight: {self.weights[wrow,wcol,channel]}")
-                        wcol = wcol + 1
+                            graph.add_edge(prev_layer[0,inrow,incol,channel], f'{self.name}d{channel}{outrow}{outcol}', weight=self.weights[outrow,outcol,inrow,incol,channel], delay=1)
+                            print(f" p{channel}{inrow}{incol} --> d{channel}{outrow}{outcol}   weight: {self.weights[outrow,outcol,inrow,incol,channel]}")
 
         self.is_built = True
         return (graph, self.metadata, [{"complete": complete_node, "begin": begin_node}], output_lists, output_codings,)
