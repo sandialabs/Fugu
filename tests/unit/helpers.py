@@ -342,7 +342,14 @@ class PoolingParams:
         return isSameOutputShape.all()
 
 class DenseParams:
-    pass
+    def __init__(self, params_obj, weights=1.0, thresholds=0.9, data_format="channels_last"):
+        self.weights = weights
+        self.thresholds = thresholds
+        self.data_format = data_format
+        self.input_shape = params_obj.input_shape
+        self.spatial_input_shape = params_obj.spatial_input_shape
+        self.output_shape = params_obj.output_shape
+        self.spatial_output_shape = params_obj.spatial_output_shape
 
 class KerasParams:
     def __init__(self,params_layers_list):
