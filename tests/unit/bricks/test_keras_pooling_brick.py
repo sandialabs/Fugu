@@ -246,6 +246,7 @@ class Test_KerasPooling2D:
         assert expected_spike_count == calculated_spike_count
 
     @pytest.mark.xfail(reason="Not implemented.")
+    #TODO: Implement handling of data_format="channels_last" and data_format="channels_first"
     def test_data_format_channels_last(self):
         assert False
 
