@@ -342,14 +342,89 @@ class PoolingParams:
         return isSameOutputShape.all()
 
 class DenseParams:
-    def __init__(self, params_obj, weights=1.0, thresholds=0.9, data_format="channels_last"):
-        self.weights = weights
-        self.thresholds = thresholds
+    def __init__(self, params_obj, output_shape, weights=1.0, thresholds=0.9, data_format="channels_last"):
         self.data_format = data_format
+        self.output_shape = output_shape
         self.input_shape = params_obj.input_shape
-        self.spatial_input_shape = params_obj.spatial_input_shape
-        self.output_shape = params_obj.output_shape
-        self.spatial_output_shape = params_obj.spatial_output_shape
+        self._set_spatial_input_shape()
+        self._set_spatial_output_shape()
+
+        self._set_weights(weights)
+        self._set_thresholds(thresholds)
+
+    def _get_spatial_input_shape(self):
+        self.batch_size, self.image_height, self.image_width, self.nChannels = self._get_input_shape_params()
+        spatial_input_shape = (self.image_height, self.image_width)
+        return spatial_input_shape
+
+    def _set_spatial_input_shape(self):
+        self.batch_size, self.image_height, self.image_width, self.nChannels = self._get_input_shape_params()
+        self.spatial_input_shape = (self.image_height, self.image_width)
+
+    def _get_spatial_output_shape(self):
+        batch_size, image_height, image_width, nChannels = self._get_output_shape_params()
+        spatial_output_shape = (image_height, image_width)
+        return spatial_output_shape
+
+    def _set_spatial_output_shape(self):
+        batch_size, image_height, image_width, nChannels = self._get_output_shape_params()
+        self.spatial_output_shape = (image_height, image_width)
+
+    def _get_output_shape_params(self):
+        if self.data_format.lower() == "channels_last":
+            batch_size, image_height, image_width, nChannels = self.output_shape
+        elif self.data_format.lower() == "channels_first":
+            batch_size, nChannels, image_height, image_width = self.output_shape
+        else:
+            raise ValueError(f"'data_format' is either 'channels_first' or 'channels_last'. Received {self.data_format}")
+
+        return batch_size, image_height, image_width, nChannels
+
+    def _get_input_shape_params(self):
+        if self.data_format.lower() == "channels_last":
+            batch_size, image_height, image_width, nChannels = self.input_shape
+        elif self.data_format.lower() == "channels_first":
+            batch_size, nChannels, image_height, image_width = self.input_shape
+        else:
+            raise ValueError(f"'data_format' is either 'channels_first' or 'channels_last'. Received {self.data_format}")
+
+        return batch_size, image_height, image_width, nChannels
+
+    def _set_weights(self, weights):
+        # Check for scalar value for weights or consistent weights shape
+        if not hasattr(weights, '__len__') and (not isinstance(weights, str)):
+            self.weights = weights * np.ones((*self.spatial_output_shape, *self.spatial_input_shape, self.nChannels), dtype=float)
+        else:
+            if not type(weights) is np.ndarray:
+                self.weights = np.array(weights)
+
+            if self.weights.shape != (*self.spatial_output_shape, *self.spatial_input_shape, self.nChannels):
+                raise ValueError(f"Weights shape {self.weights.shape} does not equal the necessary shape {(*self.spatial_output_shape, *self.spatial_input_shape, self.nChannels)}.")
+
+    def _set_thresholds(self, thresholds):
+        # Check for scalar value for thresholds or consistent thresholds shape
+        if not hasattr(thresholds, '__len__') and (not isinstance(thresholds, str)):
+            self.thresholds = thresholds * np.ones(self.output_shape)
+        else:
+            if not type(thresholds) is np.ndarray:
+                self.thresholds = np.array(thresholds)
+
+            if self.thresholds.shape != self.output_shape:
+                raise ValueError(f"Threshold shape {self.thresholds.shape} does not equal the output neuron shape {self.output_shape}.")
+
+    def _set_output_shape(self, output_shape):
+        self.output_shape = output_shape
+        self._set_spatial_output_shape()
+
+    def get_dense_answer(self, dense_input):
+        answer = np.zeros(self.thresholds.shape)
+        for outrow in np.arange(self.spatial_output_shape[0]):
+            for outcol in np.arange(self.spatial_output_shape[1]):
+                for channel in np.arange(self.nChannels):
+                    answer[0,outrow,outcol,channel] = np.dot(self.weights[outrow,outcol,:,:,channel].flatten(),dense_input[0,:,:,channel].flatten())
+
+        return answer
+
 
 class KerasParams:
     def __init__(self,params_layers_list):

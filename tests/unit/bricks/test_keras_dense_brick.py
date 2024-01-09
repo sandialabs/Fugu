@@ -25,9 +25,10 @@ class Test_KerasDense2D:
     def test_input_weights(self, weights, output_shape, expectation):
         convo_obj = ConvolutionParams(biases=np.array([-471., -1207., -1943.]))
         pool_obj = PoolingParams(convo_obj)
-        dense_obj = DenseParams(pool_obj)
+        dense_obj = DenseParams(pool_obj, pool_obj.output_shape)
         dense_obj.weights = weights
-        dense_obj.output_shape = output_shape
+        dense_obj._set_output_shape(output_shape)
+        dense_obj._set_thresholds(0.9)
         with expectation:
             self.run_dense_2d(convo_obj,pool_obj,dense_obj)
 
@@ -36,15 +37,20 @@ class Test_KerasDense2D:
     def test_input_thresholds(self, thresholds, output_shape, expectation):
         convo_obj = ConvolutionParams(biases=np.array([-471., -1207., -1943.]))
         pool_obj = PoolingParams(convo_obj)
-        dense_obj = DenseParams(pool_obj)
+        dense_obj = DenseParams(pool_obj, pool_obj.output_shape)
         dense_obj.thresholds = thresholds
-        dense_obj.output_shape = output_shape
+        dense_obj._set_output_shape(output_shape)
+        dense_obj._set_weights(1.0)
         with expectation:
             self.run_dense_2d(convo_obj,pool_obj,dense_obj)
 
     def test_simple_explicit_dense_layer_example_1(self):
         convo_obj = ConvolutionParams(biases=np.array([-471., -1207., -1943.]))
         pool_obj = PoolingParams(convo_obj, pool_strides=(1,1), pool_padding="same")
+        dense_obj = DenseParams(pool_obj)
+
+        result = self.run_dense_2d(convo_obj,pool_obj,dense_obj)
+        calculated_spike_count = len(result[result['time'] > 2].index)
         assert False
 
     @pytest.mark.xfail(reason="Not implemented.")
