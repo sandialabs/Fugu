@@ -20,8 +20,8 @@ class Test_KerasDense2D:
         self.basep = 4
         self.bits = 4
 
-    @pytest.mark.parametrize("weights,output_shape,expectation", [([1.0,1.0],(1,3,3,3),pytest.raises(ValueError)),((1.0,1.0),(1,3,3,3),pytest.raises(ValueError)),(1.0,(1,3,3,3),does_not_raise()),(1.0*np.ones((1,3,3,3)),(1,3,3,3),pytest.raises(ValueError)),(1.0*np.ones((3,3,3,3,3)),(1,3,3,3),does_not_raise()),
-                                                                  ([1.0,1.0],(1,2,2,3),pytest.raises(ValueError)),((1.0,1.0),(1,2,2,3),pytest.raises(ValueError)),(1.0,(1,2,2,3),does_not_raise()),(1.0*np.ones((1,3,3,3)),(1,2,2,3),pytest.raises(ValueError)),(1.0*np.ones((2,2,3,3,3)),(1,2,2,3),does_not_raise())])
+    @pytest.mark.parametrize("weights,output_shape,expectation", [([1.0,1.0],(1,3,3,3),pytest.raises(ValueError)),((1.0,1.0),(1,3,3,3),pytest.raises(ValueError)),(1.0,(1,3,3,3),does_not_raise()),(1.0*np.ones((1,3,3,3)),(1,3,3,3),pytest.raises(ValueError)),(1.0*np.ones((27,27)),(1,3,3,3),does_not_raise()),
+                                                                  ([1.0,1.0],(1,2,2,3),pytest.raises(ValueError)),((1.0,1.0),(1,2,2,3),pytest.raises(ValueError)),(1.0,(1,2,2,3),does_not_raise()),(1.0*np.ones((1,3,3,3)),(1,2,2,3),pytest.raises(ValueError)),(1.0*np.ones((12,27)),(1,2,2,3),does_not_raise())])
     def test_input_weights(self, weights, output_shape, expectation):
         convo_obj = ConvolutionParams(biases=np.array([-471., -1207., -1943.]))
         pool_obj = PoolingParams(convo_obj)

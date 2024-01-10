@@ -345,6 +345,7 @@ class DenseParams:
     def __init__(self, params_obj, output_shape, weights=1.0, thresholds=0.9, data_format="channels_last"):
         self.data_format = data_format
         self.output_shape = output_shape
+        self.output_units = np.prod(output_shape)
         self.input_shape = params_obj.input_shape
         self._set_spatial_input_shape()
         self._set_spatial_output_shape()
@@ -390,30 +391,35 @@ class DenseParams:
 
         return batch_size, image_height, image_width, nChannels
 
-    def _set_weights(self, weights):
-        # Check for scalar value for weights or consistent weights shape
-        if not hasattr(weights, '__len__') and (not isinstance(weights, str)):
-            self.weights = weights * np.ones((*self.spatial_output_shape, *self.spatial_input_shape, self.nChannels), dtype=float)
-        else:
-            if not type(weights) is np.ndarray:
-                self.weights = np.array(weights)
+    def _set_weights_shape(self):
+        self.weights_shape = (self.output_units,np.prod((*self.spatial_input_shape, self.nChannels)))
 
-            if self.weights.shape != (*self.spatial_output_shape, *self.spatial_input_shape, self.nChannels):
-                raise ValueError(f"Weights shape {self.weights.shape} does not equal the necessary shape {(*self.spatial_output_shape, *self.spatial_input_shape, self.nChannels)}.")
+    def _set_weights(self, weights):
+        expected_weights_shape = (self.output_units,np.prod((*self.spatial_input_shape, self.nChannels)))
+        error_str = "Weights shape {} does not equal the necessary shape {}."
+        self.weights = self.check_shape(weights, expected_weights_shape,error_str)
 
     def _set_thresholds(self, thresholds):
         # Check for scalar value for thresholds or consistent thresholds shape
-        if not hasattr(thresholds, '__len__') and (not isinstance(thresholds, str)):
-            self.thresholds = thresholds * np.ones(self.output_shape)
-        else:
-            if not type(thresholds) is np.ndarray:
-                self.thresholds = np.array(thresholds)
+        expected_thresholds_shape = self.output_shape
+        error_str = "Threshold shape {} does not equal the output neuron shape {}."
+        self.thresholds = self.check_shape(thresholds,expected_thresholds_shape,error_str)
 
-            if self.thresholds.shape != self.output_shape:
-                raise ValueError(f"Threshold shape {self.thresholds.shape} does not equal the output neuron shape {self.output_shape}.")
+    def check_shape(self, variable, expected_variable_shape, error_str):
+        if not hasattr(variable, '__len__') and (not isinstance(variable, str)):
+            variable = variable * np.ones(expected_variable_shape, dtype=float)
+        else:
+            if not type(variable) is np.ndarray:
+                variable = np.array(variable)
+
+            if variable.shape != expected_variable_shape:
+                raise ValueError(error_str.format(variable.shape, expected_variable_shape))
+
+        return variable
 
     def _set_output_shape(self, output_shape):
         self.output_shape = output_shape
+        self.output_units = np.prod(output_shape)
         self._set_spatial_output_shape()
 
     def get_dense_answer(self, dense_input):

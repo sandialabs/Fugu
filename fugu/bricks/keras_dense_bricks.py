@@ -22,7 +22,10 @@ class keras_dense_2d_4dinput(Brick):
         self.weights = weights
         self.thresholds = thresholds
         self.data_format = data_format
+        # TODO: Output shape should be 1 dimension of shape (product(output_shape),)
+        self.output_units = np.prod(output_shape)
         self.metadata = {'dense_output_shape': output_shape}
+        self.metadata = {'dense_output_units': self.output_units}
         self.prev_layer_prefix = prev_layer_prefix
         self.output_shape = output_shape
         self.spatial_output_shape = self.get_spatial_output_shape()
@@ -66,25 +69,8 @@ class keras_dense_2d_4dinput(Brick):
         graph.add_edge(control_nodes[0]["complete"], complete_node, weight=0.0, delay=1)
         graph.add_edge(control_nodes[0]["begin"], begin_node, weight=0.0, delay=1)
 
-        # Check for scalar value for thresholds or consistent thresholds shape
-        if not hasattr(self.thresholds, '__len__') and (not isinstance(self.thresholds, str)):
-            self.thresholds = self.thresholds * np.ones(self.output_shape)
-        else:
-            if not type(self.thresholds) is np.ndarray:
-                self.thresholds = np.array(self.thresholds)
-
-            if self.thresholds.shape != self.output_shape:
-                raise ValueError(f"Threshold shape {self.thresholds.shape} does not equal the output neuron shape {self.output_shape}.")
-
-        # Check for scalar value for weights or consistent weights shape
-        if not hasattr(self.weights, '__len__') and (not isinstance(self.weights, str)):
-            self.weights = self.weights * np.ones((*self.spatial_output_shape, *self.spatial_input_shape, self.nChannels), dtype=float)
-        else:
-            if not type(self.weights) is np.ndarray:
-                self.weights = np.array(self.weights)
-
-            if self.weights.shape != (*self.spatial_output_shape, *self.spatial_input_shape, self.nChannels):
-                raise ValueError(f"Weights shape {self.weights.shape} does not equal the necessary shape {(*self.spatial_output_shape, *self.spatial_input_shape, self.nChannels)}.")
+        self.check_thresholds_shape()
+        self.check_weights_shape()
 
         # output neurons/nodes
         output_lists = [[]]
@@ -98,17 +84,45 @@ class keras_dense_2d_4dinput(Brick):
         prev_layer = np.reshape(input_lists[0], self.input_shape)
 
         # Construct edges connecting input and output nodes
+        wrow = -1
         for outrow in np.arange(self.spatial_output_shape[0]):  # loop over output neurons
             for outcol in np.arange(self.spatial_output_shape[1]): # loop over output neurons
-
+                wcol = 0
+                wrow = wrow + 1
                 for inrow in np.arange(self.spatial_input_shape[0]):  # loop over input neurons
                     for incol in np.arange(self.spatial_input_shape[1]):  # loop over input neurons
-                        for channel in np.arange(self.nChannels):
-                            graph.add_edge(prev_layer[0,inrow,incol,channel], f'{self.name}d{channel}{outrow}{outcol}', weight=self.weights[outrow,outcol,inrow,incol,channel], delay=1)
-                            print(f" p{channel}{inrow}{incol} --> d{channel}{outrow}{outcol}   weight: {self.weights[outrow,outcol,inrow,incol,channel]}")
+                        for channel in np.arange(self.nChannels): # loop over input neuron channels
+                            graph.add_edge(prev_layer[0,inrow,incol,channel], f'{self.name}d{channel}{outrow}{outcol}', weight=self.weights[wrow,wcol], delay=1)
+                            print(f" p{channel}{inrow}{incol} --> d{channel}{outrow}{outcol}   weight: {self.weights[wrow,wcol]}")
+                            wcol = wcol + 1
 
         self.is_built = True
         return (graph, self.metadata, [{"complete": complete_node, "begin": begin_node}], output_lists, output_codings,)
+
+    def check_thresholds_shape(self):
+        # Check for scalar value for thresholds or consistent thresholds shape
+        expected_thresholds_shape = self.output_shape
+        error_str = "Threshold shape {} does not equal the output neuron shape {}."
+        self.thresholds = self.check_shape(self.thresholds,expected_thresholds_shape,error_str)
+
+    def check_weights_shape(self):
+        # Check for scalar value for weights or consistent weights shape
+        # Weights is a matrix that that has output_units rows and flattened(input_shape) columns (excluding batch size).
+        expected_weights_shape = (self.output_units,np.prod((*self.spatial_input_shape, self.nChannels)))
+        error_str = "Weights shape {} does not equal the necessary shape {}."
+        self.weights = self.check_shape(self.weights, expected_weights_shape,error_str)
+
+    def check_shape(self, variable, expected_variable_shape, error_str):
+        if not hasattr(variable, '__len__') and (not isinstance(variable, str)):
+            variable = variable * np.ones(expected_variable_shape, dtype=float)
+        else:
+            if not type(variable) is np.ndarray:
+                variable = np.array(variable)
+
+            if variable.shape != expected_variable_shape:
+                raise ValueError(error_str.format(variable.shape, expected_variable_shape))
+
+        return variable
 
     def get_spatial_input_shape(self):
         self.batch_size, self.image_height, self.image_width, self.nChannels = self.get_dense_input_shape_params()
