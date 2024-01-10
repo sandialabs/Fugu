@@ -66,9 +66,6 @@ class keras_dense_2d_4dinput(Brick):
         graph.add_edge(control_nodes[0]["complete"], complete_node, weight=0.0, delay=1)
         graph.add_edge(control_nodes[0]["begin"], begin_node, weight=0.0, delay=1)
 
-        output_size = np.prod(self.spatial_output_shape)
-        input_size = np.prod(self.spatial_input_shape)
-
         # Check for scalar value for thresholds or consistent thresholds shape
         if not hasattr(self.thresholds, '__len__') and (not isinstance(self.thresholds, str)):
             self.thresholds = self.thresholds * np.ones(self.output_shape)

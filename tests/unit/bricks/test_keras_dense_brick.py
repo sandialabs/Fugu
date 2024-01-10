@@ -45,9 +45,12 @@ class Test_KerasDense2D:
             self.run_dense_2d(convo_obj,pool_obj,dense_obj)
 
     def test_simple_explicit_dense_layer_example_1(self):
-        convo_obj = ConvolutionParams(biases=np.array([-471., -1207., -1943.]))
+        convo_obj = ConvolutionParams(nFilters=4,biases=np.array([-471., -1207., -1943., 500.]))
         pool_obj = PoolingParams(convo_obj, pool_strides=(1,1), pool_padding="same")
-        dense_obj = DenseParams(pool_obj)
+        dense_obj = DenseParams(pool_obj, (1,2,2,4))
+
+        dense_input = pool_obj.pool_answer.astype(int)
+        dense_answer = dense_obj.get_dense_answer(dense_input)
 
         result = self.run_dense_2d(convo_obj,pool_obj,dense_obj)
         calculated_spike_count = len(result[result['time'] > 2].index)
@@ -80,21 +83,6 @@ class Test_KerasDense2D:
         ini = output_positions[0]
         end = output_positions[1]
         return (result["neuron_number"] >= ini) & (result["neuron_number"] <= end)
-
-    def run_dense_layer_2d(self, output_shape):
-        scaffold = Scaffold()
-        scaffold.add_brick(BaseP_Input(np.array([self.pvector]),p=self.basep,bits=self.bits,collapse_binary=False,name="Input0",time_dimension=False),"input")
-        scaffold.add_brick(keras_convolution_2d(self.pshape,self.filters,self.conv_thresholds,self.basep,self.bits,name="convolution_",mode=self.mode),[(0, 0)],output=True)
-        scaffold.add_brick(keras_pooling_2d(self.pool_size,self.pool_strides,thresholds=self.pool_thresholds,name="pool_",method=self.pool_method),[(1,0)],output=True)
-        scaffold.add_brick(keras_dense_2d(output_shape,weights=self.dense_weights,thresholds=self.dense_thresholds,name="dense_"),[(2,0)],output=True)
-
-        self.graph = scaffold.lay_bricks()
-        scaffold.summary(verbose=1)
-        backend = snn_Backend()
-        backend_args = {}
-        backend.compile(scaffold, backend_args)
-        result = backend.run(5)
-        return result
 
     def run_dense_2d(self, convo_obj, pool_obj, dense_obj):
         scaffold = Scaffold()
@@ -151,3 +139,10 @@ class Test_KerasDense2D:
         ans = np.array(expected_ans)
         spikes = ans[ ans > thresholds].astype(float)
         return list(3.0 * np.ones(spikes.shape))
+
+    def get_result_spike_count(self, result):
+        output_positions = self.get_output_spike_positions()
+        output_mask = self.get_output_mask(output_positions, result)
+
+        calculated_spikes = list(result[output_mask].to_numpy()[:, 0])
+        return np.array(calculated_spikes).sum()
