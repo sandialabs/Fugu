@@ -14,7 +14,7 @@ class keras_dense_2d_4dinput(Brick):
     
     """
 
-    def __init__(self, output_shape, weights=1.0, thresholds=0.9, name=None, prev_layer_prefix="pooling_", data_format="channels_last"):
+    def __init__(self, output_shape, weights=1.0, thresholds=0.9, name=None, prev_layer_prefix="pooling_", data_format="channels_last", input_shape=None):
         super().__init__()
         self.is_built = False
         self.name = name
@@ -29,6 +29,7 @@ class keras_dense_2d_4dinput(Brick):
         self.prev_layer_prefix = prev_layer_prefix
         self.output_shape = output_shape
         self.spatial_output_shape = self.get_spatial_output_shape()
+        self.input_shape = input_shape
 
     def build(self, graph, metadata, control_nodes, input_lists, input_codings):
         """
@@ -54,7 +55,9 @@ class keras_dense_2d_4dinput(Brick):
             self.metadata = {**metadata, **self.metadata}
 
         #TODO: Add raise exception if dictionary key is absent from metadata (KeyError)
-        self.input_shape = self.metadata["{}output_shape".format(self.prev_layer_prefix)]
+        if self.input_shape is None:
+            self.input_shape = self.metadata["{}output_shape".format(self.prev_layer_prefix)]
+
         self.spatial_input_shape = self.get_spatial_input_shape()
         self.metadata["dense_input_shape"] = self.input_shape
 
@@ -76,7 +79,7 @@ class keras_dense_2d_4dinput(Brick):
         output_lists = [[]]
         for row in np.arange(0, self.spatial_output_shape[0]):
             for col in np.arange(0, self.spatial_output_shape[1]):
-                for channel in np.arange(self.nChannels):
+                for channel in np.arange(self.nChannelsOutput):
                     graph.add_node(f'{self.name}d{channel}{row}{col}', index=(row,col,channel), threshold=self.thresholds[0,row,col,channel], decay=1.0, p=1.0, potential=0.0)
                     output_lists[0].append(f'{self.name}d{channel}{row}{col}')
 
@@ -87,14 +90,15 @@ class keras_dense_2d_4dinput(Brick):
         wrow = -1
         for outrow in np.arange(self.spatial_output_shape[0]):  # loop over output neurons
             for outcol in np.arange(self.spatial_output_shape[1]): # loop over output neurons
-                wcol = 0
-                wrow = wrow + 1
-                for inrow in np.arange(self.spatial_input_shape[0]):  # loop over input neurons
-                    for incol in np.arange(self.spatial_input_shape[1]):  # loop over input neurons
-                        for channel in np.arange(self.nChannels): # loop over input neuron channels
-                            graph.add_edge(prev_layer[0,inrow,incol,channel], f'{self.name}d{channel}{outrow}{outcol}', weight=self.weights[wrow,wcol], delay=1)
-                            print(f" p{channel}{inrow}{incol} --> d{channel}{outrow}{outcol}   weight: {self.weights[wrow,wcol]}")
-                            wcol = wcol + 1
+                for outchan in np.arange(self.nChannelsOutput):
+                    wcol = 0
+                    wrow = wrow + 1
+                    for inrow in np.arange(self.spatial_input_shape[0]):  # loop over input neurons
+                        for incol in np.arange(self.spatial_input_shape[1]):  # loop over input neurons
+                            for inchan in np.arange(self.nChannelsInput): # loop over input neuron channels
+                                graph.add_edge(prev_layer[0,inrow,incol,inchan], f'{self.name}d{outchan}{outrow}{outcol}', weight=self.weights[wrow,wcol], delay=1)
+                                print(f" p{inchan}{inrow}{incol} --> d{outchan}{outrow}{outcol}   weight: {self.weights[wrow,wcol]}")
+                                wcol = wcol + 1
 
         self.is_built = True
         return (graph, self.metadata, [{"complete": complete_node, "begin": begin_node}], output_lists, output_codings,)
@@ -108,7 +112,7 @@ class keras_dense_2d_4dinput(Brick):
     def check_weights_shape(self):
         # Check for scalar value for weights or consistent weights shape
         # Weights is a matrix that that has output_units rows and flattened(input_shape) columns (excluding batch size).
-        expected_weights_shape = (self.output_units,np.prod((*self.spatial_input_shape, self.nChannels)))
+        expected_weights_shape = (self.output_units,np.prod((*self.spatial_input_shape, self.nChannelsInput)))
         error_str = "Weights shape {} does not equal the necessary shape {}."
         self.weights = self.check_shape(self.weights, expected_weights_shape,error_str)
 
@@ -125,7 +129,7 @@ class keras_dense_2d_4dinput(Brick):
         return variable
 
     def get_spatial_input_shape(self):
-        self.batch_size, self.image_height, self.image_width, self.nChannels = self.get_dense_input_shape_params()
+        self.batch_size, self.image_height, self.image_width, self.nChannelsInput = self.get_dense_input_shape_params()
         spatial_input_shape = (self.image_height, self.image_width)
         return spatial_input_shape
     
@@ -140,7 +144,7 @@ class keras_dense_2d_4dinput(Brick):
         return batch_size, image_height, image_width, nChannels  
     
     def get_spatial_output_shape(self):
-        batch_size, image_height, image_width, nChannels = self.get_dense_output_shape_params()
+        batch_size, image_height, image_width, self.nChannelsOutput = self.get_dense_output_shape_params()
         spatial_output_shape = (image_height, image_width)
         return spatial_output_shape
     

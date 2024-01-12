@@ -5,6 +5,7 @@ import pytest
 from contextlib import nullcontext as does_not_raise
 
 from fugu.backends import snn_Backend
+from fugu.bricks import Vector_Input, Mock_Brick
 from fugu.bricks.keras_convolution_bricks import keras_convolution_2d_4dinput as keras_convolution_2d
 from fugu.bricks.keras_dense_bricks import keras_dense_2d_4dinput as keras_dense_2d
 from fugu.bricks.input_bricks import BaseP_Input
@@ -45,21 +46,55 @@ class Test_KerasDense2D:
             self.run_dense_2d(convo_obj,pool_obj,dense_obj)
 
     def test_simple_explicit_dense_layer_example_1(self):
-        convo_obj = ConvolutionParams(nFilters=4,biases=np.array([-471., -1207., -1943., 500.]))
+        convo_obj = ConvolutionParams(nFilters=4,biases=np.array([-471., -1207., -1943., -500.]))
         pool_obj = PoolingParams(convo_obj, pool_strides=(1,1), pool_padding="same")
         dense_obj = DenseParams(pool_obj, (1,2,2,4))
 
         dense_input = pool_obj.pool_answer.astype(int)
         dense_answer = dense_obj.get_dense_answer(dense_input)
+        expected_spike_count = (dense_obj.dense_answer + dense_obj.biases > dense_obj.thresholds.flatten()).sum().astype(int)
 
         result = self.run_dense_2d(convo_obj,pool_obj,dense_obj)
         calculated_spike_count = len(result[result['time'] > 2].index)
-        assert False
+        assert calculated_spike_count == expected_spike_count
+
+    def test_mock_brick(self):
+
+        nFilters = 4
+        output_shape = (1,2,2,nFilters)
+        convo_obj = ConvolutionParams(nFilters=nFilters,biases=np.array([-471., -1207., -1943., 500.]))
+        pool_obj = PoolingParams(convo_obj, pool_strides=(1,1), pool_padding="same")
+        dense_obj = DenseParams(pool_obj, output_shape)
+
+        vector_input = Vector_Input(pool_obj.pool_answer,name="pool_",time_dimension=False)
+        mock_input = Mock_Brick(vector_input,{'pooling_output_shape': pool_obj.pool_answer.shape})
+
+        scaffold = Scaffold()
+        scaffold.add_brick(mock_input,"input")
+        scaffold.add_brick(keras_dense_2d(output_shape=output_shape,weights=1.0,thresholds=0.9,data_format="channels_last",name="dense_"),[(0,0)],output=True)
+
+        graph = scaffold.lay_bricks()
+        scaffold.summary(verbose=1)
+        backend = snn_Backend()
+        backend_args = {}
+        backend.compile(scaffold, backend_args)
+        result = backend.run(5)
+
+        calculated_spike_count = len(result[result['time'] > 0].index)
+        expected_spike_count = (dense_obj.dense_answer > dense_obj.thresholds.flatten()).sum().astype(int)
+        assert expected_spike_count == calculated_spike_count
 
     @pytest.mark.xfail(reason="Not implemented.")
     def test_something(self):
         assert False
 
+    def get_neuron_numbers(self, name_prefix):
+        neuron_numbers = []
+        for key in self.graph.nodes.keys():
+            if key.startswith(name_prefix):
+                neuron_numbers.append(self.graph.nodes[key]['neuron_number'])
+
+        return np.array(neuron_numbers)
 
     def get_output_neuron_numbers(self):
         neuron_numbers = []
@@ -108,33 +143,6 @@ class Test_KerasDense2D:
     def get_output_shape(self):
         return (self.get_output_size(self.pixel_dim1), self.get_output_size(self.pixel_dim2))
     
-    def get_expected_pooling_answer(self, pool_input):
-        row_stride_positions = self.get_stride_positions(self.pixel_dim1)
-        col_stride_positions = self.get_stride_positions(self.pixel_dim2)
-        output_shape = self.get_output_shape()
-        expected = []
-
-        if self.pool_method == "max":
-            for row in row_stride_positions[:output_shape[0]]:
-                for col in col_stride_positions[:output_shape[1]]:
-                    expected.append(np.any(pool_input[row:row+self.pool_size,col:col+self.pool_size]))
-
-            expected = np.reshape(expected, output_shape).astype(int)
-            expected = (np.array(expected, dtype=int) > self.pool_thresholds).astype(float)
-
-        elif self.pool_method == "average": #TODO : fix this code. 
-            weights = np.ones((self.pool_size,self.pool_size),dtype=float) / float(self.pool_size*self.pool_size)
-            for row in row_stride_positions[:output_shape[0]]:
-                for col in col_stride_positions[:output_shape[1]]:
-                    expected.append(np.dot(weights.flatten(),pool_input[row:row+self.pool_size,col:col+self.pool_size].astype(int).flatten()))
-
-            expected = np.reshape(expected, output_shape).astype(float)
-        else:
-            print(f"'pool_method' class member variable must be either 'max' or 'average'. But it is {self.pool_method}.")
-            raise ValueError("Unrecognized 'pool_method' class member variable.")
-            
-        return np.array(expected)
-    
     def get_expected_spikes(self,expected_ans, thresholds):
         ans = np.array(expected_ans)
         spikes = ans[ ans > thresholds].astype(float)
@@ -146,3 +154,8 @@ class Test_KerasDense2D:
 
         calculated_spikes = list(result[output_mask].to_numpy()[:, 0])
         return np.array(calculated_spikes).sum()
+
+    def get_dense_neurons_result_only(self, result):
+        dense_neuron_numbers = self.get_neuron_numbers('dense_d')
+        sub_result = result[result['neuron_number'].isin(dense_neuron_numbers)]
+        return sub_result
