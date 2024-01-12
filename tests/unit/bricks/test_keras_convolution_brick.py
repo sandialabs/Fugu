@@ -926,6 +926,28 @@ class Test_KerasConvolution2D_4dinput:
         result = self.run_convolution_2d(thresholds)
         assert self.expected_spikes(nSpikes) == self.calculated_spikes(thresholds,result)
 
+    def test_positive_biases(self):
+        image_height, image_width, nChannels = 3, 3, 2
+        kernel_height, kernel_width, nFilters = 2, 2, 4
+
+        self.pvector = generate_mock_image(image_height,image_width,nChannels)
+        self.filters = generate_keras_kernel(kernel_height,kernel_width,nFilters,nChannels)
+        self.pshape = np.array(self.pvector).shape
+        self.filters_shape = np.array(self.filters).shape
+        self.nChannels = nChannels
+        self.nFilters = nFilters
+        # TODO: Using "500" inside the biases here causes the result to spike at multiple times. MUST figure out why and correct the bug.
+        self.biases = np.array([-471., -1207., -1943., 500.])
+
+        output_shape = keras_convolution2d_output_shape_4dinput(self.pvector,self.filters,self.strides,self.mode,self.nFilters)
+        thresholds = 0.5*np.ones(output_shape).reshape(1,*output_shape)
+        keras_convolution_answer = keras_convolve2d_4dinput(self.pvector,self.filters,strides=self.strides,mode=self.mode,filters=self.nFilters)
+        expected_spike_count = (keras_convolution_answer + self.biases > 0.5).sum().astype(int)
+
+        result = self.run_convolution_2d(thresholds)
+        calculated_spike_count = len(result[result['time'] > 0].index)
+
+        assert expected_spike_count == calculated_spike_count
 
     @pytest.mark.xfail(reason="Not implemented.")
     def test_strides_parameter_handling(self):
