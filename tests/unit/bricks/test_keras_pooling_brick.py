@@ -245,6 +245,17 @@ class Test_KerasPooling2D:
         calculated_spike_count = len(result[result['time'] > 1].index)
         assert expected_spike_count == calculated_spike_count
 
+    def test_pooling_one_off3(self):
+        self.basep = 4
+        self.bits = 4
+        convo_obj = ConvolutionParams(nFilters=4,biases=np.array([-471., -1207., -1943., 500.]))
+        pool_obj = PoolingParams(convo_obj, pool_strides=(1,1), pool_padding="same")
+        expected_spike_count = (pool_obj.pool_answer > pool_obj.pool_thresholds).sum().astype(int)
+
+        result = self.run_pooling_2d(convo_obj,pool_obj)
+        calculated_spike_count = len(result[result['time'] > 1].index)
+        assert expected_spike_count == calculated_spike_count
+
     @pytest.mark.xfail(reason="Not implemented.")
     #TODO: Implement handling of data_format="channels_last" and data_format="channels_first"
     def test_data_format_channels_last(self):
@@ -252,6 +263,14 @@ class Test_KerasPooling2D:
 
     def get_pool_output_shape(self):
         return np.floor((self.input_shape - 1) / self.pool_strides) + 1
+
+    def get_neuron_numbers(self, name_prefix):
+        neuron_numbers = []
+        for key in self.graph.nodes.keys():
+            if key.startswith(name_prefix):
+                neuron_numbers.append(self.graph.nodes[key]['neuron_number'])
+
+        return np.array(neuron_numbers)
 
     def get_output_neuron_numbers(self):
         neuron_numbers = []
