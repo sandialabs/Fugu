@@ -342,16 +342,26 @@ class PoolingParams:
         return isSameOutputShape.all()
 
 class DenseParams:
-    def __init__(self, params_obj, output_shape, weights=1.0, thresholds=0.9, data_format="channels_last"):
+    def __init__(self, params_obj, output_shape, weights=1.0, thresholds=0.9, data_format="channels_last", biases=None):
         self.data_format = data_format
         self.output_shape = output_shape
         self.output_units = np.prod(output_shape)
         self.input_shape = params_obj.input_shape
+        self.dense_input = params_obj.pool_answer.astype(int)
+
+        if biases is None:
+            self.biases = np.zeros((1,))
+        elif len(biases) > 1:
+            raise ValueError(f"Received to many biases. Should only receive one bias for dense layer.")
+        else:
+            self.biases = biases
+
         self._set_spatial_input_shape()
         self._set_spatial_output_shape()
 
         self._set_weights(weights)
         self._set_thresholds(thresholds)
+        self._set_dense_answer()
 
     def _get_spatial_input_shape(self):
         self.batch_size, self.image_height, self.image_width, self.nChannels = self._get_input_shape_params()
@@ -422,13 +432,11 @@ class DenseParams:
         self.output_units = np.prod(output_shape)
         self._set_spatial_output_shape()
 
-    def get_dense_answer(self, dense_input):
-        answer = np.zeros(self.thresholds.shape)
-        for outrow in np.arange(self.spatial_output_shape[0]):
-            for outcol in np.arange(self.spatial_output_shape[1]):
-                for channel in np.arange(self.nChannels):
-                    answer[0,outrow,outcol,channel] = np.dot(self.weights[outrow,outcol,:,:,channel].flatten(),dense_input[0,:,:,channel].flatten())
+    def _set_dense_answer(self):
+        self.dense_answer = self.get_dense_answer(self.dense_input)
 
+    def get_dense_answer(self, dense_input):
+        answer = np.matmul(self.weights, dense_input.flatten())
         return answer
 
 
