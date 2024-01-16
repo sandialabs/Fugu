@@ -350,9 +350,9 @@ class DenseParams:
         self.dense_input = params_obj.pool_answer.astype(int)
 
         if biases is None:
-            self.biases = np.zeros((1,))
-        elif len(biases) > 1:
-            raise ValueError(f"Received to many biases. Should only receive one bias for dense layer.")
+            self.biases = 0.0
+        elif hasattr(biases, '__len__') and len(biases) > 1:
+            raise ValueError(f"Received to many biases. Should only receive one (scalar) bias for dense layer.")
         else:
             self.biases = biases
 

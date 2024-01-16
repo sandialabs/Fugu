@@ -14,7 +14,7 @@ class keras_dense_2d_4dinput(Brick):
     
     """
 
-    def __init__(self, output_shape, weights=1.0, thresholds=0.9, name=None, prev_layer_prefix="pooling_", data_format="channels_last", input_shape=None):
+    def __init__(self, output_shape, weights=1.0, thresholds=0.9, name=None, prev_layer_prefix="pooling_", data_format="channels_last", input_shape=None, biases=None):
         super().__init__()
         self.is_built = False
         self.name = name
@@ -22,6 +22,7 @@ class keras_dense_2d_4dinput(Brick):
         self.weights = weights
         self.thresholds = thresholds
         self.data_format = data_format
+        self.biases = biases
         # TODO: Output shape should be 1 dimension of shape (product(output_shape),)
         self.output_units = np.prod(output_shape)
         self.metadata = {'dense_output_shape': output_shape}
@@ -82,6 +83,17 @@ class keras_dense_2d_4dinput(Brick):
                 for channel in np.arange(self.nChannelsOutput):
                     graph.add_node(f'{self.name}d{channel}{row}{col}', index=(row,col,channel), threshold=self.thresholds[0,row,col,channel], decay=1.0, p=1.0, potential=0.0)
                     output_lists[0].append(f'{self.name}d{channel}{row}{col}')
+
+        # Biases for dense layer
+        if self.biases is not None:
+            # biases neurons/nodes; one node per kernel/channel in filter
+            graph.add_node(f'{self.name}b0', index=(99,0), threshold=0.0, decay=1.0, p=1.0, potential=0.1)
+
+            # Construct edges connecting biases node(s) to output nodes
+            for row in np.arange(0, self.spatial_output_shape[0]):
+                for col in np.arange(0, self.spatial_output_shape[1]):
+                    for channel in np.arange(self.nChannelsOutput):
+                        graph.add_edge(f'{self.name}b0',f'{self.name}d{channel}{row}{col}', weight=self.biases, delay=1)
 
         # Collect Inputs
         prev_layer = np.reshape(input_lists[0], self.input_shape)

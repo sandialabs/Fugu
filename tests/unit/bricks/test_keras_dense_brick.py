@@ -58,6 +58,20 @@ class Test_KerasDense2D:
         calculated_spike_count = len(result[result['time'] > 2].index)
         assert calculated_spike_count == expected_spike_count
 
+    @pytest.mark.parametrize("bias",[-20.0,-21.0])
+    def test_dense_brick_biases(self, bias):
+        convo_obj = ConvolutionParams(nFilters=4,biases=np.array([-471., -1207., -1943., -500.]))
+        pool_obj = PoolingParams(convo_obj, pool_strides=(1,1), pool_padding="same")
+        dense_obj = DenseParams(pool_obj, (1,2,2,4), biases=bias)
+
+        dense_input = pool_obj.pool_answer.astype(int)
+        dense_answer = dense_obj.get_dense_answer(dense_input)
+        expected_spike_count = (dense_obj.dense_answer + dense_obj.biases > dense_obj.thresholds.flatten()).sum().astype(int)
+
+        result = self.run_dense_2d(convo_obj,pool_obj,dense_obj)
+        calculated_spike_count = len(result[result['time'] > 2].index)
+        assert calculated_spike_count == expected_spike_count
+
     def test_mock_brick(self):
 
         nFilters = 4
@@ -124,7 +138,7 @@ class Test_KerasDense2D:
         scaffold.add_brick(BaseP_Input(convo_obj.mock_image,p=self.basep,bits=self.bits,collapse_binary=False,name="I",time_dimension=False),"input")
         scaffold.add_brick(keras_convolution_2d(convo_obj.input_shape,convo_obj.filters,convo_obj.thresholds,self.basep,self.bits,name="convolution_",mode=convo_obj.mode,strides=convo_obj.strides,biases=convo_obj.biases),[(0, 0)],output=True)
         scaffold.add_brick(keras_pooling_2d(pool_obj.pool_size,pool_obj.pool_strides,thresholds=pool_obj.pool_thresholds,name="pool_",padding=pool_obj.pool_padding,method=pool_obj.pool_method),[(1,0)],output=True)
-        scaffold.add_brick(keras_dense_2d(dense_obj.output_shape,dense_obj.weights,dense_obj.thresholds,data_format=dense_obj.data_format,name="dense_"),[(2,0)],output=True)
+        scaffold.add_brick(keras_dense_2d(dense_obj.output_shape,dense_obj.weights,dense_obj.thresholds,data_format=dense_obj.data_format,name="dense_",biases=dense_obj.biases),[(2,0)],output=True)
 
         self.graph = scaffold.lay_bricks()
         scaffold.summary(verbose=1)
