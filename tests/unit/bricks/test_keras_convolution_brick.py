@@ -684,6 +684,8 @@ def get_output_shape(image,kernel,strides,mode):
     strided_answer = keras_convolve2d(image,kernel,strides,mode)
     return strided_answer.shape
 
+@pytest.mark.keras
+@pytest.mark.keras_convolution
 class Test_KerasConvolution2D_4dinput:
     def setup_method(self):
         image_height, image_width = 3, 3

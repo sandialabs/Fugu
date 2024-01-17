@@ -23,6 +23,7 @@ from ..helpers import ConvolutionParams, PoolingParams, KerasParams
 Spiking_BRelu = pytest.importorskip("whetstone.layers", reason=f"Whetstone package not installed. Skipping test file {__file__} because of module dependency.").Spiking_BRelu
 layer_utils = pytest.importorskip("whetstone.utils", reason=f"Whetstone package not installed. Skipping test file {__file__} because of module dependency.").layer_utils
 
+@pytest.mark.whetstone
 class Test_Whetstone_2_Fugu_MaxPoolingLayer:
     def setup_method(self):
         self.basep = 4
@@ -61,7 +62,7 @@ def run_whetstone_to_fugu_utility(mock_image, basep, bits, keras_model):
     result = backend.run(5)
     return result
 
-
+@pytest.mark.whetstone
 class Test_Whetstone_2_Fugu_AveragePoolingLayer:
     def setup_method(self):
         self.basep = 4

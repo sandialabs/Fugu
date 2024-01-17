@@ -132,6 +132,7 @@ def custom_setup(image_params,kernel_params,convolution_params):
     kernel_height, kernel_width, nFilters = kernel_params
     mode, strides = convolution_params
 
+@pytest.mark.whetstone
 class Test_Whetstone_2_Fugu_ConvolutionLayer:
     @pytest.mark.xfail(run=False,reason="Not implemented. And takes to long for 'xfail'.")
     def test_layers(self):

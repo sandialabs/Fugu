@@ -23,6 +23,7 @@ from ..helpers import ConvolutionParams, PoolingParams, DenseParams, KerasParams
 Spiking_BRelu = pytest.importorskip("whetstone.layers", reason=f"Whetstone package not installed. Skipping test file {__file__} because of module dependency.").Spiking_BRelu
 layer_utils = pytest.importorskip("whetstone.utils", reason=f"Whetstone package not installed. Skipping test file {__file__} because of module dependency.").layer_utils
 
+@pytest.mark.whetstone
 class Test_Whetstone_2_Fugu_DenseLayer:
     def setup_method(self):
         self.basep = 4
