@@ -62,26 +62,28 @@ class LIS(Brick):
         new_begin_node_name = self.generate_neuron_name('begin')
         graph.add_node(
             new_begin_node_name,
-            threshold=0.1,
+            threshold=0.45,
             decay=0.0,
             potential=0.0,
         )
         graph.add_edge(
             control_nodes[0]['complete'],
             new_begin_node_name,
-            weight=1.0,
-            delay=1.0,
+            weight=0.5,
+            delay=1,
         )
 
         complete_name = self.generate_neuron_name('complete')
         graph.add_node(
             complete_name,
             index=self.sequence_length,
-            threshold=0.1,
+            threshold=0.45,
             decay=0.0,
             potential=0.0,
         )
         complete_node_list = [complete_name]
+
+        debug_node_list = []
 
         min_runtime = self.sequence_length
 
@@ -89,8 +91,8 @@ class LIS(Brick):
         levels = [[] for i in range(self.sequence_length)]
         for i in range(self.sequence_length):
             L_name = self.generate_neuron_name("L_{}_Main".format(i + 1))
-            graph.add_node(L_name, threshold=0.90, decay=0.0, potential=0.0)
-            graph.add_edge(L_name, L_name, weight=-10000.0, delay=1.0)
+            graph.add_node(L_name, threshold=0.45, decay=0.0, potential=0.0)
+            graph.add_edge(L_name, L_name, weight=-1.0, delay=1)
             output_Ls.append(L_name)
 
         for i in range(self.sequence_length):
@@ -99,19 +101,22 @@ class LIS(Brick):
             x_name = self.generate_neuron_name("x_{}".format(i))
             L0_A_name = self.generate_neuron_name("L_1-x_{}-A".format(i))
 
+            debug_node_list.append(x_name)
+            debug_node_list.append(L0_A_name)
+
             # create x_i neuron
-            graph.add_node(x_name, threshold=0.0, decay=0.0, potential=0.0)
+            graph.add_node(x_name, threshold=0.45, decay=0.0, potential=0.0)
 
             # create column
-            graph.add_node(L0_A_name, threshold=0.90, decay=0.0, potential=0.0)
+            graph.add_node(L0_A_name, threshold=0.45, decay=0.0, potential=0.0)
 
-            graph.add_edge(x_name, L0_A_name, weight=1.0, delay=1.0)
-            graph.add_edge(L0_A_name, L0_A_name, weight=-18, delay=1.0)
+            graph.add_edge(x_name, L0_A_name, weight=0.5, delay=1)
+            graph.add_edge(L0_A_name, L0_A_name, weight=-1, delay=1)
 
             graph.add_edge(L0_A_name,
                            self.generate_neuron_name("L_1_Main"),
-                           weight=1.0,
-                           delay=1.0)
+                           weight=0.5,
+                           delay=1)
 
             levels[0].append(L0_A_name)
 
@@ -121,43 +126,46 @@ class LIS(Brick):
                 L_A_name = self.generate_neuron_name("L_{}-x_{}-A".format(
                     j + 2, i))
                 graph.add_node(L_B_name,
-                               threshold=0.90,
+                               threshold=0.45,
                                decay=0.0,
                                potential=0.0)
                 graph.add_node(L_A_name,
-                               threshold=1.90,
+                               threshold=0.90,
                                decay=0.0,
                                potential=0.0)
 
-                # Alarms
-                graph.add_edge(x_name, L_B_name, weight=-19.0, delay=(j + 2.0))
-                graph.add_edge(x_name, L_A_name, weight=1.0, delay=1.0)
+                debug_node_list.append(L_A_name)
+                debug_node_list.append(L_B_name)
 
-                graph.add_edge(L_B_name, L_A_name, weight=1.0, delay=1.0)
-                graph.add_edge(L_A_name, L_A_name, weight=-18.0, delay=1.0)
+                # Alarms
+                graph.add_edge(x_name, L_B_name, weight=-1.0, delay=(j + 2))
+                graph.add_edge(x_name, L_A_name, weight=0.5, delay=1)
+
+                graph.add_edge(L_B_name, L_A_name, weight=0.5, delay=1)
+                graph.add_edge(L_A_name, L_A_name, weight=-1.0, delay=1)
 
                 graph.add_edge(L_A_name,
                                self.generate_neuron_name(
                                    "L_{}_Main".format(j + 2)),
-                               weight=1.0,
-                               delay=1.0)
+                               weight=0.5,
+                               delay=1)
 
                 levels[j].append(L_B_name)
                 levels[j + 1].append(L_A_name)
 
         for level in levels:
             if len(level) > 1:
-                graph.add_edge(level[0], level[1], weight=1.0, delay=1.0)
-                graph.add_edge(level[0], level[2], weight=1.0, delay=1.0)
+                graph.add_edge(level[0], level[1], weight=0.5, delay=1)
+                graph.add_edge(level[0], level[2], weight=0.5, delay=1)
                 for i in range(1, len(level) - 2, 2):
                     graph.add_edge(level[i],
                                    level[i + 2],
-                                   weight=1.0,
-                                   delay=1.0)
+                                   weight=0.5,
+                                   delay=1)
                     graph.add_edge(level[i],
                                    level[i + 3],
-                                   weight=1.0,
-                                   delay=1.0)
+                                   weight=0.5,
+                                   delay=1)
 
         x_index = 0
         for input_list in input_lists:
@@ -165,8 +173,8 @@ class LIS(Brick):
                 graph.add_edge(input_neuron,
                                self.generate_neuron_name(
                                    "x_{}".format(x_index)),
-                               weight=1.0,
-                               delay=1.0)
+                               weight=0.5,
+                               delay=1)
                 x_index += 1
                 if x_index > self.sequence_length:
                     raise TypeError("Too many inputs to brick: {}".format(

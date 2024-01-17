@@ -7,6 +7,202 @@ from .bricks import Brick, CompoundBrick, input_coding_types
 from .register_bricks import Max, Addition
 
 
+class Delay(Brick):
+    """
+    A brick that implements a simple chain of neurons.
+    """
+    def __init__(self, delay_value, name="Delay"):
+        """
+        Construtor for this brick.
+        Args:
+            name (str): Name of the brick.  If not specified, a default will be used.  Name should be unique.
+        """
+        super(Delay, self).__init__(name)
+        self.is_built = False
+        self.metadata = {'D': 1}
+        self.name = name
+        self.delay_value = delay_value
+
+    def build(self, graph, metadata, control_nodes, input_lists,
+              input_codings):
+        """
+        Build neuron chain brick.
+
+        Args:
+            graph ({add_node, add_edge}): networkx graph to define connections of the computational graph
+            metadata (dict): dictionary to define the shapes and parameters of the brick
+            control_nodes (list): list of dictionary of auxillary nodes.
+                Expected keys:
+                    'complete' - A list of neurons that fire when the brick is done
+            input_lists (list): list of nodes that will contain input
+            input_coding (list): list of input coding formats.  ('Raster', 'Undefined' supported)
+
+        Returns:
+            graph (any): graph of a computational elements and connections
+            metadata (dict): dictionary of output parameters (shape, coding, layers, depth, etc)
+            complete_name (str): list dictionary of control nodes ('complete')
+            main_name: list of output edges
+            input_codings (list): list of coding formats of output ('current')
+        """
+
+        num_inputs = sum([len(in_list) for in_list in input_lists])
+        if num_inputs > 1:
+            raise ValueError(
+                "Input length does not match expected number. Expected: 1, Found: {}"
+                .format(
+                    num_inputs,
+                ))
+
+        graph.add_node(
+            self.generate_neuron_name("begin"),
+            threshold=0.5,
+            potential=1.0,
+            decay=0.0,
+            index=-1,
+            p=1.0,
+        )
+        complete_name = self.generate_neuron_name("complete")
+        graph.add_node(
+            complete_name,
+            threshold=0.5,
+            potential=0.0,
+            decay=0.0,
+            index=-1,
+            p=1.0,
+        )
+
+        src_name = self.generate_neuron_name('src')
+        dest_name = self.generate_neuron_name('dest')
+
+        graph.add_node(
+                src_name,
+                threshold=0.1,
+                potential=0.0,
+                decay=0.0,
+                index=0,
+                )
+        graph.add_node(
+                dest_name,
+                threshold=0.1,
+                potential=0.0,
+                decay=0.0,
+                index=0,
+                )
+
+        graph.add_edge(
+            input_lists[0][0],
+            src_name,
+            weight=1.0,
+            delay=1,
+            )
+
+        graph.add_edge(
+            src_name,
+            dest_name,
+            weight=1.0,
+            delay=self.delay_value,
+            )
+
+        self.is_built = True
+        return (graph, metadata, [{
+            'complete': complete_name
+        }], [[src_name, dest_name]], input_codings)
+
+
+class NeuronChain(Brick):
+    """
+    A brick that implements a simple chain of neurons.
+    """
+    def __init__(self, num_neurons, name="NeuronChain"):
+        """
+        Construtor for this brick.
+        Args:
+            name (str): Name of the brick.  If not specified, a default will be used.  Name should be unique.
+        """
+        super(NeuronChain, self).__init__(name)
+        self.is_built = False
+        self.metadata = {'D': 1}
+        self.name = name
+        self.num_neurons = num_neurons
+
+    def build(self, graph, metadata, control_nodes, input_lists,
+              input_codings):
+        """
+        Build neuron chain brick.
+
+        Args:
+            graph ({add_node, add_edge}): networkx graph to define connections of the computational graph
+            metadata (dict): dictionary to define the shapes and parameters of the brick
+            control_nodes (list): list of dictionary of auxillary nodes.
+                Expected keys:
+                    'complete' - A list of neurons that fire when the brick is done
+            input_lists (list): list of nodes that will contain input
+            input_coding (list): list of input coding formats.  ('Raster', 'Undefined' supported)
+
+        Returns:
+            graph (any): graph of a computational elements and connections
+            metadata (dict): dictionary of output parameters (shape, coding, layers, depth, etc)
+            complete_name (str): list dictionary of control nodes ('complete')
+            main_name: list of output edges
+            input_codings (list): list of coding formats of output ('current')
+        """
+
+        num_inputs = sum([len(in_list) for in_list in input_lists])
+        if num_inputs > 1:
+            raise ValueError(
+                "Input length does not match expected number. Expected: 1, Found: {}"
+                .format(
+                    num_inputs,
+                ))
+
+        graph.add_node(
+            self.generate_neuron_name("begin"),
+            threshold=0.5,
+            potential=1.0,
+            decay=0.0,
+            index=-1,
+            p=1.0,
+        )
+        complete_name = self.generate_neuron_name("complete")
+        graph.add_node(
+            complete_name,
+            threshold=0.5,
+            potential=0.0,
+            decay=0.0,
+            index=-1,
+            p=1.0,
+        )
+
+        for i in range(self.num_neurons):
+            neuron_name = self.generate_neuron_name(i)
+            graph.add_node(
+                    neuron_name,
+                    threshold=0.1,
+                    potential=0.0,
+                    decay=0.0,
+                    index=0,
+                    )
+
+        dest_name = neuron_name
+
+        for i in range(self.num_neurons - 1):
+            source_name = self.generate_neuron_name(i)
+            dest_name = self.generate_neuron_name(i + 1)
+            graph.add_edge(source_name, dest_name, weight=1.0, delay=1)
+
+        graph.add_edge(
+            input_lists[0][0],
+            self.generate_neuron_name(0),
+            weight=1.0,
+            delay=1,
+            )
+
+        self.is_built = True
+        return (graph, metadata, [{
+            'complete': complete_name
+        }], [[dest_name]], input_codings)
+
+
 class InstantDecay(Brick):
     """
     A brick used to test neurons that have instant decay.
