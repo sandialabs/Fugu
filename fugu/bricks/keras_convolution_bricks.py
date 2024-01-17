@@ -113,7 +113,7 @@ class keras_convolution_2d(Brick):
         # Biases for convolution
         if self.biases is not None:
             # biases neurons/nodes; one node per kernel/channel in filter
-            graph.add_node(f'{self.name}b', index=(99,0), threshold=-1.0, decay=1.0, p=1.0, potential=0.0)
+            graph.add_node(f'{self.name}b', index=(99,0), threshold=0.0, decay=1.0, p=1.0, potential=0.1)
 
             # Construct edges connecting biases node(s) to output nodes
             for i in np.arange(self.bnds[0,0],self.bnds[1,0] + 1,self.strides[0]):
@@ -344,7 +344,7 @@ class keras_convolution_2d_4dinput(Brick):
         if self.biases is not None:
             # biases neurons/nodes; one node per kernel/channel in filter
             for k in np.arange(self.nFilters):
-                graph.add_node(f'{self.name}b{k}', index=(99,k), threshold=-1.0, decay=1.0, p=1.0, potential=0.0)
+                graph.add_node(f'{self.name}b{k}', index=(99,k), threshold=0.0, decay=1.0, p=1.0, potential=0.1)
 
             # Construct edges connecting biases node(s) to output nodes
             for k in np.arange(self.nFilters):
