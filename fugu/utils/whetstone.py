@@ -2,6 +2,7 @@
 # fmt: off
 import numpy as np
 
+from fugu.bricks.keras_dense_bricks import keras_dense_2d_4dinput as dense_layer_2d
 from fugu.bricks.keras_convolution_bricks import keras_convolution_2d_4dinput as convolution_2d
 from fugu.bricks.input_bricks import BaseP_Input
 from fugu.bricks.keras_pooling_bricks import keras_pooling_2d_4dinput as pooling_2d
@@ -83,8 +84,12 @@ def whetstone_2_fugu(keras_model, basep, bits, scaffold=None):
             # need output shape, weights, thresholds 
             output_shape = layer.output_shape
             weights = layer.weights[0]
-            bias = layer.weights[1]
-            scaffold.add_brick(dense_layer_2d(output_shape,weights=weights,thresholds=bias,name=f"dense_layer_{layerID}"),[(layerID,0)],output=True)
+            try:
+                biases = layer.weights[1]
+            except IndexError:
+                biases = 0.0
+            units = layer.units
+            scaffold.add_brick(dense_layer_2d(output_shape,weights=weights,thresholds=0.5,name=f"dense_layer_{layerID}",biases=biases),[(layerID,0)],output=True)
             layerID += 1
     
     return scaffold
