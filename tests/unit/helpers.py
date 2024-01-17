@@ -254,10 +254,9 @@ class PoolingParams:
             for col in col_stride_positions[:self.spatial_output_shape[1]]:
                 icol, fcol = self.adjust_position_to_input_length(col,self.spatial_input_shape[1],self.pool_size[1])
                 for channel in np.arange(self.nChannels):
-                    answer.append(np.any(pool_input[0,irow:frow,icol:fcol,channel]))
+                    answer.append(np.max(pool_input[0,irow:frow,icol:fcol,channel]))
 
-        answer = np.reshape(answer, self.output_shape).astype(int)
-        answer = (np.array(answer, dtype=int) > 0.9).astype(float)
+        answer = np.reshape(answer, self.output_shape).astype(float)
         return answer
     
     def get_average_pooling_answer(self,pool_input):
@@ -342,26 +341,31 @@ class PoolingParams:
         return isSameOutputShape.all()
 
 class DenseParams:
-    def __init__(self, params_obj, output_shape, weights=1.0, thresholds=0.9, data_format="channels_last", biases=None):
+    def __init__(self, params_obj, output_units, weights=1.0, thresholds=0.5, data_format="channels_last", biases=None):
         self.data_format = data_format
-        self.output_shape = output_shape
-        self.output_units = np.prod(output_shape)
+        self.output_units = output_units
         self.input_shape = params_obj.input_shape
+        self.output_shape = (*np.array(params_obj.input_shape)[:3],self.output_units)
         self.dense_input = params_obj.pool_answer.astype(int)
 
-        if biases is None:
-            self.biases = 0.0
-        elif hasattr(biases, '__len__') and len(biases) > 1:
-            raise ValueError(f"Received to many biases. Should only receive one (scalar) bias for dense layer.")
-        else:
-            self.biases = biases
-
+        self._set_biases(biases)
         self._set_spatial_input_shape()
         self._set_spatial_output_shape()
 
         self._set_weights(weights)
         self._set_thresholds(thresholds)
         self._set_dense_answer()
+
+    def _set_biases(self,biases):
+        biases_shape = (self.output_units,)
+        if biases is None:
+            self.biases = np.zeros(biases_shape)
+        elif isinstance(biases,(int,float)):
+            self.biases = biases * np.ones(biases_shape)
+        elif isinstance(biases,(list,np.ndarray)) and len(biases) != self.output_units:
+            raise ValueError(f"Received to many/few biases. Biases should be shape {biases_shape}.")
+        else:
+            raise ValueError(f"Received unknown type for biases.")
 
     def _get_spatial_input_shape(self):
         self.batch_size, self.image_height, self.image_width, self.nChannels = self._get_input_shape_params()
@@ -402,10 +406,10 @@ class DenseParams:
         return batch_size, image_height, image_width, nChannels
 
     def _set_weights_shape(self):
-        self.weights_shape = (self.output_units,np.prod((*self.spatial_input_shape, self.nChannels)))
+        self.weights_shape = (self.nChannels,self.output_units)
 
     def _set_weights(self, weights):
-        expected_weights_shape = (self.output_units,np.prod((*self.spatial_input_shape, self.nChannels)))
+        expected_weights_shape = (self.nChannels,self.output_units)
         error_str = "Weights shape {} does not equal the necessary shape {}."
         self.weights = self.check_shape(weights, expected_weights_shape,error_str)
 
@@ -429,14 +433,13 @@ class DenseParams:
 
     def _set_output_shape(self, output_shape):
         self.output_shape = output_shape
-        self.output_units = np.prod(output_shape)
         self._set_spatial_output_shape()
 
     def _set_dense_answer(self):
         self.dense_answer = self.get_dense_answer(self.dense_input)
 
     def get_dense_answer(self, dense_input):
-        answer = np.matmul(self.weights, dense_input.flatten())
+        answer = np.matmul(dense_input, self.weights)
         return answer
 
 
@@ -458,10 +461,7 @@ class KerasParams:
                 model = self.add_pooling_layer(model, params_layer, layerID, input_shape)
 
             if isinstance(params_layer, DenseParams):
-                if layerID == 0:
-                    pass
-                else:
-                    pass
+                model = self.add_dense_layer(model, params_layer, layerID, input_shape)
 
         feature_extractor = Model(inputs=model.inputs, outputs=[layer.output for layer in model.layers])
         self.model = model
@@ -499,4 +499,38 @@ class KerasParams:
         return model
 
     def add_dense_layer(self, model, params_layer, layerID, input_shape=None):
+        if input_shape is None:
+            model.add(Dense(units=params_layer.output_units,
+                            use_bias=True,
+                            kernel_initializer=ArraySequence(params_layer.weights),
+                            bias_initializer=initializers.constant(params_layer.biases),
+                            name=str(layerID)))
+        else:
+            model.add(Dense(units=params_layer.output_units,
+                            use_bias=True,
+                            kernel_initializer=ArraySequence(params_layer.weights),
+                            bias_initializer=initializers.constant(params_layer.biases),
+                            name=str(layerID),
+                            input_shape=input_shape))
+
         return model
+
+class IntegerSequence(initializers.Initializer):
+    '''
+        Custom Initialzer that constructs an integer sequence from 1 to np.prod(shape)+1.
+    '''
+    def __init__(self):
+        pass
+
+    def __call__(self, shape, dtype=None, **kwargs):
+        return np.arange(1,np.prod(shape)+1).reshape(shape)
+
+class ArraySequence(initializers.Initializer):
+    '''
+        Sets the initializer values to the user prescribed array values.
+    '''
+    def __init__(self, array_values):
+        self.array_values = array_values
+
+    def __call__(self, shape, dtype=None, **kwargs):
+        return np.array(self.array_values).reshape(shape)

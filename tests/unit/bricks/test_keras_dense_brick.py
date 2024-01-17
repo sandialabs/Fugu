@@ -21,26 +21,26 @@ class Test_KerasDense2D:
         self.basep = 4
         self.bits = 4
 
-    @pytest.mark.parametrize("weights,output_shape,expectation", [([1.0,1.0],(1,3,3,3),pytest.raises(ValueError)),((1.0,1.0),(1,3,3,3),pytest.raises(ValueError)),(1.0,(1,3,3,3),does_not_raise()),(1.0*np.ones((1,3,3,3)),(1,3,3,3),pytest.raises(ValueError)),(1.0*np.ones((27,27)),(1,3,3,3),does_not_raise()),
-                                                                  ([1.0,1.0],(1,2,2,3),pytest.raises(ValueError)),((1.0,1.0),(1,2,2,3),pytest.raises(ValueError)),(1.0,(1,2,2,3),does_not_raise()),(1.0*np.ones((1,3,3,3)),(1,2,2,3),pytest.raises(ValueError)),(1.0*np.ones((12,27)),(1,2,2,3),does_not_raise())])
-    def test_input_weights(self, weights, output_shape, expectation):
+    @pytest.mark.parametrize("weights,output_units,expectation", [([1.0,1.0],27,pytest.raises(ValueError)),((1.0,1.0),27,pytest.raises(ValueError)),(1.0,27,does_not_raise()),(1.0*np.ones((1,3,3,3)),27,pytest.raises(ValueError)),(1.0*np.ones((3,27)),27,does_not_raise()),
+                                                                  ([1.0,1.0],12,pytest.raises(ValueError)),((1.0,1.0),12,pytest.raises(ValueError)),(1.0,12,does_not_raise()),(1.0*np.ones((1,3,3,3)),12,pytest.raises(ValueError)),(1.0*np.ones((3,12)),12,does_not_raise()),
+                                                                  (1.0*np.ones((27,12)),12,pytest.raises(ValueError))])
+    def test_input_weights(self, weights, output_units, expectation):
         convo_obj = ConvolutionParams(biases=np.array([-471., -1207., -1943.]))
         pool_obj = PoolingParams(convo_obj)
-        dense_obj = DenseParams(pool_obj, pool_obj.output_shape)
+        dense_obj = DenseParams(pool_obj, output_units)
         dense_obj.weights = weights
-        dense_obj._set_output_shape(output_shape)
+        # dense_obj._set_output_shape(output_shape)
         dense_obj._set_thresholds(0.9)
         with expectation:
             self.run_dense_2d(convo_obj,pool_obj,dense_obj)
 
-    @pytest.mark.parametrize("thresholds,output_shape,expectation", [([0.9,0.9],(1,3,3,3),pytest.raises(ValueError)),((0.9,0.9),(1,3,3,3),pytest.raises(ValueError)),(0.9,(1,3,3,3),does_not_raise()),(0.9*np.ones((1,3,3,3)),(1,3,3,3),does_not_raise()),
-                                                                     ([0.9,0.9],(1,2,2,3),pytest.raises(ValueError)),((0.9,0.9),(1,2,2,3),pytest.raises(ValueError)),(0.9,(1,2,2,3),does_not_raise()),(0.9*np.ones((1,2,2,3)),(1,2,2,3),does_not_raise())])
-    def test_input_thresholds(self, thresholds, output_shape, expectation):
+    @pytest.mark.parametrize("thresholds,output_units,expectation", [([0.9,0.9],27,pytest.raises(ValueError)),((0.9,0.9),27,pytest.raises(ValueError)),(0.9,27,does_not_raise()),(0.9*np.ones((1,3,3,3)),27,pytest.raises(ValueError)),
+                                                                     ([0.9,0.9],12,pytest.raises(ValueError)),((0.9,0.9),12,pytest.raises(ValueError)),(0.9,12,does_not_raise()),(0.9*np.ones((1,2,2,3)),12,pytest.raises(ValueError))])
+    def test_input_thresholds(self, thresholds, output_units, expectation):
         convo_obj = ConvolutionParams(biases=np.array([-471., -1207., -1943.]))
         pool_obj = PoolingParams(convo_obj)
-        dense_obj = DenseParams(pool_obj, pool_obj.output_shape)
+        dense_obj = DenseParams(pool_obj, output_units)
         dense_obj.thresholds = thresholds
-        dense_obj._set_output_shape(output_shape)
         dense_obj._set_weights(1.0)
         with expectation:
             self.run_dense_2d(convo_obj,pool_obj,dense_obj)
@@ -48,25 +48,25 @@ class Test_KerasDense2D:
     def test_simple_explicit_dense_layer_example_1(self):
         convo_obj = ConvolutionParams(nFilters=4,biases=np.array([-471., -1207., -1943., -500.]))
         pool_obj = PoolingParams(convo_obj, pool_strides=(1,1), pool_padding="same")
-        dense_obj = DenseParams(pool_obj, (1,2,2,4))
+        dense_obj = DenseParams(pool_obj, output_units=16)
 
         dense_input = pool_obj.pool_answer.astype(int)
         dense_answer = dense_obj.get_dense_answer(dense_input)
-        expected_spike_count = (dense_obj.dense_answer + dense_obj.biases > dense_obj.thresholds.flatten()).sum().astype(int)
+        expected_spike_count = (dense_obj.dense_answer + dense_obj.biases > dense_obj.thresholds).sum().astype(int)
 
         result = self.run_dense_2d(convo_obj,pool_obj,dense_obj)
         calculated_spike_count = len(result[result['time'] > 2].index)
         assert calculated_spike_count == expected_spike_count
 
-    @pytest.mark.parametrize("bias",[-20.0,-21.0])
+    @pytest.mark.parametrize("bias",[0.0,-20.0,-21.0, None])
     def test_dense_brick_biases(self, bias):
         convo_obj = ConvolutionParams(nFilters=4,biases=np.array([-471., -1207., -1943., -500.]))
         pool_obj = PoolingParams(convo_obj, pool_strides=(1,1), pool_padding="same")
-        dense_obj = DenseParams(pool_obj, (1,2,2,4), biases=bias)
+        dense_obj = DenseParams(pool_obj, output_units=3, biases=bias)
 
         dense_input = pool_obj.pool_answer.astype(int)
         dense_answer = dense_obj.get_dense_answer(dense_input)
-        expected_spike_count = (dense_obj.dense_answer + dense_obj.biases > dense_obj.thresholds.flatten()).sum().astype(int)
+        expected_spike_count = (dense_obj.dense_answer + dense_obj.biases > dense_obj.thresholds).sum().astype(int)
 
         result = self.run_dense_2d(convo_obj,pool_obj,dense_obj)
         calculated_spike_count = len(result[result['time'] > 2].index)
@@ -75,17 +75,17 @@ class Test_KerasDense2D:
     def test_mock_brick(self):
 
         nFilters = 4
-        output_shape = (1,2,2,nFilters)
+        output_units = np.prod((1,2,2,nFilters))
         convo_obj = ConvolutionParams(nFilters=nFilters,biases=np.array([-471., -1207., -1943., 500.]))
         pool_obj = PoolingParams(convo_obj, pool_strides=(1,1), pool_padding="same")
-        dense_obj = DenseParams(pool_obj, output_shape)
+        dense_obj = DenseParams(pool_obj, output_units)
 
         vector_input = Vector_Input(pool_obj.pool_answer,name="pool_",time_dimension=False)
         mock_input = Mock_Brick(vector_input,{'pooling_output_shape': pool_obj.pool_answer.shape})
 
         scaffold = Scaffold()
         scaffold.add_brick(mock_input,"input")
-        scaffold.add_brick(keras_dense_2d(output_shape=output_shape,weights=1.0,thresholds=0.9,data_format="channels_last",name="dense_"),[(0,0)],output=True)
+        scaffold.add_brick(keras_dense_2d(units=output_units,weights=1.0,thresholds=0.9,data_format="channels_last",name="dense_"),[(0,0)],output=True)
 
         graph = scaffold.lay_bricks()
         scaffold.summary(verbose=1)
@@ -95,7 +95,7 @@ class Test_KerasDense2D:
         result = backend.run(5)
 
         calculated_spike_count = len(result[result['time'] > 0].index)
-        expected_spike_count = (dense_obj.dense_answer > dense_obj.thresholds.flatten()).sum().astype(int)
+        expected_spike_count = (dense_obj.dense_answer > dense_obj.thresholds).sum().astype(int)
         assert expected_spike_count == calculated_spike_count
 
     @pytest.mark.xfail(reason="Not implemented.")
@@ -138,7 +138,7 @@ class Test_KerasDense2D:
         scaffold.add_brick(BaseP_Input(convo_obj.mock_image,p=self.basep,bits=self.bits,collapse_binary=False,name="I",time_dimension=False),"input")
         scaffold.add_brick(keras_convolution_2d(convo_obj.input_shape,convo_obj.filters,convo_obj.thresholds,self.basep,self.bits,name="convolution_",mode=convo_obj.mode,strides=convo_obj.strides,biases=convo_obj.biases),[(0, 0)],output=True)
         scaffold.add_brick(keras_pooling_2d(pool_obj.pool_size,pool_obj.pool_strides,thresholds=pool_obj.pool_thresholds,name="pool_",padding=pool_obj.pool_padding,method=pool_obj.pool_method),[(1,0)],output=True)
-        scaffold.add_brick(keras_dense_2d(dense_obj.output_shape,dense_obj.weights,dense_obj.thresholds,data_format=dense_obj.data_format,name="dense_",biases=dense_obj.biases),[(2,0)],output=True)
+        scaffold.add_brick(keras_dense_2d(dense_obj.output_units,dense_obj.weights,dense_obj.thresholds,data_format=dense_obj.data_format,name="dense_",biases=dense_obj.biases),[(2,0)],output=True)
 
         self.graph = scaffold.lay_bricks()
         scaffold.summary(verbose=1)
