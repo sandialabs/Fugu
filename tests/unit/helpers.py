@@ -362,8 +362,11 @@ class DenseParams:
             self.biases = np.zeros(biases_shape)
         elif isinstance(biases,(int,float)):
             self.biases = biases * np.ones(biases_shape)
-        elif isinstance(biases,(list,np.ndarray)) and len(biases) != self.output_units:
-            raise ValueError(f"Received to many/few biases. Biases should be shape {biases_shape}.")
+        elif isinstance(biases,(list,np.ndarray)):
+            if len(biases) != self.output_units:
+                raise ValueError(f"Received to many/few biases. Biases should be shape {biases_shape}.")
+            else:
+                self.biases = biases
         else:
             raise ValueError(f"Received unknown type for biases.")
 
@@ -440,6 +443,7 @@ class DenseParams:
 
     def get_dense_answer(self, dense_input):
         answer = np.matmul(dense_input, self.weights)
+        # answer = np.tile(np.matmul(dense_input,self.weights).sum(axis=(0,1,2)),(*np.array(self.output_shape)[:3],1))
         return answer
 
 

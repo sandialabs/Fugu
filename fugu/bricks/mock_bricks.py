@@ -60,13 +60,13 @@ class Mock_Brick(Brick):
         #     self.metadata = {**metadata, **self.metadata}
 
         if not self.time_dimension:
-            self.vector = np.expand_dims(self.vector, len(self.vector.shape))
+            self.dvector = np.expand_dims(self.vector, len(self.vector.shape))
 
         complete_node = self.generate_neuron_name("complete")
         begin_node = self.generate_neuron_name("begin")
         vector_size = len(self.vector) * len(self.vector.shape)
 
-        time_length = self.vector.shape[-1]
+        time_length = self.dvector.shape[-1]
         if time_length == 1:
             graph.add_node(complete_node,index=-1,threshold=0.0,decay=0.0,p=1.0,potential=0.1)
         else:
@@ -75,15 +75,20 @@ class Mock_Brick(Brick):
             
         output_lists = [[]]
         self.index_map = np.ndindex(self.vector.shape[:-1])
-        for i, index in enumerate(self.index_map):
-            neuron_name = self.generate_neuron_name(str(index))
 
-            graph.add_node(neuron_name,
-                           index=index,
-                           threshold=0.0,
-                           decay=0.0,
-                           p=1.0)
-            output_lists[0].append(neuron_name)
+        input_shape = self.vector.shape
+        # for i, index in enumerate(self.index_map):
+        for row in np.arange(0,input_shape[1]):
+            for col in np.arange(0,input_shape[2]):
+                for channel in np.arange(0,input_shape[3]):
+                    neuron_name = self.generate_neuron_name(f"{channel}{row}{col}")
+
+                    graph.add_node(neuron_name,
+                                index=(row,col,channel),
+                                threshold=0.0,
+                                decay=0.0,
+                                p=1.0)
+                    output_lists[0].append(neuron_name)
         output_codings = [self.coding]
         self.is_built = True
 
