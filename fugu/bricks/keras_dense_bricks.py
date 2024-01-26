@@ -68,11 +68,11 @@ class keras_dense_2d_4dinput(Brick):
         complete_node = self.name + "_complete"
         begin_node = self.name + "_begin"
 
-        graph.add_node(begin_node, index=-1, threshold=0.0, decay=0.0, p=1.0, potential=0.0)
-        graph.add_node(complete_node, index=0, threshold=0.9, decay=0.0, p=1.0, potential=0.0)
+        graph.add_node(begin_node   , index=-1, threshold=0.9, decay=1.0, p=1.0, potential=0.0)
+        graph.add_node(complete_node, index=0 , threshold=0.9, decay=1.0, p=1.0, potential=0.0)
 
-        graph.add_edge(control_nodes[0]["complete"], complete_node, weight=0.0, delay=1)
-        graph.add_edge(control_nodes[0]["begin"], begin_node, weight=0.0, delay=1)
+        graph.add_edge(control_nodes[0]["complete"], complete_node, weight=1.0, delay=2)
+        graph.add_edge(control_nodes[0]["begin"]   , begin_node   , weight=1.0, delay=2)
 
         self.check_thresholds_shape()
         self.check_weights_shape()
@@ -90,7 +90,8 @@ class keras_dense_2d_4dinput(Brick):
             self.check_biases_shape()
             # biases neurons/nodes; one node per kernel/channel in filter
             for k in np.arange(self.output_units):
-                graph.add_node(f'{self.name}b{k}', index=(98,k), threshold=0.0, decay=1.0, p=1.0, potential=0.1)
+                graph.add_node(f'{self.name}b{k}', index=(98,k), threshold=0.9, decay=1.0, p=1.0, potential=0.0)
+                graph.add_edge(control_nodes[0]["complete"], f'{self.name}b{k}', weight=1.0, delay=1)
 
             # Construct edges connecting biases node(s) to output nodes
             for k in np.arange(self.output_units):
@@ -159,7 +160,7 @@ class keras_dense_2d_4dinput(Brick):
 
                     # Construct edges connecting input and output nodes
                     for outchan in np.arange(self.output_units):
-                        graph.add_edge(prev_layer[0,row,col,inchan], f'{self.name}d{outchan}{row}{col}', weight=self.weights[inchan,outchan], delay=1)
+                        graph.add_edge(prev_layer[0,row,col,inchan], f'{self.name}d{outchan}{row}{col}', weight=self.weights[inchan,outchan], delay=2)
                         print(f" p{inchan}{row}{col} --> d{outchan}{row}{col}   weight: {self.weights[inchan,outchan]}")
 
     def check_thresholds_shape(self):

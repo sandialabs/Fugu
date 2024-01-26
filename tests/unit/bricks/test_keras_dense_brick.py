@@ -57,7 +57,7 @@ class Test_KerasDense2D:
         expected_spike_count = (dense_obj.dense_answer + dense_obj.biases > dense_obj.thresholds).sum().astype(int)
 
         result = self.run_dense_2d(convo_obj,pool_obj,dense_obj)
-        calculated_spike_count = len(result[result['time'] > 2].index)
+        calculated_spike_count = len(self.get_dense_neurons_result_only(result).index)
         assert calculated_spike_count == expected_spike_count
 
     @pytest.mark.parametrize("bias",[0.0,-3.0,-20.0,-21.0, None])
@@ -74,7 +74,7 @@ class Test_KerasDense2D:
         expected_spike_count = (dense_obj.dense_answer + dense_obj.biases > dense_obj.thresholds).sum().astype(int)
 
         result = self.run_dense_2d(convo_obj,pool_obj,dense_obj)
-        calculated_spike_count = len(result[result['time'] > 2].index)
+        calculated_spike_count = len(self.get_dense_neurons_result_only(result).index)
         assert calculated_spike_count == expected_spike_count
 
     def test_dense_brick_biases2(self):
@@ -98,7 +98,7 @@ class Test_KerasDense2D:
         expected_spike_count = (dense_obj.dense_answer + dense_obj.biases > dense_obj.thresholds).sum().astype(int)
 
         result = self.run_dense_2d(convo_obj,pool_obj,dense_obj)
-        calculated_spike_count = len(result[result['time'] > 2].index)
+        calculated_spike_count = len(self.get_dense_neurons_result_only(result).index)
 
         # Make Keras Model
         kobj = make_keras_dense_model(units=units,input_shape=tuple(np.array(pool_obj.input_shape)[1:]),weights=weights,biases=biases)
@@ -133,7 +133,7 @@ class Test_KerasDense2D:
         backend.compile(scaffold, backend_args)
         result = backend.run(5)
 
-        calculated_spike_count = len(result[result['time'] > 0].index)
+        calculated_spike_count = len(self.get_dense_neurons_result_only(result).index)
         expected_spike_count = (dense_obj.dense_answer + dense_obj.biases > dense_obj.thresholds).sum().astype(int)
         assert expected_spike_count == calculated_spike_count
 
@@ -168,7 +168,7 @@ class Test_KerasDense2D:
         backend.compile(scaffold, backend_args)
         result = backend.run(5)
 
-        calculated_spike_count = len(result[result['time'] > 0].index)
+        calculated_spike_count = len(self.get_dense_neurons_result_only(result).index)
         expected_spike_count = (dense_obj.dense_answer + dense_obj.biases > dense_obj.thresholds).sum().astype(int)
 
         # Make Keras Model
@@ -222,7 +222,7 @@ class Test_KerasDense2D:
         backend = snn_Backend()
         backend_args = {}
         backend.compile(scaffold, backend_args)
-        result = backend.run(5)
+        result = backend.run(10)
         return result
 
     def get_stride_positions(self, pixel_dim):
