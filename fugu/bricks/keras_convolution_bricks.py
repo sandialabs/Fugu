@@ -295,25 +295,21 @@ class keras_convolution_2d_4dinput(Brick):
 
         output_codings = [input_codings[0]]
 
-        new_complete_node_name = self.name + '_complete'
-        new_begin_node_name = self.name + '_begin'
+        complete_node = self.name + "_complete"
+        begin_node = self.name + "_begin"
 
-        graph.add_node(new_begin_node_name   , index = -2, threshold = 0.0, decay =0.0, p=1.0, potential=0.0)
-        graph.add_node(new_complete_node_name, index = -1, threshold = 0.9, decay =0.0, p=1.0, potential=0.0)
+        graph.add_node(begin_node   , index=-2, threshold=0.9, decay=1.0, p=1.0, potential=0.0)
+        graph.add_node(complete_node, index=-1, threshold=0.9, decay=1.0, p=1.0, potential=0.0)
 
-
-        graph.add_edge(control_nodes[0]['complete'], new_complete_node_name, weight=1.0, delay=1)
-        graph.add_edge(control_nodes[0]['begin']   , new_begin_node_name   , weight=1.0, delay=1)
-
-        complete_node = new_complete_node_name
-        begin_node = new_begin_node_name
+        graph.add_edge(control_nodes[0]["complete"], complete_node, weight=1.0, delay=2)
+        graph.add_edge(control_nodes[0]["begin"]   , begin_node   , weight=1.0, delay=2)
 
         # determine output neuron bounds based on the "mode"
         self.get_output_bounds()
 
         self.check_thresholds_shape()
         output_lists = self.create_output_neurons(graph)
-        self.create_biases_nodes_and_synapses(graph)
+        self.create_biases_nodes_and_synapses(graph,control_nodes)
         self.connect_input_and_output_neurons(input_lists,graph)
 
         self.is_built=True
@@ -339,12 +335,13 @@ class keras_convolution_2d_4dinput(Brick):
 
         return output_lists
 
-    def create_biases_nodes_and_synapses(self, graph):
+    def create_biases_nodes_and_synapses(self, graph, control_nodes):
         # Biases for convolution
         if self.biases is not None:
             # biases neurons/nodes; one node per kernel/channel in filter
             for k in np.arange(self.nFilters):
-                graph.add_node(f'{self.name}b{k}', index=(99,k), threshold=0.0, decay=1.0, p=1.0, potential=0.1)
+                graph.add_node(f'{self.name}b{k}', index=(99,k), threshold=0.9, decay=1.0, p=1.0, potential=0.0)
+                graph.add_edge(control_nodes[0]["complete"], f'{self.name}b{k}', weight=1.0, delay=1)
 
             # Construct edges connecting biases node(s) to output nodes
             for k in np.arange(self.nFilters):
@@ -377,7 +374,7 @@ class keras_convolution_2d_4dinput(Brick):
 
                 for filter in np.arange(self.nFilters):
                     cnt += 1
-                    graph.add_edge(I[k], f'{self.name}g{filter}{i}{j}', weight=Ck * self.basep**pwr * self.filters[ix,jx,channel,filter], delay=1)
+                    graph.add_edge(I[k], f'{self.name}g{filter}{i}{j}', weight=Ck * self.basep**pwr * self.filters[ix,jx,channel,filter], delay=2)
                     logging.debug(f'{cnt:3d}  A[m,n]: ({row:2d},{col:2d})   power: {pwr}    coeff_i: {Ck}    input: {k:3d}      output: {filter}{i}{j}   B[m,n]: ({ix:2d},{jx:2d})   filter: {self.filters[ix,jx,channel,filter]}     I(row,col,channel,bit-pwr,basep-coeff): {np.unravel_index(k,(Am,An,self.nChannels,self.bits,self.basep))}     I[index]: {graph.nodes[I[k]]["index"]}')
 
     def get_output_neurons(self,row,col,Bm,Bn):

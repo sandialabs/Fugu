@@ -9,6 +9,7 @@ from fugu.bricks.keras_convolution_bricks import keras_convolution_2d, keras_con
 from fugu.bricks.input_bricks import BaseP_Input
 from fugu.scaffold import Scaffold
 from fugu.utils.keras_helpers import keras_convolve2d, keras_convolve2d_4dinput, generate_keras_kernel, generate_mock_image, keras_convolution2d_output_shape_4dinput
+from ..helpers import ConvolutionParams
 
 from scipy.signal import convolve2d
 
@@ -705,8 +706,8 @@ class Test_KerasConvolution2D_4dinput:
         self.nChannels = nChannels
         self.nFilters = nFilters
 
-    @pytest.mark.parametrize("nSpikes,bias",[(0,-63),(1,-62),(2,-58)])
-    def test_explicit_simple_convolution_with_bias(self,nSpikes,bias):
+    @pytest.mark.parametrize("bias",[-63,-62,-58])
+    def test_explicit_simple_convolution_with_bias(self,bias):
         '''
             Convolution answer is
                   [[23., 33., 24.],
@@ -718,6 +719,8 @@ class Test_KerasConvolution2D_4dinput:
         nChannels = 1
         nFilters = 1
 
+        convo_obj = ConvolutionParams(image_height=image_height,image_width=image_width,nChannels=nChannels,
+                                      kernel_height=kernel_height,kernel_width=kernel_width,nFilters=nFilters)
         self.pvector = generate_mock_image(image_height,image_width,nChannels)
         self.filters = generate_keras_kernel(kernel_height,kernel_width,nFilters,nChannels)
         self.pshape = np.array(self.pvector).shape
@@ -729,8 +732,12 @@ class Test_KerasConvolution2D_4dinput:
         output_shape = keras_convolution2d_output_shape_4dinput(self.pvector,self.filters,self.strides,self.mode,self.nFilters)
         thresholds = 0.5*np.ones(output_shape).reshape(1,*output_shape)
         keras_convolution_answer = keras_convolve2d_4dinput(self.pvector,self.filters,strides=self.strides,mode=self.mode,filters=self.nFilters)
+        expected_spike_count = (keras_convolution_answer + self.biases > thresholds).sum().astype(int)
+
         result = self.run_convolution_2d(thresholds)
-        assert self.expected_spikes(nSpikes) == self.calculated_spikes(thresholds,result)
+        calculated_spike_count = len(result[result['time'] > 0].index)
+
+        assert expected_spike_count == calculated_spike_count
 
     @pytest.mark.parametrize("nSpikes,biases",[(3,[-471, -1207, -1943]),(4,[-471, -1107, -1943]),(0,[-472, -1208, -1944])])
     def test_explicit_same_convolution_with_bias(self,nSpikes,biases):
@@ -745,8 +752,12 @@ class Test_KerasConvolution2D_4dinput:
         output_shape = keras_convolution2d_output_shape_4dinput(self.pvector,self.filters,self.strides,self.mode,self.nFilters)
         thresholds = 0.5*np.ones(output_shape).reshape(1,*output_shape)
         keras_convolution_answer = keras_convolve2d_4dinput(self.pvector,self.filters,strides=self.strides,mode=self.mode,filters=self.nFilters)
+        expected_spike_count = (keras_convolution_answer + self.biases > thresholds).sum().astype(int)
+
         result = self.run_convolution_2d(thresholds)
-        assert self.expected_spikes(nSpikes) == self.calculated_spikes(thresholds,result)
+        calculated_spike_count = len(result[result['time'] > 0].index)
+
+        assert expected_spike_count == calculated_spike_count
 
     @pytest.mark.parametrize("nSpikes,biases,strides",[(7,[-320, -682, -1152],(1,2)),(12,[-298, -682, -1037],(2,1)),(0,[-472, -1208, -1944],(1,2)),(9,[-322, -736, -1066],(2,1)),(0,[-328, -1208, -1944],(2,2))])
     def test_explicit_same_convolution_with_bias_and_strides(self,nSpikes,biases,strides):
@@ -762,8 +773,12 @@ class Test_KerasConvolution2D_4dinput:
         output_shape = keras_convolution2d_output_shape_4dinput(self.pvector,self.filters,self.strides,self.mode,self.nFilters)
         thresholds = 0.5*np.ones(output_shape).reshape(1,*output_shape)
         keras_convolution_answer = keras_convolve2d_4dinput(self.pvector,self.filters,strides=self.strides,mode=self.mode,filters=self.nFilters)
+        expected_spike_count = (keras_convolution_answer + self.biases > thresholds).sum().astype(int)
+
         result = self.run_convolution_2d(thresholds)
-        assert self.expected_spikes(nSpikes) == self.calculated_spikes(thresholds,result)
+        calculated_spike_count = len(result[result['time'] > 0].index)
+
+        assert expected_spike_count == calculated_spike_count
 
     @pytest.mark.parametrize("nSpikes,biases",[(3,[-471, -1207, -1943]),(4,[-471, -1107, -1943]),(0,[-472, -1208, -1944]),(2,[-435, -1208, -1944]),(3,[-472, -907, -1944]),(2,[-472, -1208, -1779])])
     def test_explicit_valid_convolution_with_bias(self,nSpikes,biases):
@@ -778,8 +793,12 @@ class Test_KerasConvolution2D_4dinput:
         output_shape = keras_convolution2d_output_shape_4dinput(self.pvector,self.filters,self.strides,self.mode,self.nFilters)
         thresholds = 0.5*np.ones(output_shape).reshape(1,*output_shape)
         keras_convolution_answer = keras_convolve2d_4dinput(self.pvector,self.filters,strides=self.strides,mode=self.mode,filters=self.nFilters)
+        expected_spike_count = (keras_convolution_answer + self.biases > thresholds).sum().astype(int)
+
         result = self.run_convolution_2d(thresholds)
-        assert self.expected_spikes(nSpikes) == self.calculated_spikes(thresholds,result)
+        calculated_spike_count = len(result[result['time'] > 0].index)
+
+        assert expected_spike_count == calculated_spike_count
 
     @pytest.mark.parametrize("nSpikes,biases,strides",[(3,[-363, -907, -1451],(1,2)),(6,[-327, -807, -1287],(2,1)),(2,[-327, -808, -1287],(2,2))])
     def test_explicit_valid_convolution_with_bias_and_strides(self,nSpikes,biases,strides):
@@ -795,8 +814,12 @@ class Test_KerasConvolution2D_4dinput:
         output_shape = keras_convolution2d_output_shape_4dinput(self.pvector,self.filters,self.strides,self.mode,self.nFilters)
         thresholds = 0.5*np.ones(output_shape).reshape(1,*output_shape)
         keras_convolution_answer = keras_convolve2d_4dinput(self.pvector,self.filters,strides=self.strides,mode=self.mode,filters=self.nFilters)
+        expected_spike_count = (keras_convolution_answer + self.biases > thresholds).sum().astype(int)
+
         result = self.run_convolution_2d(thresholds)
-        assert self.expected_spikes(nSpikes) == self.calculated_spikes(thresholds,result)
+        calculated_spike_count = len(result[result['time'] > 0].index)
+
+        assert expected_spike_count == calculated_spike_count
 
     @pytest.mark.skip(reason="Slow test. Doesn't show 'dots' as one dot tests all matrix entries per stride value. Additionally, this is a duplicate of exhaustive test below, which does show 'dots' for each matrix entry per mode, but demonstrates the explicit version of that (exhaustive) test.")
     @pytest.mark.parametrize("strides", [(1,1),(1,2),(2,1),(2,2),(1,3),(3,1),(2,3),(3,2),(3,3)])
@@ -850,8 +873,10 @@ class Test_KerasConvolution2D_4dinput:
             self.biases = -bias * np.ones((nFilters,))
             result = self.run_convolution_2d(thresholds)
 
-            nSpikes = (keras_convolution_answer > bias).sum()
-            assert self.expected_spikes(nSpikes) == self.calculated_spikes(thresholds,result)
+            expected_spike_count = (keras_convolution_answer + self.biases > thresholds).sum().astype(int)
+            calculated_spike_count = len(result[result['time'] > 0].index)
+
+            assert expected_spike_count == calculated_spike_count
 
     def generate_all_values_for_exhaustive_test(self):
         '''
@@ -926,7 +951,9 @@ class Test_KerasConvolution2D_4dinput:
         self.strides = strides
         self.mode = mode
         result = self.run_convolution_2d(thresholds)
-        assert self.expected_spikes(nSpikes) == self.calculated_spikes(thresholds,result)
+        calculated_spike_count = len(result[result['time'] > 0].index)
+        expected_spike_count = nSpikes
+        assert expected_spike_count == calculated_spike_count
 
     def test_positive_biases(self):
         image_height, image_width, nChannels = 3, 3, 2
@@ -944,7 +971,7 @@ class Test_KerasConvolution2D_4dinput:
         output_shape = keras_convolution2d_output_shape_4dinput(self.pvector,self.filters,self.strides,self.mode,self.nFilters)
         thresholds = 0.5*np.ones(output_shape).reshape(1,*output_shape)
         keras_convolution_answer = keras_convolve2d_4dinput(self.pvector,self.filters,strides=self.strides,mode=self.mode,filters=self.nFilters)
-        expected_spike_count = (keras_convolution_answer + self.biases > 0.5).sum().astype(int)
+        expected_spike_count = (keras_convolution_answer + self.biases > thresholds).sum().astype(int)
 
         result = self.run_convolution_2d(thresholds)
         calculated_spike_count = len(result[result['time'] > 0].index)
