@@ -44,7 +44,7 @@ class Test_KerasPooling2D:
         expected_spike_count = (pool_obj.pool_answer > pool_obj.pool_thresholds).sum().astype(int)
 
         result = self.run_pooling_2d(convo_obj,pool_obj)
-        calculated_spike_count = len(result[result['time'] > 1].index)
+        calculated_spike_count = len(self.get_pooling_neurons_result_only(result).index)
         assert expected_spike_count == calculated_spike_count
 
     def test_explicit_max_pooling_same_mode_strides_12(self):
@@ -54,7 +54,7 @@ class Test_KerasPooling2D:
         expected_spike_count = (pool_obj.pool_answer > pool_obj.pool_thresholds).sum().astype(int)
 
         result = self.run_pooling_2d(convo_obj,pool_obj)
-        calculated_spike_count = len(result[result['time'] > 1].index)
+        calculated_spike_count = len(self.get_pooling_neurons_result_only(result).index)
         assert expected_spike_count == calculated_spike_count
 
     def test_explicit_max_pooling_same_mode_strides_21(self):
@@ -64,7 +64,7 @@ class Test_KerasPooling2D:
         expected_spike_count = (pool_obj.pool_answer > pool_obj.pool_thresholds).sum().astype(int)
 
         result = self.run_pooling_2d(convo_obj,pool_obj)
-        calculated_spike_count = len(result[result['time'] > 1].index)
+        calculated_spike_count = len(self.get_pooling_neurons_result_only(result).index)
         assert expected_spike_count == calculated_spike_count
 
     def test_explicit_max_pooling_same_mode_strides_22(self):
@@ -74,7 +74,7 @@ class Test_KerasPooling2D:
         expected_spike_count = (pool_obj.pool_answer > pool_obj.pool_thresholds).sum().astype(int)
 
         result = self.run_pooling_2d(convo_obj,pool_obj)
-        calculated_spike_count = len(result[result['time'] > 1].index)
+        calculated_spike_count = len(self.get_pooling_neurons_result_only(result).index)
         assert expected_spike_count == calculated_spike_count
 
     def test_explicit_max_pooling_valid_mode_strides_11(self):
@@ -84,7 +84,7 @@ class Test_KerasPooling2D:
         expected_spike_count = (pool_obj.pool_answer > pool_obj.pool_thresholds).sum().astype(int)
 
         result = self.run_pooling_2d(convo_obj,pool_obj)
-        calculated_spike_count = len(result[result['time'] > 1].index)
+        calculated_spike_count = len(self.get_pooling_neurons_result_only(result).index)
         assert expected_spike_count == calculated_spike_count
 
     def test_explicit_max_pooling_valid_mode_strides_12(self):
@@ -94,7 +94,7 @@ class Test_KerasPooling2D:
         expected_spike_count = (pool_obj.pool_answer > pool_obj.pool_thresholds).sum().astype(int)
 
         result = self.run_pooling_2d(convo_obj,pool_obj)
-        calculated_spike_count = len(result[result['time'] > 1].index)
+        calculated_spike_count = len(self.get_pooling_neurons_result_only(result).index)
         assert expected_spike_count == calculated_spike_count
 
     def test_explicit_max_pooling_valid_mode_strides_21(self):
@@ -104,7 +104,7 @@ class Test_KerasPooling2D:
         expected_spike_count = (pool_obj.pool_answer > pool_obj.pool_thresholds).sum().astype(int)
 
         result = self.run_pooling_2d(convo_obj,pool_obj)
-        calculated_spike_count = len(result[result['time'] > 1].index)
+        calculated_spike_count = len(self.get_pooling_neurons_result_only(result).index)
         assert expected_spike_count == calculated_spike_count
 
     def test_explicit_max_pooling_valid_mode_strides_22(self):
@@ -114,7 +114,7 @@ class Test_KerasPooling2D:
         expected_spike_count = (pool_obj.pool_answer > pool_obj.pool_thresholds).sum().astype(int)
 
         result = self.run_pooling_2d(convo_obj,pool_obj)
-        calculated_spike_count = len(result[result['time'] > 1].index)
+        calculated_spike_count = len(self.get_pooling_neurons_result_only(result).index)
         assert expected_spike_count == calculated_spike_count
 
     def test_explicit_average_pooling_same_mode_strides_11(self):
@@ -124,7 +124,7 @@ class Test_KerasPooling2D:
         expected_spike_count = (pool_obj.pool_answer > pool_obj.pool_thresholds).sum().astype(int)
 
         result = self.run_pooling_2d(convo_obj,pool_obj)
-        calculated_spike_count = len(result[result['time'] > 1].index)
+        calculated_spike_count = len(self.get_pooling_neurons_result_only(result).index)
         assert expected_spike_count == calculated_spike_count
 
     def test_explicit_average_pooling_same_mode_strides_12(self):
@@ -134,7 +134,7 @@ class Test_KerasPooling2D:
         expected_spike_count = (pool_obj.pool_answer > pool_obj.pool_thresholds).sum().astype(int)
 
         result = self.run_pooling_2d(convo_obj,pool_obj)
-        calculated_spike_count = len(result[result['time'] > 1].index)
+        calculated_spike_count = len(self.get_pooling_neurons_result_only(result).index)
         assert expected_spike_count == calculated_spike_count
 
     def test_explicit_average_pooling_same_mode_strides_21(self):
@@ -144,7 +144,7 @@ class Test_KerasPooling2D:
         expected_spike_count = (pool_obj.pool_answer > pool_obj.pool_thresholds).sum().astype(int)
 
         result = self.run_pooling_2d(convo_obj,pool_obj)
-        calculated_spike_count = len(result[result['time'] > 1].index)
+        calculated_spike_count = len(self.get_pooling_neurons_result_only(result).index)
         assert expected_spike_count == calculated_spike_count
 
     def test_explicit_average_pooling_same_mode_strides_22(self):
@@ -154,7 +154,7 @@ class Test_KerasPooling2D:
         expected_spike_count = (pool_obj.pool_answer > pool_obj.pool_thresholds).sum().astype(int)
 
         result = self.run_pooling_2d(convo_obj,pool_obj)
-        calculated_spike_count = len(result[result['time'] > 1].index)
+        calculated_spike_count = len(self.get_pooling_neurons_result_only(result).index)
         assert expected_spike_count == calculated_spike_count
 
     def test_explicit_average_pooling_valid_mode_strides_11(self):
@@ -164,7 +164,7 @@ class Test_KerasPooling2D:
         expected_spike_count = (pool_obj.pool_answer > pool_obj.pool_thresholds).sum().astype(int)
 
         result = self.run_pooling_2d(convo_obj,pool_obj)
-        calculated_spike_count = len(result[result['time'] > 1].index)
+        calculated_spike_count = len(self.get_pooling_neurons_result_only(result).index)
         assert expected_spike_count == calculated_spike_count
 
     def test_explicit_average_pooling_valid_mode_strides_12(self):
@@ -174,7 +174,7 @@ class Test_KerasPooling2D:
         expected_spike_count = (pool_obj.pool_answer > pool_obj.pool_thresholds).sum().astype(int)
 
         result = self.run_pooling_2d(convo_obj,pool_obj)
-        calculated_spike_count = len(result[result['time'] > 1].index)
+        calculated_spike_count = len(self.get_pooling_neurons_result_only(result).index)
         assert expected_spike_count == calculated_spike_count
 
     def test_explicit_average_pooling_valid_mode_strides_21(self):
@@ -184,7 +184,7 @@ class Test_KerasPooling2D:
         expected_spike_count = (pool_obj.pool_answer > pool_obj.pool_thresholds).sum().astype(int)
 
         result = self.run_pooling_2d(convo_obj,pool_obj)
-        calculated_spike_count = len(result[result['time'] > 1].index)
+        calculated_spike_count = len(self.get_pooling_neurons_result_only(result).index)
         assert expected_spike_count == calculated_spike_count
 
     def test_explicit_average_pooling_valid_mode_strides_22(self):
@@ -194,7 +194,7 @@ class Test_KerasPooling2D:
         expected_spike_count = (pool_obj.pool_answer > pool_obj.pool_thresholds).sum().astype(int)
 
         result = self.run_pooling_2d(convo_obj,pool_obj)
-        calculated_spike_count = len(result[result['time'] > 1].index)
+        calculated_spike_count = len(self.get_pooling_neurons_result_only(result).index)
         assert expected_spike_count == calculated_spike_count
 
     @pytest.mark.parametrize("pool_size", [(1,2),(2,1),(2,2),(2,3),(3,2),(3,3)])
@@ -214,7 +214,7 @@ class Test_KerasPooling2D:
         expected_spike_count = (pool_obj.pool_answer > pool_obj.pool_thresholds).sum().astype(int)
 
         result = self.run_pooling_2d(convo_obj,pool_obj)
-        calculated_spike_count = len(result[result['time'] > 1].index)
+        calculated_spike_count = len(self.get_pooling_neurons_result_only(result).index)
         assert expected_spike_count == calculated_spike_count
 
     def test_pooling_one_off1(self):
@@ -229,7 +229,7 @@ class Test_KerasPooling2D:
         expected_spike_count = (pool_obj.pool_answer > pool_obj.pool_thresholds).sum().astype(int)
 
         result = self.run_pooling_2d(convo_obj,pool_obj)
-        calculated_spike_count = len(result[result['time'] > 1].index)
+        calculated_spike_count = len(self.get_pooling_neurons_result_only(result).index)
         assert expected_spike_count == calculated_spike_count
 
     def test_pooling_one_off2(self):
@@ -244,7 +244,7 @@ class Test_KerasPooling2D:
         expected_spike_count = (pool_obj.pool_answer > pool_obj.pool_thresholds).sum().astype(int)
 
         result = self.run_pooling_2d(convo_obj,pool_obj)
-        calculated_spike_count = len(result[result['time'] > 1].index)
+        calculated_spike_count = len(self.get_pooling_neurons_result_only(result).index)
         assert expected_spike_count == calculated_spike_count
 
     def test_pooling_one_off3(self):
@@ -255,7 +255,7 @@ class Test_KerasPooling2D:
         expected_spike_count = (pool_obj.pool_answer > pool_obj.pool_thresholds).sum().astype(int)
 
         result = self.run_pooling_2d(convo_obj,pool_obj)
-        calculated_spike_count = len(result[result['time'] > 1].index)
+        calculated_spike_count = len(self.get_pooling_neurons_result_only(result).index)
         assert expected_spike_count == calculated_spike_count
 
     @pytest.mark.xfail(reason="Not implemented.")
@@ -273,6 +273,11 @@ class Test_KerasPooling2D:
                 neuron_numbers.append(self.graph.nodes[key]['neuron_number'])
 
         return np.array(neuron_numbers)
+
+    def get_pooling_neurons_result_only(self, result):
+        pool_neuron_numbers = self.get_neuron_numbers('pool_p')
+        sub_result = result[result['neuron_number'].isin(pool_neuron_numbers)]
+        return sub_result
 
     def get_output_neuron_numbers(self):
         neuron_numbers = []

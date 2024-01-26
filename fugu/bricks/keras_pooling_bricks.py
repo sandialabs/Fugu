@@ -82,14 +82,14 @@ class keras_pooling_2d_4dinput(Brick):
 
         output_codings = [input_codings[0]]
         
-        complete_node = self.name + '_complete'
-        begin_node = self.name + '_begin'
-        
-        graph.add_node(begin_node   , index = -1, threshold = 0.0, decay =0.0, p=1.0, potential=0.0)
-        graph.add_node(complete_node, index =  0, threshold = 0.9, decay =0.0, p=1.0, potential=0.0)
-        
-        graph.add_edge(control_nodes[0]['complete'], complete_node, weight=0.0, delay=1)
-        graph.add_edge(control_nodes[0]['begin']   , begin_node   , weight=0.0, delay=1)
+        complete_node = self.name + "_complete"
+        begin_node = self.name + "_begin"
+
+        graph.add_node(begin_node   , index=-1, threshold=0.9, decay=1.0, p=1.0, potential=0.0)
+        graph.add_node(complete_node, index=0 , threshold=0.9, decay=1.0, p=1.0, potential=0.0)
+
+        graph.add_edge(control_nodes[0]["complete"], complete_node, weight=1.0, delay=1)
+        graph.add_edge(control_nodes[0]["begin"]   , begin_node   , weight=1.0, delay=1)
 
         # determine output neuron bounds based on "input length", "pool_size", and "strides"
         # floor(1 + [Am + 2*pad_length - Bm ] / stride)
