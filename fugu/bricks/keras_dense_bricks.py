@@ -58,10 +58,16 @@ class keras_dense_2d_4dinput(Brick):
         if self.input_shape is None:
             self.input_shape = self.metadata["{}output_shape".format(self.prev_layer_prefix)]
 
-        self.spatial_input_shape = self.get_spatial_input_shape()
         self.metadata["dense_input_shape"] = self.input_shape
-        self.output_shape = (*np.array(self.input_shape)[:3],self.output_units)
-        self.spatial_output_shape = self.get_spatial_output_shape()
+
+        # TODO: Handle input shape with rank > 2 and <= 2.
+        # self.spatial_input_shape = self.get_spatial_input_shape()
+        # self.spatial_output_shape = self.get_spatial_output_shape()
+        if len(self.input_shape) <= 2:
+            self.output_shape = (1,self.output_units)
+        else:
+            self.output_shape = (*np.array(self.input_shape)[:-1],self.output_units)
+        self.handle_input_layer_shapes()
 
         output_codings = [input_codings[0]]
 
@@ -104,6 +110,17 @@ class keras_dense_2d_4dinput(Brick):
 
         self.is_built = True
         return (graph, self.metadata, [{"complete": complete_node, "begin": begin_node}], output_lists, output_codings,)
+
+    def handle_input_layer_shapes(self):
+        if len(self.input_shape) <= 2:
+            self.image_height = 1
+            self.image_width = 1
+            self.nChannelsInput = np.prod([x for x in self.input_shape if x is not None])
+            self.spatial_input_shape = (1,1)
+            self.spatial_output_shape = (1,1)
+        else:
+            self.spatial_input_shape = self.get_spatial_input_shape()
+            self.spatial_output_shape = self.get_spatial_output_shape()
 
     def connect_input_and_output_neurons_1(self,input_lists,graph):
         # Collect Inputs
@@ -214,11 +231,21 @@ class keras_dense_2d_4dinput(Brick):
         return spatial_output_shape
     
     def get_dense_output_shape_params(self):
-        if self.data_format.lower() == "channels_last":
-            batch_size, image_height, image_width, nChannels = self.output_shape
-        elif self.data_format.lower() == "channels_first":
-            batch_size, nChannels, image_height, image_width = self.output_shape
+        if len(self.input_shape) <= 2:
+            image_height = 1
+            image_width = 1
+            if self.data_format.lower() == "channels_last":
+                batch_size, nChannels = self.output_shape
+            elif self.data_format.lower() == "channels_first":
+                batch_size, nChannels = self.output_shape
+            else:
+                raise ValueError(f"'data_format' is either 'channels_first' or 'channels_last'. Received {self.data_format}")
         else:
-            raise ValueError(f"'data_format' is either 'channels_first' or 'channels_last'. Received {self.data_format}")
+            if self.data_format.lower() == "channels_last":
+                batch_size, image_height, image_width, nChannels = self.output_shape
+            elif self.data_format.lower() == "channels_first":
+                batch_size, nChannels, image_height, image_width = self.output_shape
+            else:
+                raise ValueError(f"'data_format' is either 'channels_first' or 'channels_last'. Received {self.data_format}")
 
         return batch_size, image_height, image_width, nChannels    

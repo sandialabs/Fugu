@@ -344,8 +344,8 @@ class DenseParams:
     def __init__(self, params_obj, output_units, weights=1.0, thresholds=0.5, data_format="channels_last", biases=None):
         self.data_format = data_format
         self.output_units = output_units
-        self.input_shape = params_obj.input_shape
-        self.output_shape = (*np.array(params_obj.input_shape)[:3],self.output_units)
+        self.input_shape = params_obj.output_shape
+        self.output_shape = (*np.array(params_obj.output_shape)[:-1],self.output_units)
         self.dense_input = params_obj.pool_answer.astype(int)
 
         self._set_biases(biases)
@@ -371,22 +371,40 @@ class DenseParams:
             raise ValueError(f"Received unknown type for biases.")
 
     def _get_spatial_input_shape(self):
-        self.batch_size, self.image_height, self.image_width, self.nChannels = self._get_input_shape_params()
-        spatial_input_shape = (self.image_height, self.image_width)
+        if len(self.input_shape) <= 2:
+            self.image_height = 1
+            self.image_width = 1
+            self.nChannels = np.prod([x for x in self.input_shape if x is not None])
+            spatial_input_shape = (1,1)
+        else:
+            self.batch_size, self.image_height, self.image_width, self.nChannels = self._get_input_shape_params()
+            spatial_input_shape = (self.image_height, self.image_width)
         return spatial_input_shape
 
     def _set_spatial_input_shape(self):
-        self.batch_size, self.image_height, self.image_width, self.nChannels = self._get_input_shape_params()
-        self.spatial_input_shape = (self.image_height, self.image_width)
+        if len(self.input_shape) <= 2:
+            self.image_height = 1
+            self.image_width = 1
+            self.nChannels = np.prod([x for x in self.input_shape if x is not None])
+            self.spatial_input_shape = (1,1)
+        else:
+            self.batch_size, self.image_height, self.image_width, self.nChannels = self._get_input_shape_params()
+            self.spatial_input_shape = (self.image_height, self.image_width)
 
     def _get_spatial_output_shape(self):
-        batch_size, image_height, image_width, nChannels = self._get_output_shape_params()
-        spatial_output_shape = (image_height, image_width)
+        if len(self.input_shape) <= 2:
+            spatial_output_shape = (1,1)
+        else:
+            batch_size, image_height, image_width, nChannels = self._get_output_shape_params()
+            spatial_output_shape = (image_height, image_width)
         return spatial_output_shape
 
     def _set_spatial_output_shape(self):
-        batch_size, image_height, image_width, nChannels = self._get_output_shape_params()
-        self.spatial_output_shape = (image_height, image_width)
+        if len(self.input_shape) <= 2:
+            self.spatial_output_shape = (1,1)
+        else:
+            batch_size, image_height, image_width, nChannels = self._get_output_shape_params()
+            self.spatial_output_shape = (image_height, image_width)
 
     def _get_output_shape_params(self):
         if self.data_format.lower() == "channels_last":
@@ -399,12 +417,24 @@ class DenseParams:
         return batch_size, image_height, image_width, nChannels
 
     def _get_input_shape_params(self):
-        if self.data_format.lower() == "channels_last":
-            batch_size, image_height, image_width, nChannels = self.input_shape
-        elif self.data_format.lower() == "channels_first":
-            batch_size, nChannels, image_height, image_width = self.input_shape
+        if len(self.input_shape) <= 2:
+            if self.data_format.lower() == "channels_last":
+                image_height = 1
+                image_width = 1
+                batch_size, nChannels = self.input_shape
+            elif self.data_format.lower() == "channels_first":
+                image_height = 1
+                image_width = 1
+                batch_size, nChannels = self.input_shape
+            else:
+                raise ValueError(f"'data_format' is either 'channels_first' or 'channels_last'. Received {self.data_format}")
         else:
-            raise ValueError(f"'data_format' is either 'channels_first' or 'channels_last'. Received {self.data_format}")
+            if self.data_format.lower() == "channels_last":
+                batch_size, image_height, image_width, nChannels = self.input_shape
+            elif self.data_format.lower() == "channels_first":
+                batch_size, nChannels, image_height, image_width = self.input_shape
+            else:
+                raise ValueError(f"'data_format' is either 'channels_first' or 'channels_last'. Received {self.data_format}")
 
         return batch_size, image_height, image_width, nChannels
 
