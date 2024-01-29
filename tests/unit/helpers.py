@@ -372,13 +372,10 @@ class DenseParams:
 
     def _get_spatial_input_shape(self):
         if len(self.input_shape) <= 2:
-            self.image_height = 1
-            self.image_width = 1
-            self.nChannels = np.prod([x for x in self.input_shape if x is not None])
             spatial_input_shape = (1,1)
         else:
-            self.batch_size, self.image_height, self.image_width, self.nChannels = self._get_input_shape_params()
-            spatial_input_shape = (self.image_height, self.image_width)
+            batch_size, image_height, image_width, nChannels = self._get_input_shape_params()
+            spatial_input_shape = (image_height, image_width)
         return spatial_input_shape
 
     def _set_spatial_input_shape(self):
