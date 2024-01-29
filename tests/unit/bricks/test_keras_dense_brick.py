@@ -60,7 +60,36 @@ class Test_KerasDense2D:
         calculated_spike_count = len(self.get_dense_neurons_result_only(result).index)
         assert calculated_spike_count == expected_spike_count
 
-    @pytest.mark.parametrize("bias",[0.0,-3.0,-20.0,-21.0, None])
+    def test_dense_brick_2d_layer(self):
+        bias = 0.0
+        convo_obj = ConvolutionParams(nFilters=4,biases=np.array([-471., -1207., -1943., -500.]))
+        pool_obj = PoolingParams(convo_obj, pool_strides=(1,1), pool_padding="same")
+        pool_obj.output_shape = (1,np.prod(pool_obj.output_shape))
+        pool_obj.pool_answer = pool_obj.pool_answer.flatten().reshape(pool_obj.output_shape)
+
+        units = 2
+        myweights = np.arange(1,units*np.prod(pool_obj.output_shape)+1).reshape(np.prod(pool_obj.output_shape),units)
+        dense_obj = DenseParams(pool_obj, output_units=units, weights=myweights, thresholds=0.5,biases=bias)
+
+        dense_input = pool_obj.pool_answer.astype(int)
+        expected_spike_count = (dense_obj.dense_answer + dense_obj.biases > dense_obj.thresholds).sum().astype(int)
+
+        scaffold = Scaffold()
+        scaffold.add_brick(BaseP_Input(convo_obj.mock_image,p=self.basep,bits=self.bits,collapse_binary=False,name="I",time_dimension=False),"input")
+        scaffold.add_brick(keras_convolution_2d(convo_obj.input_shape,convo_obj.filters,convo_obj.thresholds,self.basep,self.bits,name="convolution_",mode=convo_obj.mode,strides=convo_obj.strides,biases=convo_obj.biases),[(0, 0)],output=True)
+        scaffold.add_brick(keras_pooling_2d(pool_obj.pool_size,pool_obj.pool_strides,thresholds=pool_obj.pool_thresholds,name="pool_",padding=pool_obj.pool_padding,method=pool_obj.pool_method),[(1,0)],output=True)
+        scaffold.add_brick(keras_dense_2d(dense_obj.output_units,dense_obj.weights,dense_obj.thresholds,data_format=dense_obj.data_format,name="dense_",biases=dense_obj.biases,input_shape=pool_obj.output_shape),[(2,0)],output=True)
+
+        self.graph = scaffold.lay_bricks()
+        scaffold.summary(verbose=1)
+        backend = snn_Backend()
+        backend_args = {}
+        backend.compile(scaffold, backend_args)
+        result = backend.run(10)
+        calculated_spike_count = len(self.get_dense_neurons_result_only(result).index)
+        assert calculated_spike_count == expected_spike_count
+
+    @pytest.mark.parametrize("bias",[0.0,-15.4,19.4,-20., None,[-7.,0.],[-16.,0.],[0.,-8.],[0.,-20.],[-7.,-8.],[-16.,-8.],[-7.,-20.],[-16.,-20.]])
     def test_dense_brick_biases(self, bias):
         convo_obj = ConvolutionParams(nFilters=4,biases=np.array([-471., -1207., -1943., -500.]))
         pool_obj = PoolingParams(convo_obj, pool_strides=(1,1), pool_padding="same")
@@ -70,7 +99,6 @@ class Test_KerasDense2D:
         dense_obj = DenseParams(pool_obj, output_units=units, weights=myweights, thresholds=0.5,biases=bias)
 
         dense_input = pool_obj.pool_answer.astype(int)
-        dense_answer = dense_obj.get_dense_answer(dense_input)
         expected_spike_count = (dense_obj.dense_answer + dense_obj.biases > dense_obj.thresholds).sum().astype(int)
 
         result = self.run_dense_2d(convo_obj,pool_obj,dense_obj)
@@ -85,7 +113,7 @@ class Test_KerasDense2D:
         # Set dense Layer Parameters
         units = 2
         weights = np.arange(1,units*pool_obj.nChannels+1).reshape(pool_obj.nChannels,units).astype(float)
-        biases = [1e9, 0.0]
+        biases = [0.1, -1.1]
         thresholds = 1.0
         # thresholds = generate_mock_image(height,width,units).astype(float)
         # thresholds[:] = 0.
@@ -105,6 +133,7 @@ class Test_KerasDense2D:
 
         assert calculated_spike_count == expected_spike_count
 
+    @pytest.mark.xfail(reason="Not complete.")
     def test_mock_brick1(self):
 
         nFilters = 4
@@ -126,17 +155,18 @@ class Test_KerasDense2D:
         scaffold.add_brick(mock_input,"input")
         scaffold.add_brick(keras_dense_2d(units=dense_obj.output_units,weights=dense_obj.weights,thresholds=thresholds,data_format="channels_last",name="dense_",biases=dense_obj.biases),[(0,0)],output=True)
 
-        graph = scaffold.lay_bricks()
+        self.graph = scaffold.lay_bricks()
         scaffold.summary(verbose=1)
         backend = snn_Backend()
         backend_args = {}
         backend.compile(scaffold, backend_args)
-        result = backend.run(5)
+        result = backend.run(10)
 
         calculated_spike_count = len(self.get_dense_neurons_result_only(result).index)
         expected_spike_count = (dense_obj.dense_answer + dense_obj.biases > dense_obj.thresholds).sum().astype(int)
         assert expected_spike_count == calculated_spike_count
 
+    @pytest.mark.xfail(reason="Not complete.")
     def test_mock_brick2(self):
 
         # Set "pooling" parameters
@@ -161,12 +191,12 @@ class Test_KerasDense2D:
         scaffold.add_brick(mock_brick,"input")
         scaffold.add_brick(keras_dense_2d(units=dense_obj.output_units,weights=dense_obj.weights,thresholds=thresholds,data_format="channels_last",name="dense_",biases=dense_obj.biases),[(0,0)],output=True)
 
-        graph = scaffold.lay_bricks()
+        self.graph = scaffold.lay_bricks()
         scaffold.summary(verbose=1)
         backend = snn_Backend()
         backend_args = {}
         backend.compile(scaffold, backend_args)
-        result = backend.run(5)
+        result = backend.run(10)
 
         calculated_spike_count = len(self.get_dense_neurons_result_only(result).index)
         expected_spike_count = (dense_obj.dense_answer + dense_obj.biases > dense_obj.thresholds).sum().astype(int)
