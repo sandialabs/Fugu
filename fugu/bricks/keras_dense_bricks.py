@@ -11,7 +11,7 @@ class keras_dense_2d_4dinput(Brick):
     Dense Layer
     Michael Krygier
     mkrygie@sandia.gov
-    
+
     """
 
     def __init__(self, units, weights=1.0, thresholds=0.5, name=None, prev_layer_prefix="pooling_", data_format="channels_last", input_shape=None, biases=None):
@@ -85,11 +85,12 @@ class keras_dense_2d_4dinput(Brick):
 
         # output neurons/nodes
         output_lists = [[]]
-        for row in np.arange(0, self.spatial_output_shape[0]):
-            for col in np.arange(0, self.spatial_output_shape[1]):
-                for k in np.arange(self.output_units):
-                    graph.add_node(f'{self.name}d{k}{row}{col}', index=(row,col,k), threshold=self.thresholds[0,row,col,k], decay=1.0, p=1.0, potential=0.0)
-                    output_lists[0].append(f'{self.name}d{k}{row}{col}')
+        for i in np.arange(np.prod(self.thresholds.shape)):
+            index = np.unravel_index(i,self.thresholds.shape)
+            outchan = index[-1]
+            index_str = ''.join(map(str,(outchan,*index[1:-1])))
+            graph.add_node(f'{self.name}d{index_str}', index=index, threshold=self.thresholds[index], decay=1.0, p=1.0, potential=0.0)
+            output_lists[0].append(f'{self.name}d{index_str}')
 
         # Biases for dense layer
         if self.biases is not None:
@@ -100,13 +101,14 @@ class keras_dense_2d_4dinput(Brick):
                 graph.add_edge(control_nodes[0]["complete"], f'{self.name}b{k}', weight=1.0, delay=1)
 
             # Construct edges connecting biases node(s) to output nodes
-            for k in np.arange(self.output_units):
-                for row in np.arange(0, self.spatial_output_shape[0]):
-                    for col in np.arange(0, self.spatial_output_shape[1]):
-                        graph.add_edge(f'{self.name}b{k}',f'{self.name}d{k}{row}{col}', weight=self.biases[k], delay=1)
-                        print(f"{self.name}b{k} ---> {self.name}d{k}{row}{col} : weight = {self.biases[k]}")
+            for i in np.arange(np.prod(self.thresholds.shape)):
+                index = np.unravel_index(i,self.thresholds.shape)
+                k = index[-1]
+                index_str = ''.join(map(str,(k,*index[1:-1])))
+                graph.add_edge(f'{self.name}b{k}',f'{self.name}d{index_str}', weight=self.biases[k], delay=1)
+                print(f"{self.name}b{k} ---> {self.name}d{index_str} : weight = {self.biases[k]}")
 
-        self.connect_input_and_output_neurons_4(input_lists,graph)
+        self.connect_input_and_output_neurons(input_lists,graph)
 
         self.is_built = True
         return (graph, self.metadata, [{"complete": complete_node, "begin": begin_node}], output_lists, output_codings,)
@@ -122,51 +124,6 @@ class keras_dense_2d_4dinput(Brick):
             self.spatial_input_shape = self.get_spatial_input_shape()
             self.spatial_output_shape = self.get_spatial_output_shape()
 
-    def connect_input_and_output_neurons_1(self,input_lists,graph):
-        # Collect Inputs
-        prev_layer = np.reshape(input_lists[0], self.input_shape)
-
-        # Construct edges connecting input and output nodes
-        for outrow in np.arange(self.spatial_output_shape[0]):  # loop over output neurons
-            for outcol in np.arange(self.spatial_output_shape[1]): # loop over output neurons
-                for outchan in np.arange(self.output_units):
-
-                    for inrow in np.arange(self.spatial_input_shape[0]):  # loop over input neurons
-                        for incol in np.arange(self.spatial_input_shape[1]):  # loop over input neurons
-                            for inchan in np.arange(self.nChannelsInput): # loop over input neuron channels
-                                graph.add_edge(prev_layer[0,inrow,incol,inchan], f'{self.name}d{outchan}{outrow}{outcol}', weight=self.weights[inchan,outchan], delay=1)
-                                # print(f" p{inchan}{inrow}{incol} --> d{outchan}{outrow}{outcol}   weight: {self.weights[inchan,outchan]}")
-
-    def connect_input_and_output_neurons_2(self,input_lists,graph):
-        # Collect Inputs
-        prev_layer = np.reshape(input_lists[0], self.input_shape)
-
-        for inrow in np.arange(self.spatial_input_shape[0]):  # loop over input neurons
-            for incol in np.arange(self.spatial_input_shape[1]):  # loop over input neurons
-                for inchan in np.arange(self.nChannelsInput): # loop over input neuron channels
-
-                    # Construct edges connecting input and output nodes
-                    for outrow in np.arange(self.spatial_output_shape[0]):  # loop over output neurons
-                        for outcol in np.arange(self.spatial_output_shape[1]): # loop over output neurons
-                            for outchan in np.arange(self.output_units):
-                                graph.add_edge(prev_layer[0,inrow,incol,inchan], f'{self.name}d{outchan}{outrow}{outcol}', weight=self.weights[inchan,outchan], delay=1)
-                                # print(f" p{inchan}{inrow}{incol} --> d{outchan}{outrow}{outcol}   weight: {self.weights[inchan,outchan]}")
-
-    def connect_input_and_output_neurons_3(self,input_lists,graph):
-        # Collect Inputs
-        prev_layer = np.reshape(input_lists[0], self.input_shape)
-
-        for inrow in np.arange(self.spatial_input_shape[0]):  # loop over input neurons
-            for incol in np.arange(self.spatial_input_shape[1]):  # loop over input neurons
-                for inchan in np.arange(self.nChannelsInput): # loop over input neuron channels
-
-                    # Construct edges connecting input and output nodes
-                    for outrow in np.arange(self.spatial_output_shape[0]):  # loop over output neurons
-                        for outcol in np.arange(self.spatial_output_shape[1]): # loop over output neurons
-                            for outchan in np.arange(self.output_units):
-                                graph.add_edge(prev_layer[0,inrow,incol,inchan], f'{self.name}d{outchan}{outrow}{outcol}', weight=self.weights[inchan,outchan], delay=1)
-                                print(f" p{inchan}{inrow}{incol} --> d{outchan}{outrow}{outcol}   weight: {self.weights[inchan,outchan]}")
-
     def connect_input_and_output_neurons_4(self,input_lists,graph):
         # Collect Inputs
         prev_layer = np.reshape(input_lists[0], self.input_shape)
@@ -179,6 +136,18 @@ class keras_dense_2d_4dinput(Brick):
                     for outchan in np.arange(self.output_units):
                         graph.add_edge(prev_layer[0,row,col,inchan], f'{self.name}d{outchan}{row}{col}', weight=self.weights[inchan,outchan], delay=2)
                         print(f" p{inchan}{row}{col} --> d{outchan}{row}{col}   weight: {self.weights[inchan,outchan]}")
+
+    def connect_input_and_output_neurons(self,input_lists,graph):
+        # Collect Inputs
+        prev_layer = np.reshape(input_lists[0], self.input_shape)
+        for i in np.arange(np.prod(self.input_shape)):
+            index = np.unravel_index(i,self.input_shape)
+            inchan = index[-1]
+            index_pstr = ''.join(map(str,(inchan,*index[1:-1])))
+            for outchan in np.arange(self.output_units):
+                index_dstr = ''.join(map(str,(outchan,*index[1:-1])))
+                graph.add_edge(prev_layer[index], f'{self.name}d{index_dstr}', weight=self.weights[inchan,outchan], delay=2)
+                print(f" p{index_pstr} --> d{index_dstr}   weight: {self.weights[inchan,outchan]}")
 
     def check_thresholds_shape(self):
         # Check for scalar value for thresholds or consistent thresholds shape
@@ -214,7 +183,7 @@ class keras_dense_2d_4dinput(Brick):
         self.batch_size, self.image_height, self.image_width, self.nChannelsInput = self.get_dense_input_shape_params()
         spatial_input_shape = (self.image_height, self.image_width)
         return spatial_input_shape
-    
+
     def get_dense_input_shape_params(self):
         if self.data_format.lower() == "channels_last":
             batch_size, image_height, image_width, nChannels = self.input_shape
@@ -223,13 +192,13 @@ class keras_dense_2d_4dinput(Brick):
         else:
             raise ValueError(f"'data_format' is either 'channels_first' or 'channels_last'. Received {self.data_format}")
 
-        return batch_size, image_height, image_width, nChannels  
-    
+        return batch_size, image_height, image_width, nChannels
+
     def get_spatial_output_shape(self):
         batch_size, image_height, image_width, self.nChannelsOutput = self.get_dense_output_shape_params()
         spatial_output_shape = (image_height, image_width)
         return spatial_output_shape
-    
+
     def get_dense_output_shape_params(self):
         if len(self.input_shape) <= 2:
             image_height = 1
@@ -248,4 +217,4 @@ class keras_dense_2d_4dinput(Brick):
             else:
                 raise ValueError(f"'data_format' is either 'channels_first' or 'channels_last'. Received {self.data_format}")
 
-        return batch_size, image_height, image_width, nChannels    
+        return batch_size, image_height, image_width, nChannels

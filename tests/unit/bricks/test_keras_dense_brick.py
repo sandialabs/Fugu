@@ -60,9 +60,9 @@ class Test_KerasDense2D:
         calculated_spike_count = len(self.get_dense_neurons_result_only(result).index)
         assert calculated_spike_count == expected_spike_count
 
-    def test_dense_brick_2d_layer(self):
-        bias = 0.0
-        convo_obj = ConvolutionParams(nFilters=4,biases=np.array([-471., -1207., -1943., -500.]))
+    @pytest.mark.parametrize("bias",[0.0,None,-579.,-599.4,-600.,[0.,0.],[-579.,0.],[0.,-600.],[-579.,-600.],[-578.4,600.],[-579.,-599.4]])
+    def test_dense_brick_2d_layer(self,bias):
+        convo_obj = ConvolutionParams(nFilters=4,biases=np.array([-471., -1207., -1943., 500.]))
         pool_obj = PoolingParams(convo_obj, pool_strides=(1,1), pool_padding="same")
         pool_obj.output_shape = (1,np.prod(pool_obj.output_shape))
         pool_obj.pool_answer = pool_obj.pool_answer.flatten().reshape(pool_obj.output_shape)
@@ -91,7 +91,7 @@ class Test_KerasDense2D:
 
     @pytest.mark.parametrize("bias",[0.0,-15.4,19.4,-20., None,[-7.,0.],[-16.,0.],[0.,-8.],[0.,-20.],[-7.,-8.],[-16.,-8.],[-7.,-20.],[-16.,-20.]])
     def test_dense_brick_biases(self, bias):
-        convo_obj = ConvolutionParams(nFilters=4,biases=np.array([-471., -1207., -1943., -500.]))
+        convo_obj = ConvolutionParams(nFilters=4,biases=np.array([-471., -1207., -1943., 500.]))
         pool_obj = PoolingParams(convo_obj, pool_strides=(1,1), pool_padding="same")
 
         units = 2
