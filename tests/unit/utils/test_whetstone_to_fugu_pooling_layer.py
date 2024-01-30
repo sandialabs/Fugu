@@ -46,21 +46,34 @@ class Test_Whetstone_2_Fugu_MaxPoolingLayer:
         keras_obj.pool_answer = (keras_obj.features_extractor(convo_obj.mock_image)[1].numpy() > 0.5).astype(int)
         expected_spike_count = keras_obj.pool_answer.sum()
 
-        result = run_whetstone_to_fugu_utility(convo_obj.mock_image, self.basep, self.bits, keras_obj.model)
-        calculated_spike_count = len(result[result['time'] > 1].index)
+        result, graph = run_whetstone_to_fugu_utility(convo_obj.mock_image, self.basep, self.bits, keras_obj.model)
+        calculated_spike_count = len(get_pooling_neurons_result_only(result,graph).index)
         assert expected_spike_count == calculated_spike_count
+
+def get_neuron_numbers(name_prefix, graph):
+    neuron_numbers = []
+    for key in graph.nodes.keys():
+        if key.startswith(name_prefix):
+            neuron_numbers.append(graph.nodes[key]['neuron_number'])
+
+    return np.array(neuron_numbers)
+
+def get_pooling_neurons_result_only(result, graph):
+    pool_neuron_numbers = get_neuron_numbers('pool_layer_',graph)
+    sub_result = result[result['neuron_number'].isin(pool_neuron_numbers)]
+    return sub_result
 
 def run_whetstone_to_fugu_utility(mock_image, basep, bits, keras_model):
     scaffold = Scaffold()
     scaffold.add_brick(BaseP_Input(mock_image,p=basep,bits=bits,collapse_binary=False,name="I",time_dimension=False),"input")
     scaffold = whetstone_2_fugu(keras_model,basep,bits,scaffold=scaffold)
-    scaffold.lay_bricks()
+    graph = scaffold.lay_bricks()
     scaffold.summary(verbose=1)
     backend = snn_Backend()
     backend_args = {}
     backend.compile(scaffold, backend_args)
-    result = backend.run(5)
-    return result
+    result = backend.run(10)
+    return result, graph
 
 @pytest.mark.whetstone
 class Test_Whetstone_2_Fugu_AveragePoolingLayer:
@@ -85,6 +98,6 @@ class Test_Whetstone_2_Fugu_AveragePoolingLayer:
         keras_obj.pool_answer = (keras_obj.features_extractor(convo_obj.mock_image)[1].numpy() > 0.5).astype(int)
         expected_spike_count = keras_obj.pool_answer.sum()
 
-        result = run_whetstone_to_fugu_utility(convo_obj.mock_image, self.basep, self.bits, keras_obj.model)
-        calculated_spike_count = len(result[result['time'] > 1].index)
+        result, graph = run_whetstone_to_fugu_utility(convo_obj.mock_image, self.basep, self.bits, keras_obj.model)
+        calculated_spike_count = len(get_pooling_neurons_result_only(result,graph).index)
         assert expected_spike_count == calculated_spike_count

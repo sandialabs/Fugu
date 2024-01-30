@@ -239,8 +239,9 @@ class Test_Whetstone_2_Fugu_ConvolutionLayer:
         self.mode = mode
         result = self.run_whetstone_to_fugu_utility(model)
 
-        new_fugu_thresholds = 0.5*np.ones(feature_extractor(mock_image)[0][0,:,:,0].numpy().shape)
-        assert self.expected_spikes(nSpikes) == self.calculated_spikes(new_fugu_thresholds, result)
+        expected_spike_count = (feature_extractor(mock_image)[0][0,:,:,0].numpy() > 0.5).sum()
+        calculated_spike_count = len(result.index)
+        assert expected_spike_count == calculated_spike_count
 
     def test_explicit_whetstone_2_fugu_conv2d_layer(self):
         '''
@@ -297,8 +298,9 @@ class Test_Whetstone_2_Fugu_ConvolutionLayer:
         self.mode = mode
         result = self.run_whetstone_to_fugu_utility(model)
 
-        new_fugu_thresholds = 0.5*np.ones(feature_extractor(mock_image)[0][0,:,:,0].numpy().shape)
-        assert self.expected_spikes(nSpikes) == self.calculated_spikes(new_fugu_thresholds, result)
+        expected_spike_count = (feature_extractor(mock_image)[0][0,:,:,0].numpy() > 0.5).sum()
+        calculated_spike_count = len(result.index)
+        assert expected_spike_count == calculated_spike_count
 
     def test_explicit_whetstone_2_fugu_conv2d_layer_multichannel_multifilter_mode_same_strides_11(self):
         '''
@@ -365,8 +367,9 @@ class Test_Whetstone_2_Fugu_ConvolutionLayer:
         self.mode = mode
         result = self.run_whetstone_to_fugu_utility(model)
 
-        new_fugu_thresholds = 0.5*np.ones(feature_extractor(mock_image)[0].numpy().shape)
-        assert self.expected_spikes(nSpikes) == self.calculated_spikes(new_fugu_thresholds, result)
+        expected_spike_count = (feature_extractor(mock_image)[0].numpy() > 0.5).sum()
+        calculated_spike_count = len(result.index)
+        assert expected_spike_count == calculated_spike_count
 
     def test_explicit_whetstone_2_fugu_conv2d_layer_multichannel_multifilter_mode_same_strides_12(self):
         '''
@@ -898,9 +901,9 @@ class Test_Whetstone_2_Fugu_ConvolutionLayer:
         self.mode = mode
         result = self.run_whetstone_to_fugu_utility(model)
 
-        new_fugu_thresholds =  0.5*np.ones(feature_extractor(mock_image)[1].numpy().shape)
-        nSpikes = (merged_calculated > 0.5).sum()
-        assert self.expected_spikes(nSpikes) == self.calculated_spikes(new_fugu_thresholds, result)
+        expected_spike_count = (feature_extractor(mock_image)[1].numpy() > 0.5).sum().astype(int)
+        calculated_spike_count = len(result.index)
+        assert expected_spike_count == calculated_spike_count
 
     @pytest.mark.parametrize("strides",[(1,1),(1,2),(2,1),(2,2)])
     @pytest.mark.parametrize("mode", ["same", "valid"])
@@ -956,7 +959,7 @@ class Test_Whetstone_2_Fugu_ConvolutionLayer:
         backend = snn_Backend()
         backend_args = {}
         backend.compile(scaffold, backend_args)
-        result = backend.run(5)
+        result = backend.run(10)
         return result
 
     # Auxillary/helper functions
