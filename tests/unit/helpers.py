@@ -341,12 +341,20 @@ class PoolingParams:
         return isSameOutputShape.all()
 
 class DenseParams:
-    def __init__(self, params_obj, output_units, weights=1.0, thresholds=0.5, data_format="channels_last", biases=None):
+    def __init__(self, params_obj, output_units, weights=1.0, thresholds=0.5, data_format="channels_last", biases=None, output_shape=None):
         self.data_format = data_format
         self.output_units = output_units
-        self.input_shape = params_obj.output_shape
-        self.output_shape = (*np.array(params_obj.output_shape)[:-1],self.output_units)
-        self.dense_input = params_obj.pool_answer.astype(int)
+        if output_shape is None:
+            self.input_shape = params_obj.output_shape
+            self.output_shape = (*params_obj.output_shape[:-1],self.output_units)
+        else:
+            if len(output_shape) <= 2:
+                self.input_shape = output_shape
+                self.output_shape = (*output_shape[:-1], output_units)
+            else:
+                self.input_shape = output_shape
+                self.output_shape = (*output_shape[:-1], output_units)
+        self.dense_input = params_obj.pool_answer.reshape(self.input_shape).astype(int)
 
         self._set_biases(biases)
         self._set_spatial_input_shape()

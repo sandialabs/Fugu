@@ -6,7 +6,7 @@ from fugu.bricks.keras_dense_bricks import keras_dense_2d_4dinput as dense_layer
 from fugu.bricks.keras_convolution_bricks import keras_convolution_2d_4dinput as convolution_2d
 from fugu.bricks.input_bricks import BaseP_Input
 from fugu.bricks.keras_pooling_bricks import keras_pooling_2d_4dinput as pooling_2d
-from fugu.bricks.dense_bricks import dense_layer_2d
+from fugu.bricks.keras_dense_bricks import keras_dense_2d_4dinput as dense_layer_2d
 from fugu.scaffold import Scaffold
 
 from tensorflow.keras.layers import Dense, Conv2D, Flatten, MaxPooling2D, BatchNormalization
@@ -82,14 +82,15 @@ def whetstone_2_fugu(keras_model, basep, bits, scaffold=None):
 
         if type(layer) is Dense:
             # need output shape, weights, thresholds 
-            output_shape = layer.output_shape
-            weights = layer.weights[0]
+            input_shape = tuple([batch_size if value == None else value for value in layer.input_shape])
+            output_shape = tuple([batch_size if value == None else value for value in layer.output_shape])
+            weights = layer.weights[0].numpy()
             try:
-                biases = layer.weights[1]
+                biases = layer.weights[1].numpy()
             except IndexError:
                 biases = 0.0
             units = layer.units
-            scaffold.add_brick(dense_layer_2d(output_shape,weights=weights,thresholds=0.5,name=f"dense_layer_{layerID}",biases=biases),[(layerID,0)],output=True)
+            scaffold.add_brick(dense_layer_2d(units=units,weights=weights,thresholds=0.5,name=f"dense_layer_{layerID}",input_shape=input_shape,biases=biases),[(layerID,0)],output=True)
             layerID += 1
     
     return scaffold
