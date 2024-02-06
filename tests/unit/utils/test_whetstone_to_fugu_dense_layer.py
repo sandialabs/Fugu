@@ -10,7 +10,7 @@ from fugu.bricks.input_bricks import BaseP_Input, Vector_Input
 from fugu.bricks.keras_pooling_bricks import keras_pooling_2d_4dinput as pooling_2d
 from fugu.scaffold import Scaffold
 from fugu.utils.keras_helpers import keras_convolve2d, keras_convolve2d_4dinput, generate_keras_kernel, generate_mock_image, keras_convolution2d_output_shape, keras_convolution2d_output_shape_4dinput
-from fugu.utils.whetstone import whetstone_2_fugu
+from fugu.utils.whetstone_conversion import whetstone_2_fugu
 
 import pandas as pd
 from tensorflow import constant as tf_constant

@@ -1,7 +1,9 @@
 # isort: skip_file
 # fmt: off
+import argparse
 import numpy as np
 
+from fugu import backends
 from fugu.bricks.keras_dense_bricks import keras_dense_2d_4dinput as dense_layer_2d
 from fugu.bricks.keras_convolution_bricks import keras_convolution_2d_4dinput as convolution_2d
 from fugu.bricks.input_bricks import BaseP_Input
@@ -11,8 +13,9 @@ from fugu.scaffold import Scaffold
 
 from tensorflow.keras.layers import Dense, Conv2D, Flatten, MaxPooling2D, BatchNormalization
 try:
-    from whetstone.layers import Spiking_BRelu
+    from whetstone.layers import Spiking_BRelu, Softmax_Decode
     from whetstone.utils.export_utils import copy_remove_batchnorm
+    from whetstone.utils.layer_utils import load_model
 except ImportError as e:
     import sys
     if "pytest" in sys.modules:
@@ -32,6 +35,7 @@ def whetstone_2_fugu(keras_model, basep, bits, scaffold=None):
     # model = copy_remove_batchnorm(keras_model)
     model = keras_model
     layerID = 0
+    batch_size = 1
     for idx, layer in enumerate(model.layers):
         if type(layer) is Conv2D:
             # TODO: Add capability to handle "data_format='channels_first'". Current implementation assumes data_format='channels_last'.
@@ -123,3 +127,21 @@ def merge_layers(convolution2d_layer, batch_normalization_layer):
 
 def get_merged_layers(current_layer, batch_normalization_layer):
     pass
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("filename", type=str, help="Whetstone keras model filename.")
+    parser.add_argument("neural_timesteps", type=int, help="Neural timesteps for the Fugu backend.")
+    parser.add_argument("--bits", default=4, type=int, help="Number of bits to use in Fugu.")
+    parser.add_argument("--basep", default=4, type=int, help="Base number to use in Fugu.")
+    parser.add_argument("--fugu_backend", default="snn", type=str, help="Backend to use in Fugu.")
+    args = parser.parse_args()
+
+    whetstone_model = load_model(args.filename)
+    scaffold = whetstone_2_fugu(whetstone_model, basep=args.basep, bits=args.bits)
+
+    if args.fugu_backend.lower() == "snn":
+        backend = backends.snn_Backend()
+    backend_args = {}
+    backend.compile(scaffold, backend_args)
+    result = backend.run(args.neural_timesteps)
