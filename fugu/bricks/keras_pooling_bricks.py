@@ -96,7 +96,7 @@ class keras_pooling_2d_4dinput(Brick):
         # Am = Convolution Output Length
         # Bm = pool_size
         # pad_length = 0 (padding is taken care in the convolution brick)
-        self.output_shape = self.get_pool_output_shape()
+        self.output_shape = self.get_output_shape()
         self.metadata['pooling_output_shape'] = self.output_shape
 
         # Restrict max pooling threshold value to 0.9. Otherwise, the neuron circuit will not behave like an OR operation.
@@ -216,7 +216,7 @@ class keras_pooling_2d_4dinput(Brick):
         return [np.arange(input_shape_bounds[0,0],input_shape_bounds[0,1],self.strides[0]),
                 np.arange(input_shape_bounds[1,0],input_shape_bounds[1,1],self.strides[1])]
 
-    def get_pool_output_shape(self):
+    def get_output_shape(self):
         self.spatial_output_shape = self.get_spatial_output_shape()
 
         if self.data_format.lower() == "channels_last":
@@ -227,7 +227,7 @@ class keras_pooling_2d_4dinput(Brick):
         return output_shape
 
     def get_spatial_input_shape(self):
-        self.batch_size, self.image_height, self.image_width, self.nChannels = self.get_pool_input_shape_params()
+        self.batch_size, self.image_height, self.image_width, self.nChannels = self.get_input_shape_params()
         spatial_input_shape = (self.image_height, self.image_width)
         return spatial_input_shape
 
@@ -254,7 +254,7 @@ class keras_pooling_2d_4dinput(Brick):
         spatial_output_shape = list(map(int,spatial_output_shape))
         return spatial_output_shape
 
-    def get_pool_input_shape_params(self):
+    def get_input_shape_params(self):
         if self.data_format.lower() == "channels_last":
             batch_size, image_height, image_width, nChannels = self.input_shape
         elif self.data_format.lower() == "channels_first":
