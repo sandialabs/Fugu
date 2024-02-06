@@ -241,13 +241,14 @@ class keras_convolution_2d_4dinput(Brick):
 
     """
 
-    def __init__(self, input_shape, filters, thresholds, basep, bits, name=None, mode='same', strides=(1,1), biases=None):
+    def __init__(self, input_shape, filters, thresholds, basep, bits, name=None, mode='same', strides=(1,1), biases=None, data_format="channels_last"):
         # TODO: Add capability to handle Keras "data_format='channels_first'"
+        # TODO: Rename 'mode' to 'padding' throughout brick.
         super().__init__()
         self.is_built = False
         self.name = name
         self.supported_codings = ['binary-L']
-        self.pshape = input_shape # (batch size, height, width, nChannels), can assume batch size is 1 or None.
+        self.input_shape = input_shape # (batch size, height, width, nChannels), can assume batch size is 1 or None.
         self.filters = np.array(filters) # (kernel height, kernel width, nChannels, nFilters)
         self.thresholds = thresholds    # must match self.filters.shape
         self.basep = basep
@@ -255,7 +256,7 @@ class keras_convolution_2d_4dinput(Brick):
         self.mode = mode
         self.biases = biases   # shape must be (nFilters,)
 
-        self.nChannels = self.pshape[-1]
+        self.nChannels = self.input_shape[-1]
         self.nFilters = self.filters.shape[-1]
 
         if isinstance(strides,(list,tuple)):
@@ -268,8 +269,11 @@ class keras_convolution_2d_4dinput(Brick):
         else:
             raise ValueError("Check strides input variable.")
         self.strides = strides
+        self.data_format = data_format
+        self.get_spatial_input_shape()
+        self.get_kernel_shape()
         self.get_output_shape()
-        self.metadata = {'D': 2, 'basep': basep, 'bits': bits, 'convolution_mode': mode, 'convolution_input_shape': self.pshape, 'convolution_strides': self.strides, 'convolution_output_shape': self.output_shape}
+        self.metadata = {'D': 2, 'basep': basep, 'bits': bits, 'convolution_mode': mode, 'convolution_input_shape': self.input_shape, 'convolution_strides': self.strides, 'convolution_output_shape': self.output_shape}
 
     def build(self, graph, metadata, control_nodes, input_lists, input_codings):
         """
@@ -351,13 +355,13 @@ class keras_convolution_2d_4dinput(Brick):
 
     def connect_input_and_output_neurons(self,input_lists,graph):
         # Get size/shape information from input arrays
-        batch_size, Am, An, nChannels = self.pshape
+        batch_size, Am, An, nChannels = self.input_shape
         Bm, Bn = self.filters.shape[:2]
 
         I = np.array(input_lists[0])
         num_input_neurons = len(input_lists[0])
 
-        output_neurons = {(row,col): self.get_output_neurons(row,col,Bm,Bn) for col in np.arange(An) for row in np.arange(Am)}
+        input_neurons_2_output_neurons = {(row,col): self.get_output_neurons(row,col,Bm,Bn) for col in np.arange(An) for row in np.arange(Am)}
 
         # Construct edges connecting input and output nodes
         cnt = -1
@@ -368,7 +372,7 @@ class keras_convolution_2d_4dinput(Brick):
             if Ck == 0:
                 continue
 
-            for i, j in output_neurons[(row,col)]:
+            for i, j in input_neurons_2_output_neurons[(row,col)]:
                 ix = i - row + (Bm - 1)
                 jx = j - col + (Bn - 1)
 
@@ -392,27 +396,83 @@ class keras_convolution_2d_4dinput(Brick):
         return neuron_indices
 
     def get_output_bounds(self):
-        input_shape = np.array(self.pshape)[1:3]
-        kernel_shape = np.array(self.filters.shape)[:2]
-        full_output_shape = input_shape + kernel_shape - 1
+        spatial_input_shape = np.array(self.spatial_input_shape)
+        kernel_shape = np.array(self.kernel_shape)
+        full_output_shape = spatial_input_shape + kernel_shape - 1
 
         if self.mode == "same":
-            lb = np.floor(0.5 * (full_output_shape - input_shape))
-            ub = np.floor(0.5 * (full_output_shape + input_shape) - 1)
+            lb = np.floor(0.5 * (full_output_shape - spatial_input_shape))
+            ub = np.floor(0.5 * (full_output_shape + spatial_input_shape) - 1)
             self.bnds = np.array([lb, ub], dtype=int)
 
         if self.mode == "valid":
-            lmins = np.minimum(input_shape, kernel_shape)
+            lmins = np.minimum(spatial_input_shape, kernel_shape)
             lb = lmins - 1
             ub = np.array(full_output_shape) - lmins
             self.bnds = np.array([lb, ub], dtype=int) - 1
 
     def get_output_shape(self):
+        self.spatial_output_shape = self.get_spatial_output_shape()
         strides_shape = np.array(self.strides)
-        input_shape = np.array(self.pshape)[1:3]
-        kernel_shape = np.array(self.filters.shape)[:2]
+        spatial_input_shape = np.array(self.spatial_input_shape)
+        kernel_shape = np.array(self.kernel_shape)
         nFilters = self.nFilters
 
-        p = 0.5 if self.mode == "same" else 0
-        output_shape = np.floor((input_shape + 2*p - kernel_shape)/strides_shape + 1).astype(int)
-        self.output_shape = (1,) + tuple(output_shape) + (nFilters,)
+        # p = 0.5 if self.mode == "same" else 0
+        padding_shape = np.array(self.get_padded_zeros_count()) if self.mode == "same" else np.array((0,0))
+        spatial_output_shape = np.floor((spatial_input_shape + padding_shape - kernel_shape)/strides_shape + 1).astype(int)
+        self.output_shape = (1,) + tuple(spatial_output_shape) + (nFilters,)
+
+    def get_padded_zeros_count(self):
+        '''
+            padding = strides*(output - 1) + kernel - input
+        '''
+        spatial_input_shape = np.array(self.spatial_input_shape)
+        kernel_shape = np.array(self.kernel_shape)
+        strides_shape = np.array(self.strides)
+        spatial_output_shape = np.array(self.spatial_output_shape)
+
+        padding_count = (strides_shape*(spatial_output_shape - 1) + kernel_shape - spatial_input_shape)
+        padding_count[padding_count < 0] = 0.
+        return tuple(padding_count.astype(int))
+
+    def get_kernel_shape(self):
+        self.kernel_shape = self.filters.shape[:2]
+
+    def get_spatial_input_shape(self):
+        self.batch_size, self.image_height, self.image_width, self.nChannels = self.get_input_shape_params()
+        spatial_input_shape = (self.image_height, self.image_width)
+        return spatial_input_shape
+
+    def get_input_shape_params(self):
+        if self.data_format.lower() == "channels_last":
+            batch_size, image_height, image_width, nChannels = self.input_shape
+        elif self.data_format.lower() == "channels_first":
+            batch_size, nChannels, image_height, image_width = self.input_shape
+        else:
+            raise ValueError(f"'data_format' is either 'channels_first' or 'channels_last'. Received {self.data_format}")
+
+        return batch_size, image_height, image_width, nChannels
+
+    def same_padding_spatial_output_shape(self):
+        if not hasattr(self,"spatial_input_shape"):
+            self.spatial_input_shape = self.get_spatial_input_shape()
+
+        return np.floor((np.array(self.spatial_input_shape) - 1) / np.array(self.strides)) + 1
+
+    def valid_padding_spatial_output_shape(self):
+        if not hasattr(self,"spatial_input_shape"):
+            self.spatial_input_shape = self.get_spatial_input_shape()
+
+        return np.floor((np.array(self.spatial_input_shape) - np.array(self.kernel_shape)) / np.array(self.strides)) + 1
+
+    def get_spatial_output_shape(self):
+        if self.mode.lower() == "same":
+            spatial_output_shape = self.same_padding_spatial_output_shape()
+        elif self.mode.lower() == "valid":
+            spatial_output_shape = self.valid_padding_spatial_output_shape()
+        else:
+            raise ValueError(f"'padding' is one of 'same' or 'valid'. Received {self.mode}.")
+
+        spatial_output_shape = list(map(int,spatial_output_shape))
+        return spatial_output_shape
