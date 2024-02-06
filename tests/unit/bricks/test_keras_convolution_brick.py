@@ -978,6 +978,72 @@ class Test_KerasConvolution2D_4dinput:
 
         assert expected_spike_count == calculated_spike_count
 
+    @pytest.mark.xfail(reason="In progress.")
+    def test_28x28_image_same_mode_with_strides_and_biases(self):
+        '''
+            Filter 1 Out
+          [[ 772.,  808.,  844.,  880.,  490.],
+           [ 952.,  988., 1024., 1060.,  590.],
+           [1132., 1168., 1204., 1240.,  690.],
+           [1312., 1348., 1384., 1420.,  790.],
+           [ 847.,  869.,  891.,  913.,  500.]]
+
+            Filter 2 Out
+          [[1828., 1928., 2028., 2128., 1130.],
+           [2328., 2428., 2528., 2628., 1390.],
+           [2828., 2928., 3028., 3128., 1650.],
+           [3328., 3428., 3528., 3628., 1910.],
+           [1935., 1989., 2043., 2097., 1100.]]
+
+            Filter 3 Out
+          [[2884., 3048., 3212., 3376., 1770.],
+           [3704., 3868., 4032., 4196., 2190.],
+           [4524., 4688., 4852., 5016., 2610.],
+           [5344., 5508., 5672., 5836., 3030.],
+           [3023., 3109., 3195., 3281., 1700.]]
+        '''
+        from ..helpers import ArraySequence, IntegerSequence
+        from tensorflow import constant as tf_constant
+        from tensorflow.keras import Model, initializers
+        from tensorflow.keras.models import Sequential
+        from tensorflow.keras.layers import Conv2D
+
+        image_height, image_width = 3, 3
+        kernel_height, kernel_width = 7, 7
+        nChannels = 1
+        nFilters = 1
+
+        self.basep = 3
+        self.bits = 8
+        self.pvector = generate_mock_image(image_height,image_width,nChannels)
+        self.filters = generate_keras_kernel(kernel_height,kernel_width,nFilters,nChannels)
+        self.pshape = np.array(self.pvector).shape
+        self.filters_shape = np.array(self.filters).shape
+        self.mode = "same"
+        self.strides = (1,1)
+        self.biases = np.zeros((nFilters,))
+        self.nChannels = nChannels
+        self.nFilters = nFilters
+
+        keras_convolution_answer = keras_convolve2d_4dinput(self.pvector,self.filters,strides=self.strides,mode=self.mode,filters=self.nFilters)
+        # thresholds = 0.5*np.ones(keras_convolution_answer.shape).reshape(1,*keras_convolution_answer.shape)
+        thresholds = np.reshape(keras_convolution_answer,(1,*keras_convolution_answer.shape)).copy() - 1.
+
+        # self.biases = -2909.0 * np.ones((nFilters,))
+        result = self.run_convolution_2d(thresholds, verbose_scaffold=1)
+
+        model = Sequential()
+        model.add(Conv2D(nFilters, (kernel_height, kernel_width), strides=self.strides, padding=self.mode, activation=None, use_bias=True, 
+                         input_shape=self.pvector.shape[1:], name="conv2d", kernel_initializer=ArraySequence(np.flip(self.filters,(0,1))), bias_initializer=ArraySequence(self.biases)))
+        feature_extractor = Model(inputs=model.inputs, outputs=[layer.output for layer in model.layers])
+        feature_extractor_answer = feature_extractor(self.pvector)[0].numpy()
+        keras_spike_count = (feature_extractor_answer > thresholds).astype(int).sum()
+
+        expected_spike_count = (keras_convolution_answer + self.biases > thresholds).sum().astype(int)
+        calculated_spike_count = len(self.get_convolution_neurons_result_only(result).index)
+
+        assert expected_spike_count == calculated_spike_count
+
     @pytest.mark.xfail(reason="Not implemented.")
     def test_strides_parameter_handling(self):
         assert False
@@ -1006,7 +1072,24 @@ class Test_KerasConvolution2D_4dinput:
     def test_input_output_neurons_connections(self):
         assert False
 
+    @pytest.mark.xfail(reason="Not implemented.")
+    def test_padding_size(self):
+        assert False
+
     # Auxillary/Helper Function below
+    def get_neuron_numbers(self, name_prefix):
+        neuron_numbers = []
+        for key in self.graph.nodes.keys():
+            if key.startswith(name_prefix):
+                neuron_numbers.append(self.graph.nodes[key]['neuron_number'])
+
+        return np.array(neuron_numbers)
+
+    def get_convolution_neurons_result_only(self, result):
+        convolution_neuron_numbers = self.get_neuron_numbers('convolution_g')
+        sub_result = result[result['neuron_number'].isin(convolution_neuron_numbers)]
+        return sub_result
+
     def get_num_output_neurons(self, thresholds):
         Am, An = self.pshape[1:3]
         Bm, Bn = self.filters_shape[:2]
@@ -1066,7 +1149,7 @@ class Test_KerasConvolution2D_4dinput:
 
         return expected_spikes
 
-    def run_convolution_2d(self, thresholds):
+    def run_convolution_2d(self, thresholds, verbose_scaffold=1):
         scaffold = Scaffold()
         scaffold.add_brick(
             BaseP_Input(
@@ -1094,8 +1177,8 @@ class Test_KerasConvolution2D_4dinput:
             [(0, 0)],
             output=True,
         )
-        scaffold.lay_bricks()
-        scaffold.summary(verbose=1)
+        self.graph = scaffold.lay_bricks()
+        scaffold.summary(verbose=verbose_scaffold)
         backend = snn_Backend()
         backend_args = {}
         backend.compile(scaffold, backend_args)
