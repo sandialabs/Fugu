@@ -88,7 +88,7 @@ class keras_dense_2d_4dinput(Brick):
         for i in np.arange(np.prod(self.thresholds.shape)):
             index = np.unravel_index(i,self.thresholds.shape)
             outchan = index[-1]
-            index_str = ''.join(map(str,(outchan,*index[1:-1])))
+            index_str = '_'.join(map(str,(outchan,*index[1:-1])))
             graph.add_node(f'{self.name}d{index_str}', index=index, threshold=self.thresholds[index], decay=1.0, p=1.0, potential=0.0)
             output_lists[0].append(f'{self.name}d{index_str}')
 
@@ -104,7 +104,7 @@ class keras_dense_2d_4dinput(Brick):
             for i in np.arange(np.prod(self.thresholds.shape)):
                 index = np.unravel_index(i,self.thresholds.shape)
                 k = index[-1]
-                index_str = ''.join(map(str,(k,*index[1:-1])))
+                index_str = '_'.join(map(str,(k,*index[1:-1])))
                 graph.add_edge(f'{self.name}b{k}',f'{self.name}d{index_str}', weight=self.biases[k], delay=1)
                 print(f"{self.name}b{k} ---> {self.name}d{index_str} : weight = {self.biases[k]}")
 
@@ -124,30 +124,17 @@ class keras_dense_2d_4dinput(Brick):
             self.spatial_input_shape = self.get_spatial_input_shape()
             self.spatial_output_shape = self.get_spatial_output_shape()
 
-    def connect_input_and_output_neurons_4(self,input_lists,graph):
-        # Collect Inputs
-        prev_layer = np.reshape(input_lists[0], self.input_shape)
-
-        for row in np.arange(self.spatial_input_shape[0]):  # loop over input neurons
-            for col in np.arange(self.spatial_input_shape[1]):  # loop over input neurons
-                for inchan in np.arange(self.nChannelsInput): # loop over input neuron channels
-
-                    # Construct edges connecting input and output nodes
-                    for outchan in np.arange(self.output_units):
-                        graph.add_edge(prev_layer[0,row,col,inchan], f'{self.name}d{outchan}{row}{col}', weight=self.weights[inchan,outchan], delay=2)
-                        print(f" p{inchan}{row}{col} --> d{outchan}{row}{col}   weight: {self.weights[inchan,outchan]}")
-
     def connect_input_and_output_neurons(self,input_lists,graph):
         # Collect Inputs
         prev_layer = np.reshape(input_lists[0], self.input_shape)
         for i in np.arange(np.prod(self.input_shape)):
             index = np.unravel_index(i,self.input_shape)
             inchan = index[-1]
-            index_pstr = ''.join(map(str,(inchan,*index[1:-1])))
+            index_pstr = '_'.join(map(str,(inchan,*index[1:-1])))
             for outchan in np.arange(self.output_units):
-                index_dstr = ''.join(map(str,(outchan,*index[1:-1])))
+                index_dstr = '_'.join(map(str,(outchan,*index[1:-1])))
                 graph.add_edge(prev_layer[index], f'{self.name}d{index_dstr}', weight=self.weights[inchan,outchan], delay=2)
-                print(f" p{index_pstr} --> d{index_dstr}   weight: {self.weights[inchan,outchan]}")
+                logging.debug(f" p{index_pstr} --> d{index_dstr}   weight: {self.weights[inchan,outchan]}")
 
     def check_thresholds_shape(self):
         # Check for scalar value for thresholds or consistent thresholds shape
