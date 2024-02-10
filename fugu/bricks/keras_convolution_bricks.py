@@ -334,8 +334,8 @@ class keras_convolution_2d_4dinput(Brick):
         for ix, i in enumerate(np.arange(self.bnds[0,0],self.bnds[1,0] + 1,self.strides[0])):
             for jx, j in enumerate(np.arange(self.bnds[0,1],self.bnds[1,1] + 1,self.strides[1])):
                 for kx in np.arange(self.nFilters):
-                    graph.add_node(f'{self.name}g{kx}{i}{j}', index=(ix,jx,kx), threshold=self.thresholds[0,ix,jx,kx], decay=1.0, p=1.0, potential=0.0)
-                    output_lists[0].append(f'{self.name}g{kx}{i}{j}')
+                    graph.add_node(f'{self.name}g{kx}_{ix}_{jx}', index=(ix,jx,kx), threshold=self.thresholds[0,ix,jx,kx], decay=1.0, p=1.0, potential=0.0)
+                    output_lists[0].append(f'{self.name}g{kx}_{ix}_{jx}')
 
         return output_lists
 
@@ -349,51 +349,111 @@ class keras_convolution_2d_4dinput(Brick):
 
             # Construct edges connecting biases node(s) to output nodes
             for k in np.arange(self.nFilters):
-                for j in np.arange(self.bnds[0,0],self.bnds[1,0] + 1,self.strides[0]):
-                    for i in np.arange(self.bnds[0,1],self.bnds[1,1] + 1,self.strides[1]):
-                        graph.add_edge(f'{self.name}b{k}',f'{self.name}g{k}{j}{i}', weight=self.biases[k], delay=1)
+                for jx, j in enumerate(np.arange(self.bnds[0,0],self.bnds[1,0] + 1,self.strides[0])):
+                    for ix, i in enumerate(np.arange(self.bnds[0,1],self.bnds[1,1] + 1,self.strides[1])):
+                        graph.add_edge(f'{self.name}b{k}',f'{self.name}g{k}_{jx}_{ix}', weight=self.biases[k], delay=1)
 
     def connect_input_and_output_neurons(self,input_lists,graph):
         # Get size/shape information from input arrays
         batch_size, Am, An, nChannels = self.input_shape
-        Bm, Bn = self.filters.shape[:2]
+        Bm, Bn = self.kernel_shape
 
-        I = np.array(input_lists[0])
         num_input_neurons = len(input_lists[0])
 
-        input_neurons_2_output_neurons = {(row,col): self.get_output_neurons(row,col,Bm,Bn) for col in np.arange(An) for row in np.arange(Am)}
+        input_neurons_2_output_neurons = {(row,col): self.get_output_neurons(row,col) for col in np.arange(An) for row in np.arange(Am)}
+        # Collect Inputs
+        I = np.array(input_lists[0])
 
+        padded_input_shape_bounds = self.get_padded_input_shape_bounds()
+        padded_row_stride_positions, padded_col_stride_positions = self.get_stride_positions_from_bounds(padded_input_shape_bounds)
+        kernel_corner_position_on_padded_input_shape_bounds = [(a,b) for a in padded_row_stride_positions[:self.spatial_output_shape[0]] for b in padded_col_stride_positions[:self.spatial_output_shape[1]]]
         # Construct edges connecting input and output nodes
         cnt = -1
         for k in np.arange(num_input_neurons):  # loop over input neurons
-
-            # loop over output neurons
-            row, col, channel, pwr, Ck = np.unravel_index(k, (Am, An, self.nChannels, self.bits,  self.basep))
+            # input_row, input_col, channel, pwr, Ck = np.unravel_index(k, (Am, An, self.nChannels, self.bits,  self.basep))
+            input_row, input_col, channel, pwr, Ck = graph.nodes[I[k]]['index'][-5:]
             if Ck == 0:
                 continue
 
-            for i, j in input_neurons_2_output_neurons[(row,col)]:
-                ix = i - row + (Bm - 1)
-                jx = j - col + (Bn - 1)
+            # loop over output neurons
+            for output_row, output_col in input_neurons_2_output_neurons[(input_row,input_col)]:
+                ix = (Bm-1) - input_row + (padded_row_stride_positions[0] + output_row * self.strides[0])
+                jx = (Bn-1) - input_col + (padded_col_stride_positions[0] + output_col * self.strides[1])
 
                 for filter in np.arange(self.nFilters):
                     cnt += 1
-                    graph.add_edge(I[k], f'{self.name}g{filter}{i}{j}', weight=Ck * self.basep**pwr * self.filters[ix,jx,channel,filter], delay=2)
-                    logging.debug(f'{cnt:3d}  A[m,n]: ({row:2d},{col:2d})   power: {pwr}    coeff_i: {Ck}    input: {k:3d}      output: {filter}{i}{j}   B[m,n]: ({ix:2d},{jx:2d})   filter: {self.filters[ix,jx,channel,filter]}     I(row,col,channel,bit-pwr,basep-coeff): {np.unravel_index(k,(Am,An,self.nChannels,self.bits,self.basep))}     I[index]: {graph.nodes[I[k]]["index"]}')
+                    graph.add_edge(I[k], f'{self.name}g{filter}_{output_row}_{output_col}', weight=Ck * self.basep**pwr * self.filters[ix,jx,channel,filter], delay=2)
+                    logging.debug(f'{cnt:3d}  A[m,n]: ({input_row:2d},{input_col:2d})   power: {pwr}    coeff_i: {Ck}    input: {k:3d}      output: {filter}{output_row}{output_col}   B[m,n]: ({ix:2d},{jx:2d})   filter: {self.filters[ix,jx,channel,filter]}     I(row,col,channel,bit-pwr,basep-coeff): {np.unravel_index(k,(Am,An,self.nChannels,self.bits,self.basep))}     I[index]: {graph.nodes[I[k]]["index"]}')
 
-    def get_output_neurons(self,row,col,Bm,Bn):
-        neuron_indices = []
+    def adjust_position_to_input_length(self, pos, input_length, kernel_length):
+        if pos < 0:
+            ipos = 0
+            fpos = pos + kernel_length
+        elif pos + kernel_length > input_length:
+            ipos = input_length - kernel_length + 1
+            fpos = input_length
+        else:
+            ipos = pos
+            fpos = pos + kernel_length
+
+        return ipos, fpos
+
+    def get_padded_input_shape_bounds(self):
+        '''
+            padding_shape = (prow,pcol)
+
+            If the kernel height is odd then we will pad prow/2 rows on top and bottom. However, if the kernel height 
+            is even then we pad floor(prow/2) rows on the top and ceil(prow/2) rows on the bottom. The width is padded
+            in a similar fashion.
+        '''
+        padding_shape = self.get_padded_zeros_count()
+        assert self.check_padded_zeros_count(padding_shape)
+
+        # determine padding adjustments for top/bottom/left/right regions.
+        top_bottom_padding = self.get_padding_amount(padding_shape[0])
+        left_right_padding = self.get_padding_amount(padding_shape[1])
+
+        # add adjustments to input_shape and return result
+        top_bottom_bounds = [0 - top_bottom_padding[0], top_bottom_padding[1] + self.spatial_input_shape[1]]
+        left_right_bounds = [0 - left_right_padding[0], left_right_padding[1] + self.spatial_input_shape[1]]
+        return np.array([top_bottom_bounds, left_right_bounds]).astype(int)
+
+    def get_padding_amount(self, dim_length):
+        adjustments_array = np.array([np.floor(0.5*dim_length), np.ceil(0.5*dim_length)])
+        return adjustments_array
+
+    def check_padded_zeros_count(self, padding_count):
+        spatial_input_shape = np.array(self.spatial_input_shape)
+        kernel_shape = np.array(self.kernel_shape)
+        strides_shape = np.array(self.strides)
+        spatial_output_shape = np.array(self.spatial_output_shape)
+        padding_shape = np.array(padding_count)
+        calculated_output_shape = np.floor( (spatial_input_shape - kernel_shape + padding_shape + strides_shape) / strides_shape)
+        expected_output_shape = spatial_output_shape
+        isSameOutputShape = expected_output_shape == calculated_output_shape
+        return isSameOutputShape.all()
+
+    def get_stride_positions_from_bounds(self, input_shape_bounds):
+        return [np.arange(input_shape_bounds[0,0],input_shape_bounds[0,1],self.strides[0]),
+                np.arange(input_shape_bounds[1,0],input_shape_bounds[1,1],self.strides[1])]
+
+    def get_output_neurons(self,row,col):
+        output_neuron_indices = []
+        Bm, Bn = self.kernel_shape
         Sm, Sn = self.strides
 
-        for i in np.arange(row - Bm + 1, row + 1):
-            if i < 0 or np.mod(i, Sm) != 0 or i > self.bnds[1,0]:
-                continue
-            for j in np.arange(col - Bn + 1, col + 1):
-                if j < 0 or np.mod(j, Sn) != 0 or j > self.bnds[1,1]:
-                    continue
-                neuron_indices.append((i,j))
+        padded_input_shape_bounds = self.get_padded_input_shape_bounds()
+        padded_row_stride_positions, padded_col_stride_positions = self.get_stride_positions_from_bounds(padded_input_shape_bounds)
 
-        return neuron_indices
+        for outrow, krow in enumerate(padded_row_stride_positions[:self.spatial_output_shape[0]]):
+            if row < krow or row >= krow + Bm:
+                continue
+            for outcol, kcol in enumerate(padded_col_stride_positions[:self.spatial_output_shape[1]]):
+                if col < kcol or col >= kcol + Bn:
+                    continue
+                output_neuron_indices.append((outrow,outcol))
+
+        return output_neuron_indices
 
     def get_output_bounds(self):
         spatial_input_shape = np.array(self.spatial_input_shape)

@@ -24,6 +24,8 @@ class ConvolutionParams:
 
         if biases is None:
             self.biases = np.zeros((self.nFilters,))
+        elif isinstance(biases,(int,float)):
+            self.biases = biases * np.ones((self.nFilters,))
         elif len(biases) != self.nFilters:
             raise ValueError(f"Number of biases does not match the number of filters.")
         else:
@@ -32,6 +34,7 @@ class ConvolutionParams:
         self.filters = generate_keras_kernel(self.kernel_height,self.kernel_width,self.nFilters,self.nChannels)
         self.spatial_input_shape = (image_height,image_width)
         self.mock_image = generate_mock_image(self.image_height,self.image_width,self.nChannels)
+        self._set_kernel_shape()
         self._set_input_shape()
         self._set_output_shape()
         self._set_convolution_answer()
@@ -55,29 +58,95 @@ class ConvolutionParams:
         else:
             raise ValueError(f"'data_format' is either 'channels_first' or 'channels_last'. Received {self.data_format}")
 
+    def _set_kernel_shape(self):
+        self.kernel_shape = self.filters.shape[:2]
+
     def _set_output_shape(self):
+        self.spatial_output_shape = self.get_spatial_output_shape()
         strides_shape = np.array(self.strides)
-        input_shape = np.array(self.spatial_input_shape)
-        kernel_shape = np.array(self.filters.shape)[:2]
+        spatial_input_shape = np.array(self.spatial_input_shape)
+        kernel_shape = np.array(self.kernel_shape)
         nFilters = self.nFilters
 
-        p = 0.5 if self.mode == "same" else 0
-        output_shape = np.floor((input_shape + 2*p - kernel_shape)/strides_shape + 1).astype(int)
+        padding_shape = np.array(self.get_padded_zeros_count()) if self.mode == "same" else np.array((0,0))
+        spatial_output_shape = np.floor((spatial_input_shape + padding_shape - kernel_shape)/strides_shape + 1).astype(int)
+        self.output_shape = (1,) + tuple(spatial_output_shape) + (nFilters,)
 
-        if self.data_format == "channels_last":
-            self.output_shape = (self.batch_size,) + tuple(output_shape) + (nFilters,)
-        elif self.data_format == "channels_first":
-            self.output_shape = (self.batch_size,) + (nFilters,) + tuple(output_shape)
+    def get_padded_zeros_count(self):
+        '''
+            padding = strides*(output - 1) + kernel - input
+        '''
+        spatial_input_shape = np.array(self.spatial_input_shape)
+        kernel_shape = np.array(self.kernel_shape)
+        strides_shape = np.array(self.strides)
+        spatial_output_shape = np.array(self.spatial_output_shape)
+
+        padding_count = (strides_shape*(spatial_output_shape - 1) + kernel_shape - spatial_input_shape)
+        padding_count[padding_count < 0] = 0.
+        return tuple(padding_count.astype(int))
+
+    def get_input_shape_params(self):
+        if self.data_format.lower() == "channels_last":
+            batch_size, image_height, image_width, nChannels = self.input_shape
+        elif self.data_format.lower() == "channels_first":
+            batch_size, nChannels, image_height, image_width = self.input_shape
         else:
             raise ValueError(f"'data_format' is either 'channels_first' or 'channels_last'. Received {self.data_format}")
-        
+
+        return batch_size, image_height, image_width, nChannels
+
+    def same_padding_spatial_output_shape(self):
+        if not hasattr(self,"spatial_input_shape"):
+            self.spatial_input_shape = self.get_spatial_input_shape()
+
+        return np.floor((np.array(self.spatial_input_shape) - 1) / np.array(self.strides)) + 1
+
+    def valid_padding_spatial_output_shape(self):
+        if not hasattr(self,"spatial_input_shape"):
+            self.spatial_input_shape = self.get_spatial_input_shape()
+
+        return np.floor((np.array(self.spatial_input_shape) - np.array(self.kernel_shape)) / np.array(self.strides)) + 1
+
+    def get_spatial_output_shape(self):
+        if self.mode.lower() == "same":
+            spatial_output_shape = self.same_padding_spatial_output_shape()
+        elif self.mode.lower() == "valid":
+            spatial_output_shape = self.valid_padding_spatial_output_shape()
+        else:
+            raise ValueError(f"'padding' is one of 'same' or 'valid'. Received {self.mode}.")
+
+        spatial_output_shape = list(map(int,spatial_output_shape))
+        return spatial_output_shape
+
+    def get_spatial_input_shape(self):
+        self.batch_size, self.image_height, self.image_width, self.nChannels = self.get_input_shape_params()
+        spatial_input_shape = (self.image_height, self.image_width)
+        return spatial_input_shape
+
+    def get_input_shape_params(self):
+        if self.data_format.lower() == "channels_last":
+            batch_size, image_height, image_width, nChannels = self.input_shape
+        elif self.data_format.lower() == "channels_first":
+            batch_size, nChannels, image_height, image_width = self.input_shape
+        else:
+            raise ValueError(f"'data_format' is either 'channels_first' or 'channels_last'. Received {self.data_format}")
+
+        return batch_size, image_height, image_width, nChannels
+
     def _get_spatial_input_shape(self):
         batch_size, image_height, image_width, nChannels = self._get_input_shape_params()
         spatial_input_shape = (image_height, image_width)
         return spatial_input_shape
     
     def _set_convolution_answer(self):
-        self.answer = keras_convolve2d_4dinput(self.mock_image, self.filters, self.strides, self.mode, self.data_format, filters=self.nFilters).reshape(self.output_shape)
+        model = Sequential()
+        model.add(Conv2D(self.nFilters, (self.kernel_height, self.kernel_width), strides=self.strides, padding=self.mode, activation=None, use_bias=True, 
+                            input_shape=self.input_shape[1:], name="conv2d", kernel_initializer=ArraySequence(np.flip(self.filters,(0,1))), bias_initializer=ArraySequence(self.biases)))
+        feature_extractor = Model(inputs=model.inputs, outputs=[layer.output for layer in model.layers])
+        feature_extractor_answer = feature_extractor(self.mock_image).numpy() - self.biases
+
+        # self.answer = keras_convolve2d_4dinput(self.mock_image, self.filters, self.strides, self.mode, self.data_format, filters=self.nFilters).reshape(self.output_shape)
+        self.answer = feature_extractor_answer
 
     def _set_convolution_answer_boolean(self):
         if not hasattr(self,"answer"):
@@ -94,6 +163,10 @@ class ConvolutionParams:
     def get_random_biases_within_answer_range(self, nSamples=1):
         mins = np.min(self.answer, axis=(0,1,2))
         maxs = np.max(self.answer, axis=(0,1,2))
+
+        if np.array_equal(mins,maxs):
+            return -mins
+
         if nSamples == 1:
             size = (self.nFilters,)
         else:
@@ -553,6 +626,25 @@ class KerasParams:
                             input_shape=input_shape))
 
         return model
+
+def tensorflow_keras_conv2d_answer(convo_obj):
+    class Empty:
+        pass
+
+    model = Sequential()
+    model.add(Conv2D(convo_obj.nFilters, (convo_obj.kernel_height, convo_obj.kernel_width), strides=convo_obj.strides, padding=convo_obj.mode, activation=None, use_bias=True, 
+                        input_shape=convo_obj.input_shape[1:], name="conv2d", kernel_initializer=ArraySequence(np.flip(convo_obj.filters,(0,1))), bias_initializer=ArraySequence(convo_obj.biases)))
+    feature_extractor = Model(inputs=model.inputs, outputs=[layer.output for layer in model.layers])
+    feature_extractor_answer = feature_extractor(convo_obj.mock_image)[0].numpy()
+    keras_spike_count = (feature_extractor_answer > convo_obj.thresholds).astype(int).sum()
+
+    keras = Empty()
+    keras.model = model
+    keras.extractor = feature_extractor
+    keras.answer = feature_extractor_answer
+    keras.spike_count = keras_spike_count
+
+    return keras
 
 class IntegerSequence(initializers.Initializer):
     '''

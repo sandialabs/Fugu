@@ -9,7 +9,7 @@ from fugu.bricks.keras_convolution_bricks import keras_convolution_2d, keras_con
 from fugu.bricks.input_bricks import BaseP_Input
 from fugu.scaffold import Scaffold
 from fugu.utils.keras_helpers import keras_convolve2d, keras_convolve2d_4dinput, generate_keras_kernel, generate_mock_image, keras_convolution2d_output_shape_4dinput
-from ..helpers import ConvolutionParams
+from ..helpers import ConvolutionParams, tensorflow_keras_conv2d_answer
 
 from scipy.signal import convolve2d
 
@@ -882,6 +882,12 @@ class Test_KerasConvolution2D_4dinput:
         '''
             Helper function to generate all the possible parameters for a 5x5 image with 2 channels and a 3 filters with a 2x2 kernel at different strides and modes{"same","valid"}.
         '''
+        from ..helpers import ArraySequence, IntegerSequence
+        from tensorflow import constant as tf_constant
+        from tensorflow.keras import Model, initializers
+        from tensorflow.keras.models import Sequential
+        from tensorflow.keras.layers import Conv2D
+
         runSubsetOn = True # Run only a subset of the full exhaustive parameter space; otherwise runs every parameter sequence
         subset_size = 100  # Note: Full parameter space size is 510
         class Empty:
@@ -902,21 +908,27 @@ class Test_KerasConvolution2D_4dinput:
         aself.biases = np.zeros((nFilters,))
         aself.nChannels = nChannels
         aself.nFilters = nFilters
+        thresholds = 0.5
 
         arguments = []
         for mode in ["same", "valid"]:
             aself.mode = mode
             for strides in [(1,1),(1,2),(2,1),(2,2),(1,3),(3,1),(2,3),(3,2),(3,3)]:
                 aself.strides = strides
-                keras_convolution_answer = keras_convolve2d_4dinput(aself.pvector,aself.filters,strides=aself.strides,mode=aself.mode,filters=aself.nFilters)
-                thresholds = 0.5*np.ones(keras_convolution_answer.shape).reshape(1,*keras_convolution_answer.shape)
 
-                biases_list = np.sort(keras_convolution_answer,axis=None)
+                model = Sequential()
+                model.add(Conv2D(aself.nFilters, aself.filters.shape[:2], strides=aself.strides, padding=aself.mode, activation=None, use_bias=True, 
+                                input_shape=aself.pshape[1:], name="conv2d", kernel_initializer=ArraySequence(np.flip(aself.filters,(0,1))), bias_initializer=ArraySequence(aself.biases)))
+                feature_extractor = Model(inputs=model.inputs, outputs=[layer.output for layer in model.layers])
+                feature_extractor_answer = feature_extractor(aself.pvector)[0].numpy()
+                keras_spike_count = (feature_extractor_answer > thresholds).astype(int).sum()
+
+                biases_list = np.sort(feature_extractor_answer,axis=None)
                 biases_list = np.flip(np.append(biases_list, biases_list[-1])).astype(float)
                 biases_list[1:] -= 0.6
                 for k, bias in enumerate(biases_list):
-                    nSpikes = (keras_convolution_answer > bias).sum()
                     biases = -bias * np.ones((nFilters,))
+                    nSpikes = (feature_extractor_answer + biases> thresholds).sum()
                     if runSubsetOn:
                         arguments.append((nSpikes, thresholds, biases, strides, mode, aself))
                     else:
@@ -955,6 +967,78 @@ class Test_KerasConvolution2D_4dinput:
         expected_spike_count = nSpikes
         assert expected_spike_count == calculated_spike_count
 
+    @pytest.mark.parametrize("image_size", [(3,3),(5,5)])
+    @pytest.mark.parametrize("kernel_size", [(2,2),(3,3)])
+    @pytest.mark.parametrize("strides", [(1,1),(1,2),(2,1),(2,2),(1,3),(3,1),(2,3),(3,2),(3,3)])
+    @pytest.mark.parametrize("mode", ["same", "valid"])
+    @pytest.mark.parametrize("nChannels,nFilters", [(2,3), (1,1)])
+    def test_exhaustive_keras_convolution_brick_all_modes_strides_with_random_biases(self, image_size, kernel_size, strides, mode, nChannels, nFilters):
+        self.basep = 4
+        self.bits = 3
+        convo_obj = ConvolutionParams(image_height=image_size[0], image_width=image_size[1], nChannels=nChannels, 
+                                      kernel_height=kernel_size[0], kernel_width=kernel_size[1], nFilters=nFilters, 
+                                      strides=strides, mode=mode, data_format="channels_last", biases=np.zeros((nFilters,)))
+        convo_obj.biases = convo_obj.get_random_biases_within_answer_range()
+
+        scaffold = Scaffold()
+        scaffold.add_brick(BaseP_Input(convo_obj.mock_image,p=self.basep,bits=self.bits,collapse_binary=False,name="I",time_dimension=False),"input")
+        scaffold.add_brick(keras_convolution_2d_4dinput(convo_obj.input_shape,convo_obj.filters,convo_obj.thresholds,self.basep,self.bits,name="convolution_",mode=convo_obj.mode,strides=convo_obj.strides,biases=convo_obj.biases),[(0, 0)],output=True)
+        self.graph = scaffold.lay_bricks()
+        scaffold.summary(verbose=1)
+        backend = snn_Backend()
+        backend_args = {}
+        backend.compile(scaffold, backend_args)
+        result = backend.run(5)
+        calculated_spike_count = len(result[result['time'] > 0].index)
+
+        keras_obj = tensorflow_keras_conv2d_answer(convo_obj)
+        expected_spike_count = keras_obj.spike_count
+        assert expected_spike_count == calculated_spike_count
+
+    @pytest.mark.parametrize("strides", [(1,1),(1,2),(2,1),(2,2),(1,3),(3,1),(2,3),(3,2),(3,3)])
+    @pytest.mark.parametrize("mode", ["same", "valid"])
+    @pytest.mark.parametrize("nChannels,nFilters", [(2,3), (1,1)])
+    def test_exhaustive_5x5_image_all_modes_strides_random_biases(self, strides, mode, nChannels, nFilters):
+        from ..helpers import ArraySequence, IntegerSequence
+        from tensorflow import constant as tf_constant
+        from tensorflow.keras import Model, initializers
+        from tensorflow.keras.models import Sequential
+        from tensorflow.keras.layers import Conv2D
+
+        self.basep = 4
+        self.bits = 3
+
+        convo_obj = ConvolutionParams(image_height=5, image_width=5, nChannels=nChannels, kernel_height=2, kernel_width=2, nFilters=nFilters, strides=strides, mode=mode, biases=np.zeros((nFilters,)))
+        convo_obj.biases = convo_obj.get_random_biases_within_answer_range()
+        # convo_obj.biases = np.array([-1272., -1841., -2555.])
+        convo_obj._set_convolution_answer_boolean()
+        expected_spike_count = convo_obj.answer_bool.astype(int).sum()
+
+        keras_convolution_answer = keras_convolve2d_4dinput(convo_obj.mock_image,convo_obj.filters,strides=convo_obj.strides,mode=convo_obj.mode,filters=convo_obj.nFilters)
+        keras_spike_count = (keras_convolution_answer + convo_obj.biases > convo_obj.thresholds).sum().astype(int)
+
+        scaffold = Scaffold()
+        scaffold.add_brick(BaseP_Input(convo_obj.mock_image,p=self.basep,bits=self.bits,collapse_binary=False,name="I",time_dimension=False),"input")
+        scaffold.add_brick(keras_convolution_2d_4dinput(convo_obj.input_shape,convo_obj.filters,convo_obj.thresholds,self.basep,self.bits,name="convolution_",mode=convo_obj.mode,strides=convo_obj.strides,biases=convo_obj.biases),[(0, 0)],output=True)
+        self.graph = scaffold.lay_bricks()
+        scaffold.summary(verbose=1)
+        backend = snn_Backend()
+        backend_args = {}
+        backend.compile(scaffold, backend_args)
+        result = backend.run(5)
+        calculated_spike_count = len(result[result['time'] > 0].index)
+        print(convo_obj.biases)
+
+
+        model = Sequential()
+        model.add(Conv2D(convo_obj.nFilters, (convo_obj.kernel_height, convo_obj.kernel_width), strides=convo_obj.strides, padding=convo_obj.mode, activation=None, use_bias=True, 
+                         input_shape=convo_obj.input_shape[1:], name="conv2d", kernel_initializer=ArraySequence(np.flip(convo_obj.filters,(0,1))), bias_initializer=ArraySequence(convo_obj.biases)))
+        feature_extractor = Model(inputs=model.inputs, outputs=[layer.output for layer in model.layers])
+        feature_extractor_answer = feature_extractor(convo_obj.mock_image)[0].numpy()
+        keras_spike_count = (feature_extractor_answer > convo_obj.thresholds).astype(int).sum()
+
+        assert keras_spike_count == calculated_spike_count
+
     def test_positive_biases(self):
         image_height, image_width, nChannels = 3, 3, 2
         kernel_height, kernel_width, nFilters = 2, 2, 4
@@ -978,8 +1062,8 @@ class Test_KerasConvolution2D_4dinput:
 
         assert expected_spike_count == calculated_spike_count
 
-    @pytest.mark.xfail(reason="In progress.")
-    def test_28x28_image_same_mode_with_strides_and_biases(self):
+    @pytest.mark.parametrize("strides",[(1,1),(1,2),(2,1),(2,2)])
+    def test_28x28_image_same_mode_with_strides_and_biases(self, strides):
         '''
             Filter 1 Out
           [[ 772.,  808.,  844.,  880.,  490.],
@@ -1008,7 +1092,7 @@ class Test_KerasConvolution2D_4dinput:
         from tensorflow.keras.models import Sequential
         from tensorflow.keras.layers import Conv2D
 
-        image_height, image_width = 3, 3
+        image_height, image_width = 28, 28
         kernel_height, kernel_width = 7, 7
         nChannels = 1
         nFilters = 1
@@ -1020,7 +1104,7 @@ class Test_KerasConvolution2D_4dinput:
         self.pshape = np.array(self.pvector).shape
         self.filters_shape = np.array(self.filters).shape
         self.mode = "same"
-        self.strides = (1,1)
+        self.strides = strides
         self.biases = np.zeros((nFilters,))
         self.nChannels = nChannels
         self.nFilters = nFilters
@@ -1030,6 +1114,7 @@ class Test_KerasConvolution2D_4dinput:
         thresholds = np.reshape(keras_convolution_answer,(1,*keras_convolution_answer.shape)).copy() - 1.
 
         # self.biases = -2909.0 * np.ones((nFilters,))
+        # self.biases = -50000.0 * np.ones((nFilters,))
         result = self.run_convolution_2d(thresholds, verbose_scaffold=1)
 
         model = Sequential()

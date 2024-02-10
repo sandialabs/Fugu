@@ -12,7 +12,13 @@ def keras_convolve2d(image,kernel,strides=(1,1),mode="same"):
     '''
         Custom function that uses scipy.signal.convove2d to reproduce the Keras 2D convolution result with strides
     '''
-    return np.flip(convolve2d(np.flip(image),np.flip(kernel),mode=mode))[::strides[0],::strides[1]]
+    # return np.flip(convolve2d(np.flip(image),np.flip(kernel),mode=mode))[::strides[0],::strides[1]]
+    if mode == "same":
+        answer = np.flip(convolve2d(np.flip(image),np.flip(kernel),mode=mode)[::strides[0],::strides[1]])
+    elif mode == "valid":
+        answer = np.flip(convolve2d(np.flip(image),np.flip(kernel),mode=mode))[::strides[0],::strides[1]]
+    return answer
+    # return convolve2d(image,kernel,mode=mode)[::strides[0],1::strides[1]]
 
 def keras_convolve2d_4dinput(image,kernel,strides=(1,1),mode="same",data_format="channels_last",filters=1):
     '''
