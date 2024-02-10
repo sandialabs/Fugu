@@ -117,8 +117,8 @@ class keras_pooling_2d_4dinput(Brick):
         for row in np.arange(0, self.spatial_output_shape[0]):
             for col in np.arange(0, self.spatial_output_shape[1]):
                 for channel in np.arange(self.nChannels):
-                    graph.add_node(f'{self.name}p{channel}{row}{col}', index=(row,col,channel), threshold=self.thresholds[0,row,col,channel], decay=1.0, p=1.0, potential=0.0)
-                    output_lists[0].append(f'{self.name}p{channel}{row}{col}')
+                    graph.add_node(f'{self.name}p{channel}_{row}_{col}', index=(row,col,channel), threshold=self.thresholds[0,row,col,channel], decay=1.0, p=1.0, potential=0.0)
+                    output_lists[0].append(f'{self.name}p{channel}_{row}_{col}')
 
         # Collect Inputs
         pixels = np.reshape(input_lists[0], self.input_shape)
@@ -130,23 +130,23 @@ class keras_pooling_2d_4dinput(Brick):
         # Construct edges connecting input and output nodes
         # TODO: Handle cases where batch_size != 1; (i.e., index 0 in pixel[0,:,:,:] should not be hardcoded.)
         padded_input_shape_bounds = self.get_padded_input_shape_bounds()
-        row_stride_positions, col_stride_positions = self.get_stride_positions_from_bounds(padded_input_shape_bounds)
-        for row, irow in enumerate(row_stride_positions[:self.spatial_output_shape[0]]):
-            irowpos, frowpos = self.adjust_position_to_input_length(irow,self.spatial_input_shape[0],self.pool_size[0])
-            for col, icol in enumerate(col_stride_positions[:self.spatial_output_shape[1]]):
-                icolpos, fcolpos = self.adjust_position_to_input_length(icol,self.spatial_input_shape[1],self.pool_size[1])
+        padded_row_stride_positions, padded_col_stride_positions = self.get_stride_positions_from_bounds(padded_input_shape_bounds)
+        for output_row, padded_input_row in enumerate(padded_row_stride_positions[:self.spatial_output_shape[0]]):
+            row_slice = slice(*self.adjust_position_to_input_length(padded_input_row,self.spatial_input_shape[0],self.pool_size[0]))
+            for output_col, padded_input_column in enumerate(padded_col_stride_positions[:self.spatial_output_shape[1]]):
+                col_slice = slice(*self.adjust_position_to_input_length(padded_input_column,self.spatial_input_shape[1],self.pool_size[1]))
                 for channel in np.arange(self.nChannels):
                     # method 1
                     # for kx in np.arange(self.pool_size):
                     #     for ky in np.arange(self.pool_size):
-                    #         graph.add_edge(pixels[0,rowpos+kx,colpos+ky], f'{self.name}p{channel}{row}{col}', weight=edge_weights, delay=1)
-                    #         print(f" g{rowpos+kx}{colpos+ky} --> p{channel}{row}{col}")
+                    #         graph.add_edge(pixels[0,rowpos+kx,colpos+ky], f'{self.name}p{channel}_{output_row}_{output_col}', weight=edge_weights, delay=1)
+                    #         print(f" g{rowpos+kx}{colpos+ky} --> p{channel}_{output_row}_{output_col}")
 
                     # method 2
-                    pixels_subset = pixels[0,irowpos:frowpos,icolpos:fcolpos,channel]
+                    pixels_subset = pixels[0,row_slice,col_slice,channel]
                     for pixel in pixels_subset.flatten():
-                        graph.add_edge(pixel, f'{self.name}p{channel}{row}{col}', weight=edge_weights, delay=1)
-                        logging.debug(f" {pixel.split('_')[1]} --> p{channel}{row}{col}")
+                        graph.add_edge(pixel, f'{self.name}p{channel}_{output_row}_{output_col}', weight=edge_weights, delay=1)
+                        logging.debug(f" {pixel.split('_')[1]} --> p{channel}_{output_row}_{output_col}")
 
         self.is_built = True        
         return (graph, self.metadata, [{'complete': complete_node, 'begin': begin_node}], output_lists, output_codings)
