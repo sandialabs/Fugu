@@ -6,16 +6,15 @@ isort:skip_file
 """
 
 # fmt: off
-from spinnaker2 import snn, hardware
-
 from .backend import Backend
-
 import sys
 
 
 class spinnaker2_Backend(Backend):
 
     def _build_network(self):
+        from spinnaker2 import snn, hardware
+
         C = self.fugu_circuit
         G = self.fugu_graph
         self.network = snn.Network()
@@ -157,6 +156,8 @@ class spinnaker2_Backend(Backend):
         self._build_network()
 
     def run(self, n_steps=10, return_potentials=False):
+        from spinnaker2 import snn, hardware
+
         if return_potentials and not self.recordVoltages:
             self.recordVoltages = True
             self.lif.record.append('v')
