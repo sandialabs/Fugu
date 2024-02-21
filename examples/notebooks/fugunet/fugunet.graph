@@ -1,0 +1,33 @@
+stream:
+- modname: spike_input
+  coord:
+  - 0.0
+  - 0.0
+  - 0.0
+vertex:
+- modname: fugu_neuron
+  order: 12
+  shape: point
+  coord:
+  - 0.0
+  - 0.0
+  - 0.0
+edge:
+- source: spike_input
+  target:
+  - fugu_neuron
+  modname: synclamp
+  cutoff: 0.0
+  connect:
+  - type: file
+    filetype: csv-sparse
+    filename: files/fugu_input.csv
+- source: fugu_neuron
+  target:
+  - fugu_neuron
+  modname: fugu_synapse
+  cutoff: 0.0
+  connect:
+  - type: file
+    filetype: csv-sparse
+    filename: files/fugu_delay.csv

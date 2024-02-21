@@ -70,6 +70,50 @@ python -m pip install /PATH/TO/nxsdk-<version>/
 conda develop /PATH/TO/nxsdk-apps/nxsdk_modules
 ```
 
+## [OPTIONAL] STACS Backend
+The Simulation Tool for Asynchronous Cortical Streams (STACS) is an optional simulator backend that may be used with Fugu. Developed to be parallel from the ground up, STACS leverages the highly portable Charm++ parallel programming framework. In addition to the parallel runtime, STACS also implements a memory-efficient distributed network data structure for network construction, simulation, and serialization. This provides a scalable simulation backend to support both large-scale and long running SNN experiments (e.g. on HPC systems).
+
+While STACS is developed as a stand-alone simulator, through the use of a template network model and specially developed neuron and synapse models, users of Fugu may interface with STACS simply through Fugu's backend API. To utilize the STACS backend, some additional software tools are necessary. This section describes the installation of these tools from source for the STACS backend usage.
+
+### Prerequisite Packages
+First, install essential (linux) packages.
+```
+sudo apt-get install build-essential gfortran cmake cmake-curses-gui
+sudo apt-get install libyaml-cpp-dev libfftw3-dev zlib1g-dev
+sudo apt-get install mpich
+```
+
+### Charm++
+Download Charm++ (v7.0.0) and untar the package.
+```
+wget http://charm.cs.illinois.edu/distrib/charm-7.0.0.tar.gz
+tar -zxvf charm-7.0.0.tar.gz
+
+mkdir charm
+mv charm-7.0.0.tar.gz charm/
+mv charm-v7.0.0/ charm/7.0.0
+```
+
+Build Charm++
+```
+cd charm/7.0.0
+./build charm++ mpi-linux-x86_64 --with-production -j2
+```
+
+Add Charm++ to PATH variable (target=mpi-linux-x86_64 here)
+```
+export CHARM_ROOTDIR=/path/to/charm/version/target
+export PATH=${CHARM_ROOTDIR}/bin:$PATH
+```
+Replace `/path/to/charm/version/target` with the directory path to your Charm++. Alternatively, add the above two lines to your `~/.bashrc` file for a variables to be persistent between linux sessions.
+
+Next, install STACS repository
+```
+git clone https://github.com/sandialabs/STACS.git
+cd STACS
+make -j2
+```
+
 # Documentation
 Documentation is currently spread across several files and directories.  We are working on including docstrings on all the classes and methods.
 

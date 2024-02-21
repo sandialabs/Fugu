@@ -30,7 +30,7 @@ tests:
   before_script:
     - python -m pip install -r requirements.txt
     - python -m pip install --upgrade .
-    - python -m pip install pytest
+    - python -m pip install pytest==7.4.4
   script:
     - pytest
 
@@ -39,7 +39,7 @@ coverage:
   before_script:
     - python -m pip install -r requirements.txt
     - python -m pip install --upgrade .
-    - python -m pip install pytest coverage
+    - python -m pip install pytest==7.4.4 coverage==7.4.1
   script:
     - |
       coverage run -m pytest

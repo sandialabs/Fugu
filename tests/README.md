@@ -3,7 +3,7 @@
 ## Get Started
 
 ```bash
-pip install -U pytest coverage
+pip install -U pytest==7.4.4 coverage==7.4.1
 pytest
 ```
 
