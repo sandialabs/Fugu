@@ -106,7 +106,7 @@ class keras_dense_2d_4dinput(Brick):
                 k = index[-1]
                 index_str = '_'.join(map(str,(k,*index[1:-1])))
                 graph.add_edge(f'{self.name}b{k}',f'{self.name}d{index_str}', weight=self.biases[k], delay=1)
-                print(f"{self.name}b{k} ---> {self.name}d{index_str} : weight = {self.biases[k]}")
+                logging.debug(f"{self.name}b{k} ---> {self.name}d{index_str} : weight = {self.biases[k]}")
 
         self.connect_input_and_output_neurons(input_lists,graph)
 

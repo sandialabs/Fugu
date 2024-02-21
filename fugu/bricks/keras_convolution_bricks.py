@@ -367,23 +367,34 @@ class keras_convolution_2d_4dinput(Brick):
         padded_input_shape_bounds = self.get_padded_input_shape_bounds()
         padded_row_stride_positions, padded_col_stride_positions = self.get_stride_positions_from_bounds(padded_input_shape_bounds)
         kernel_corner_position_on_padded_input_shape_bounds = [(a,b) for a in padded_row_stride_positions[:self.spatial_output_shape[0]] for b in padded_col_stride_positions[:self.spatial_output_shape[1]]]
+        self.padded_top_row_position = padded_row_stride_positions[0]
+        self.padded_left_col_position = padded_col_stride_positions[0]
         # Construct edges connecting input and output nodes
         cnt = -1
         for k in np.arange(num_input_neurons):  # loop over input neurons
             # input_row, input_col, channel, pwr, Ck = np.unravel_index(k, (Am, An, self.nChannels, self.bits,  self.basep))
-            input_row, input_col, channel, pwr, Ck = graph.nodes[I[k]]['index'][-5:]
-            if Ck == 0:
-                continue
+            try:
+                input_row, input_col, channel, pwr, Ck = graph.nodes[I[k]]['index'][-5:]
+                if Ck == 0:
+                    continue
+                constant = Ck * self.basep**pwr
+            except ValueError:
+                input_row, input_col, channel = graph.nodes[I[k]]['index'][-3:]
+                constant = 1.0
 
             # loop over output neurons
             for output_row, output_col in input_neurons_2_output_neurons[(input_row,input_col)]:
-                ix = (Bm-1) - input_row + (padded_row_stride_positions[0] + output_row * self.strides[0])
-                jx = (Bn-1) - input_col + (padded_col_stride_positions[0] + output_col * self.strides[1])
+                ix, jx = self.get_kernel_indices(input_row,input_col,output_row,output_col)
 
                 for filter in np.arange(self.nFilters):
                     cnt += 1
-                    graph.add_edge(I[k], f'{self.name}g{filter}_{output_row}_{output_col}', weight=Ck * self.basep**pwr * self.filters[ix,jx,channel,filter], delay=2)
-                    logging.debug(f'{cnt:3d}  A[m,n]: ({input_row:2d},{input_col:2d})   power: {pwr}    coeff_i: {Ck}    input: {k:3d}      output: {filter}{output_row}{output_col}   B[m,n]: ({ix:2d},{jx:2d})   filter: {self.filters[ix,jx,channel,filter]}     I(row,col,channel,bit-pwr,basep-coeff): {np.unravel_index(k,(Am,An,self.nChannels,self.bits,self.basep))}     I[index]: {graph.nodes[I[k]]["index"]}')
+                    graph.add_edge(I[k], f'{self.name}g{filter}_{output_row}_{output_col}', weight=constant * self.filters[ix,jx,channel,filter], delay=2)
+                    # logging.debug(f'{cnt:3d}  A[m,n]: ({input_row:2d},{input_col:2d})   power: {pwr}    coeff_i: {Ck}    input: {k:3d}      output: {filter}{output_row}{output_col}   B[m,n]: ({ix:2d},{jx:2d})   filter: {self.filters[ix,jx,channel,filter]}     I(row,col,channel,bit-pwr,basep-coeff): {np.unravel_index(k,(Am,An,self.nChannels,self.bits,self.basep))}     I[index]: {graph.nodes[I[k]]["index"]}')
+
+    def get_kernel_indices(self, input_row, input_col, output_row, output_col):
+        ix = (self.kernel_shape[0]-1) - input_row + (self.padded_top_row_position + output_row * self.strides[0])
+        jx = (self.kernel_shape[1]-1) - input_col + (self.padded_left_col_position + output_col * self.strides[1])
+        return (ix,jx)
 
     def adjust_position_to_input_length(self, pos, input_length, kernel_length):
         if pos < 0:
