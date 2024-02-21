@@ -1,0 +1,75 @@
+type: record
+events:
+- spike
+- clamp
+---
+type: stream
+modname: spike_input
+modtype: 5
+param:
+- name: n
+  value: 4
+port:
+- name: input
+  value: files/fugu_input.yml
+---
+type: vertex
+modname: fugu_neuron
+modtype: 80
+param: null
+state:
+- name: v
+  init: file
+  filetype: csv-dense
+  filename: files/fugu_v.csv
+- name: v_thresh
+  init: file
+  filetype: csv-dense
+  filename: files/fugu_v_thresh.csv
+- name: v_reset
+  init: file
+  filetype: csv-dense
+  filename: files/fugu_v_reset.csv
+- name: v_bias
+  init: file
+  filetype: csv-dense
+  filename: files/fugu_v_bias.csv
+- name: v_leak
+  init: file
+  filetype: csv-dense
+  filename: files/fugu_v_leak.csv
+- name: p_spike
+  init: file
+  filetype: csv-dense
+  filename: files/fugu_p_spike.csv
+- name: I_syn
+  init: file
+  filetype: csv-dense
+  filename: files/fugu_I_syn.csv
+- name: I_clamp
+  init: constant
+  value: 0.0
+---
+type: edge
+modname: fugu_synapse
+modtype: 81
+param: null
+state:
+- name: delay
+  init: file
+  rep: tick
+  filetype: csv-sparse
+  filename: files/fugu_delay.csv
+- name: weight
+  init: file
+  filetype: csv-sparse
+  filename: files/fugu_weight.csv
+---
+type: edge
+modname: synclamp
+modtype: 15
+state:
+- name: delay
+  init: constant
+  rep: tick
+  value: 1.0
