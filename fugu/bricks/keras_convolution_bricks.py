@@ -148,36 +148,6 @@ class keras_convolution_2d(Brick):
                 graph.add_edge(I[k], f'{self.name}g{i}{j}', weight=Ck * self.basep**pwr * self.filters[ix][jx], delay=1)
                 logging.debug(f'{cnt:3d}  A[m,n]: ({row:2d},{col:2d})   power: {pwr}    coeff_i: {Ck}    input: {k:3d}      output: {i}{j}   B[m,n]: ({ix:2d},{jx:2d})   filter: {self.filters[ix][jx]}     I(row,col,bit-pwr,basep-coeff): {np.unravel_index(k,(Am,An,self.bits,self.basep))}     I[index]: {graph.nodes[I[k]]["index"]}')
 
-    def connect_input_and_output_neurons_alt2(self,input_lists,output_lists,graph):
-        '''
-            Construct the input/output synapses (edges) by looping over the output neurons (outer loop) and assigning their edges to the input neurons (inner loop).
-
-            This method is INCOMPLETE and may be removed later.
-        '''
-        # Get size/shape information from input arrays
-        Am, An = self.pshape
-        Bm, Bn = self.filters.shape
-        Gm, Gn = self.bnds.shape
-
-        num_input_neurons = len(input_lists[0])
-        num_output_neurons = len(output_lists[0])
-
-        # Collect Inputs
-        I = input_lists[0]
-
-        # Construct edges connecting input and output nodes
-        cnt = -1
-        # loop over output neurons
-        for k in np.arange(num_output_neurons):
-            row, col = np.unravel_index(k, (Gm, Gn))
-            # loop over input neurons.
-            for j in np.arange(num_input_neurons):
-                aa, bb, pwr, Ck = np.unravel_index(j, (Am, An, self.bits, self.basep))
-                ix = aa
-                jx = bb
-                graph.add_edge(I[j], f'{self.name}g{row}{col}', weight=Ck * self.basep**pwr * self.filters[ix][jx], delay=1)
-        pass
-
     def get_output_neurons(self,row,col,Bm,Bn):
         neuron_indices = []
         Sm, Sn = self.strides
@@ -395,19 +365,6 @@ class keras_convolution_2d_4dinput(Brick):
         ix = (self.kernel_shape[0]-1) - input_row + (self.padded_top_row_position + output_row * self.strides[0])
         jx = (self.kernel_shape[1]-1) - input_col + (self.padded_left_col_position + output_col * self.strides[1])
         return (ix,jx)
-
-    def adjust_position_to_input_length(self, pos, input_length, kernel_length):
-        if pos < 0:
-            ipos = 0
-            fpos = pos + kernel_length
-        elif pos + kernel_length > input_length:
-            ipos = input_length - kernel_length + 1
-            fpos = input_length
-        else:
-            ipos = pos
-            fpos = pos + kernel_length
-
-        return ipos, fpos
 
     def get_padded_input_shape_bounds(self):
         '''

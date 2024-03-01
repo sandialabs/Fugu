@@ -91,11 +91,6 @@ class keras_pooling_2d_4dinput(Brick):
         graph.add_edge(control_nodes[0]["complete"], complete_node, weight=1.0, delay=1)
         graph.add_edge(control_nodes[0]["begin"]   , begin_node   , weight=1.0, delay=1)
 
-        # determine output neuron bounds based on "input length", "pool_size", and "strides"
-        # floor(1 + [Am + 2*pad_length - Bm ] / stride)
-        # Am = Convolution Output Length
-        # Bm = pool_size
-        # pad_length = 0 (padding is taken care in the convolution brick)
         self.output_shape = self.get_output_shape()
         self.metadata['pooling_output_shape'] = self.output_shape
 

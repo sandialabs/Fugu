@@ -1010,7 +1010,6 @@ class Test_KerasConvolution2D_4dinput:
 
         convo_obj = ConvolutionParams(image_height=5, image_width=5, nChannels=nChannels, kernel_height=2, kernel_width=2, nFilters=nFilters, strides=strides, mode=mode, biases=np.zeros((nFilters,)))
         convo_obj.biases = convo_obj.get_random_biases_within_answer_range()
-        # convo_obj.biases = np.array([-1272., -1841., -2555.])
         convo_obj._set_convolution_answer_boolean()
         expected_spike_count = convo_obj.answer_bool.astype(int).sum()
 
@@ -1049,7 +1048,6 @@ class Test_KerasConvolution2D_4dinput:
         self.filters_shape = np.array(self.filters).shape
         self.nChannels = nChannels
         self.nFilters = nFilters
-        # TODO: Using "500" inside the biases here causes the result to spike at multiple times. MUST figure out why and correct the bug.
         self.biases = np.array([-471., -1207., -1943., 500.])
 
         output_shape = keras_convolution2d_output_shape_4dinput(self.pvector,self.filters,self.strides,self.mode,self.nFilters)
@@ -1110,8 +1108,8 @@ class Test_KerasConvolution2D_4dinput:
         self.nFilters = nFilters
 
         keras_convolution_answer = keras_convolve2d_4dinput(self.pvector,self.filters,strides=self.strides,mode=self.mode,filters=self.nFilters)
-        # thresholds = 0.5*np.ones(keras_convolution_answer.shape).reshape(1,*keras_convolution_answer.shape)
-        thresholds = np.reshape(keras_convolution_answer,(1,*keras_convolution_answer.shape)).copy() - 1.
+        thresholds = 0.5*np.ones(keras_convolution_answer.shape).reshape(1,*keras_convolution_answer.shape)
+        # thresholds = np.reshape(keras_convolution_answer,(1,*keras_convolution_answer.shape)).copy() - 1.
 
         # self.biases = -2909.0 * np.ones((nFilters,))
         # self.biases = -50000.0 * np.ones((nFilters,))

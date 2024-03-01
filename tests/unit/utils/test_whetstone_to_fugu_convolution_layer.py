@@ -126,64 +126,8 @@ def kernel_filters():
 def kernel_params(kernel_shape, kernel_filters):
     return kernel_shape[0], kernel_shape[1], kernel_filters
 
-@pytest.fixture
-def custom_setup(image_params,kernel_params,convolution_params):
-    image_height, image_width, nChannels = image_params
-    kernel_height, kernel_width, nFilters = kernel_params
-    mode, strides = convolution_params
-
 @pytest.mark.whetstone
 class Test_Whetstone_2_Fugu_ConvolutionLayer:
-    @pytest.mark.xfail(run=False,reason="Not implemented. And takes to long for 'xfail'.")
-    def test_layers(self):
-        model = layer_utils.load_model(keras_mnist_model_norm_off())
-
-        basep = 3
-        bits = 3
-        scaffold = Scaffold()
-        scaffold.add_brick(Vector_Input(np.ones((28,28)), name="Input0"),"input")
-        scaffold = whetstone_2_fugu(model,basep,bits,scaffold=scaffold)
-        self.graph = scaffold.lay_bricks()
-
-        # test against layer names
-        #  - for each layer, 
-        #       - convolution layer
-        #           - input shape, output shape, weights (filters), bias (thresholds), brick names, and number of bricks per convolution layer (to make sure channels are handled properly)
-        #       - pooling layer
-        #           - pool size, strides, brick names, and number of bricks per pooling laer (to make sure channels are handled properly)
-        #       - dense layer
-        #           - output shape, weights, bias (thresholds), and brick names
-
-        assert False
-
-    @pytest.mark.parametrize("convolution_mode", ["same"])
-    @pytest.mark.parametrize("bias", [(-22),(-23),(-24),(-33),(-36),(-42),(-52),(-53),(-59),(-63)])
-    def test_temporary(self,image_params,kernel_params,convolution_params,bias):
-        from tensorflow.keras import Model, initializers
-        image_height, image_width, nChannels = image_params
-        kernel_height, kernel_width, nFilters = kernel_params
-        mode, strides = convolution_params
-
-        features, model = keras_custom_model_inference(bias,(image_height,image_width),(kernel_height,kernel_width),nChannels,nFilters,mode,strides)
-        self.basep = 3
-        self.bits = 3
-        self.pvector = generate_mock_image(image_height,image_width,nChannels).astype(float)
-        result = self.run_whetstone_to_fugu_utility(model)
-
-        expected_spikes = (features[0].numpy() > 0.5).sum()
-        calculated_spikes = len(result.index)
-        assert expected_spikes == calculated_spikes
-
-    @pytest.mark.parametrize("biases, expected_spikes", [([-320., -653., -786.], 19),([-471.,-1207.,-1943.], 3), ([-472.,-1208.,-1944.], 0)])
-    def test_mock_keras_model(self, monkeypatch,biases,expected_spikes):
-        # monkeypatch.setattr("whetstone.utils.layer_utils.load_model", mock_keras_model)
-        # monkeypatch.setattr("whetstone.utils.layer_utils.load_model", mock_keras_model)
-        # model = layer_utils.load_model(keras_mnist_model_norm_off())
-        features, model = keras_fixed_model_inference(biases)
-
-        calculated_spikes = (features.numpy() > 0.5).sum()
-
-        assert expected_spikes == calculated_spikes
 
     @pytest.mark.parametrize("bias,nSpikes", [(-22,9),(-23,8),(-24,7),(-33,6),(-36,5),(-42,4),(-52,3),(-53,2),(-59,1),(-63,0)])
     def test_whetstone_2_fugu_conv2d_layer(self,bias,nSpikes):
@@ -961,67 +905,6 @@ class Test_Whetstone_2_Fugu_ConvolutionLayer:
         backend.compile(scaffold, backend_args)
         result = backend.run(10)
         return result
-
-    # Auxillary/helper functions
-    def get_num_output_neurons(self, thresholds):
-        input_shape = np.array(self.pshape)[1:3]
-        kernel_shape = np.array(self.filters.shape)[:2]
-        full_output_shape = input_shape + kernel_shape - 1
-
-        #TODO: Do I need this conditional statement here?
-        if not hasattr(thresholds, "__len__") and (not isinstance(thresholds, str)):
-            if self.mode == "full":
-                thresholds_size = full_output_shape.prod()
-
-            if self.mode == "valid":
-                lmins = np.minimum(input_shape, kernel_shape)
-                lb = lmins - 1
-                ub = np.array(full_output_shape) - lmins
-                thresholds_size = (ub[0] - lb[0] + 1) * (ub[1] - lb[1] + 1)
-
-            if self.mode == "same":
-                lb = np.floor(0.5 * (full_output_shape - input_shape))
-                ub = np.floor(0.5 * (full_output_shape + input_shape) - 1)
-                thresholds_size = (ub[0] - lb[0] + 1) * (ub[1] - lb[1] + 1)
-        else:
-            if thresholds.ndim == 2:
-                thresholds_size = np.size(thresholds)
-            elif thresholds.ndim ==4:
-                thresholds_size = np.size(thresholds[0,:,:,0])
-
-        return thresholds_size * self.nFilters
-
-    def output_spike_positions(self, basep, bits, pvector, filters, thresholds):
-        thresholds_size = self.get_num_output_neurons(thresholds)
-        offset = 4  # begin/complete nodes for input and output nodes
-        input_basep_len = np.size(pvector) * basep * bits
-        output_ini_position = offset + input_basep_len
-        output_end_position = offset + input_basep_len + thresholds_size
-        return [output_ini_position, output_end_position]
-
-    def output_mask(self, output_positions, result):
-        ini = output_positions[0]
-        end = output_positions[1]
-        return (result["neuron_number"] >= ini) & (result["neuron_number"] <= end)
-
-    def calculated_spikes(self,thresholds,result):
-        # get output positions in result
-        output_positions = self.output_spike_positions(
-            self.basep, self.bits, self.pvector, self.filters, thresholds
-        )
-        output_mask = self.output_mask(output_positions, result)
-
-        calculated_spikes = list(result[output_mask].to_numpy()[:, 0])
-        return calculated_spikes
-
-    def expected_spikes(self,nSpikes):
-        # Check calculations
-        if nSpikes == 0:
-            expected_spikes = list(np.array([]))
-        else:
-            expected_spikes = list(np.ones((nSpikes,)))
-
-        return expected_spikes
 
 # Auxillary/Helper functions
 def normalization(batch, bnorm_layer):

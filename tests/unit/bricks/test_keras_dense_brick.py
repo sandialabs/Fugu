@@ -133,82 +133,6 @@ class Test_KerasDense2D:
 
         assert calculated_spike_count == expected_spike_count
 
-    @pytest.mark.xfail(reason="Not complete.")
-    def test_mock_brick1(self):
-
-        nFilters = 4
-        output_units = np.prod((1,2,2,nFilters))
-        convo_obj = ConvolutionParams(nFilters=nFilters,biases=np.array([-471., -1207., -1943., 500.]))
-        pool_obj = PoolingParams(convo_obj, pool_strides=(1,1), pool_padding="same")
-        myinputs = np.arange(1,3*3*pool_obj.nChannels+1).reshape((1,3,3,pool_obj.nChannels))
-        pool_obj.pool_answer = myinputs
-
-        units = 2
-        weights = np.arange(1,units*pool_obj.nChannels+1).reshape(pool_obj.nChannels,units)
-        biases = [0., 0.]
-        thresholds = 400.0
-        dense_obj = DenseParams(pool_obj, output_units=units, weights=weights, thresholds=thresholds, biases=biases)
-        vector_input = Vector_Input(pool_obj.pool_answer,name="pool_",time_dimension=False)
-        mock_input = Mock_Brick(vector_input,{'pooling_output_shape': pool_obj.pool_answer.shape})
-
-        scaffold = Scaffold()
-        scaffold.add_brick(mock_input,"input")
-        scaffold.add_brick(keras_dense_2d(units=dense_obj.output_units,weights=dense_obj.weights,thresholds=thresholds,data_format="channels_last",name="dense_",biases=dense_obj.biases),[(0,0)],output=True)
-
-        self.graph = scaffold.lay_bricks()
-        scaffold.summary(verbose=1)
-        backend = snn_Backend()
-        backend_args = {}
-        backend.compile(scaffold, backend_args)
-        result = backend.run(10)
-
-        calculated_spike_count = len(self.get_dense_neurons_result_only(result).index)
-        expected_spike_count = (dense_obj.dense_answer + dense_obj.biases > dense_obj.thresholds).sum().astype(int)
-        assert expected_spike_count == calculated_spike_count
-
-    @pytest.mark.xfail(reason="Not complete.")
-    def test_mock_brick2(self):
-
-        # Set "pooling" parameters
-        batch_size, height, width, nChannels = 1, 3, 3, 1
-        input_shape = (batch_size, height, width, nChannels)
-        dense_input = generate_mock_image(height,width,nChannels).reshape(input_shape)
-        myobj = CustomParam(input_shape=input_shape,pool_answer=dense_input)
-
-        # Set dense Layer Parameters
-        units = 2
-        weights = np.arange(1,units*nChannels+1).reshape(nChannels,units)
-        biases = [0., 0.]
-        thresholds = 1.0
-        dense_obj = DenseParams(myobj, output_units=units, weights=weights, thresholds=thresholds, biases=biases)
-
-        # Construct Mock Brick
-        mock_brick = Mock_Brick(Vector_Input(dense_input, name="I_", time_dimension=False), 
-                                {'pooling_output_shape': dense_input.shape})
-        
-        # Build Scaffold
-        scaffold = Scaffold()
-        scaffold.add_brick(mock_brick,"input")
-        scaffold.add_brick(keras_dense_2d(units=dense_obj.output_units,weights=dense_obj.weights,thresholds=thresholds,data_format="channels_last",name="dense_",biases=dense_obj.biases),[(0,0)],output=True)
-
-        self.graph = scaffold.lay_bricks()
-        scaffold.summary(verbose=1)
-        backend = snn_Backend()
-        backend_args = {}
-        backend.compile(scaffold, backend_args)
-        result = backend.run(10)
-
-        calculated_spike_count = len(self.get_dense_neurons_result_only(result).index)
-        expected_spike_count = (dense_obj.dense_answer + dense_obj.biases > dense_obj.thresholds).sum().astype(int)
-
-        # Make Keras Model
-        kobj = make_keras_dense_model(units=units,input_shape=input_shape,weights=weights,biases=biases)
-        assert expected_spike_count == calculated_spike_count
-
-    @pytest.mark.xfail(reason="Not implemented.")
-    def test_something(self):
-        assert False
-
     def get_neuron_numbers(self, name_prefix):
         neuron_numbers = []
         for key in self.graph.nodes.keys():
@@ -216,29 +140,6 @@ class Test_KerasDense2D:
                 neuron_numbers.append(self.graph.nodes[key]['neuron_number'])
 
         return np.array(neuron_numbers)
-
-    def get_output_neuron_numbers(self):
-        neuron_numbers = []
-        for key in self.graph.nodes.keys():
-            if key.startswith('dense_d'):
-                neuron_numbers.append(self.graph.nodes[key]['neuron_number'])
-
-        return np.array(neuron_numbers)
-
-    def get_output_spike_positions(self):
-        neuron_numbers = self.get_output_neuron_numbers()
-        if neuron_numbers.size == 0:
-            output_ini_position = np.nan
-            output_end_position = np.nan
-        else:
-            output_ini_position = np.amin(neuron_numbers)
-            output_end_position = np.amax(neuron_numbers)
-        return [output_ini_position,output_end_position]
-
-    def get_output_mask(self,output_positions, result):
-        ini = output_positions[0]
-        end = output_positions[1]
-        return (result["neuron_number"] >= ini) & (result["neuron_number"] <= end)
 
     def run_dense_2d(self, convo_obj, pool_obj, dense_obj):
         scaffold = Scaffold()
@@ -255,36 +156,10 @@ class Test_KerasDense2D:
         result = backend.run(10)
         return result
 
-    def get_stride_positions(self, pixel_dim):
-        return np.arange(0, pixel_dim, self.pool_strides, dtype=int)
-    
-    def get_output_size(self, pixel_dim):
-        return int(np.floor(1.0 + (np.float64(pixel_dim) - self.pool_size)/self.pool_strides))
-
-    def get_output_shape(self):
-        return (self.get_output_size(self.pixel_dim1), self.get_output_size(self.pixel_dim2))
-    
-    def get_expected_spikes(self,expected_ans, thresholds):
-        ans = np.array(expected_ans)
-        spikes = ans[ ans > thresholds].astype(float)
-        return list(3.0 * np.ones(spikes.shape))
-
-    def get_result_spike_count(self, result):
-        output_positions = self.get_output_spike_positions()
-        output_mask = self.get_output_mask(output_positions, result)
-
-        calculated_spikes = list(result[output_mask].to_numpy()[:, 0])
-        return np.array(calculated_spikes).sum()
-
     def get_dense_neurons_result_only(self, result):
         dense_neuron_numbers = self.get_neuron_numbers('dense_d')
         sub_result = result[result['neuron_number'].isin(dense_neuron_numbers)]
         return sub_result
-
-class CustomParam():
-    def __init__(self,input_shape,pool_answer):
-        self.input_shape = input_shape
-        self.pool_answer = pool_answer
 
 def make_keras_dense_model(units, input_shape, weights=None, biases=None):
     from tensorflow.keras import Model, initializers
@@ -331,9 +206,8 @@ def make_keras_dense_model(units, input_shape, weights=None, biases=None):
 
     return obj
 
-def mk_something(graph,node_name):
-    adict = {node_name: [i[1] for i in graph[node_name]]}
-    return adict
+def get_node_edges(graph,node_name):
+    return [i[1] for i in graph[node_name]]
 
 def get_node_name_list(prefix,shape):
     batch_size, height, width, nChannels = shape
@@ -342,7 +216,7 @@ def get_node_name_list(prefix,shape):
 
 def get_edge_connections(graph,prefix,shape):
     node_names = get_node_name_list(prefix,shape)
-    adict = {node_name: [i[1] for i in graph.edges(node_name)] for node_name in node_names}
+    adict = {node_name: get_node_edges(graph,node_name) for node_name in node_names}
     return adict
 
 def get_edge_connections_inverse(graph,prefix1,shape1,prefix2,shape2):

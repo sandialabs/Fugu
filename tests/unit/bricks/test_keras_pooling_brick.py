@@ -263,9 +263,6 @@ class Test_KerasPooling2D:
     def test_data_format_channels_last(self):
         assert False
 
-    def get_pool_output_shape(self):
-        return np.floor((self.input_shape - 1) / self.pool_strides) + 1
-
     def get_neuron_numbers(self, name_prefix):
         neuron_numbers = []
         for key in self.graph.nodes.keys():
@@ -278,29 +275,6 @@ class Test_KerasPooling2D:
         pool_neuron_numbers = self.get_neuron_numbers('pool_p')
         sub_result = result[result['neuron_number'].isin(pool_neuron_numbers)]
         return sub_result
-
-    def get_output_neuron_numbers(self):
-        neuron_numbers = []
-        for key in self.graph.nodes.keys():
-            if key.startswith('pool_p'):
-                neuron_numbers.append(self.graph.nodes[key]['neuron_number'])
-
-        return np.array(neuron_numbers)
-
-    def get_output_spike_positions(self):
-        neuron_numbers = self.get_output_neuron_numbers()
-        if neuron_numbers.size == 0:
-            output_ini_position = np.nan
-            output_end_position = np.nan
-        else:
-            output_ini_position = np.amin(neuron_numbers)
-            output_end_position = np.amax(neuron_numbers)
-        return [output_ini_position,output_end_position]
-
-    def get_output_mask(self,output_positions, result):
-        ini = output_positions[0]
-        end = output_positions[1]
-        return (result["neuron_number"] >= ini) & (result["neuron_number"] <= end)
 
     def run_pooling_2d(self,convo_obj, pool_obj):
         scaffold = Scaffold()
@@ -323,55 +297,3 @@ class Test_KerasPooling2D:
         thresholds[~random_ids] = thresholds[~random_ids] + 0.1
         thresholds[thresholds < 0.0] = 0.0
         return thresholds
-    
-    def make_convolution_spike_positions_vector(self, case):
-        '''
-        The returned list is [0.0, 0.1, 0.0, 0.1, 0.0, 0.0, 0.0] for "fixed" case. The "random" case returns a list 
-        with the positions of "0.1" randomized in the list.
-
-        The 0.1 specifies the convolution brick's output positions that will spike (i.e., output neurons will fire).
-        '''
-        conv_spike_pos = np.zeros(self.conv_ans.shape, dtype=float)
-
-        if case.lower() == "fixed":
-            conv_spike_pos = 0.1*np.array([[1,0,0,0,1],[0,0,1,1,1],[1,1,1,0,1],[0,1,0,0,1],[1,1,0,0,0]],dtype=float)
-        elif case.lower() == "random":
-            conv_spike_pos = 0.1 * np.random.randint(2,size=self.conv_ans.shape)
-        else:
-            print(f"Case parameter is either 'fixed' or 'random'. But you provided {case}.")
-            raise ValueError("Unrecognized 'case' parameter value provided.")
-        
-        return conv_spike_pos
-    
-    def get_expected_pooling_answer(self, pool_input, pool_obj):
-        row_stride_positions, col_stride_positions = get_stride_positions(pool_obj.spatial_input_shape, pool_obj.pool_strides)
-        expected = []
-
-        if pool_obj.pool_method == "max":
-            for row in row_stride_positions[:pool_obj.spatial_output_shape[0]]:
-                for col in col_stride_positions[:pool_obj.spatial_output_shape[1]]:
-                    for channel in np.arange(pool_obj.nChannels):
-                        expected.append(np.any(pool_input[0,row:row+pool_obj.pool_size[0],col:col+pool_obj.pool_size[1],channel]))
-
-            expected = np.reshape(expected, pool_obj.output_shape).astype(int)
-            expected = (np.array(expected, dtype=int) > 0.9).astype(float)
-
-        elif pool_obj.pool_method == "average":
-            weights = 1.0 / np.prod(pool_obj.pool_size)
-            for row in row_stride_positions[:pool_obj.spatial_output_shape[0]]:
-                for col in col_stride_positions[:pool_obj.spatial_output_shape[1]]:
-                    for channel in np.arange(pool_obj.nChannels):
-                        expected.append( (weights * pool_input[0,row:row+pool_obj.pool_size[0],col:col+pool_obj.pool_size[1],channel].astype(int)).sum() )
-
-            expected = np.reshape(expected, pool_obj.output_shape).astype(float)
-        else:
-            print(f"'method' class member variable must be either 'max' or 'average'. But it is {pool_obj.pool_method}.")
-            raise ValueError("Unrecognized 'method' class member variable.")
-            
-        return np.array(expected)
-    
-    def get_expected_spikes(self,expected_ans):
-        ans = np.array(expected_ans)
-        spikes = ans[ ans > self.thresholds].astype(float)
-        return list(2.0 * np.ones(spikes.shape))    
-
