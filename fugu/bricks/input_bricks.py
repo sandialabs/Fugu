@@ -249,6 +249,8 @@ class Vector_Input(InputBrick):
         if not self.time_dimension:
             self.vector = np.expand_dims(self.vector, len(self.vector.shape))
 
+        #print(f"Current vector: {self.vector}")
+
         complete_node = self.generate_neuron_name("complete")
         begin_node = self.generate_neuron_name("begin")
         vector_size = len(self.vector) * len(self.vector.shape)
@@ -423,5 +425,16 @@ class BaseP_Input(Vector_Input):
                                             bits=bits,
                                             time_dimension = time_dimension,
                                             collapse_binary = collapse_binary)
+        self.p = p
+        self.bits = bits
+        self.time_dimension = time_dimension
+        self.collapse_binary = collapse_binary
         self.vector = formatted_array
         self.coding = 'binary_L' if p==2 else 'Undefined'
+
+    def set_properties(self, properties={}):
+        new_vector = np.array(properties['spike_vector'])
+        converted_array = _convert_base_p(new_vector, p=self.p, bits=self.bits, time_dimension=self.time_dimension, collapse_binary=self.collapse_binary)
+        formatted_properties = {}
+        formatted_properties['spike_vector'] = converted_array
+        return super(BaseP_Input, self).set_properties(formatted_properties)
