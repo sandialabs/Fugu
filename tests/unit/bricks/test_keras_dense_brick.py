@@ -128,9 +128,6 @@ class Test_KerasDense2D:
         result = self.run_dense_2d(convo_obj,pool_obj,dense_obj)
         calculated_spike_count = len(self.get_dense_neurons_result_only(result).index)
 
-        # Make Keras Model
-        kobj = make_keras_dense_model(units=units,input_shape=tuple(np.array(pool_obj.input_shape)[1:]),weights=weights,biases=biases)
-
         assert calculated_spike_count == expected_spike_count
 
     def get_neuron_numbers(self, name_prefix):
