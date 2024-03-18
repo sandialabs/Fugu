@@ -12,6 +12,7 @@ from tensorflow.keras import Model, initializers
 # Turn off black formatting for this file
 # fmt: off
 
+@pytest.mark.keras
 class Test_Keras_Conv2d:
     def test_simple_conv2d(self):
         
