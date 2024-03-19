@@ -98,9 +98,10 @@ class convolution_1d(Brick):
             if coeff_i == 0:
                 continue
 
+            prefactor = coeff_i * self.basep**pwr
             for j in self.get_output_neurons(row, filter_length):  # loop over output neurons
                 ix = j - row
-                graph.add_edge(I[i], f'{self.name}g{j}', weight=coeff_i * self.basep**pwr * self.filters[ix], delay=1)
+                graph.add_edge(I[i], f'{self.name}g{j}', weight=prefactor * self.filters[ix], delay=1)
                 logging.debug(f'coeff_i: {coeff_i}    power: {pwr}    input: {i}      output: {j}     filter id: {ix}     filter: {self.filters[ix]}')
                 
         self.is_built=True        
@@ -244,14 +245,14 @@ class convolution_2d(Brick):
             if coeff_i == 0:
                 continue
 
+            prefactor = coeff_i * self.basep**pwr
             for i, j in self.get_output_neurons(row, col, Bm, Bn):
                 ix = i - row
                 jx = j - col
 
                 cnt += 1
-                graph.add_edge(I[k], f'{self.name}g{i}{j}', weight=coeff_i * self.basep**pwr * self.filters[ix][jx], delay=1)
-                # logging.debug(f'{cnt}     coeff_i: {coeff_i}    power: {pwr}    input: {k}      output: {i}{j}     filter: {self.filters[ix][jx]}     I(row,col,Ck): {np.unravel_index(k,(Am,An,self.bits*self.basep))}     I[index]: {graph.nodes[I[k]]["index"]}')
-                print(f'{cnt:3d}  A[m,n]: ({row:2d},{col:2d})   power: {pwr}    coeff_i: {coeff_i}    input: {k:3d}      output: {i}{j}   B[m,n]: ({ix:2d},{jx:2d})   filter: {self.filters[ix][jx]}     I(row,col,bit-pwr,basep-coeff): {np.unravel_index(k,(Am,An,self.bits,self.basep))}     I[index]: {graph.nodes[I[k]]["index"]}')
+                graph.add_edge(I[k], f'{self.name}g{i}{j}', weight=prefactor * self.filters[ix][jx], delay=1)
+                logging.debug(f'{cnt:3d}  A[m,n]: ({row:2d},{col:2d})   power: {pwr}    coeff_i: {coeff_i}    input: {k:3d}      output: {i}{j}   B[m,n]: ({ix:2d},{jx:2d})   filter: {self.filters[ix][jx]}     I(row,col,bit-pwr,basep-coeff): {np.unravel_index(k,(Am,An,self.bits,self.basep))}     I[index]: {graph.nodes[I[k]]["index"]}')
                 
         self.is_built=True
         
