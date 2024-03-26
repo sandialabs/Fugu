@@ -140,18 +140,39 @@ sphinx-build -b html -a source/ build/html
 The documentation will be in `docs/build/html`.
 Open `introduction.html`.  From this page you can you can navigate through the full website, Fugu Module, etc.
 
-# Testing
+# Developers
+The information below is for Fugu developers.
 
-Click [here](tests/README.md) for more information and instructions on Fugu's test suite.
+## Pre-commit hooks
+Pre-commit is used to enforce a code standard thoughout Fugu's codebase. For now, the pre-commit hooks enforce 
 
-# Contributing
+1. Code formatting (via `black`)
+2. Import sorting (via `isort`)
 
-## Branches
+The following packages are required for the pre-commit hooks
 
-We suggest the following convention for naming branches: `username/##-branch-name`, where:
-- `username`: your GitLab username
-- `##`: issue number (can be omitted if branch is not tied to an issue)
-- `branch-name`: a short descrition of the work
+1. black
+2. isort
+3. pre-commit
+
+### Installation and setup
+
+First install the necessary python packages using
+
+`pip install black isort pre-commit`
+
+or 
+
+`conda install -c conda-forge black isort pre-commit`
+
+Next, we install the pre-commit hooks with
+`pre-commit install --install-hooks`
+*Note:* `.pre-commit-config.yaml` must be present in the top level of Fugu for the pre-commit installation. For the pre-commit installs to work properly for me, I had to disconnect from the Sandia VPN. Lastly, these instructions have been tested using a conda environment.
+
+Now the pre-commit hooks will be installed. The next time you commit a file to the repository, `isort` and `black` will check that the file conforms to the new code standards. If the file passes the checks then you will be prompted to enter a commit message. Otherwise, the pre-commit will display if one or both commands failed. To fix the problem run one or both of these commands on the culprit file:
+
+`isort /path/to/culprit/file`
+`black /path/to/culprit/file`
 
 ## Formatters
 
@@ -188,6 +209,17 @@ isort:skip_file
 ```
 
 __Caution: if you are working with existing code that hasn't been formatted yet, please commit the updates from the formatting tools as a single commit before doing actual work and record the SHA as a new line in the file `.git-blame-ignore-revs`. This helps with more accurate information from the `git blame` command and prevent polluting the record with your username from the updates from the formatters. To configure `git` to use this file automatically, run the command `git config blame.ignoreRevsFile .git-blame-ignore-revs`.__
+
+## Testing
+
+Click [here](tests/README.md) for more information and instructions on Fugu's test suite.
+
+## Branches
+
+We suggest the following convention for naming branches: `username/##-branch-name`, where:
+- `username`: your GitLab username
+- `##`: issue number (can be omitted if branch is not tied to an issue)
+- `branch-name`: a short descrition of the work
 
 # Basic concepts
 
