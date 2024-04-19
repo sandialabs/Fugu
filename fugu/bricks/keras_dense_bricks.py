@@ -5,6 +5,24 @@ import logging
 import numpy as np
 from .bricks import Brick
 
+def isValueScalar(scalar):
+    if not hasattr(scalar, '__len__') and (not isinstance(scalar, str)):
+        return True
+    else:
+        return False
+
+def create_array_from_scalar_value(scalar, shape):
+    return scalar * np.ones(shape)
+
+def correct_shape(variable, expected_variable_shape):
+    if not type(variable) is np.ndarray:
+        variable = np.array(variable)
+
+    if variable.shape == expected_variable_shape:
+        return True
+    else:
+        return False
+
 class keras_dense_2d_4dinput(Brick):
     "Dense Layer brick"
     """
@@ -80,8 +98,10 @@ class keras_dense_2d_4dinput(Brick):
         graph.add_edge(control_nodes[0]["complete"], complete_node, weight=1.0, delay=2)
         graph.add_edge(control_nodes[0]["begin"]   , begin_node   , weight=1.0, delay=2)
 
-        self.check_thresholds_shape()
-        self.check_weights_shape()
+
+        self.thresholds = self.parse_variable(self.thresholds,self.output_shape,"Threshold shape {} does not equal the output neuron shape {}.")
+        self.weights = self.parse_variable(self.weights,(self.nChannelsInput,self.output_units),"Weights shape {} does not equal the necessary shape {}.")
+        self.biases = self.parse_variable(self.biases,(self.output_units,),"Biases shape {} does not equal the necessary shape {}.") if self.biases is not None else None
 
         # output neurons/nodes
         output_lists = [[]]
@@ -94,7 +114,6 @@ class keras_dense_2d_4dinput(Brick):
 
         # Biases for dense layer
         if self.biases is not None:
-            self.check_biases_shape()
             # biases neurons/nodes; one node per kernel/channel in filter
             for k in np.arange(self.output_units):
                 graph.add_node(f'{self.name}b{k}', index=(98,k), threshold=0.9, decay=1.0, p=1.0, potential=0.0)
@@ -153,6 +172,16 @@ class keras_dense_2d_4dinput(Brick):
         expected_biases_shape = (self.output_units,)
         error_str = "Biases shape {} does not equal the necessary shape {}."
         self.biases = self.check_shape(self.biases, expected_biases_shape,error_str)
+
+    def parse_variable(self, variable, expected_shape, error_str):
+        if isValueScalar(variable):
+            return create_array_from_scalar_value(variable, expected_shape)
+        else:
+            variable = np.array(variable)
+            if correct_shape(variable, expected_shape):
+                return variable
+            else:
+                raise ValueError(error_str.format(variable.shape, expected_shape))
 
     def check_shape(self, variable, expected_variable_shape, error_str):
         if not hasattr(variable, '__len__') and (not isinstance(variable, str)):
