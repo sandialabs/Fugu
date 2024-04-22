@@ -12,12 +12,6 @@ def debug_input_index(input_lists, Am, An, basep, bits):
         row, col, pwr, Ck = np.unravel_index(k, (Am, An, bits, basep))
         print(f"{k:3d}  {np.mod(k,basep*bits):2d}  ({row},{col}) {Ck:2d}  {pwr:2d}")
 
-def input_index_to_matrix_entry(input_shape,basep,bits,index):
-    Am, An = input_shape
-    linearized_index = np.ravel_multi_index(index,tuple(np.repeat([1,2,basep],[1,2,2])))# zero-based linearized index
-
-    return np.unravel_index(linearized_index,(Am,An,basep*bits))[:2]
-
 def isValueScalar(scalar):
     if not hasattr(scalar, '__len__') and (not isinstance(scalar, str)):
         return True
