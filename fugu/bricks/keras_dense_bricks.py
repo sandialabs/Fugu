@@ -123,8 +123,8 @@ class keras_dense_2d_4dinput(Brick):
             self.spatial_input_shape = (1,1)
             self.spatial_output_shape = (1,1)
         else:
-            self.spatial_input_shape = self.get_spatial_input_shape()
-            self.spatial_output_shape = self.get_spatial_output_shape()
+            self.spatial_input_shape = self.get_spatial_input_shape(self.input_shape)
+            self.spatial_output_shape = self.get_spatial_output_shape(self.input_shape, self.output_shape)
 
     def connect_input_and_output_neurons(self,input_lists,graph):
         # Collect Inputs
@@ -148,28 +148,34 @@ class keras_dense_2d_4dinput(Brick):
             else:
                 raise ValueError(error_str.format(variable.shape, expected_shape))
 
-    def get_spatial_input_shape(self):
-        self.batch_size, self.image_height, self.image_width, self.nChannelsInput = self.get_dense_input_shape_params()
+    def initialize_spatial_input_shape(self):
+        self.spatial_input_shape = (self.image_height, self.image_width)
+
+    def initialize_input_shape_params(self):
+        self.batch_size, self.image_height, self.image_width, self.nChannels = self.get_input_shape_params(self.input_shape)
+
+    def get_spatial_input_shape(self, input_shape):
+        self.batch_size, self.image_height, self.image_width, self.nChannelsInput = self.get_input_shape_params(input_shape)
         spatial_input_shape = (self.image_height, self.image_width)
         return spatial_input_shape
 
-    def get_dense_input_shape_params(self):
+    def get_input_shape_params(self, input_shape):
         if self.data_format.lower() == "channels_last":
-            batch_size, image_height, image_width, nChannels = self.input_shape
+            batch_size, image_height, image_width, nChannels = input_shape
         elif self.data_format.lower() == "channels_first":
-            batch_size, nChannels, image_height, image_width = self.input_shape
+            batch_size, nChannels, image_height, image_width = input_shape
         else:
             raise ValueError(f"'data_format' is either 'channels_first' or 'channels_last'. Received {self.data_format}")
 
         return batch_size, image_height, image_width, nChannels
 
-    def get_spatial_output_shape(self):
-        batch_size, image_height, image_width, self.nChannelsOutput = self.get_dense_output_shape_params()
+    def get_spatial_output_shape(self, input_shape, output_shape):
+        batch_size, image_height, image_width, self.nChannelsOutput = self.get_output_shape_params(input_shape, output_shape)
         spatial_output_shape = (image_height, image_width)
         return spatial_output_shape
 
-    def get_dense_output_shape_params(self):
-        if len(self.input_shape) <= 2:
+    def get_output_shape_params(self, input_shape, output_shape):
+        if len(input_shape) <= 2:
             image_height = 1
             image_width = 1
             if self.data_format.lower() == "channels_last":
@@ -179,11 +185,6 @@ class keras_dense_2d_4dinput(Brick):
             else:
                 raise ValueError(f"'data_format' is either 'channels_first' or 'channels_last'. Received {self.data_format}")
         else:
-            if self.data_format.lower() == "channels_last":
-                batch_size, image_height, image_width, nChannels = self.output_shape
-            elif self.data_format.lower() == "channels_first":
-                batch_size, nChannels, image_height, image_width = self.output_shape
-            else:
-                raise ValueError(f"'data_format' is either 'channels_first' or 'channels_last'. Received {self.data_format}")
+            batch_size, image_height, image_width, nChannels = self.get_input_shape_params(output_shape)
 
         return batch_size, image_height, image_width, nChannels
