@@ -3,6 +3,7 @@
 import logging
 import numpy as np
 from .bricks import Brick
+from .keras_utils import parse_thresholds_input_parameter, parse_strides_input_parameter
 
 # Turn off black formatting for this file
 # fmt: off
@@ -11,24 +12,6 @@ def debug_input_index(input_lists, Am, An, basep, bits):
     for k in np.arange(len(input_lists[0])):
         row, col, pwr, Ck = np.unravel_index(k, (Am, An, bits, basep))
         print(f"{k:3d}  {np.mod(k,basep*bits):2d}  ({row},{col}) {Ck:2d}  {pwr:2d}")
-
-def isValueScalar(scalar):
-    if not hasattr(scalar, '__len__') and (not isinstance(scalar, str)):
-        return True
-    else:
-        return False
-
-def create_array_from_scalar_value(scalar, shape):
-    return scalar * np.ones(shape)
-
-def isShapeCorrect(variable, expected_variable_shape):
-    if not type(variable) is np.ndarray:
-        variable = np.array(variable)
-
-    if variable.shape == expected_variable_shape:
-        return True
-    else:
-        return False
 
 class keras_convolution_2d_4dinput(Brick):
     'Convolution brick that assumes collapse_binary=False for all base-p values'
@@ -54,12 +37,14 @@ class keras_convolution_2d_4dinput(Brick):
         self.nFilters = self.kernel.shape[-1]
 
         self.data_format = data_format.lower()
-        self.strides = self.parse_strides_input_parameter(strides)
-        self.initialize_spatial_input_shape()
+        self.strides = parse_strides_input_parameter(strides, error_message="Strides must be an integer or tuple of 2 integers.")
         self.initialize_kernel_shape()
+        self.initialize_input_shape_params()
+        self.initialize_spatial_input_shape()
+        self.initialize_spatial_output_shape()
         self.initialize_output_shape()
         self.initialize_output_bounds() # determine output neuron bounds based on the "padding/mode"
-        self.thresholds = self.parse_thresholds_input_parameter(thresholds, self.output_shape)
+        self.thresholds = parse_thresholds_input_parameter(thresholds, self.output_shape)
         self.metadata = {'D': 2, 'basep': basep, 'bits': bits, 'convolution_padding': mode, 'convolution_input_shape': self.input_shape, 'convolution_strides': self.strides, 'convolution_output_shape': self.output_shape}
 
     def build(self, graph, metadata, control_nodes, input_lists, input_codings):
@@ -102,29 +87,6 @@ class keras_convolution_2d_4dinput(Brick):
         self.is_built=True
 
         return (graph, self.metadata, [{'complete': complete_node, 'begin': begin_node}], output_lists, output_codings)
-
-    def parse_thresholds_input_parameter(self, thresholds_input, expected_shape):
-        if isValueScalar(thresholds_input):
-            return create_array_from_scalar_value(thresholds_input, expected_shape)
-        else:
-            thresholds = np.array(thresholds_input)
-            if isShapeCorrect(thresholds, expected_shape):
-                return thresholds
-            else:
-                raise ValueError(f"Threshold shape {thresholds.shape} does not equal the output neuron shape {expected_shape}.")
-
-    def parse_strides_input_parameter(self, strides_input):
-        if isinstance(strides_input,(list,tuple)):
-            if len(strides_input) > 2:
-                raise ValueError("Strides must be an integer or tuple/list of 2 integers.")
-            else:
-                strides = tuple(map(int,strides_input))
-        elif isinstance(strides_input,(float,int)):
-            strides = tuple(map(int,[strides_input,strides_input]))
-        else:
-            raise ValueError("Check strides input variable.")
-        
-        return strides
 
     def create_output_neurons(self, graph):
         # output neurons/nodes
@@ -219,6 +181,37 @@ class keras_convolution_2d_4dinput(Brick):
         adjustments_array = np.array([np.floor(0.5*dim_length), np.ceil(0.5*dim_length)])
         return adjustments_array
 
+    def get_padded_zeros_shape(self, spatial_input_shape, kernel_shape, strides_shape, spatial_output_shape):
+        '''
+            padding = strides*(output - 1) + kernel - input
+
+            Returns the number (count) of padded zeros in the (rows,columns) necessary to reproduce the spatial 
+            output shape given the spatial input shape, kernel shape, and strides.
+        '''
+        spatial_input_shape = np.array(spatial_input_shape)
+        kernel_shape = np.array(kernel_shape)
+        strides_shape = np.array(strides_shape)
+        spatial_output_shape = np.array(spatial_output_shape)
+
+        padding_count = (strides_shape*(spatial_output_shape - 1) + kernel_shape - spatial_input_shape)
+        padding_count[padding_count < 0] = 0.
+        return tuple(padding_count.astype(int))
+
+    def get_padded_zeros_shape_alt(self, kernel_shape, strides_shape):
+        '''
+            padding_shape = (prow,pcol)
+            kernel_shape = (krow,kcol)
+
+            Setting (prow,pcol) = (krow,kcol) - 1 results in a spatial output shape equal to the
+            spatial input shape. Otherwise, (prow,pcol)=(0,0) for padding="valid".
+        '''
+        if self.padding == "same":
+            return tuple(np.array(kernel_shape) - np.array(strides_shape))
+        elif self.padding == "valid":
+            return (0,0)
+        else:
+            raise ValueError(f"'padding' is one of 'same' or 'valid'. Received {self.padding}.")
+
     def check_padded_zeros_shape(self, padding_count):
         spatial_input_shape = np.array(self.spatial_input_shape)
         kernel_shape = np.array(self.kernel_shape)
@@ -269,48 +262,15 @@ class keras_convolution_2d_4dinput(Brick):
             self.bnds = np.array([lb, ub], dtype=int) - 1
 
     def initialize_output_shape(self):
-        self.initialize_spatial_output_shape()
         if self.data_format == "channels_last":
             self.output_shape = (self.batch_size, *self.spatial_output_shape, self.nFilters)
         elif self.data_format == "channels_first":
             self.output_shape = (self.batch_size, self.nFilters, *self.spatial_output_shape)
 
-    def get_padded_zeros_shape(self, spatial_input_shape, kernel_shape, strides_shape, spatial_output_shape):
-        '''
-            padding = strides*(output - 1) + kernel - input
-
-            Returns the number (count) of padded zeros in the (rows,columns) necessary to reproduce the spatial 
-            output shape given the spatial input shape, kernel shape, and strides.
-        '''        
-        spatial_input_shape = np.array(spatial_input_shape)
-        kernel_shape = np.array(kernel_shape)
-        strides_shape = np.array(strides_shape)
-        spatial_output_shape = np.array(spatial_output_shape)
-
-        padding_count = (strides_shape*(spatial_output_shape - 1) + kernel_shape - spatial_input_shape)
-        padding_count[padding_count < 0] = 0.
-        return tuple(padding_count.astype(int))
-
-    def get_padded_zeros_shape_alt(self, kernel_shape, strides_shape):
-        '''
-            padding_shape = (prow,pcol)
-            kernel_shape = (krow,kcol)
-
-            Setting (prow,pcol) = (krow,kcol) - 1 results in a spatial output shape equal to the
-            spatial input shape. Otherwise, (prow,pcol)=(0,0) for padding="valid".
-        '''
-        if self.padding == "same":
-            return tuple(np.array(kernel_shape) - np.array(strides_shape))
-        elif self.padding == "valid":
-            return (0,0)
-        else:
-            raise ValueError(f"'padding' is one of 'same' or 'valid'. Received {self.padding}.")
-
     def initialize_kernel_shape(self):
         self.kernel_shape = self.kernel.shape[:2]
 
     def initialize_spatial_input_shape(self):
-        self.initialize_input_shape_params()
         self.spatial_input_shape = (self.image_height, self.image_width)
 
     def initialize_input_shape_params(self):
@@ -338,16 +298,10 @@ class keras_convolution_2d_4dinput(Brick):
         return np.floor((np.array(spatial_input_shape) - np.array(kernel_shape)) / np.array(strides)) + 1
 
     def initialize_same_padding_spatial_output_shape(self):
-        if not hasattr(self,"spatial_input_shape"):
-            self.initialize_spatial_input_shape()
-
-        return self.get_same_padding_spatial_output_shape(self.spatial_input_shape,self.strides)
+        self.spatial_output_shape = list(map(int, self.get_same_padding_spatial_output_shape(self.spatial_input_shape, self.strides)))
 
     def initialize_valid_padding_spatial_output_shape(self):
-        if not hasattr(self,"spatial_input_shape"):
-            self.initialize_spatial_input_shape()
-
-        return self.get_valid_padding_spatial_output_shape(self.spatial_input_shape,self.kernel_shape,self.strides)
+        self.spatial_output_shape = list(map(int, self.get_valid_padding_spatial_output_shape(self.spatial_input_shape, self.kernel_shape, self.strides)))
 
     def get_spatial_output_shape(self, spatial_input_shape, kernel_shape, strides):
         if self.padding == "same":
@@ -362,10 +316,8 @@ class keras_convolution_2d_4dinput(Brick):
 
     def initialize_spatial_output_shape(self):
         if self.padding == "same":
-            spatial_output_shape = self.initialize_same_padding_spatial_output_shape()
+            self.initialize_same_padding_spatial_output_shape()
         elif self.padding == "valid":
-            spatial_output_shape = self.initialize_valid_padding_spatial_output_shape()
+            self.initialize_valid_padding_spatial_output_shape()
         else:
             raise ValueError(f"'padding' is one of 'same' or 'valid'. Received {self.padding}.")
-
-        self.spatial_output_shape = list(map(int,spatial_output_shape))
