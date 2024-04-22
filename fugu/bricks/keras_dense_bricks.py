@@ -4,24 +4,7 @@
 import logging
 import numpy as np
 from .bricks import Brick
-
-def isValueScalar(scalar):
-    if not hasattr(scalar, '__len__') and (not isinstance(scalar, str)):
-        return True
-    else:
-        return False
-
-def create_array_from_scalar_value(scalar, shape):
-    return scalar * np.ones(shape)
-
-def correct_shape(variable, expected_variable_shape):
-    if not type(variable) is np.ndarray:
-        variable = np.array(variable)
-
-    if variable.shape == expected_variable_shape:
-        return True
-    else:
-        return False
+from .keras_utils import isValueScalar, create_array_from_scalar_value, isShapeCorrect
 
 class keras_dense_2d_4dinput(Brick):
     "Dense Layer brick"
@@ -99,9 +82,9 @@ class keras_dense_2d_4dinput(Brick):
         graph.add_edge(control_nodes[0]["begin"]   , begin_node   , weight=1.0, delay=2)
 
 
-        self.thresholds = self.parse_variable(self.thresholds,self.output_shape,"Threshold shape {} does not equal the output neuron shape {}.")
-        self.weights = self.parse_variable(self.weights,(self.nChannelsInput,self.output_units),"Weights shape {} does not equal the necessary shape {}.")
-        self.biases = self.parse_variable(self.biases,(self.output_units,),"Biases shape {} does not equal the necessary shape {}.") if self.biases is not None else None
+        self.thresholds = self.parse_instance_variable(self.thresholds,self.output_shape,"Threshold shape {} does not equal the output neuron shape {}.")
+        self.weights = self.parse_instance_variable(self.weights,(self.nChannelsInput,self.output_units),"Weights shape {} does not equal the necessary shape {}.")
+        self.biases = self.parse_instance_variable(self.biases,(self.output_units,),"Biases shape {} does not equal the necessary shape {}.") if self.biases is not None else None
 
         # output neurons/nodes
         output_lists = [[]]
@@ -155,45 +138,15 @@ class keras_dense_2d_4dinput(Brick):
                 graph.add_edge(prev_layer[index], f'{self.name}d{index_dstr}', weight=self.weights[inchan,outchan], delay=2)
                 logging.debug(f" p{index_pstr} --> d{index_dstr}   weight: {self.weights[inchan,outchan]}")
 
-    def check_thresholds_shape(self):
-        # Check for scalar value for thresholds or consistent thresholds shape
-        expected_thresholds_shape = self.output_shape
-        error_str = "Threshold shape {} does not equal the output neuron shape {}."
-        self.thresholds = self.check_shape(self.thresholds,expected_thresholds_shape,error_str)
-
-    def check_weights_shape(self):
-        # Check for scalar value for weights or consistent weights shape
-        # Weights is a matrix that that has output_units rows and flattened(input_shape) columns (excluding batch size).
-        expected_weights_shape = (self.nChannelsInput,self.output_units)
-        error_str = "Weights shape {} does not equal the necessary shape {}."
-        self.weights = self.check_shape(self.weights, expected_weights_shape,error_str)
-
-    def check_biases_shape(self):
-        expected_biases_shape = (self.output_units,)
-        error_str = "Biases shape {} does not equal the necessary shape {}."
-        self.biases = self.check_shape(self.biases, expected_biases_shape,error_str)
-
-    def parse_variable(self, variable, expected_shape, error_str):
+    def parse_instance_variable(self, variable, expected_shape, error_str):
         if isValueScalar(variable):
             return create_array_from_scalar_value(variable, expected_shape)
         else:
             variable = np.array(variable)
-            if correct_shape(variable, expected_shape):
+            if isShapeCorrect(variable, expected_shape):
                 return variable
             else:
                 raise ValueError(error_str.format(variable.shape, expected_shape))
-
-    def check_shape(self, variable, expected_variable_shape, error_str):
-        if not hasattr(variable, '__len__') and (not isinstance(variable, str)):
-            variable = variable * np.ones(expected_variable_shape, dtype=float)
-        else:
-            if not type(variable) is np.ndarray:
-                variable = np.array(variable)
-
-            if variable.shape != expected_variable_shape:
-                raise ValueError(error_str.format(variable.shape, expected_variable_shape))
-
-        return variable
 
     def get_spatial_input_shape(self):
         self.batch_size, self.image_height, self.image_width, self.nChannelsInput = self.get_dense_input_shape_params()
