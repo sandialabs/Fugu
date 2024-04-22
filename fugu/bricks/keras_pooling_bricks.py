@@ -23,7 +23,7 @@ class keras_pooling_2d_4dinput(Brick):
     
     """
     
-    def __init__(self, pool_size, strides=None, thresholds=0.9, name=None, padding="same", method="max", data_format="channels_last"):
+    def __init__(self, pool_size, strides=None, thresholds=0.9, name=None, padding="same", method="max", layer_name='pooling', data_format="channels_last"):
         super().__init__()
         self.is_built = False
         self.name = name
@@ -36,7 +36,7 @@ class keras_pooling_2d_4dinput(Brick):
         self.thresholds = thresholds
         self.method = method.lower()
         self.data_format = data_format.lower()
-        self.metadata = {'pooling_size': self.pool_size, 'pooling_strides': self.strides, 'pooling_padding': self.padding, 'pooling_method': self.method}
+        self.metadata = {'pooling_size': self.pool_size, 'isKerasBrickLayer': True, 'layer_name': layer_name, 'padding': self.padding, 'strides': self.strides, 'method': self.method}
         
     def build(self, graph, metadata, control_nodes, input_lists, input_codings):
         """
@@ -56,13 +56,15 @@ class keras_pooling_2d_4dinput(Brick):
             + list of output
             + list of coding formats of output
         """
-        if type(metadata) is list:
-            self.metadata = {**metadata[0], **self.metadata}
-        else:
-            self.metadata = {**metadata, **self.metadata}
+        self.parse_metadata(metadata)
+        assert hasattr(self, "input_shape")
 
-        self.input_shape = self.metadata['convolution_output_shape']
-        self.metadata['pooling_input_shape'] = self.input_shape
+        self.metadata['input_shape'] = self.input_shape
+        self.initialize_input_shape_params()
+        self.initialize_spatial_input_shape()
+        self.initialize_spatial_output_shape()
+        self.initialize_output_shape()
+        self.metadata['output_shape'] = self.output_shape
 
         output_codings = [input_codings[0]]
         
@@ -74,12 +76,6 @@ class keras_pooling_2d_4dinput(Brick):
 
         graph.add_edge(control_nodes[0]["complete"], complete_node, weight=1.0, delay=1)
         graph.add_edge(control_nodes[0]["begin"]   , begin_node   , weight=1.0, delay=1)
-
-        self.initialize_input_shape_params()
-        self.initialize_spatial_input_shape()
-        self.initialize_spatial_output_shape()
-        self.initialize_output_shape()
-        self.metadata['pooling_output_shape'] = self.output_shape
 
         # Restrict max pooling threshold value to 0.9. Otherwise, the neuron circuit will not behave like an OR operation.
         if self.method == "max" and not np.any(np.array(self.thresholds) < 1.0):
@@ -125,6 +121,25 @@ class keras_pooling_2d_4dinput(Brick):
 
         self.is_built = True        
         return (graph, self.metadata, [{'complete': complete_node, 'begin': begin_node}], output_lists, output_codings)
+
+    def parse_metadata(self, metadata):
+        try:
+            isPreviousBrickKeras = metadata['isKerasBrickLayer']
+            isMetadataAList = False
+        except TypeError:
+            try:
+                isPreviousBrickKeras = metadata[0]['isKerasBrickLayer']
+                isMetadataAList = True
+            except KeyError:
+                isPreviousBrickKeras = False
+        except KeyError:
+            isPreviousBrickKeras = False
+
+        if isPreviousBrickKeras:
+            if isMetadataAList:
+                self.input_shape = metadata[0]['output_shape']
+            else:
+                self.input_shape = metadata['output_shape']
 
     def get_adjusted_slice_positions(self, pos, input_length, pool_length):
         '''

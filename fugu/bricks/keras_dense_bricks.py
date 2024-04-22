@@ -15,7 +15,7 @@ class keras_dense_2d_4dinput(Brick):
 
     """
 
-    def __init__(self, units, weights=1.0, thresholds=0.5, name=None, prev_layer_prefix="pooling_", data_format="channels_last", input_shape=None, biases=None):
+    def __init__(self, units, weights=1.0, thresholds=0.5, name=None, data_format="channels_last", input_shape=None, biases=None, layer_name='dense'):
         super().__init__()
         self.is_built = False
         self.name = name
@@ -28,8 +28,7 @@ class keras_dense_2d_4dinput(Brick):
         # TODO: Change 'output_shape' to 'output_units' to match tensorflow's Keras terminology.
         # TODO: 'output_units' should be a 1D array of shape (units,)
         self.output_units = units
-        self.metadata = {'dense_output_units': self.output_units}
-        self.prev_layer_prefix = prev_layer_prefix
+        self.metadata = {'isKerasBirckLayer': True, 'layer_name': layer_name}
         self.input_shape = input_shape
 
     def build(self, graph, metadata, control_nodes, input_lists, input_codings):
@@ -50,16 +49,11 @@ class keras_dense_2d_4dinput(Brick):
             + list of output
             + list of coding formats of output
         """
-        if type(metadata) is list:
-            self.metadata = {**metadata[0], **self.metadata}
-        else:
-            self.metadata = {**metadata, **self.metadata}
-
-        #TODO: Add raise exception if dictionary key is absent from metadata (KeyError)
         if self.input_shape is None:
-            self.input_shape = self.metadata["{}output_shape".format(self.prev_layer_prefix)]
+            self.parse_metadata(metadata)
 
-        self.metadata["dense_input_shape"] = self.input_shape
+        assert self.input_shape is not None
+        self.metadata["input_shape"] = self.input_shape
 
         # TODO: Handle input shape with rank > 2 and <= 2.
         # self.spatial_input_shape = self.get_spatial_input_shape()
@@ -69,6 +63,7 @@ class keras_dense_2d_4dinput(Brick):
         else:
             self.output_shape = (*np.array(self.input_shape)[:-1],self.output_units)
         self.handle_input_layer_shapes()
+        self.metadata["output_shape"] = self.output_shape
 
         output_codings = [input_codings[0]]
 
@@ -114,6 +109,25 @@ class keras_dense_2d_4dinput(Brick):
 
         self.is_built = True
         return (graph, self.metadata, [{"complete": complete_node, "begin": begin_node}], output_lists, output_codings,)
+
+    def parse_metadata(self, metadata):
+        try:
+            isPreviousBrickKeras = metadata['isKerasBrickLayer']
+            isMetadataAList = False
+        except TypeError:
+            try:
+                isPreviousBrickKeras = metadata[0]['isKerasBrickLayer']
+                isMetadataAList = True
+            except KeyError:
+                isPreviousBrickKeras = False
+        except KeyError:
+            isPreviousBrickKeras = False
+
+        if isPreviousBrickKeras:
+            if isMetadataAList:
+                self.input_shape = metadata[0]['output_shape']
+            else:
+                self.input_shape = metadata['output_shape']
 
     def handle_input_layer_shapes(self):
         if len(self.input_shape) <= 2:

@@ -22,7 +22,7 @@ class keras_convolution_2d_4dinput(Brick):
 
     """
 
-    def __init__(self, input_shape, kernel, thresholds, basep, bits, name=None, mode='same', strides=(1,1), biases=None, data_format="channels_last"):
+    def __init__(self, input_shape, kernel, thresholds, basep, bits, name=None, mode='same', strides=(1,1), biases=None, layer_name="convolution", data_format="channels_last"):
         # TODO: Add capability to handle Keras "data_format='channels_first'"
         super().__init__()
         self.is_built = False
@@ -35,17 +35,12 @@ class keras_convolution_2d_4dinput(Brick):
         self.padding = mode.lower()
         self.biases = biases   # shape must be (nFilters,)
         self.nFilters = self.kernel.shape[-1]
+        self.thresholds = thresholds
 
         self.data_format = data_format.lower()
         self.strides = parse_strides_input_parameter(strides, error_message="Strides must be an integer or tuple of 2 integers.")
         self.initialize_kernel_shape()
-        self.initialize_input_shape_params()
-        self.initialize_spatial_input_shape()
-        self.initialize_spatial_output_shape()
-        self.initialize_output_shape()
-        self.initialize_output_bounds() # determine output neuron bounds based on the "padding/mode"
-        self.thresholds = parse_thresholds_input_parameter(thresholds, self.output_shape)
-        self.metadata = {'D': 2, 'basep': basep, 'bits': bits, 'convolution_padding': mode, 'convolution_input_shape': self.input_shape, 'convolution_strides': self.strides, 'convolution_output_shape': self.output_shape}
+        self.metadata = {'D': 2, 'basep': basep, 'bits': bits, 'isKerasBrickLayer': True, 'layer_name': layer_name, 'padding': mode, 'strides': self.strides}
 
     def build(self, graph, metadata, control_nodes, input_lists, input_codings):
         """
@@ -69,6 +64,17 @@ class keras_convolution_2d_4dinput(Brick):
         if len(input_codings) != 1:
             raise ValueError("convolution takes in 1 inputs of size n")
 
+        self.parse_metadata(metadata)
+        assert hasattr(self, "input_shape")
+
+        self.metadata['input_shape'] = self.input_shape
+        self.initialize_input_shape_params()
+        self.initialize_spatial_input_shape()
+        self.initialize_spatial_output_shape()
+        self.initialize_output_shape()
+        self.initialize_output_bounds() # determine output neuron bounds based on the "padding/mode"
+        self.metadata['output_shape'] = self.output_shape
+        self.thresholds = parse_thresholds_input_parameter(self.thresholds, self.output_shape)
         output_codings = [input_codings[0]]
 
         complete_node = self.name + "_complete"
@@ -87,6 +93,25 @@ class keras_convolution_2d_4dinput(Brick):
         self.is_built=True
 
         return (graph, self.metadata, [{'complete': complete_node, 'begin': begin_node}], output_lists, output_codings)
+
+    def parse_metadata(self, metadata):
+        try:
+            isPreviousBrickKeras = metadata['isKerasBrickLayer']
+            isMetadataAList = False
+        except TypeError:
+            try:
+                isPreviousBrickKeras = metadata[0]['isKerasBrickLayer']
+                isMetadataAList = True
+            except KeyError:
+                isPreviousBrickKeras = False
+        except KeyError:
+            isPreviousBrickKeras = False
+
+        if isPreviousBrickKeras:
+            if isMetadataAList:
+                self.input_shape = metadata[0]['output_shape']
+            else:
+                self.input_shape = metadata['output_shape']
 
     def create_output_neurons(self, graph):
         # output neurons/nodes
