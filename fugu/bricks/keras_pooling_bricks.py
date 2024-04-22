@@ -3,9 +3,16 @@
 import logging
 import numpy as np
 from .bricks import Brick
+from .keras_utils import is_int_or_2d_tuple_of_ints, parse_thresholds_input_parameter, parse_strides_input_parameter
 
 # Turn off black formatting for this file
 # fmt: off
+
+def parse_pool_size_input_parameter(pool_size_input):
+    if is_int_or_2d_tuple_of_ints(pool_size_input):
+        return pool_size_input if hasattr(pool_size_input, "__len__") else tuple(map(int, [pool_size_input, pool_size_input]))
+    else:
+        raise ValueError("'pool_size' must be an integer or tuple of 2 integers.")
 
 class keras_pooling_2d_4dinput(Brick):
     'Pooling Layer brick'
@@ -22,37 +29,14 @@ class keras_pooling_2d_4dinput(Brick):
         self.name = name
         self.supported_codings = ['binary-L']
 
-        if hasattr(pool_size,"__len__"):
-            if type(pool_size) is not tuple:
-                raise ValueError("'pool_size' must be an integer or tuple of 2 integers.")
+        self.pool_size = parse_pool_size_input_parameter(pool_size)
+        self.strides = self.pool_size if strides is None else parse_strides_input_parameter(strides, error_message="'strides' must be an integer, tuple of 2 integers, or None. If None then defaults to 'pool_size'")
 
-            if len(pool_size) != 2:
-                raise ValueError("'pool_size' must be an integer or tuple of 2 integers.")
-        elif isinstance(pool_size,float):
-            raise ValueError("'pool_size' must be an integer or tuple of 2 integers.")
-        else:
-            pool_size = (pool_size, pool_size)
-
-        if strides is None:
-            strides = pool_size
-        elif hasattr(strides, "__len__"):
-            if type(strides) is not tuple:
-                raise ValueError("'strides' must be an integer, tuple of 2 integers, or None. If None then defaults to 'pool_size'")
-
-            if len(strides) != 2:
-                raise ValueError("'strides' must be an integer, tuple of 2 integers, or None. If None then defaults to 'pool_size'")
-        elif isinstance(strides, float):
-            raise ValueError("'strides' must be an integer, tuple of 2 integers, or None. If None then defaults to 'pool_size'")
-        else:
-            strides = (strides, strides)
-
-        self.pool_size = pool_size
-        self.padding = padding
-        self.strides = strides
+        self.padding = padding.lower()
         self.thresholds = thresholds
-        self.method = method
-        self.data_format = data_format
-        self.metadata = {'pooling_size': pool_size, 'pooling_strides': strides, 'pooling_padding': padding, 'pooling_method': method}
+        self.method = method.lower()
+        self.data_format = data_format.lower()
+        self.metadata = {'pooling_size': self.pool_size, 'pooling_strides': self.strides, 'pooling_padding': self.padding, 'pooling_method': self.method}
         
     def build(self, graph, metadata, control_nodes, input_lists, input_codings):
         """
@@ -91,21 +75,19 @@ class keras_pooling_2d_4dinput(Brick):
         graph.add_edge(control_nodes[0]["complete"], complete_node, weight=1.0, delay=1)
         graph.add_edge(control_nodes[0]["begin"]   , begin_node   , weight=1.0, delay=1)
 
-        self.output_shape = self.get_output_shape()
+        self.initialize_input_shape_params()
+        self.initialize_spatial_input_shape()
+        self.initialize_spatial_output_shape()
+        self.initialize_output_shape()
         self.metadata['pooling_output_shape'] = self.output_shape
 
         # Restrict max pooling threshold value to 0.9. Otherwise, the neuron circuit will not behave like an OR operation.
-        if self.method.lower() == "max" and not np.any(np.array(self.thresholds) < 1.0):
+        if self.method == "max" and not np.any(np.array(self.thresholds) < 1.0):
             print("You cannot modify the threshold value for method='max' in pooling brick. You must use the default threshold value here.")
             raise ValueError(f"Max pooling requires a threshold value equal to 0.9.")
         
         # Check for scalar value for thresholds
-        if not hasattr(self.thresholds, '__len__') and (not isinstance(self.thresholds, str)):
-            self.thresholds = self.thresholds * np.ones(self.output_shape)
-        else:
-            if self.thresholds.shape != self.output_shape:
-                raise ValueError(f"Threshold shape {self.thresholds.shape} does not equal the output neuron shape {self.output_shape}."
-                )
+        self.thresholds = parse_thresholds_input_parameter(self.thresholds, self.output_shape)
             
         # output neurons/nodes
         output_lists = [[]]
@@ -118,13 +100,11 @@ class keras_pooling_2d_4dinput(Brick):
         # Collect Inputs
         pixels = np.reshape(input_lists[0], self.input_shape)
 
-        edge_weights = 1.0
-        if self.method == 'average':
-            edge_weights = 1.0 / np.prod(self.pool_size, dtype=float)
+        edge_weights = self.get_edge_weights(self.pool_size, self.method)
 
         # Construct edges connecting input and output nodes
         # TODO: Handle cases where batch_size != 1; (i.e., index 0 in pixel[0,:,:,:] should not be hardcoded.)
-        padded_input_shape_bounds = self.get_padded_input_shape_bounds()
+        padded_input_shape_bounds = self.get_padded_input_shape_bounds(self.spatial_input_shape, self.pool_size, self.strides, self.spatial_output_shape)
         padded_row_stride_positions, padded_col_stride_positions = self.get_stride_positions_from_bounds(padded_input_shape_bounds)
         for output_row, padded_input_row in enumerate(padded_row_stride_positions[:self.spatial_output_shape[0]]):
             row_slice = slice(*self.get_adjusted_slice_positions(padded_input_row,self.spatial_input_shape[0],self.pool_size[0]))
@@ -162,7 +142,15 @@ class keras_pooling_2d_4dinput(Brick):
 
         return ipos, fpos
 
-    def get_padded_input_shape_bounds(self):
+    def get_edge_weights(self, kernel_shape, method):
+        if method.lower() == "average":
+            return 1.0 / np.prod(kernel_shape, dtype=float)
+        elif method.lower() == "max":
+            return 1.0
+        else:
+            raise ValueError("Undefined 'method' for edge weights.")
+
+    def get_padded_input_shape_bounds(self, spatial_input_shape, kernel_shape, strides, spatial_output_shape):
         '''
             padding_shape = (prow,pcol)
 
@@ -170,8 +158,8 @@ class keras_pooling_2d_4dinput(Brick):
             is even then we pad floor(prow/2) rows on the top and ceil(prow/2) rows on the bottom. The width is padded
             in a similar fashion.
         '''
-        padding_shape = self.get_padded_zeros_count()
-        assert self.check_padded_zeros_count(padding_shape)
+        padding_shape = self.get_padded_zeros_shape(spatial_input_shape, kernel_shape, strides, spatial_output_shape)
+        assert self.check_padded_zeros_shape(padding_shape)
 
         # determine padding adjustments for top/bottom/left/right regions.
         top_bottom_padding = self.get_padding_amount(padding_shape[0])
@@ -186,9 +174,12 @@ class keras_pooling_2d_4dinput(Brick):
         adjustments_array = np.array([np.floor(0.5*dim_length), np.ceil(0.5*dim_length)])
         return adjustments_array
 
-    def get_padded_zeros_count(self):
+    def get_padded_zeros_shape(self, spatial_input_shape, kernel_shape, strides_shape, spatial_output_shape):
         '''
             padding = strides*(output - 1) + kernel - input
+
+            Returns the number (count) of padded zeros in the (rows,columns) necessary to reproduce the spatial
+            output shape given the spatial input shape, kernel shape, and strides.
         '''
         spatial_input_shape = np.array(self.spatial_input_shape)
         kernel_shape = np.array(self.pool_size)
@@ -199,7 +190,7 @@ class keras_pooling_2d_4dinput(Brick):
         padding_count[padding_count < 0] = 0.
         return tuple(padding_count.astype(int))
 
-    def check_padded_zeros_count(self, padding_count):
+    def check_padded_zeros_shape(self, padding_count):
         spatial_input_shape = np.array(self.spatial_input_shape)
         kernel_shape = np.array(self.pool_size)
         strides_shape = np.array(self.strides)
@@ -214,50 +205,60 @@ class keras_pooling_2d_4dinput(Brick):
         return [np.arange(input_shape_bounds[0,0],input_shape_bounds[0,1],self.strides[0]),
                 np.arange(input_shape_bounds[1,0],input_shape_bounds[1,1],self.strides[1])]
 
-    def get_output_shape(self):
-        self.spatial_output_shape = self.get_spatial_output_shape()
+    def initialize_output_shape(self):
+        if self.data_format == "channels_last":
+            self.output_shape = (self.batch_size, *self.spatial_output_shape, self.nChannels)
+        elif self.data_format == "channels_first":
+            self.output_shape = (self.batch_size, self.nChannels, *self.spatial_output_shape)
 
-        if self.data_format.lower() == "channels_last":
-            output_shape = (self.batch_size, *self.spatial_output_shape, self.nChannels)
-        else:
-            output_shape = (self.batch_size, self.nChannels, *self.spatial_output_shape)
+    def initialize_spatial_input_shape(self):
+        self.spatial_input_shape = (self.image_height, self.image_width)
 
-        return output_shape
+    def initialize_input_shape_params(self):
+        self.batch_size, self.image_height, self.image_width, self.nChannels = self.get_input_shape_params(self.input_shape)
 
-    def get_spatial_input_shape(self):
-        self.batch_size, self.image_height, self.image_width, self.nChannels = self.get_input_shape_params()
-        spatial_input_shape = (self.image_height, self.image_width)
+    def get_spatial_input_shape(self, input_shape):
+        batch_size, image_height, image_width, nChannels = self.get_input_shape_params(input_shape)
+        spatial_input_shape = (image_height, image_width)
         return spatial_input_shape
 
-    def same_padding_spatial_output_shape(self):
-        if not hasattr(self,"spatial_input_shape"):
-            self.spatial_input_shape = self.get_spatial_input_shape()
+    def get_input_shape_params(self, input_shape):
+        if self.data_format == "channels_last":
+            batch_size, image_height, image_width, nChannels = input_shape
+        elif self.data_format == "channels_first":
+            batch_size, nChannels, image_height, image_width = input_shape
+        else:
+            raise ValueError(f"'data_format' is either 'channels_first' or 'channels_last'. Received {self.data_format}")
 
-        return np.floor((np.array(self.spatial_input_shape) - 1) / np.array(self.strides)) + 1
+        return batch_size, image_height, image_width, nChannels
 
-    def valid_padding_spatial_output_shape(self):
-        if not hasattr(self,"spatial_input_shape"):
-            self.spatial_input_shape = self.get_spatial_input_shape()
+    def get_same_padding_spatial_output_shape(self, spatial_input_shape, strides):
+        return np.floor((np.array(spatial_input_shape) - 1) / np.array(strides)) + 1
 
-        return np.floor((np.array(self.spatial_input_shape) - np.array(self.pool_size)) / np.array(self.strides)) + 1
+    def get_valid_padding_spatial_output_shape(self, spatial_input_shape, kernel_shape, strides):
+        return np.floor((np.array(spatial_input_shape) - np.array(kernel_shape)) / np.array(strides)) + 1
 
-    def get_spatial_output_shape(self):
-        if self.padding.lower() == "same":
-            spatial_output_shape = self.same_padding_spatial_output_shape()
-        elif self.padding.lower() == "valid":
-            spatial_output_shape = self.valid_padding_spatial_output_shape()
+    def initialize_same_padding_spatial_output_shape(self):
+        self.spatial_output_shape = list(map(int, self.get_same_padding_spatial_output_shape(self.spatial_input_shape, self.strides)))
+
+    def initialize_valid_padding_spatial_output_shape(self):
+        self.spatial_output_shape = list(map(int, self.get_valid_padding_spatial_output_shape(self.spatial_input_shape, self.pool_size, self.strides)))
+
+    def get_spatial_output_shape(self, spatial_input_shape, kernel_shape, strides):
+        if self.padding == "same":
+            spatial_output_shape = self.get_same_padding_spatial_output_shape(spatial_input_shape, strides)
+        elif self.padding == "valid":
+            spatial_output_shape = self.get_valid_padding_spatial_output_shape(spatial_input_shape, kernel_shape, strides)
         else:
             raise ValueError(f"'pool_padding' is one of 'same' or 'valid'. Received {self.padding}.")
 
         spatial_output_shape = list(map(int,spatial_output_shape))
         return spatial_output_shape
 
-    def get_input_shape_params(self):
-        if self.data_format.lower() == "channels_last":
-            batch_size, image_height, image_width, nChannels = self.input_shape
-        elif self.data_format.lower() == "channels_first":
-            batch_size, nChannels, image_height, image_width = self.input_shape
+    def initialize_spatial_output_shape(self):
+        if self.padding == "same":
+            self.initialize_same_padding_spatial_output_shape()
+        elif self.padding == "valid":
+            self.initialize_valid_padding_spatial_output_shape()
         else:
-            raise ValueError(f"'data_format' is either 'channels_first' or 'channels_last'. Received {self.data_format}")
-
-        return batch_size, image_height, image_width, nChannels
+            raise ValueError(f"'pool_padding' is one of 'same' or 'valid'. Received {self.padding}.")
