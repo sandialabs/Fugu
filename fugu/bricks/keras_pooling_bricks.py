@@ -127,9 +127,9 @@ class keras_pooling_2d_4dinput(Brick):
         padded_input_shape_bounds = self.get_padded_input_shape_bounds()
         padded_row_stride_positions, padded_col_stride_positions = self.get_stride_positions_from_bounds(padded_input_shape_bounds)
         for output_row, padded_input_row in enumerate(padded_row_stride_positions[:self.spatial_output_shape[0]]):
-            row_slice = slice(*self.adjust_position_to_input_length(padded_input_row,self.spatial_input_shape[0],self.pool_size[0]))
+            row_slice = slice(*self.get_adjusted_slice_positions(padded_input_row,self.spatial_input_shape[0],self.pool_size[0]))
             for output_col, padded_input_column in enumerate(padded_col_stride_positions[:self.spatial_output_shape[1]]):
-                col_slice = slice(*self.adjust_position_to_input_length(padded_input_column,self.spatial_input_shape[1],self.pool_size[1]))
+                col_slice = slice(*self.get_adjusted_slice_positions(padded_input_column,self.spatial_input_shape[1],self.pool_size[1]))
                 for channel in np.arange(self.nChannels):
                     # method 1
                     # for kx in np.arange(self.pool_size):
@@ -146,7 +146,10 @@ class keras_pooling_2d_4dinput(Brick):
         self.is_built = True        
         return (graph, self.metadata, [{'complete': complete_node, 'begin': begin_node}], output_lists, output_codings)
 
-    def adjust_position_to_input_length(self, pos, input_length, pool_length):
+    def get_adjusted_slice_positions(self, pos, input_length, pool_length):
+        '''
+            Returns the start and end slice positions from a specific position in the padded input row/column list
+        '''
         if pos < 0:
             ipos = 0
             fpos = pos + pool_length
