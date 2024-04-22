@@ -27,7 +27,7 @@ def isValueScalar(scalar):
 def create_array_from_scalar_value(scalar, shape):
     return scalar * np.ones(shape)
 
-def correct_shape(variable, expected_variable_shape):
+def isShapeCorrect(variable, expected_variable_shape):
     if not type(variable) is np.ndarray:
         variable = np.array(variable)
 
@@ -60,12 +60,12 @@ class keras_convolution_2d_4dinput(Brick):
         self.nFilters = self.kernel.shape[-1]
 
         self.data_format = data_format.lower()
-        self.strides = self.parse_strides_input(strides)
+        self.strides = self.parse_strides_input_parameter(strides)
         self.initialize_spatial_input_shape()
         self.initialize_kernel_shape()
         self.initialize_output_shape()
         self.initialize_output_bounds() # determine output neuron bounds based on the "padding/mode"
-        self.thresholds = self.parse_thresholds_input(thresholds, self.output_shape)
+        self.thresholds = self.parse_thresholds_input_parameter(thresholds, self.output_shape)
         self.metadata = {'D': 2, 'basep': basep, 'bits': bits, 'convolution_padding': mode, 'convolution_input_shape': self.input_shape, 'convolution_strides': self.strides, 'convolution_output_shape': self.output_shape}
 
     def build(self, graph, metadata, control_nodes, input_lists, input_codings):
@@ -109,24 +109,24 @@ class keras_convolution_2d_4dinput(Brick):
 
         return (graph, self.metadata, [{'complete': complete_node, 'begin': begin_node}], output_lists, output_codings)
 
-    def parse_thresholds_input(self, thresholds, expected_shape):
-        if isValueScalar(thresholds):
-            return create_array_from_scalar_value(thresholds, expected_shape)
+    def parse_thresholds_input_parameter(self, thresholds_input, expected_shape):
+        if isValueScalar(thresholds_input):
+            return create_array_from_scalar_value(thresholds_input, expected_shape)
         else:
-            thresholds = np.array(thresholds)
-            if correct_shape(thresholds, expected_shape):
+            thresholds = np.array(thresholds_input)
+            if isShapeCorrect(thresholds, expected_shape):
                 return thresholds
             else:
                 raise ValueError(f"Threshold shape {thresholds.shape} does not equal the output neuron shape {expected_shape}.")
 
-    def parse_strides_input(self, strides):
-        if isinstance(strides,(list,tuple)):
-            if len(strides) > 2:
+    def parse_strides_input_parameter(self, strides_input):
+        if isinstance(strides_input,(list,tuple)):
+            if len(strides_input) > 2:
                 raise ValueError("Strides must be an integer or tuple/list of 2 integers.")
             else:
-                strides = tuple(map(int,strides))
-        elif isinstance(strides,(float,int)):
-            strides = tuple(map(int,[strides,strides]))
+                strides = tuple(map(int,strides_input))
+        elif isinstance(strides_input,(float,int)):
+            strides = tuple(map(int,[strides_input,strides_input]))
         else:
             raise ValueError("Check strides input variable.")
         
