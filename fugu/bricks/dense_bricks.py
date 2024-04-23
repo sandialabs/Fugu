@@ -3,7 +3,7 @@
 import logging
 import numpy as np
 from .bricks import Brick
-
+from .layer_utils import is_metadata_key_present, get_metadata_key_value
 
 class dense_layer_1d(Brick):
     "Dense Layer brick"
@@ -14,15 +14,14 @@ class dense_layer_1d(Brick):
     
     """
 
-    def __init__(self, output_shape, weights, thresholds, name=None, prev_layer_prefix="pooling_"):
+    def __init__(self, output_shape, weights, thresholds, name=None, layer_name="dense_1d"):
         super().__init__()
         self.is_built = False
         self.name = name
         self.supported_codings = ["binary-L"]
         self.weights = np.array(weights)
         self.thresholds = np.array(thresholds)
-        self.metadata = {'dense_output_shape': output_shape}
-        self.prev_layer_prefix = prev_layer_prefix
+        self.metadata = {'isNeuralNetworkLayer': True, 'layer_name': layer_name, 'output_shape': output_shape}
         self.output_shape = output_shape
 
     def build(self, graph, metadata, control_nodes, input_lists, input_codings):
@@ -44,14 +43,15 @@ class dense_layer_1d(Brick):
             + list of coding formats of output
         """
 
-        if type(metadata) is list:
-            self.metadata = {**metadata[0], **self.metadata}
-        else:
-            self.metadata = {**metadata, **self.metadata}
+        # if type(metadata) is list:
+        #     self.metadata = {**metadata[0], **self.metadata}
+        # else:
+        #     self.metadata = {**metadata, **self.metadata}
+        if is_metadata_key_present(metadata[0],'isNeuralNetworkLayer'):
+            self.input_shape = get_metadata_key_value(metadata[0],'output_shape')
 
-        #TODO: Add raise exception if dictionary key is absent from metadata (KeyError)
-        self.input_shape = self.metadata["{}output_shape".format(self.prev_layer_prefix)]
-        self.metadata["dense_input_shape"] = self.input_shape
+        assert hasattr(self, 'input_shape')
+        self.metadata['input_shape'] = self.input_shape
 
         output_codings = [input_codings[0]]
 
@@ -112,15 +112,14 @@ class dense_layer_2d(Brick):
     
     """
 
-    def __init__(self, output_shape, weights=1.0, thresholds=0.9, name=None, prev_layer_prefix="pooling_"):
+    def __init__(self, output_shape, weights=1.0, thresholds=0.9, name=None, layer_name="dense_2d"):
         super().__init__()
         self.is_built = False
         self.name = name
         self.supported_codings = ["binary-L"]
         self.weights = weights
         self.thresholds = thresholds
-        self.metadata = {'dense_output_shape': output_shape}
-        self.prev_layer_prefix = prev_layer_prefix
+        self.metadata = {'isNeuralNetworkLayer': True, 'layer_name': layer_name, 'output_shape': output_shape}
         self.output_shape = output_shape
 
     def build(self, graph, metadata, control_nodes, input_lists, input_codings):
@@ -141,14 +140,16 @@ class dense_layer_2d(Brick):
             + list of output
             + list of coding formats of output
         """
-        if type(metadata) is list:
-            self.metadata = {**metadata[0], **self.metadata}
-        else:
-            self.metadata = {**metadata, **self.metadata}
+        # if type(metadata) is list:
+        #     self.metadata = {**metadata[0], **self.metadata}
+        # else:
+        #     self.metadata = {**metadata, **self.metadata}
 
-        #TODO: Add raise exception if dictionary key is absent from metadata (KeyError)
-        self.input_shape = self.metadata["{}output_shape".format(self.prev_layer_prefix)]
-        self.metadata["dense_input_shape"] = self.input_shape
+        if is_metadata_key_present(metadata[0],'isNeuralNetworkLayer'):
+            self.input_shape = get_metadata_key_value(metadata[0],'output_shape')
+
+        assert hasattr(self, 'input_shape')
+        self.metadata['input_shape'] = self.input_shape
 
         output_codings = [input_codings[0]]
 
