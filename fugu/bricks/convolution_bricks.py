@@ -3,7 +3,7 @@
 import logging
 import numpy as np
 from .bricks import Brick
-from .layer_utils import is_metadata_key_present, get_metadata_key_value
+from .metadata_utils import is_metadata_key_present, get_metadata_key_value
 
 class convolution_1d(Brick):
     'Convolution brick that assumes collapse_binary=False for all base-p values'
