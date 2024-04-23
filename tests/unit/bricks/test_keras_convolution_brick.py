@@ -8,7 +8,7 @@ from fugu.backends import snn_Backend
 from fugu.bricks.keras_convolution_bricks import keras_convolution_2d_4dinput
 from fugu.bricks.input_bricks import BaseP_Input
 from fugu.scaffold import Scaffold
-from fugu.utils.keras_helpers import keras_convolve2d, keras_convolve2d_4dinput, generate_keras_kernel, generate_mock_image, keras_convolution2d_output_shape_4dinput
+from ..keras_helpers import keras_convolve2d, keras_convolve2d_4dinput, generate_keras_kernel, generate_mock_image, keras_convolution2d_output_shape_4dinput
 from ..helpers import ConvolutionParams, tensorflow_keras_conv2d_answer
 
 from scipy.signal import convolve2d

@@ -12,7 +12,7 @@ from fugu.bricks.input_bricks import BaseP_Input
 from fugu.bricks.keras_pooling_bricks import keras_pooling_2d_4dinput as keras_pooling_2d
 from fugu.scaffold import Scaffold
 
-from fugu.utils.keras_helpers import keras_convolve2d, keras_convolve2d_4dinput, generate_keras_kernel, generate_mock_image, keras_convolution2d_output_shape_4dinput
+from ..keras_helpers import keras_convolve2d, keras_convolve2d_4dinput, generate_keras_kernel, generate_mock_image, keras_convolution2d_output_shape_4dinput
 from ..helpers import ConvolutionParams, PoolingParams, DenseParams, IntegerSequence, ArraySequence
 
 @pytest.mark.keras
