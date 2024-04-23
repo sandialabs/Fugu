@@ -241,8 +241,8 @@ class convolution_2d(Brick):
             ix = i - self.bnds[0,0]                
             for j in np.arange(self.bnds[0,1],self.bnds[1,1] + 1):
                 jx = j - self.bnds[0,1]
-                graph.add_node(f'{self.name}g{i}{j}', index=(ix,jx), threshold=self.thresholds[ix][jx], decay=1.0, p=1.0, potential=0.0)
-                output_lists[0].append(f'{self.name}g{i}{j}')
+                graph.add_node(f'{self.name}g{i}_{j}', index=(ix,jx), threshold=self.thresholds[ix][jx], decay=1.0, p=1.0, potential=0.0)
+                output_lists[0].append(f'{self.name}g{i}_{j}')
         
         # Collect Inputs
         I = input_lists[0]
@@ -262,7 +262,7 @@ class convolution_2d(Brick):
                 jx = j - col
 
                 cnt += 1
-                graph.add_edge(I[k], f'{self.name}g{i}{j}', weight=prefactor * self.filters[ix][jx], delay=1)
+                graph.add_edge(I[k], f'{self.name}g{i}_{j}', weight=prefactor * self.filters[ix][jx], delay=1)
                 logging.debug(f'{cnt:3d}  A[m,n]: ({row:2d},{col:2d})   power: {pwr}    coeff_i: {coeff_i}    input: {k:3d}      output: {i}{j}   B[m,n]: ({ix:2d},{jx:2d})   filter: {self.filters[ix][jx]}     I(row,col,bit-pwr,basep-coeff): {np.unravel_index(k,(Am,An,self.bits,self.basep))}     I[index]: {graph.nodes[I[k]]["index"]}')
                 
         self.is_built=True

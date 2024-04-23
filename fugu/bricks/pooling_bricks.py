@@ -96,7 +96,7 @@ class pooling_1d(Brick):
             pos = stride_positions[i]
             for k in np.arange(self.pool_size):
                 graph.add_edge(pixels[pos+k], f'{self.name}p{i}', weight=edge_weights, delay=1)
-                print(f" g{pos+k} --> p{i}")
+                logging.debug(f" g{pos+k} --> p{i}")
 
         self.is_built = True        
         return (graph, self.metadata, [{'complete': complete_node, 'begin': begin_node}], output_lists, output_codings)
@@ -191,8 +191,8 @@ class pooling_2d(Brick):
         output_lists = [[]]
         for row in np.arange(self.output_shape[0]):
             for col in np.arange(self.output_shape[1]):
-                graph.add_node(f'{self.name}p{row}{col}', index=(row,col), threshold=self.thresholds[row,col], decay=1.0, p=1.0, potential=0.0)
-                output_lists[0].append(f'{self.name}p{row}{col}')
+                graph.add_node(f'{self.name}p{row}_{col}', index=(row,col), threshold=self.thresholds[row,col], decay=1.0, p=1.0, potential=0.0)
+                output_lists[0].append(f'{self.name}p{row}_{col}')
 
         # Collect Inputs
         pixels = input_lists[0]
@@ -219,8 +219,8 @@ class pooling_2d(Brick):
                 # method 2
                 tmp = pixels[rowpos:rowpos+self.pool_size,colpos:colpos+self.pool_size]
                 for pixel in tmp.flatten():
-                    graph.add_edge(pixel, f'{self.name}p{row}{col}', weight=edge_weights, delay=1)
-                    print(f" {pixel.split('_')[1]} --> p{row}{col}")                        
+                    graph.add_edge(pixel, f'{self.name}p{row}_{col}', weight=edge_weights, delay=1)
+                    logging.debug(f" {pixel.split('_')[1]} --> p{row}_{col}")                        
 
         self.is_built = True        
         return (graph, self.metadata, [{'complete': complete_node, 'begin': begin_node}], output_lists, output_codings)
