@@ -3,6 +3,7 @@
 import logging
 import numpy as np
 from .bricks import Brick
+from .metadata_utils import is_metadata_key_present, get_metadata_key_value
 
 class convolution_1d(Brick):
     'Convolution brick that assumes collapse_binary=False for all base-p values'
@@ -13,18 +14,18 @@ class convolution_1d(Brick):
     
     """
     
-    def __init__(self, pvector, filters, thresholds, basep, bits, name=None, mode='full'):
+    def __init__(self, plength, filters, thresholds, basep, bits, name=None, mode='full', layer_name='convolution_1d'):
         super().__init__()
         self.is_built = False
         self.name = name
         self.supported_codings = ['binary-L']
-        self.plength = len(pvector)
+        self.plength = plength
         self.filters = filters
         self.thresholds = thresholds
         self.basep = basep
         self.bits = bits
         self.mode = mode
-        self.metadata = {'D': 2, 'basep': basep, 'bits': bits, 'convolution_mode': mode, 'convolution_input_shape': (self.plength,)}
+        self.metadata = {'D': 2, 'basep': basep, 'bits': bits, 'isNeuralNetworkLayer': True, 'layer_name': layer_name, 'mode': mode, 'input_shape': (self.plength,)}
         
     def build(self, graph, metadata, control_nodes, input_lists, input_codings):
         """
@@ -47,7 +48,12 @@ class convolution_1d(Brick):
         
         if len(input_codings) != 1:
             raise ValueError("convolution takes in 1 inputs of size n")
-            
+
+        if is_metadata_key_present(metadata[0],'isNeuralNetworkLayer'):
+            self.plength = get_metadata_key_value(metadata[0],'output_shape')
+
+        self.metadata['input_shape'] = self.plength
+
         output_codings = [input_codings[0]]
         
         new_complete_node_name = self.name + '_complete'
@@ -71,7 +77,7 @@ class convolution_1d(Brick):
         # determine output neuron bounds based on the "mode"
         self.get_output_bounds()
         dim1 = self.bnds[1] - self.bnds[0] + 1
-        self.metadata['convolution_output_shape'] = (dim1,)
+        self.metadata['output_shape'] = (dim1,)
 
         # Check for scalar value for thresholds
         if not hasattr(self.thresholds, '__len__') and (not isinstance(self.thresholds, str)):
@@ -92,19 +98,16 @@ class convolution_1d(Brick):
         I = input_lists[0]
                
         # Construct edges connecting input and output nodes
-        pwr = -1
         for i in np.arange(num_input_neurons):  # loop over input neurons
-            coeff_i = np.mod(i, self.basep)
+
+            row, pwr, coeff_i = np.unravel_index(i, (input_length, self.bits, self.basep))
             if coeff_i == 0:
-                pwr = pwr + 1
-                if np.mod(pwr, self.bits) == 0:
-                    pwr = 0
                 continue
 
-            row = np.unravel_index(i, (input_length, self.bits * self.basep))[0]
+            prefactor = coeff_i * self.basep**pwr
             for j in self.get_output_neurons(row, filter_length):  # loop over output neurons
                 ix = j - row
-                graph.add_edge(I[i], f'{self.name}g{j}', weight=coeff_i * self.basep**pwr * self.filters[ix], delay=1)
+                graph.add_edge(I[i], f'{self.name}g{j}', weight=prefactor * self.filters[ix], delay=1)
                 logging.debug(f'coeff_i: {coeff_i}    power: {pwr}    input: {i}      output: {j}     filter id: {ix}     filter: {self.filters[ix]}')
                 
         self.is_built=True        
@@ -159,18 +162,18 @@ class convolution_2d(Brick):
     
     """
     
-    def __init__(self, pvector, filters, thresholds, basep, bits, name=None, mode='full'):
+    def __init__(self, input_shape, filters, thresholds, basep, bits, name=None, mode='full', layer_name='convolution_2d'):
         super().__init__()
         self.is_built = False
         self.name = name
         self.supported_codings = ['binary-L']
-        self.pshape = np.array(pvector).shape
+        self.input_shape = input_shape
         self.filters = filters
         self.thresholds = thresholds
         self.basep = basep
         self.bits = bits
         self.mode = mode
-        self.metadata = {'D': 2, 'basep': basep, 'bits': bits, 'convolution_mode': mode, 'convolution_input_shape': self.pshape}
+        self.metadata = {'D': 2, 'basep': basep, 'bits': bits, 'isNeuralNetworkLayer': True, 'layer_name': layer_name, 'mode': mode, 'input_shape': self.input_shape}
         
     def build(self, graph, metadata, control_nodes, input_lists, input_codings):
         """
@@ -193,7 +196,12 @@ class convolution_2d(Brick):
         
         if len(input_codings) != 1:
             raise ValueError("convolution takes in 1 inputs of size n")
-            
+
+        if is_metadata_key_present(metadata[0],'isNeuralNetworkLayer'):
+            self.input_shape = get_metadata_key_value(metadata[0],'output_shape')
+
+        self.metadata['input_shape'] = self.input_shape
+
         output_codings = [input_codings[0]]
         
         new_complete_node_name = self.name + '_complete'
@@ -210,13 +218,13 @@ class convolution_2d(Brick):
         begin_node = new_begin_node_name
         
         # Get size/shape information from input arrays
-        Am, An = self.pshape
+        Am, An = self.input_shape
         Bm, Bn = np.array(self.filters).shape
 
         # determine output neuron bounds based on the "mode"
         self.get_output_bounds()
         dim1, dim2 = self.bnds[1,0] - self.bnds[0,0] + 1, self.bnds[1,1] - self.bnds[0,1] + 1
-        self.metadata['convolution_output_shape'] = (dim1,dim2)
+        self.metadata['output_shape'] = (dim1,dim2)
 
         # Check for scalar value for thresholds
         if not hasattr(self.thresholds, '__len__') and (not isinstance(self.thresholds, str)):
@@ -233,32 +241,29 @@ class convolution_2d(Brick):
             ix = i - self.bnds[0,0]                
             for j in np.arange(self.bnds[0,1],self.bnds[1,1] + 1):
                 jx = j - self.bnds[0,1]
-                graph.add_node(f'{self.name}g{i}{j}', index=(ix,jx), threshold=self.thresholds[ix][jx], decay=1.0, p=1.0, potential=0.0)
-                output_lists[0].append(f'{self.name}g{i}{j}')
+                graph.add_node(f'{self.name}g{i}_{j}', index=(ix,jx), threshold=self.thresholds[ix][jx], decay=1.0, p=1.0, potential=0.0)
+                output_lists[0].append(f'{self.name}g{i}_{j}')
         
         # Collect Inputs
         I = input_lists[0]
                
         # Construct edges connecting input and output nodes
-        pwr = -1
         cnt = -1
         for k in np.arange(num_input_neurons):  # loop over input neurons
-            coeff_i = np.mod(k, self.basep)
-            if coeff_i == 0:
-                pwr = pwr + 1
-                if np.mod(pwr, self.bits) == 0:
-                    pwr = 0
-                continue
 
             # loop over output neurons
-            row, col = np.unravel_index(k, (Am, An, self.bits * self.basep))[0:2]
+            row, col, pwr, coeff_i = np.unravel_index(k, (Am, An, self.bits, self.basep))
+            if coeff_i == 0:
+                continue
+
+            prefactor = coeff_i * self.basep**pwr
             for i, j in self.get_output_neurons(row, col, Bm, Bn):
                 ix = i - row
                 jx = j - col
 
                 cnt += 1
-                graph.add_edge(I[k], f'{self.name}g{i}{j}', weight=coeff_i * self.basep**pwr * self.filters[ix][jx], delay=1)
-                logging.debug(f'{cnt}     coeff_i: {coeff_i}    power: {pwr}    input: {k}      output: {i}{j}     filter: {self.filters[ix][jx]}     I: {np.unravel_index(k,(Am,An,self.bits*self.basep))}')
+                graph.add_edge(I[k], f'{self.name}g{i}_{j}', weight=prefactor * self.filters[ix][jx], delay=1)
+                logging.debug(f'{cnt:3d}  A[m,n]: ({row:2d},{col:2d})   power: {pwr}    coeff_i: {coeff_i}    input: {k:3d}      output: {i}{j}   B[m,n]: ({ix:2d},{jx:2d})   filter: {self.filters[ix][jx]}     I(row,col,bit-pwr,basep-coeff): {np.unravel_index(k,(Am,An,self.bits,self.basep))}     I[index]: {graph.nodes[I[k]]["index"]}')
                 
         self.is_built=True
         
@@ -283,7 +288,7 @@ class convolution_2d(Brick):
         return neuron_indices
 
     def get_output_bounds(self):
-        Am, An = self.pshape
+        Am, An = self.input_shape
         Bm, Bn = np.array(self.filters).shape
         Gm, Gn = Am + Bm - 1, An + Bn - 1
 

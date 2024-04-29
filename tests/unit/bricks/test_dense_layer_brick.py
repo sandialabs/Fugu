@@ -22,6 +22,7 @@ class Test_DenseLayer1D:
         self.filters = [2, 3]
         self.mode = "full"
         self.pvector = [2, 3, 7, 4, 6, 2]
+        self.plength = len(self.pvector)
 
         self.pool_size = 2
         self.pool_strides = 2
@@ -70,6 +71,7 @@ class Test_DenseLayer1D:
         self.filters = [2, 3]
         self.mode = "full"
         self.pvector = [2, 3, 7, 4, 6, 2]
+        self.plength = len(self.pvector)
 
         self.pool_size = 2
         self.pool_strides = 2
@@ -112,7 +114,7 @@ class Test_DenseLayer1D:
     def run_dense_layer_1d(self, output_shape):
         scaffold = Scaffold()
         scaffold.add_brick(BaseP_Input(np.array([self.pvector]),p=self.basep,bits=self.bits,collapse_binary=False,name="Input0",time_dimension=False),"input")
-        scaffold.add_brick(convolution_1d(self.pvector,self.filters,self.conv_thresholds,self.basep,self.bits,name="convolution_",mode=self.mode),[(0, 0)],output=True)
+        scaffold.add_brick(convolution_1d(self.plength,self.filters,self.conv_thresholds,self.basep,self.bits,name="convolution_",mode=self.mode),[(0, 0)],output=True)
         scaffold.add_brick(pooling_1d(self.pool_size,self.pool_strides,thresholds=self.pool_thresholds,name="pool_",method=self.pool_method),[(1,0)],output=True)
         scaffold.add_brick(dense_layer_1d(output_shape,weights=self.dense_weights,thresholds=self.dense_thresholds,name="dense_"),[(2,0)],output=True)
 
@@ -187,6 +189,7 @@ class Test_DenseLayer2D:
         self.filters = [[2, 3],[4,5]]
         self.mode = "full"
         self.pvector = [[1,1,4,6],[6,2,4,2],[2,3,5,4],[6,1,6,3]]
+        self.pshape = np.array(self.pvector).shape
 
         self.pool_size = 2
         self.pool_strides = 2
@@ -233,6 +236,7 @@ class Test_DenseLayer2D:
         self.filters = [[2, 3],[4,5]]
         self.mode = "full"
         self.pvector = [[1,1,4,6],[6,2,4,2],[2,3,5,4],[6,1,6,3]]
+        self.pshape = np.array(self.pvector).shape
 
         self.pool_size = 2
         self.pool_strides = 2
@@ -275,6 +279,7 @@ class Test_DenseLayer2D:
         self.filters = [[2, 3],[4,5]]
         self.mode = "full"
         self.pvector = [[1,1,4,6],[6,2,4,2],[2,3,5,4],[6,1,6,3]]
+        self.pshape = np.array(self.pvector).shape
 
         self.pool_size = 2
         self.pool_strides = 2
@@ -312,6 +317,7 @@ class Test_DenseLayer2D:
         self.filters = [[2, 3],[4,5]]
         self.mode = "full"
         self.pvector = [[1,1,4,6],[6,2,4,2],[2,3,5,4],[6,1,6,3]]
+        self.pshape = np.array(self.pvector).shape
 
         self.pool_size = 2
         self.pool_strides = 2
@@ -355,6 +361,7 @@ class Test_DenseLayer2D:
         self.filters = [[2, 3],[4,5]]
         self.mode = "full"
         self.pvector = [[1,1,4,6],[6,2,4,2],[2,3,5,4],[6,1,6,3]]
+        self.pshape = np.array(self.pvector).shape
 
         self.pool_size = 2
         self.pool_strides = 2
@@ -392,6 +399,7 @@ class Test_DenseLayer2D:
         self.filters = [[2, 3],[4,5]]
         self.mode = "full"
         self.pvector = [[1,1,4,6],[6,2,4,2],[2,3,5,4],[6,1,6,3]]
+        self.pshape = np.array(self.pvector).shape
 
         self.pool_size = 2
         self.pool_strides = 2
@@ -459,7 +467,7 @@ class Test_DenseLayer2D:
     def run_dense_layer_2d(self, output_shape):
         scaffold = Scaffold()
         scaffold.add_brick(BaseP_Input(np.array([self.pvector]),p=self.basep,bits=self.bits,collapse_binary=False,name="Input0",time_dimension=False),"input")
-        scaffold.add_brick(convolution_2d(self.pvector,self.filters,self.conv_thresholds,self.basep,self.bits,name="convolution_",mode=self.mode),[(0, 0)],output=True)
+        scaffold.add_brick(convolution_2d(self.pshape,self.filters,self.conv_thresholds,self.basep,self.bits,name="convolution_",mode=self.mode),[(0, 0)],output=True)
         scaffold.add_brick(pooling_2d(self.pool_size,self.pool_strides,thresholds=self.pool_thresholds,name="pool_",method=self.pool_method),[(1,0)],output=True)
         scaffold.add_brick(dense_layer_2d(output_shape,weights=self.dense_weights,thresholds=self.dense_thresholds,name="dense_"),[(2,0)],output=True)
 

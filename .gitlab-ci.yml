@@ -23,12 +23,12 @@ black:
     - python -m pip install --upgrade .
     - python -m pip install black
   script:
-    - black --check tests fugu/utils/validation.py fugu/simulators --exclude=tests/unit/bricks/
+    - black --check tests fugu/utils/validation.py fugu/simulators --exclude="(tests/unit/bricks/)"
 
 tests:
   stage: testing
   before_script:
-    - python -m pip install -r requirements.txt
+    - python -m pip install .[whetstone]
     - python -m pip install --upgrade .
     - python -m pip install pytest==7.4.4
   script:
@@ -37,7 +37,7 @@ tests:
 coverage:
   stage: testing
   before_script:
-    - python -m pip install -r requirements.txt
+    - python -m pip install .[whetstone]
     - python -m pip install --upgrade .
     - python -m pip install pytest==7.4.4 coverage==7.4.1
   script:
