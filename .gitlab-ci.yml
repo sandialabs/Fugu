@@ -15,6 +15,8 @@ isort:
     - python -m pip install isort
   script:
     - isort --check --filter-files tests fugu/utils/validation.py fugu/simulators
+  rules:
+    - when: always
 
 black:
   stage: linting
@@ -24,6 +26,8 @@ black:
     - python -m pip install black
   script:
     - black --check tests fugu/utils/validation.py fugu/simulators --exclude="(tests/unit/bricks/)"
+  rules:
+    - when: always
 
 tests:
   stage: testing
@@ -33,6 +37,8 @@ tests:
     - python -m pip install pytest==7.4.4
   script:
     - pytest
+  rules:
+    - when: always
 
 coverage:
   stage: testing
@@ -50,6 +56,8 @@ coverage:
     paths:
       - coverage_report.txt
     when: on_success
+  rules:
+    - when: always
 
 pages_build_on_mr:
   stage: build
@@ -60,7 +68,7 @@ pages_build_on_mr:
   script:
     - cd docs && make html
   rules:
-    - if: $CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == $CI_DEFAULT_BRANCH
+    - when: always
 
 pages:
   stage: deploy
