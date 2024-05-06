@@ -51,11 +51,13 @@ coverage:
       coverage run -m pytest
       echo "Report generated with command: coverage report -m --skip-covered" > coverage_report.txt
       echo >> coverage_report.txt
-      coverage report -m --skip-covered >> coverage_report.txt
+      coverage report -m --skip-covered | tee -a coverage_report.txt
   artifacts:
     paths:
       - coverage_report.txt
     when: on_success
+  needs:
+    - tests
   rules:
     - when: always
 
