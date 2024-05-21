@@ -83,6 +83,11 @@ class stacs_Backend(Backend):
                 else:
                     fp_inp.write('\n')
         self.n_inputs = len(event_list)
+
+        if self.record != False:
+            with open(fugufiles + '/fugu_output.csv','w') as fp_out:
+                for neuron in self.record:
+                    fp_out.write("{}\n".format(neuron))
         
         # Convert graph to sparse-csv files for stacs to build with
         # This essentially all gets converted into a flat population
