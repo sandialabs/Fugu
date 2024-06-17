@@ -5,6 +5,20 @@ import pytest
 from fugu.utils.optimization import offset_voltages
 
 
+def create_test_graph(threshold=None, potential=None, reset_voltage=None):
+    graph = nx.Graph()
+    graph.add_node("a")
+
+    if threshold is not None:
+        graph.nodes["a"]["threshold"] = threshold
+    if potential is not None:
+        graph.nodes["a"]["potential"] = potential
+    if reset_voltage is not None:
+        graph.nodes["a"]["reset_voltage"] = reset_voltage
+
+    return graph
+
+
 @pytest.mark.parametrize(
     "threshold, reset_voltage, expected",
     [
@@ -108,17 +122,3 @@ def test_no_potential(reset_voltage, expected):
     example_graph = offset_voltages(example_graph, desired_reset_value=0)
     assert "potential" in example_graph.nodes["a"]
     assert example_graph.nodes["a"]["potential"] == expected
-
-
-def create_test_graph(threshold=None, potential=None, reset_voltage=None):
-    graph = nx.Graph()
-    graph.add_node("a")
-
-    if threshold is not None:
-        graph.nodes["a"]["threshold"] = threshold
-    if potential is not None:
-        graph.nodes["a"]["potential"] = potential
-    if reset_voltage is not None:
-        graph.nodes["a"]["reset_voltage"] = reset_voltage
-
-    return graph
