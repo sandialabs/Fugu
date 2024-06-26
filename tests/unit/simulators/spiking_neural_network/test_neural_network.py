@@ -199,10 +199,7 @@ def test_add_synapse(capsys, blank_network, neurons_and_synapses):
 
     assert blank_network.add_synapse(synapses[0]) == None
     out, _ = capsys.readouterr()
-    assert (
-        out
-        == "Warning! Not Added! Synapse s_a_b(1, 1.0) already defined in network. (Use <synapse>.set_params() to update synapse)\n"
-    )
+    assert out == "Warning! Not Added! Synapse s_a_b(1, 1.0) already defined in network. (Use <synapse>.set_params() to update synapse)\n"
 
 
 @pytest.mark.parametrize(

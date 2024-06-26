@@ -12,10 +12,10 @@ class TestGenerateRelayData:
         graph = nx.Graph()
         for (u, v), delay in zip(edges, delays):
             graph.add_edge(u, v, delay=delay)
-    
+
         return graph
 
-    @pytest.mark.parametrize('num_edges', range(1, 10))
+    @pytest.mark.parametrize("num_edges", range(1, 10))
     def test_no_relay(self, num_edges):
         delays = [1 for _ in range(num_edges)]
         edges = [(i, i + 1) for i in range(num_edges)]
@@ -26,7 +26,7 @@ class TestGenerateRelayData:
         for edge in edges:
             assert relay_data.get_final_delay(edge) is None
 
-    @pytest.mark.parametrize('max_delay', np.arange(2, 63))
+    @pytest.mark.parametrize("max_delay", np.arange(2, 63))
     def test_single_relay(self, max_delay):
         num_edges = 10
         delays = [1 for _ in range(num_edges)]
@@ -39,25 +39,23 @@ class TestGenerateRelayData:
         assert len(relay_data.get_relay_list(edges[-1])) == 1
         assert relay_data.get_final_delay(edges[-1]) == 1
 
-    @pytest.mark.parametrize("max_delay, delay_value_multiplier, expected_final_delay", 
-                             [(2, 5, 1), (10, 5, 2), (10, 5, 9), (63, 3, 4), (63, 3, 30), (63, 3, 62)])
+    @pytest.mark.parametrize("max_delay, delay_value_multiplier, expected_final_delay", [(2, 5, 1), (10, 5, 2), (10, 5, 9), (63, 3, 4), (63, 3, 30), (63, 3, 62)])
     def test_single_relay_chain_with_final_delay(self, max_delay, delay_value_multiplier, expected_final_delay):
         num_edges = 10
         delays = [1 for _ in range(num_edges)]
         edges = [(i, i + 1) for i in range(num_edges)]
-        #delays[-1] = max_delay * delay_value_multiplier + delay_value_remainder
-        delays[-1] = max_delay * delay_value_multiplier + expected_final_delay 
+        # delays[-1] = max_delay * delay_value_multiplier + delay_value_remainder
+        delays[-1] = max_delay * delay_value_multiplier + expected_final_delay
         graph = TestGenerateRelayData.create_test_graph(edges, delays)
         relay_data = generate_relay_data(graph, max_delay)
 
         expected_total_relays = int(delays[-1] / max_delay)
 
-        assert relay_data.get_total_relays() == expected_total_relays 
-        assert len(relay_data.get_relay_list(edges[-1])) == expected_total_relays 
-        assert relay_data.get_final_delay(edges[-1]) == expected_final_delay 
+        assert relay_data.get_total_relays() == expected_total_relays
+        assert len(relay_data.get_relay_list(edges[-1])) == expected_total_relays
+        assert relay_data.get_final_delay(edges[-1]) == expected_final_delay
 
-    @pytest.mark.parametrize("max_delay, delay_value_multiplier", 
-                             [(2, 5), (2, 9), (10, 5), (10, 2), (63, 3), (63, 30), (63, 62)])
+    @pytest.mark.parametrize("max_delay, delay_value_multiplier", [(2, 5), (2, 9), (10, 5), (10, 2), (63, 3), (63, 30), (63, 62)])
     def test_single_relay_chain_no_final_delay(self, max_delay, delay_value_multiplier):
         num_edges = 10
         delays = [1 for _ in range(num_edges)]
@@ -68,14 +66,14 @@ class TestGenerateRelayData:
 
         expected_total_relays = int(delays[-1] / max_delay) - 1
 
-        assert relay_data.get_total_relays() == expected_total_relays 
-        assert len(relay_data.get_relay_list(edges[-1])) == expected_total_relays 
-        assert relay_data.get_final_delay(edges[-1]) == max_delay 
+        assert relay_data.get_total_relays() == expected_total_relays
+        assert len(relay_data.get_relay_list(edges[-1])) == expected_total_relays
+        assert relay_data.get_final_delay(edges[-1]) == max_delay
 
     def test_multiple_relay_chains(self):
         num_edges = 10
         max_delay = 63
-        delays = [max_delay * (i + 1) + i for i in range(num_edges)]
+        delays = [max_delay * (i + 1) + i + 1 for i in range(num_edges)]
         edges = [(i, i + 1) for i in range(num_edges)]
 
         graph = TestGenerateRelayData.create_test_graph(edges, delays)

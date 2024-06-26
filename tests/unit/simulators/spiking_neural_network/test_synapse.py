@@ -72,9 +72,7 @@ def test_constructor_delay_value_check(lif_neuron, delay):
         Synapse(lif_neuron("n1"), lif_neuron("n2"), delay=delay)
 
 
-def test_constructor_defaults(
-    default_synapse_w_lif_neurons, default_synapse_w_input_neurons
-):
+def test_constructor_defaults(default_synapse_w_lif_neurons, default_synapse_w_input_neurons):
     assert default_synapse_w_lif_neurons.delay == 1
     assert default_synapse_w_lif_neurons._d == 1
     assert default_synapse_w_lif_neurons.weight == 1.0
@@ -161,9 +159,7 @@ def test_set_params_value_check(default_synapse_w_lif_neurons, delay):
 
 
 @pytest.mark.parametrize("delay", [2, 3, 4, 100])
-def test_set_params(
-    default_synapse_w_lif_neurons, default_synapse_w_input_neurons, delay
-):
+def test_set_params(default_synapse_w_lif_neurons, default_synapse_w_input_neurons, delay):
     assert default_synapse_w_lif_neurons.delay == 1
     default_synapse_w_lif_neurons.set_params(new_delay=delay)
     assert default_synapse_w_lif_neurons.delay == delay
@@ -176,18 +172,12 @@ def test_set_params(
 def test_show_params(capsys, default_synapse_w_lif_neurons):
     assert default_synapse_w_lif_neurons.show_params() == None
     out, _ = capsys.readouterr()
-    assert (
-        out
-        == "Synapse LIFNeuron n1(0.0, 0.0, 1.0) -> LIFNeuron n2(0.0, 0.0, 1.0):\n delay  : 1\n weight : 1.0\n"
-    )
+    assert out == "Synapse LIFNeuron n1(0.0, 0.0, 1.0) -> LIFNeuron n2(0.0, 0.0, 1.0):\n delay  : 1\n weight : 1.0\n"
 
     assert default_synapse_w_lif_neurons.set_params(new_delay=2, new_weight=2.0) == None
     assert default_synapse_w_lif_neurons.show_params() == None
     out, _ = capsys.readouterr()
-    assert (
-        out
-        == "Synapse LIFNeuron n1(0.0, 0.0, 1.0) -> LIFNeuron n2(0.0, 0.0, 1.0):\n delay  : 2\n weight : 2.0\n"
-    )
+    assert out == "Synapse LIFNeuron n1(0.0, 0.0, 1.0) -> LIFNeuron n2(0.0, 0.0, 1.0):\n delay  : 2\n weight : 2.0\n"
 
 
 def test_named__str__(capsys, default_synapse_w_lif_neurons):

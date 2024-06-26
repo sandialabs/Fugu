@@ -16,12 +16,8 @@ class TestSnnSimpleGraphTraversal(BrickTest):
     def build_scaffold(self, input_values):
         graph, source_vertex, return_pred = input_values
         scaffold = Scaffold()
-        input_brick = BRICKS.Vector_Input(
-            self.convert_input((graph, source_vertex)), coding="Raster", name="Input"
-        )
-        traversal_brick = BRICKS.SimpleGraphTraversal(
-            graph, name="SGT", store_parent_info=return_pred
-        )
+        input_brick = BRICKS.Vector_Input(self.convert_input((graph, source_vertex)), coding="Raster", name="Input")
+        traversal_brick = BRICKS.SimpleGraphTraversal(graph, name="SGT", store_parent_info=return_pred)
 
         scaffold.add_brick(input_brick, "input")
         scaffold.add_brick(traversal_brick, input_nodes=[(0, 0)], output=True)
@@ -71,9 +67,7 @@ class TestSnnSimpleGraphTraversal(BrickTest):
                 u = neuron_props["from_vertex"]
                 v = neuron_props["to_vertex"]
 
-                predecessors[v] = (
-                    u if u < predecessors[v] or predecessors[v] < 0 else predecessors[v]
-                )
+                predecessors[v] = u if u < predecessors[v] or predecessors[v] < 0 else predecessors[v]
 
         for v in distance_table:
             if distance_table[v] > -1:
@@ -104,9 +98,7 @@ class TestSnnSimpleGraphTraversal(BrickTest):
 
                     edge_data = graph.get_edge_data(u, v)
                     if edge_data:
-                        edge_weight = (
-                            edge_data["weight"] if "weight" in edge_data else 1
-                        )
+                        edge_weight = edge_data["weight"] if "weight" in edge_data else 1
                     else:
                         edge_weight = 1
 
@@ -134,12 +126,8 @@ class TestSnnSimpleGraphTraversal(BrickTest):
         properties = []
         source_keys = [1, 5, 7]
         for key in source_keys:
-            properties.append(
-                {"Input": {"spike_vector": self.convert_input((graph, key))}}
-            )
-        self.run_property_test(
-            (graph, 1, False), properties, ["" for key in source_keys]
-        )
+            properties.append({"Input": {"spike_vector": self.convert_input((graph, key))}})
+        self.run_property_test((graph, 1, False), properties, ["" for key in source_keys])
 
     @pytest.mark.xfail()  # TODO fugu/backends/snn_backend.py:152: KeyError: 'Input'
     def test_bfs_multi_run_store_parents(self):
@@ -147,12 +135,8 @@ class TestSnnSimpleGraphTraversal(BrickTest):
         properties = []
         source_keys = [1, 5, 7]
         for key in source_keys:
-            properties.append(
-                {"Input": {"spike_vector": self.convert_input((graph, key))}}
-            )
-        self.run_property_test(
-            (graph, 1, True), properties, ["" for key in source_keys]
-        )
+            properties.append({"Input": {"spike_vector": self.convert_input((graph, key))}})
+        self.run_property_test((graph, 1, True), properties, ["" for key in source_keys])
 
     def test_sssp_random_gnp_distances(self):
         graph = create_weighted_graph(15, 0.3, 3)
@@ -168,12 +152,8 @@ class TestSnnSimpleGraphTraversal(BrickTest):
         properties = []
         source_keys = [1, 5, 7]
         for key in source_keys:
-            properties.append(
-                {"Input": {"spike_vector": self.convert_input((graph, key))}}
-            )
-        self.run_property_test(
-            (graph, 1, False), properties, ["" for key in source_keys]
-        )
+            properties.append({"Input": {"spike_vector": self.convert_input((graph, key))}})
+        self.run_property_test((graph, 1, False), properties, ["" for key in source_keys])
 
     @pytest.mark.xfail()  # TODO fugu/backends/snn_backend.py:152: KeyError: 'Input'
     def test_sssp_multi_run_store_parents(self):
@@ -181,12 +161,8 @@ class TestSnnSimpleGraphTraversal(BrickTest):
         properties = []
         source_keys = [1, 5, 7]
         for key in source_keys:
-            properties.append(
-                {"Input": {"spike_vector": self.convert_input((graph, key))}}
-            )
-        self.run_property_test(
-            (graph, 1, True), properties, ["" for key in source_keys]
-        )
+            properties.append({"Input": {"spike_vector": self.convert_input((graph, key))}})
+        self.run_property_test((graph, 1, True), properties, ["" for key in source_keys])
 
     def test_sssp_race_condition(self):
         graph = nx.DiGraph()

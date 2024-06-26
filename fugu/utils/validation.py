@@ -37,14 +37,10 @@ def validate_type(param, types=type(None)):
 
     if type(types) is list:
         if type(param) not in types:
-            raise TypeError(
-                f"{param} must be of types {types} but received type {type(param)}"
-            )
+            raise TypeError(f"{param} must be of types {types} but received type {type(param)}")
     else:
         if type(param) is not types:  # it's a single type at this point
-            raise TypeError(
-                f"{param} must be of type {types} but received type {type(param)}"
-            )
+            raise TypeError(f"{param} must be of type {types} but received type {type(param)}")
 
 
 def validate_instance(param, instances=type(None)):

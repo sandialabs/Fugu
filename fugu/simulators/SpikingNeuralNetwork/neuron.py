@@ -104,9 +104,7 @@ class LIFNeuron(Neuron):
         validate_type(record, bool_types)
 
         if leakage_constant < 0 or leakage_constant > 1:
-            raise UserWarning(
-                "For realistic models, leakage m should be in the interval [0, 1]."
-            )
+            raise UserWarning("For realistic models, leakage m should be in the interval [0, 1].")
 
         if p < 0 or p > 1:
             raise ValueError("Probability p must be in the interval [0, 1].")
@@ -163,9 +161,7 @@ class LIFNeuron(Neuron):
             none
         """
 
-        print(
-            "Neuron {0}: {1} volts, spike = {2}".format(self.name, self.v, self.spike)
-        )
+        print("Neuron {0}: {1} volts, spike = {2}".format(self.name, self.v, self.spike))
 
     def show_params(self):
         """
@@ -195,17 +191,9 @@ class LIFNeuron(Neuron):
         if len(self.presyn) == 0:
             print("Neuron {0} receives no external input".format(self.name))
         elif len(self.presyn) == 1:
-            print(
-                "{0} receives input via synapse: {1}".format(
-                    self.__repr__(), self.presyn
-                )
-            )
+            print("{0} receives input via synapse: {1}".format(self.__repr__(), self.presyn))
         else:
-            print(
-                "{0} receives input via synapses: {1}".format(
-                    self.__repr__(), self.presyn
-                )
-            )
+            print("{0} receives input via synapses: {1}".format(self.__repr__(), self.presyn))
 
     @property
     def threshold(self):
@@ -242,9 +230,7 @@ class LIFNeuron(Neuron):
         return self.v
 
     def __str__(self):
-        return "LIFNeuron {0}({1}, {2}, {3})".format(
-            self.name, self._T, self._R, self._m
-        )
+        return "LIFNeuron {0}({1}, {2}, {3})".format(self.name, self._T, self._R, self._m)
 
     def __repr__(self):
         return "LIFNeuron {0}".format(self.name)
@@ -359,9 +345,7 @@ if __name__ == "__main__":
     except:
         print("Raises type error since probability was greater than 1")
 
-    n1 = LIFNeuron(
-        "n1", threshold=1.2, reset_voltage=0.0, leakage_constant=0.6, voltage=1, p=1
-    )
+    n1 = LIFNeuron("n1", threshold=1.2, reset_voltage=0.0, leakage_constant=0.6, voltage=1, p=1)
     print("Neuron with intial v = 1; leakage_constant=0.6:")
     print("Timestep 0:")
     n1.show_state()

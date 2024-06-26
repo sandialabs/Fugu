@@ -62,11 +62,7 @@ class NeuralNetwork:
         """
         if not new_synapse:
             raise TypeError("Needs synapse object with pre and post neurons")
-        elif (
-            type(new_synapse) == tuple
-            and len(new_synapse) >= 2
-            and len(new_synapse) < 5
-        ):
+        elif type(new_synapse) == tuple and len(new_synapse) >= 2 and len(new_synapse) < 5:
             tmpsyn = Synapse(*new_synapse)
         elif type(new_synapse) == Synapse:
             tmpsyn = new_synapse
@@ -156,9 +152,7 @@ class NeuralNetwork:
         df.index.rename("Time", inplace=True)
 
         if not debug_mode:
-            drop_list = [
-                self.nrns[n].name for n in self.nrns if not self.nrns[n].record
-            ]
+            drop_list = [self.nrns[n].name for n in self.nrns if not self.nrns[n].record]
             df = df.drop(drop_list, axis=1)
 
         if record_potentials:

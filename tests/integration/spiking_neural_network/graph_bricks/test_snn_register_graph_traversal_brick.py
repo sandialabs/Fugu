@@ -16,12 +16,8 @@ class TestSnnRegisterGraphTraversal(BrickTest):
     def build_scaffold(self, input_values):
         graph, source_vertex, return_pred = input_values
         scaffold = Scaffold()
-        input_brick = BRICKS.Vector_Input(
-            self.convert_input((graph, source_vertex)), coding="Raster", name="Input"
-        )
-        traversal_brick = BRICKS.RegisterGraphTraversal(
-            graph, name="RGT", store_parent_info=return_pred
-        )
+        input_brick = BRICKS.Vector_Input(self.convert_input((graph, source_vertex)), coding="Raster", name="Input")
+        traversal_brick = BRICKS.RegisterGraphTraversal(graph, name="RGT", store_parent_info=return_pred)
 
         scaffold.add_brick(input_brick, "input")
         scaffold.add_brick(traversal_brick, input_nodes=[(0, 0)], output=True)
@@ -94,11 +90,7 @@ class TestSnnRegisterGraphTraversal(BrickTest):
         if return_path:
             for node in predecessors_indices:
                 if self.debug:
-                    print(
-                        "node: {}, pred_index: {}".format(
-                            node, predecessors_indices[node]
-                        )
-                    )
+                    print("node: {}, pred_index: {}".format(node, predecessors_indices[node]))
                 pred_index = predecessors_indices[node]
                 if pred_index > -1:
                     predecessors[node] = index_to_node[pred_index]
@@ -140,9 +132,7 @@ class TestSnnRegisterGraphTraversal(BrickTest):
 
                     edge_data = graph.get_edge_data(v, u)
                     if edge_data:
-                        edge_weight = (
-                            edge_data["weight"] if "weight" in edge_data else 1
-                        )
+                        edge_weight = edge_data["weight"] if "weight" in edge_data else 1
                     else:
                         edge_weight = 1
 
@@ -173,12 +163,8 @@ class TestSnnRegisterGraphTraversal(BrickTest):
         properties = []
         source_keys = [1, 5, 7]
         for key in source_keys:
-            properties.append(
-                {"Input": {"spike_vector": self.convert_input((graph, key))}}
-            )
-        self.run_property_test(
-            (graph, 1, False), properties, ["" for key in source_keys]
-        )
+            properties.append({"Input": {"spike_vector": self.convert_input((graph, key))}})
+        self.run_property_test((graph, 1, False), properties, ["" for key in source_keys])
 
     @pytest.mark.xfail()  # TODO fugu/backends/snn_backend.py:152: KeyError: 'Input'
     def test_bfs_multi_run_store_parents(self):
@@ -186,12 +172,8 @@ class TestSnnRegisterGraphTraversal(BrickTest):
         properties = []
         source_keys = [1, 5, 1]
         for key in source_keys:
-            properties.append(
-                {"Input": {"spike_vector": self.convert_input((graph, key))}}
-            )
-        self.run_property_test(
-            (graph, 1, True), properties, ["" for key in source_keys]
-        )
+            properties.append({"Input": {"spike_vector": self.convert_input((graph, key))}})
+        self.run_property_test((graph, 1, True), properties, ["" for key in source_keys])
 
     def test_sssp_random_gnp_distances(self):
         graph = create_weighted_graph(15, 0.3, 3)
@@ -207,12 +189,8 @@ class TestSnnRegisterGraphTraversal(BrickTest):
         properties = []
         source_keys = [1, 5, 7]
         for key in source_keys:
-            properties.append(
-                {"Input": {"spike_vector": self.convert_input((graph, key))}}
-            )
-        self.run_property_test(
-            (graph, 1, False), properties, ["" for key in source_keys]
-        )
+            properties.append({"Input": {"spike_vector": self.convert_input((graph, key))}})
+        self.run_property_test((graph, 1, False), properties, ["" for key in source_keys])
 
     @pytest.mark.xfail()  # TODO fugu/backends/snn_backend.py:152: KeyError: 'Input'
     def test_sssp_multi_run_store_parents(self):
@@ -220,12 +198,8 @@ class TestSnnRegisterGraphTraversal(BrickTest):
         properties = []
         source_keys = [1, 5, 1]
         for key in source_keys:
-            properties.append(
-                {"Input": {"spike_vector": self.convert_input((graph, key))}}
-            )
-        self.run_property_test(
-            (graph, 1, True), properties, ["" for key in source_keys]
-        )
+            properties.append({"Input": {"spike_vector": self.convert_input((graph, key))}})
+        self.run_property_test((graph, 1, True), properties, ["" for key in source_keys])
 
     def test_sssp_race_condition(self):
         graph = nx.DiGraph()

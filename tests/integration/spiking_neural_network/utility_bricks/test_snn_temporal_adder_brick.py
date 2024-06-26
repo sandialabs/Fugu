@@ -17,13 +17,9 @@ class TestSnnTemporalAdder(BrickTest):
         scaffold = Scaffold()
 
         converted_input = self.convert_input(input_values)
-        vector_brick = BRICKS.Vector_Input(
-            converted_input, coding="Raster", name="Input", time_dimension=True
-        )
+        vector_brick = BRICKS.Vector_Input(converted_input, coding="Raster", name="Input", time_dimension=True)
 
-        temporal_adder_brick = BRICKS.TemporalAdder(
-            len(input_values), name="TemporalAdder"
-        )
+        temporal_adder_brick = BRICKS.TemporalAdder(len(input_values), name="TemporalAdder")
 
         scaffold.add_brick(vector_brick, "input")
         scaffold.add_brick(temporal_adder_brick, input_nodes=(0, 0), output=True)

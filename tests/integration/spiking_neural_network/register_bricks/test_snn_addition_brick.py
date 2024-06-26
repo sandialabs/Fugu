@@ -16,12 +16,8 @@ class TestSnnAddition(BrickTest):
         scaffold = Scaffold()
 
         converted_input = self.convert_input(input_values)
-        vector_1 = BRICKS.Vector_Input(
-            converted_input[0], coding="Raster", name="Input1"
-        )
-        vector_2 = BRICKS.Vector_Input(
-            converted_input[1], coding="Raster", name="Input2"
-        )
+        vector_1 = BRICKS.Vector_Input(converted_input[0], coding="Raster", name="Input1")
+        vector_2 = BRICKS.Vector_Input(converted_input[1], coding="Raster", name="Input2")
 
         addition_brick = BRICKS.Addition(register_size=5, name="Addition")
 

@@ -152,9 +152,7 @@ def test_run_with_spikes_reset_debug(spiking_neural_network_w_reset):
     assert df.loc[1]["b"] == (1, 0.0)
 
 
-def test_run_with_record_potentials(
-    a_neural_network, spiking_neural_network, spiking_neural_network_w_reset
-):
+def test_run_with_record_potentials(a_neural_network, spiking_neural_network, spiking_neural_network_w_reset):
     df, fp = a_neural_network(False).run(record_potentials=True)
     assert type(df) == type(pd.DataFrame())
     assert type(fp) == type(pd.DataFrame())
