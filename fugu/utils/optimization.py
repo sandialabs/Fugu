@@ -31,10 +31,16 @@ class DelayRelayData:
     def add_final_delay(self, edge, final_delay):
         self.final_delays[edge] = final_delay
 
+    def has_relay_list(self, edge):
+        return edge in self.relay_list
+
     def get_relay_list(self, edge):
         if edge not in self.relay_list:
-            return []
+            return None
         return self.relay_list[edge]
+
+    def get_all_relay_lists(self):
+        return self.relay_list
 
     def get_final_delay(self, edge):
         if edge not in self.final_delays:

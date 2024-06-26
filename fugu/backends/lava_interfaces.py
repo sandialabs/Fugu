@@ -18,7 +18,10 @@ def calculateBitLength(value):
 
 def calcWeightExponent(weights):
     largest_weight_magnitude = abs(weights).max()
-    bit = calculateBitLength(largest_weight_magnitude)
+    if largest_weight_magnitude > 0:
+        bit = calculateBitLength(largest_weight_magnitude)
+    else:
+        bit = 1
     weightExponent = max(-8, bit - 13)  # Put MSB at position 13. This is position 7 for the weight mantissa, plus up-shift by 6 when accumulated weight is applied to voltage.
     return weightExponent
 
@@ -34,6 +37,7 @@ class LoihiInterface(ABC):
     def __init__(self, duration):
         self.threshold_bit_limit = 22 # 22 is power of MSB of largest possible theshold BUT hardware scales up threshold values by 6 bits. See notes on fixed-point in Loihi_backend.
         self.duration = duration
+        self.max_delay_value = 63
 
         from lava.proc.lif.process import LIF
         self.LIF = LIF
@@ -249,7 +253,7 @@ class Loihi2HWInterface(LoihiInterface):
         self.current_decay_scale_factor = 4095
         self.voltage_decay_scale_factor = 4096
 
-        self.use_sparse = False
+        self.use_sparse = True
         self.connection_model = self.Sparse if self.use_sparse else self.Dense
         self.delay_connection_model = self.DelaySparse if self.use_sparse else self.DelayDense
     
@@ -264,6 +268,8 @@ class Loihi2HWInterface(LoihiInterface):
         spike_trains = np.zeros(shape=input_iterator.shape(), dtype=int)
         for index, step in enumerate(input_iterator.inputs):
             spike_trains[index][step] = 1
+
+        print(spike_trains)
 
         sg_input = self.SpikeGenerator(data=spike_trains)
         py_nx_adapt = self.PyToNxAdapter(shape=(input_count,))

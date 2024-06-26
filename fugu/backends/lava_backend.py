@@ -12,6 +12,8 @@ import numpy as np
 
 from .backend import Backend, PortDataIterator
 from .lava_interfaces import Loihi2HWInterface, Loihi2SimInterface, calculateBitLength
+from ..utils.stats import get_max_magnitude_neuron_values, get_max_magnitude_synapse_values
+from ..utils.optimization import offset_voltages, generate_relay_data, DelayRelayData
 
 
 def warnIfValueExceedsPrecision(value, precision, value_name):
@@ -29,6 +31,49 @@ class FeatureNotAvailableException(Exception):
 
 class NonIntegerDelayValueException(Exception):
     pass
+
+
+def calculate_loihi_scale_factor(max_threshold=0, max_weight=0, max_bias=0, starting_scale=1<<20, min_scale=1<<6, threshold_bit_limit=16):
+    scale_factor = starting_scale
+    if max_threshold:
+        bits = calculateBitLength(abs(max_threshold * scale_factor)) # The power of the MSB needed to represent Vspike. The number of bits required is actually (bits+1).
+        bit_limit = threshold_bit_limit 
+        
+        excess = bits - bit_limit
+        if excess > 0:
+            scale_factor >>= excess
+            print(f"Scaling scale factor based on excess {excess}")
+            warnIfValueExceedsPrecision(scale_factor, min_scale, "Threshold")
+
+    #   Compensate for weight magnitude
+    #   As long as firing threshold can be represented, we don't care by how much it might
+    #   be exceeded. Thus we don't worry about the sum of weights, only individual weights.
+    print("Compensate for weight magnitude")
+    if max_weight:
+        bits = calculateBitLength(abs(max_weight * scale_factor))
+        bit_limit = 20 # hightest possible bit position for weight
+        
+        excess = bits - bit_limit
+        if excess > 0:
+            scale_factor >>= excess
+            print(f"Scaling scale factor based on excess {excess}")
+            warnIfValueExceedsPrecision(scale_factor, min_scale, "Weight")
+
+    #   Compensate for large bias values
+    print("Compensate for large bias")
+    if max_bias:
+        # bias is signed 13-bit (12 significant bits), with up to 7 bits of shift
+        bits = calculateBitLength(abs(max_bias * scale_factor))
+        biasExp = max(0, bits - 11)  # 11 is highest allowable power in mantissa
+        bit_limit = biasExp
+        
+        excess = bits - bit_limit
+        if excess > 0:
+            scale_factor >>= excess
+            print(f"Scaling scale factor based on excess {excess}")
+            warnIfValueExceedsPrecision(scale_factor, min_scale, "Bias")
+
+    return scale_factor
 
 
 class InputIterator:
@@ -83,148 +128,40 @@ class lava_Backend(Backend):
         self.inputIterator = InputIterator()
         self.inputIterator.length = self.duration
 
-        # Special keys in graph node:
-        # out_spikes -- list of times when this node spikes. Defined iff this is an input.
-        # outputs -- Dictionary of output configurations. Key is name of variable to trace.
-        #            Value is a dictionary of config values. Within the dictionary, 'o'
-        #            comes from N2A fuguWrapper, and can support multiple output files.
-        #            For in-graph recording, 'data' is a list containing the recorded data.
-        #            For spikes, 'data' is a list of spike times. For V or other variables,
-        #            'data' contains a trace of values for every time step in the simulation.
-        #            Other sub-keys are reserved for use by the backend.
-        # maxDelay -- Longest delay on any synapse going out from this node. Defined iff > 1.
-        # neuronPD -- Process data for the main neuron.
-        # neuronIndex -- Position of this neuron in process.
-        # inputIndex -- Position of this neuron in 'inputIterator'. Defined iff this is an input node.
-        # delayIndex -- Position of first neuron in 'delayProcess' associated with this node.
-        #               Defined iff maxDelay > 1.
+        G = offset_voltages(G, 0.0) # Need to offset voltages so that the reset potential is 0. Loihi only has reset potentials of 0
 
         # Analyze connections.
         # Find max weight over all synapses.
         #   Fugu's Loihi backend scales weight on a per-target-neuron basis, but it looks
         #   like Lava treats an entire weight matrix as having the same scaling, so we just
         #   determine a single scale for all weights in the network.
-
         print("Analyzing connections")
-        maxWeight = 1
-        delaySum  = 0
-        for n1, n2, edge in G.edges.data():
-            node = G.nodes[n1]
-            delay = edge.get('delay', 1)
-            if not isinstance(delay, int):
-                raise NonIntegerDelayValueException()
-            edge['delay'] = delay
+        max_synapse_values = get_max_magnitude_synapse_values(G, ['weight', 'delay'], {'weight':1.0, 'delay':1})
+        maxWeight = max_synapse_values['weight']
+        maxDelay = max_synapse_values['delay']
 
-            weight             = abs(edge.get('weight', 1.0))
-            max_outgoing_delay = node.get('maxOutDelay', 1)
-            if delay  > max_outgoing_delay:  node['maxOutDelay'] = delay
-            if weight > maxWeight:           maxWeight        = weight
+        # Find max bias and max threshold -- See above comment on finding max weight. A similar comment applies on how fine-grained bias can be.
+        print("Find max bias and max threshold")
+        max_values   = get_max_magnitude_neuron_values(G, ['threshold', 'bias'], {'threshold': 1.0, 'bias':0.0})
+        maxBias      = max_values['bias']
+        maxThreshold = max_values['threshold']
 
-            delaySum += max(1, delay) 
+        self.relay_data = generate_relay_data(G, self.loihi2Interface.max_delay_value)
         
-        maxDelayValue = 63 # 63 is the largest possible delay value on Loihi
-
-        # Replace edges with large delays with relay neurons
-        print("Replacing edges with large delays with chains of relay neurons")
-        edges_to_expand = []
-        for n1, n2, edge in G.edges.data():
-            delay = edge['delay']
-            if delay > maxDelayValue:
-                edges_to_expand.append((n1, n2))
-        
-        for n1, n2 in edges_to_expand:
-            edge_data = G.edges[(n1, n2)]
-            delay = edge_data['delay']
-            weight = edge_data['weight']
-
-            relay_count = 0
-            current_node = n1
-            next_node = f"{n1}-{n2}-relay-node:{relay_count}"
-            while delay > maxDelayValue:
-                G.add_node(
-                            next_node,
-                            threshold=0.5,
-                            decay=1,
-                            )
-                G.add_edge(
-                            current_node,
-                            next_node,
-                            weight=1.0,
-                            delay=maxDelayValue,
-                            )
-                delay -= maxDelayValue
-                current_node = next_node
-                relay_count += 1
-                next_node = f"{n1}-{n2}-relay-node:{relay_count}"
-            
-            G.add_edge(
-                        current_node,
-                        n2,
-                        weight=weight,
-                        delay=delay,
-                        )
-        G.remove_edges_from(edges_to_expand)
-
-        # Find max bias and max threshold -- See above. A similar comment applies on how fine-grained bias can be.
-        print("Find max bias")
-        maxBias      = 0
-        maxThreshold = 0
-        for n, node in G.nodes.data():
-            Vreset =     node.get('reset_voltage', 0.0)  # Offset from zero, since zero is always the reset voltage.
-            Vspike = abs(node.get('threshold',     1.0) - Vreset)
-            Vbias  = abs(node.get('bias',          0.0))
-            if Vbias  > maxBias:      maxBias      = Vbias
-            if Vspike > maxThreshold: maxThreshold = Vspike
-
-
         # Determine scale for voltage
         # See loihi_backend.py for reasoning behind this section.
         # All these calculations assume the quirks of Loihi-1.
         # May need something else for Loihi-2.
         print("Determining voltage scale")
-        self.scale_factor = 1 << 20
-        minScale   = 1 << 6
-
         #   Compensate for threshold
-        if maxThreshold:
-            bits = calculateBitLength(abs(maxThreshold * self.scale_factor)) # The power of the MSB needed to represent Vspike. The number of bits required is actually (bits+1).
-            bit_limit = self.loihi2Interface.threshold_bit_limit 
-            
-            excess = bits - bit_limit
-            if excess > 0:
-                self.scale_factor >>= excess
-                print(f"Scaling scale factor based on excess {excess}")
-                warnIfValueExceedsPrecision(self.scale_factor, minScale, "Threshold")
 
-        #   Compensate for weight magnitude
-        #   As long as firing threshold can be represented, we don't care by how much it might
-        #   be exceeded. Thus we don't worry about the sum of weights, only individual weights.
-        print("Compensate for weight magnitude")
-        if maxWeight:
-            bits = calculateBitLength(abs(maxWeight * self.scale_factor))
-            bit_limit = 20 # hightest possible bit position for weight
-            
-            excess = bits - bit_limit
-            if excess > 0:
-                self.scale_factor >>= excess
-                print(f"Scaling scale factor based on excess {excess}")
-                warnIfValueExceedsPrecision(self.scale_factor, minScale, "Weight")
-
-        #   Compensate for large bias values
-        print("Compensate for large bias")
-        if maxBias:
-            # bias is signed 13-bit (12 significant bits), with up to 7 bits of shift
-            bits = calculateBitLength(abs(maxBias * self.scale_factor))
-            biasExp = max(0, bits - 11)  # 11 is highest allowable power in mantissa
-            bit_limit = biasExp
-            
-            excess = bits - bit_limit
-            if excess > 0:
-                self.scale_factor >>= excess
-                print(f"Scaling scale factor based on excess {excess}")
-                warnIfValueExceedsPrecision(self.scale_factor, minScale, "Bias")
-
-        print(f"Scale factor: {self.scale_factor}")
+        self.scale_factor = calculate_loihi_scale_factor(
+            max_threshold=maxThreshold,
+            max_weight=maxWeight,
+            max_bias=maxBias,
+            min_scale=1<<6,
+            threshold_bit_limit=self.loihi2Interface.threshold_bit_limit,
+            )
 
         # Tag output neurons based on circuit information.
         print("Tag output neurons")
@@ -257,6 +194,7 @@ class lava_Backend(Backend):
                     node = G.nodes[n]
                     if 'out_spikes' not in node: node['out_spikes'] = []
                     spikes = node['out_spikes']
+                    #print(timestep)
                     # Loihi-1 does not report spikes in cycle 0, so we don't see immediate effects of input in that cycle.
                     # The Fugu Loihi backend shifts timing later by 1 to compensate, then removes the shift in post-processing.
                     # Not sure how Lava will work on Loihi hardware. It may prove necessary to include that compensation here too.
@@ -285,7 +223,6 @@ class lava_Backend(Backend):
             # Set up regular neurons.
             if 'out_spikes' in node: continue  # This was created as an input node, so can't be a regular neuron.
 
-            Vreset = node.get('reset_voltage', 0.0)  # Offset from zero, since zero is always the reset voltage.
             Vinit  = node.get('voltage',       0.0)
             Vspike = node.get('threshold',     1.0)
             Vdecay = node.get('decay',         0.0)
@@ -294,8 +231,8 @@ class lava_Backend(Backend):
             if 'potential'        in node: Vinit  =       node['potential']
             if 'leakage_constant' in node: Vdecay = 1.0 - node['leakage_constant']
 
-            Vinit  = int(self.scale_factor * (Vinit  - Vreset))
-            Vspike = int(self.scale_factor * (Vspike - Vreset))
+            Vinit  = int(self.scale_factor * Vinit)
+            Vspike = int(self.scale_factor * Vspike)
             Vbias  = int(self.scale_factor *  Vbias)
             Vdecay = int(Vdecay)
 
@@ -306,7 +243,7 @@ class lava_Backend(Backend):
             p_data, start = self._allocate(Vinit, Vdecay, Vspike, Vbias)
             node['neuronPD']    = p_data
             node['neuronIndex'] = start
-            #print(f"Key for {n}: ({Vdecay}, {Vspike})")
+            print(f"Key for {n}: ({Vdecay}, {Vspike})")
             #print(f"\tp_data: {p_data}")
             #print(f"\tstart: {start}")
 
@@ -320,9 +257,42 @@ class lava_Backend(Backend):
                     if v not in p_datao: p_datao[v] = None
                 #print(f"p_datao: {p_datao}")
 
+        self.relay_pd = None
+        self.relay_count = self.relay_data.get_total_relays()
+        self.relay_start = 0
+        if self.relay_data.get_total_relays() > 0:
+            #self.relay_pd, self.relay_start = self._allocate(0, 0, int(self.scale_factor * 0.9), 0, self.relay_count)
+            self.relay_pd, self.relay_start = self._allocate(0, 0, 1, 0, self.relay_count)
+            if self.record == 'all':
+                if 'outputs' not in self.relay_pd: 
+                    self.relay_pd['outputs'] = {}
+                    self.relay_pd['outputs']['V'] = None
+                    self.relay_pd['outputs']['I'] = None
+                    self.relay_pd['outputs']['spike'] = None
+            self.relay_pd['max_delay'] = self.loihi2Interface.max_delay_value
+
+            """
+            v           = self.relay_pd['v']
+            dv          = self.relay_pd['dv']
+            vth         = self.relay_pd['vth']
+            b           = self.relay_pd['b']
+            count       = len(v)
+            index       = self.relay_pd['index']
+            process_name = "lif_relay"
+            self.relay_pd['process'] = self.loihi2Interface.get_lif_process(
+                                                                    count=count,
+                                                                    initial_voltages=v,
+                                                                    spike_threshold=vth,
+                                                                    decay_constant=dv,
+                                                                    bias_mants=b,
+                                                                    name=process_name,
+                                                                    )
+            """
+
         # Create Lava process objects
         print("Create lava process objects")
         output_processes = []
+        self.relay_process = None
         for p_data in self.process.values():
             v           = p_data['v']
             dv          = p_data['dv']
@@ -343,6 +313,9 @@ class lava_Backend(Backend):
                                                                     name=process_name,
                                                                     )
             p_data['process_name'] = process_name
+            if self.relay_pd is not None:
+                if index == self.relay_pd['index']:
+                    self.relay_process = process
             p_datao = p_data.get('outputs', {})
             #print(f"{process_name}: {p_datao}")
             for v in p_datao:
@@ -368,14 +341,16 @@ class lava_Backend(Backend):
         # Create weight matrices
         print("Create weight matrices")
         processSize = len(self.process)
+        inputSize = len(self.inputIterator.inputs)
         input_to_lif_weight_matrices = [None] * processSize
         input_to_lif_delay_matrices = [None] * processSize
-        inputSize = len(self.inputIterator.inputs)
+
         for p_data in self.process.values():
             index = p_data['index']
             outputSize = len(p_data['v'])
             input_to_lif_weight_matrices[index] = np.zeros((outputSize, inputSize), dtype=int)
             input_to_lif_delay_matrices[index] = np.zeros((outputSize, inputSize), dtype=int)
+
         for p_data1 in self.process.values():
             size1 = len(p_data1['v'])
             p_data1['W'] = W = [None] * processSize
@@ -397,9 +372,6 @@ class lava_Backend(Backend):
 
             delay  = edge.get('delay',  1)
 
-            if delay > node2['neuronPD']['max_delay']:
-                node2['neuronPD']['max_delay'] = delay
-
             processIndex = node2['neuronPD']['index']
             targetIndex  = node2['neuronIndex']
             if 'out_spikes' in node1:  # from input
@@ -413,8 +385,36 @@ class lava_Backend(Backend):
                 p_data1 = node1['neuronPD']
                 W = p_data1['W'][processIndex]
                 D = p_data1['D'][processIndex]
-            W[targetIndex,sourceIndex] = round(weight)
-            D[targetIndex,sourceIndex] = delay - 1
+            if self.relay_data.has_relay_list((n1, n2)):
+                relays = self.relay_data.get_relay_list((n1, n2))
+                relay_pd_index = self.relay_pd['index']
+                current_relay = relays[0]
+
+                lif_to_relay_W = p_data1['W'][relay_pd_index]
+                lif_to_relay_D = p_data1['D'][relay_pd_index]
+                relay_W = self.relay_pd['W'][relay_pd_index]
+                relay_D = self.relay_pd['D'][relay_pd_index]
+                relay_to_lif_W = self.relay_pd['W'][processIndex]
+                relay_to_lif_D = self.relay_pd['D'][processIndex]
+
+                lif_to_relay_W[self.relay_start + current_relay, sourceIndex] = round(self.weightScale)
+                lif_to_relay_D[self.relay_start + current_relay, sourceIndex] = self.loihi2Interface.max_delay_value - 1
+                for next_relay in relays[1:]:
+                    current_relay_index = self.relay_start + current_relay
+                    next_relay_index = self.relay_start + next_relay
+                    relay_W[next_relay_index,current_relay_index] = round(self.weightScale)
+                    relay_D[next_relay_index,current_relay_index] = self.loihi2Interface.max_delay_value - 1
+                    current_relay = next_relay
+                relay_to_lif_W[targetIndex, self.relay_start + current_relay] = round(weight)
+                final_delay = self.relay_data.get_final_delay((n1, n2))
+                relay_to_lif_D[targetIndex, self.relay_start + current_relay] = final_delay - 1
+                if final_delay > node2['neuronPD']['max_delay']:
+                    node2['neuronPD']['max_delay'] = final_delay
+            else:
+                if delay > node2['neuronPD']['max_delay']:
+                    node2['neuronPD']['max_delay'] = delay
+                W[targetIndex,sourceIndex] = round(weight)
+                D[targetIndex,sourceIndex] = delay - 1
             #print(f"{n1}:{sourcePD}:{sourceIndex} {n2}:{node2['neuronPD']['index']}:{targetIndex} {W[targetIndex, sourceIndex]} {edge.get('weight', 1)} {D[targetIndex, sourceIndex]} {edge.get('delay', 1)}")
 
 
@@ -529,6 +529,10 @@ class lava_Backend(Backend):
             profiler.energy_probe(num_steps=self.duration)
 
         runCondition = RunSteps(num_steps=self.duration)
+        print("Importing logging")
+        import logging
+        process._log_config.level = logging.INFO
+        print(f"{process._log_config.level}, {logging.INFO}")
         process.run(condition=runCondition, run_cfg=runConfig)
 
         # collect outputs
@@ -565,6 +569,7 @@ class lava_Backend(Backend):
             self.loihi2Interface.print_output_probe_data()
 
         # Process profiler data
+        profiler_data = []
         if self.enableProfiler:
             print(">>> Profiler data:")
             profiler.statement
@@ -573,10 +578,17 @@ class lava_Backend(Backend):
             print()
             profiler.energy_breakdown()
             print()
-            print(f"Total execution time: {np.round(np.sum(profiler.execution_time), 6)} s")
-            print(f"Total power: {np.round(profiler.power, 6)} W") 
-            print(f"Total energy: {np.round(profiler.energy, 6)} J")
-            print(f"Static energy: {np.round(profiler.static_energy, 6)} J")
+            #print(f"Total execution time: {np.round(np.sum(profiler.execution_time), 6)} s")
+            #print(f"Total power: {np.round(profiler.power, 6)} W") 
+            #print(f"Total energy: {np.round(profiler.energy, 6)} J")
+            #print(f"Static energy: {np.round(profiler.static_energy, 6)} J")
+            print(f"Power: {profiler.power}")
+            print(f"Dynamic Power: {profiler.dynamic_power}")
+            print(f"Static Power: {profiler.static_power}")
+            print(f"Dynamic Energy: {profiler.dynamic_energy}")
+            print(f"Static Energy: {profiler.static_energy}")
+            print(f"Dynamic Power: {profiler.dynamic_power}")
+            print(f"Static Power: {profiler.static_power}")
 
         #print("Probe data for input process lif")
         #num_neurons = int(len(self.loihi2Interface.inputStateProbe.time_series) / self.duration)
@@ -594,7 +606,8 @@ class lava_Backend(Backend):
                     # This is mainly for convenience while visualizing the run.
                     vdict = node['outputs']['spike']
                     vdict['data'] = data = []
-                    for s in node['out_spikes']: data.append(s+timeOffset)
+                    for s in node['out_spikes']: data.append(s-timeOffset)
+                    #for s in node['out_spikes']: data.append(s)
                     continue
                 neuronIndex = node['neuronIndex']
                 p_datao = node['neuronPD']['outputs']
@@ -628,7 +641,8 @@ class lava_Backend(Backend):
             neuron_number = node['neuron_number']
             if 'out_spikes' in node:
                 for s in node['out_spikes']:
-                    spikeTimes  .append(s+timeOffset)
+                    spikeTimes  .append(s-timeOffset)
+                    #spikeTimes  .append(s)
                     spikeNeurons.append(neuron_number)
                     spikeNames  .append(n)
                 continue
@@ -638,7 +652,8 @@ class lava_Backend(Backend):
             if 'spike' in outputs:
                 for i, s in enumerate(p_datao['spike'][neuronIndex]):
                     if s:
-                        spikeTimes  .append(i - 2)
+                        spikeTimes  .append(i - (timeOffset + 1))
+                        #spikeTimes  .append(i)
                         spikeNeurons.append(neuron_number)
                         spikeNames  .append(n)
         spikes = pd.DataFrame({'time':spikeTimes, 'neuron_number':spikeNeurons, 'neuron_name':spikeNames}, copy=False)
