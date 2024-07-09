@@ -13,7 +13,7 @@ import pandas as pd
 import numpy as np
 
 from .backend import Backend, PortDataIterator
-from .lava_interfaces import Loihi2HWInterface, Loihi2SimInterface, calculateBitLength
+from .lava_interfaces import Loihi2HWInterface, Loihi2SimInterface, Loihi2SimBitAccInterface, calculateBitLength
 from ..utils.stats import get_max_magnitude_neuron_values, get_max_magnitude_synapse_values
 from ..utils.optimization import offset_voltages, generate_relay_data, DelayRelayData
 
@@ -24,7 +24,7 @@ def warnIfValueExceedsPrecision(value, precision, value_name):
 
 def warnIfFeatureNotAvailable(feature):
     # warns user that a feature is not supported but we'll still try to run anyways
-    print(f"WARNING: {feature} is not supported by Lava") 
+    print(f"WARNING: {feature} is not supported by Lava")
 
 
 class FeatureNotAvailableException(Exception):
@@ -46,8 +46,8 @@ def calculate_loihi_scale_factor(max_threshold=0, max_weight=0, max_bias=0, star
     scale_factor = starting_scale
     if max_threshold:
         bits = calculateBitLength(max_threshold * scale_factor) # The power of the MSB needed to represent Vspike. The number of bits required is actually (bits+1).
-        bit_limit = threshold_bit_limit 
-        
+        bit_limit = threshold_bit_limit
+
         excess = bits - bit_limit
         scale_factor = reduce_factor_by_bits(scale_factor, excess)
         warnIfValueExceedsPrecision(scale_factor, min_scale, "Threshold")
@@ -59,7 +59,7 @@ def calculate_loihi_scale_factor(max_threshold=0, max_weight=0, max_bias=0, star
     if max_weight:
         bits = calculateBitLength(max_weight * scale_factor)
         bit_limit = 20 # hightest possible bit position for weight
-        
+
         excess = bits - bit_limit
         scale_factor = reduce_factor_by_bits(scale_factor, excess)
         warnIfValueExceedsPrecision(scale_factor, min_scale, "Weight")
@@ -71,7 +71,7 @@ def calculate_loihi_scale_factor(max_threshold=0, max_weight=0, max_bias=0, star
         bits = calculateBitLength(max_bias * scale_factor)
         biasExp = max(0, bits - 11)  # 11 is highest allowable power in mantissa
         bit_limit = biasExp
-        
+
         excess = bits - bit_limit
         scale_factor = reduce_factor_by_bits(scale_factor, excess)
         warnIfValueExceedsPrecision(scale_factor, min_scale, "Bias")
@@ -150,7 +150,7 @@ class lava_Backend(Backend):
         maxThreshold = max_values['threshold']
 
         self.relay_data = generate_relay_data(G, self.loihi2Interface.max_delay_value)
-        
+
         # Determine scale for voltage
         # See loihi_backend.py for reasoning behind this section.
         # All these calculations assume the quirks of Loihi-1.
@@ -267,7 +267,7 @@ class lava_Backend(Backend):
             #self.relay_pd, self.relay_start = self._allocate(0, 0, int(self.scale_factor * 0.9), 0, self.relay_count)
             self.relay_pd, self.relay_start = self._allocate(0, 0, 1, 0, self.relay_count)
             if self.record == 'all':
-                if 'outputs' not in self.relay_pd: 
+                if 'outputs' not in self.relay_pd:
                     self.relay_pd['outputs'] = {}
                     self.relay_pd['outputs']['V'] = None
                     self.relay_pd['outputs']['I'] = None
@@ -482,6 +482,8 @@ class lava_Backend(Backend):
             pass
         elif self.lavaConfig == "sim2":
             self.loihi2Interface = Loihi2SimInterface(duration=self.duration)
+        elif self.lavaConfig == "sim2bitacc":
+            self.loihi2Interface = Loihi2SimBitAccInterface(duration=self.duration)
         else:  # sim1 and all others
             pass
 
@@ -505,6 +507,8 @@ class lava_Backend(Backend):
             from lava.magma.core.run_configs import Loihi1HwCfg
             runConfig = Loihi1HwCfg()
         elif self.lavaConfig == "sim2":
+            runConfig = self.loihi2Interface.get_config([self.probe_list[tag] for tag in self.probe_list])
+        elif self.lavaConfig == "sim2bitacc":
             runConfig = self.loihi2Interface.get_config([self.probe_list[tag] for tag in self.probe_list])
         else:  # sim1 and all others
             from lava.magma.core.run_configs import Loihi1SimCfg

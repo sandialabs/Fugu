@@ -121,20 +121,10 @@ class Loihi2SimInterface(LoihiInterface):
         from lava.proc.io.dataloader import SpikeDataloader
         self.SpikeDataloader = SpikeDataloader
 
-        from lava.proc.lif.models import PyLifModelBitAcc 
-        from lava.proc.sparse.models import PySparseModelBitAcc, PyDelaySparseModelBitAcc
-        self.use_bit_acc = False
-        self.proc_model_map = {}
-        if self.use_bit_acc:
-            self.proc_model_map[self.LIF] = PyLifModelBitAcc
-            self.proc_model_map[self.Sparse] = PySparseModelBitAcc
-            self.proc_model_map[self.DelaySparse] = PyDelaySparseModelBitAcc
-            self.threshold_bit_limit = 16
-
         self.process_output_map = {}
 
-        self.current_decay_scale_factor = 4095 if self.use_bit_acc else 1
-        self.voltage_decay_scale_factor = 4096 if self.use_bit_acc else 1 
+        self.current_decay_scale_factor = 1
+        self.voltage_decay_scale_factor = 1
 
     def setup_input_process(self, input_iterator, scale_factor):
         self.input_process = self.SpikeDataloader(dataset=input_iterator)
@@ -158,14 +148,14 @@ class Loihi2SimInterface(LoihiInterface):
 
     def get_config(self, callback_functions=[]):
         from lava.magma.core.run_configs import Loihi2SimCfg
-        return Loihi2SimCfg(exception_proc_model_map=self.proc_model_map)
+        return Loihi2SimCfg()
 
     def get_lif_process(self, count, initial_voltages, spike_threshold, decay_constant, bias_mants, name):
         return self.LIF(
                     shape=(count,),
                     v=initial_voltages,
                     u=0,
-                    vth=spike_threshold >> 6 if self.use_bit_acc else spike_threshold, #This is annoying sin
+                    vth=spike_threshold,
                     du=self.current_decay_scale_factor,
                     dv=int(decay_constant * self.voltage_decay_scale_factor),
                     bias_mant=bias_mants,
@@ -177,24 +167,14 @@ class Loihi2SimInterface(LoihiInterface):
         weights = input_weights[lif_index].astype('int')
         delays = input_delays[lif_index].astype('int')
         if np.count_nonzero(weights):
-            if self.use_bit_acc:
-                exponent = calcWeightExponent(weights)
-                weights = calcHardwareWeights(weights, exponent)
-                c = self.DelaySparse(weights=self.csr_matrix(weights), delays=self.csr_matrix(delays), weight_exp=exponent, sign_mode=self.SignMode.MIXED)
-            else:
-                c = self.DelaySparse(weights=self.csr_matrix(weights), delays=self.csr_matrix(delays), sign_mode=self.SignMode.MIXED)
+            c = self.DelaySparse(weights=self.csr_matrix(weights), delays=self.csr_matrix(delays), sign_mode=self.SignMode.MIXED)
             self.input_process.s_out.connect(c.s_in)
             c.a_out.connect(lif_process.a_in)
         input_weights[lif_index] = None
 
     def connect_lif_to_output(self, output_weights, lif_process):
         if np.count_nonzero(output_weights):
-            if self.use_bit_acc:
-                exponent = calcWeightExponent(output_weights)
-                output_weights = calcHardwareWeights(output_weights, exponent)
-                dummy_connection = self.Sparse(weights=self.csr_matrix(output_weights), sign_mode=self.SignMode.EXCITATORY, weight_exp=exponent)
-            else:
-                dummy_connection = self.Sparse(weights=self.csr_matrix(output_weights), sign_mode=self.SignMode.EXCITATORY)
+            dummy_connection = self.Sparse(weights=self.csr_matrix(output_weights), sign_mode=self.SignMode.EXCITATORY)
             lif_process.s_out.connect(dummy_connection.s_in)
             dummy_connection.a_out.connect(self.pass_through_lif.a_in)
 
@@ -203,12 +183,7 @@ class Loihi2SimInterface(LoihiInterface):
         W = source_lif_data['W'][dest_lif_index].astype('int')
         D = source_lif_data['D'][dest_lif_index].astype('int')
         if np.count_nonzero(W):
-            if self.use_bit_acc:
-                exponent = calcWeightExponent(W)
-                W = calcHardwareWeights(W, exponent)
-                c = self.DelaySparse(weights=self.csr_matrix(W), delays=self.csr_matrix(D), weight_exp=exponent, sign_mode=self.SignMode.MIXED)
-            else:
-                c = self.DelaySparse(weights=self.csr_matrix(W), delays=self.csr_matrix(D), sign_mode=self.SignMode.MIXED)
+            c = self.DelaySparse(weights=self.csr_matrix(W), delays=self.csr_matrix(D), sign_mode=self.SignMode.MIXED)
             source_lif_process.s_out.connect(c.s_in)
             c.a_out.connect(dest_lif_process.a_in)
         source_lif_data['W'][dest_lif_index] = None
@@ -219,7 +194,7 @@ class Loihi2SimInterface(LoihiInterface):
                 M=lif_data['count'],
                 k=-self.process_output_map[lif_data['index']],
                 )
-        W = W * weight_scale_factor 
+        W = W * weight_scale_factor
         return W
 
     def setup_probe(self, var):
@@ -242,8 +217,72 @@ class Loihi2SimInterface(LoihiInterface):
         print(f"V: {self.outputVMonitor.get_data()}")
 
 
-class Loihi2HWInterface(LoihiInterface):
+class Loihi2SimBitAccInterface(Loihi2SimInterface):
 
+    def __init__(self, duration):
+        super().__init__(duration)
+
+        from lava.proc.lif.models import PyLifModelBitAcc
+        from lava.proc.sparse.models import PySparseModelBitAcc, PyDelaySparseModelBitAcc
+        self.proc_model_map = {}
+        self.proc_model_map[self.LIF] = PyLifModelBitAcc
+        self.proc_model_map[self.Sparse] = PySparseModelBitAcc
+        self.proc_model_map[self.DelaySparse] = PyDelaySparseModelBitAcc
+        self.threshold_bit_limit = 16
+
+        self.current_decay_scale_factor = 4095
+        self.voltage_decay_scale_factor = 4096
+
+    def get_config(self, callback_functions=[]):
+        from lava.magma.core.run_configs import Loihi2SimCfg
+        return Loihi2SimCfg(exception_proc_model_map=self.proc_model_map)
+
+    def get_lif_process(self, count, initial_voltages, spike_threshold, decay_constant, bias_mants, name):
+        return self.LIF(
+                    shape=(count,),
+                    v=initial_voltages,
+                    u=0,
+                    vth=spike_threshold >> 6,
+                    du=self.current_decay_scale_factor,
+                    dv=int(decay_constant * self.voltage_decay_scale_factor),
+                    bias_mant=bias_mants,
+                    name=name,
+                    )
+
+    def connect_input_to_lif(self, input_weights, input_delays, lif_data, lif_process):
+        lif_index = lif_data['index']
+        weights = input_weights[lif_index].astype('int')
+        delays = input_delays[lif_index].astype('int')
+        if np.count_nonzero(weights):
+            exponent = calcWeightExponent(weights)
+            weights = calcHardwareWeights(weights, exponent)
+            c = self.DelaySparse(weights=self.csr_matrix(weights), delays=self.csr_matrix(delays), weight_exp=exponent, sign_mode=self.SignMode.MIXED)
+            self.input_process.s_out.connect(c.s_in)
+            c.a_out.connect(lif_process.a_in)
+        input_weights[lif_index] = None
+
+    def connect_lif_to_output(self, output_weights, lif_process):
+        if np.count_nonzero(output_weights):
+            exponent = calcWeightExponent(output_weights)
+            output_weights = calcHardwareWeights(output_weights, exponent)
+            dummy_connection = self.Sparse(weights=self.csr_matrix(output_weights), sign_mode=self.SignMode.EXCITATORY, weight_exp=exponent)
+            lif_process.s_out.connect(dummy_connection.s_in)
+            dummy_connection.a_out.connect(self.pass_through_lif.a_in)
+
+    def connect_lif_to_lif(self, source_lif_data, source_lif_process, dest_lif_data, dest_lif_process):
+        dest_lif_index = dest_lif_data['index']
+        W = source_lif_data['W'][dest_lif_index].astype('int')
+        D = source_lif_data['D'][dest_lif_index].astype('int')
+        if np.count_nonzero(W):
+            exponent = calcWeightExponent(W)
+            W = calcHardwareWeights(W, exponent)
+            c = self.DelaySparse(weights=self.csr_matrix(W), delays=self.csr_matrix(D), weight_exp=exponent, sign_mode=self.SignMode.MIXED)
+            source_lif_process.s_out.connect(c.s_in)
+            c.a_out.connect(dest_lif_process.a_in)
+        source_lif_data['W'][dest_lif_index] = None
+
+
+class Loihi2HWInterface(LoihiInterface):
 
     def __init__(self, duration):
         super().__init__(duration)
@@ -257,7 +296,7 @@ class Loihi2HWInterface(LoihiInterface):
         self.StateProbe = StateProbe
 
         # For some reason, threshold is scaled up by 6 bits (so by a value of 64) when it gets put onto hardware so we have fewer bits to work with. Otherwise we will run into overflow/garbage values.
-        self.threshold_bit_limit = 16 
+        self.threshold_bit_limit = 16
 
         from lava.proc.lif.ncmodels import NcL2ModelLif
         self.proc_model_map = {}
@@ -271,7 +310,7 @@ class Loihi2HWInterface(LoihiInterface):
         self.use_sparse = True
         self.connection_model = self.Sparse if self.use_sparse else self.Dense
         self.delay_connection_model = self.DelaySparse if self.use_sparse else self.DelayDense
-    
+
     def format_matrix(self, m):
         if self.use_sparse:
             return self.csr_matrix(m)
@@ -391,7 +430,7 @@ class Loihi2HWInterface(LoihiInterface):
             formatted_delays = self.format_matrix(D)
             #print(f"Hardware weights:\n{weights}")
             #print(f"Delay:\n{D}")
-            
+
             connection_name = f"input_to_{lif_data['process_name']}"
             c = self.delay_connection_model(
                     weights=formatted_weights,
@@ -456,7 +495,7 @@ class Loihi2HWInterface(LoihiInterface):
                 M=lif_data['count'],
                 k=-self.process_output_map[lif_data['index']],
                 )
-        W = W * weight_scale_factor 
+        W = W * weight_scale_factor
         return W
 
     def setup_probe(self, var):
