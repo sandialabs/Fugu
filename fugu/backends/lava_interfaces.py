@@ -12,16 +12,18 @@ import math
 import numpy as np
 
 
+
 def calculateBitLength(value):
-    return math.floor(math.log2(abs(value)))
+    abs_value = abs(value)
+    if abs_value > 1:
+        return math.floor(math.log2(abs_value))
+    else:
+        return 1
 
 
 def calcWeightExponent(weights):
     largest_weight_magnitude = abs(weights).max()
-    if largest_weight_magnitude > 0:
-        bit = calculateBitLength(largest_weight_magnitude)
-    else:
-        bit = 1
+    bit = calculateBitLength(largest_weight_magnitude)
     weightExponent = max(-8, bit - 13)  # Put MSB at position 13. This is position 7 for the weight mantissa, plus up-shift by 6 when accumulated weight is applied to voltage.
     return weightExponent
 
@@ -35,9 +37,22 @@ def calcHardwareWeights(weights, weightExponent):
 
 class LoihiInterface(ABC):
     def __init__(self, duration):
-        self.threshold_bit_limit = 22 # 22 is power of MSB of largest possible theshold BUT hardware scales up threshold values by 6 bits. See notes on fixed-point in Loihi_backend.
         self.duration = duration
+
+        self.threshold_bit_limit = 22 # 22 is power of MSB of largest possible theshold BUT hardware scales up threshold values by 6 bits. See notes on fixed-point in Loihi_backend.
         self.max_delay_value = 63
+        """
+        A note about max delay values:
+        The reason why we are setting this to 63 is not entirely clear:
+        1) The lava documentation for the bit-acc Python model of the DelaySparse/Dense connections explicity set 63 as themaximum value.
+        2) Looking at the source code for the neuro-core model for the Delay connections, the code checks to see if the bit_length of the max delay is < 6. This would suggest that the max delay should be 31.
+
+        HOWEVER, empirically the maximum delay value of the default Delay connections is 63.
+        This implies that the hardware (or at least lava) does some sort of shifting to delay values prior to checking.
+
+        Another note:
+        The non-bit-acc Python model does not seem to have the same restrictions. But we will us a default value of 63.
+        """
 
         from lava.proc.lif.process import LIF
         self.LIF = LIF
@@ -108,7 +123,7 @@ class Loihi2SimInterface(LoihiInterface):
 
         from lava.proc.lif.models import PyLifModelBitAcc 
         from lava.proc.sparse.models import PySparseModelBitAcc, PyDelaySparseModelBitAcc
-        self.use_bit_acc = False 
+        self.use_bit_acc = False
         self.proc_model_map = {}
         if self.use_bit_acc:
             self.proc_model_map[self.LIF] = PyLifModelBitAcc
@@ -268,8 +283,6 @@ class Loihi2HWInterface(LoihiInterface):
         spike_trains = np.zeros(shape=input_iterator.shape(), dtype=int)
         for index, step in enumerate(input_iterator.inputs):
             spike_trains[index][step] = 1
-
-        print(spike_trains)
 
         sg_input = self.SpikeGenerator(data=spike_trains)
         py_nx_adapt = self.PyToNxAdapter(shape=(input_count,))

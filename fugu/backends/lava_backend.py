@@ -7,6 +7,8 @@ isort:skip_file
 """
 
 # fmt: off
+import logging
+
 import pandas as pd
 import numpy as np
 
@@ -33,45 +35,46 @@ class NonIntegerDelayValueException(Exception):
     pass
 
 
+def reduce_factor_by_bits(value, num_bits):
+    if num_bits > 0:
+        print(f"Reducing scale factor by {num_bits} bits")
+        return value >> num_bits
+    return value
+
+
 def calculate_loihi_scale_factor(max_threshold=0, max_weight=0, max_bias=0, starting_scale=1<<20, min_scale=1<<6, threshold_bit_limit=16):
     scale_factor = starting_scale
     if max_threshold:
-        bits = calculateBitLength(abs(max_threshold * scale_factor)) # The power of the MSB needed to represent Vspike. The number of bits required is actually (bits+1).
+        bits = calculateBitLength(max_threshold * scale_factor) # The power of the MSB needed to represent Vspike. The number of bits required is actually (bits+1).
         bit_limit = threshold_bit_limit 
         
         excess = bits - bit_limit
-        if excess > 0:
-            scale_factor >>= excess
-            print(f"Scaling scale factor based on excess {excess}")
-            warnIfValueExceedsPrecision(scale_factor, min_scale, "Threshold")
+        scale_factor = reduce_factor_by_bits(scale_factor, excess)
+        warnIfValueExceedsPrecision(scale_factor, min_scale, "Threshold")
 
     #   Compensate for weight magnitude
     #   As long as firing threshold can be represented, we don't care by how much it might
     #   be exceeded. Thus we don't worry about the sum of weights, only individual weights.
     print("Compensate for weight magnitude")
     if max_weight:
-        bits = calculateBitLength(abs(max_weight * scale_factor))
+        bits = calculateBitLength(max_weight * scale_factor)
         bit_limit = 20 # hightest possible bit position for weight
         
         excess = bits - bit_limit
-        if excess > 0:
-            scale_factor >>= excess
-            print(f"Scaling scale factor based on excess {excess}")
-            warnIfValueExceedsPrecision(scale_factor, min_scale, "Weight")
+        scale_factor = reduce_factor_by_bits(scale_factor, excess)
+        warnIfValueExceedsPrecision(scale_factor, min_scale, "Weight")
 
     #   Compensate for large bias values
     print("Compensate for large bias")
     if max_bias:
         # bias is signed 13-bit (12 significant bits), with up to 7 bits of shift
-        bits = calculateBitLength(abs(max_bias * scale_factor))
+        bits = calculateBitLength(max_bias * scale_factor)
         biasExp = max(0, bits - 11)  # 11 is highest allowable power in mantissa
         bit_limit = biasExp
         
         excess = bits - bit_limit
-        if excess > 0:
-            scale_factor >>= excess
-            print(f"Scaling scale factor based on excess {excess}")
-            warnIfValueExceedsPrecision(scale_factor, min_scale, "Bias")
+        scale_factor = reduce_factor_by_bits(scale_factor, excess)
+        warnIfValueExceedsPrecision(scale_factor, min_scale, "Bias")
 
     return scale_factor
 
@@ -529,8 +532,7 @@ class lava_Backend(Backend):
             profiler.energy_probe(num_steps=self.duration)
 
         runCondition = RunSteps(num_steps=self.duration)
-        print("Importing logging")
-        import logging
+        print("Setting up nxsdk logging")
         process._log_config.level = logging.INFO
         print(f"{process._log_config.level}, {logging.INFO}")
         process.run(condition=runCondition, run_cfg=runConfig)
@@ -573,22 +575,8 @@ class lava_Backend(Backend):
         if self.enableProfiler:
             print(">>> Profiler data:")
             profiler.statement
-            print()
             profiler.power_breakdown()
-            print()
             profiler.energy_breakdown()
-            print()
-            #print(f"Total execution time: {np.round(np.sum(profiler.execution_time), 6)} s")
-            #print(f"Total power: {np.round(profiler.power, 6)} W") 
-            #print(f"Total energy: {np.round(profiler.energy, 6)} J")
-            #print(f"Static energy: {np.round(profiler.static_energy, 6)} J")
-            print(f"Power: {profiler.power}")
-            print(f"Dynamic Power: {profiler.dynamic_power}")
-            print(f"Static Power: {profiler.static_power}")
-            print(f"Dynamic Energy: {profiler.dynamic_energy}")
-            print(f"Static Energy: {profiler.static_energy}")
-            print(f"Dynamic Power: {profiler.dynamic_power}")
-            print(f"Static Power: {profiler.static_power}")
 
         #print("Probe data for input process lif")
         #num_neurons = int(len(self.loihi2Interface.inputStateProbe.time_series) / self.duration)

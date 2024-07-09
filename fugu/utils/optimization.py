@@ -51,7 +51,7 @@ class DelayRelayData:
         return sum([len(self.relay_list[e]) for e in self.relay_list])
 
 
-def generate_relay_data(graph : nx.Graph, max_delay) -> DelayRelayData:
+def generate_relay_data(graph : nx.DiGraph, max_delay) -> DelayRelayData:
     # Returns data that can be used to create relay neurons. 
     # This assumes delay is handled by the destination rather than the source
     delay_relay_data = DelayRelayData()
@@ -59,11 +59,11 @@ def generate_relay_data(graph : nx.Graph, max_delay) -> DelayRelayData:
     for (u, v) in graph.edges():
         delay = graph[u][v]["delay"]
         if delay > max_delay:
-            next = total_num_relays
+            curr_relay = total_num_relays
             while delay > max_delay:
-                delay_relay_data.add_relay((u, v), next)
+                delay_relay_data.add_relay((u, v), curr_relay)
                 total_num_relays += 1
-                next += 1
+                curr_relay += 1
                 delay -= max_delay
             delay_relay_data.add_final_delay((u, v), delay)
 

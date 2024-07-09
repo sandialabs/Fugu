@@ -16,7 +16,7 @@ class TestGenerateRelayData:
         return graph
 
     @pytest.mark.parametrize("num_edges", range(1, 10))
-    def test_no_relay(self, num_edges):
+    def test_no_added_relay(self, num_edges):
         delays = [1 for _ in range(num_edges)]
         edges = [(i, i + 1) for i in range(num_edges)]
         graph = TestGenerateRelayData.create_test_graph(edges, delays)
@@ -81,8 +81,7 @@ class TestGenerateRelayData:
         expected_total_relays = []
         expected_final_delays = []
         for delay in delays:
-            total_relays = int(delay / max_delay)
-            final_delay = delay % max_delay
+            total_relays, final_delay = divmod(delay, max_delay)
             if final_delay == 0:
                 total_relays -= 1
                 final_delay = None
