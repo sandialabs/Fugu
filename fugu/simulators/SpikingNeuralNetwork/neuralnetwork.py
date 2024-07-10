@@ -28,7 +28,7 @@ class NeuralNetwork:
         if not new_neuron:
             self._nrn_count += 1
             neuron = LIFNeuron(str(self._nrn_count))
-        elif type(new_neuron) == str:
+        elif isinstance(new_neuron, str):
             self._nrn_count += 1
             neuron = LIFNeuron(new_neuron)
         elif isinstance(new_neuron, Neuron):
@@ -62,10 +62,8 @@ class NeuralNetwork:
         """
         if not new_synapse:
             raise TypeError("Needs synapse object with pre and post neurons")
-        elif type(new_synapse) == tuple and len(new_synapse) >= 2 and len(new_synapse) < 5:
+        elif isinstance(new_synapse, tuple) and len(new_synapse) >= 2 and len(new_synapse) < 5:
             tmpsyn = Synapse(*new_synapse)
-        elif type(new_synapse) == Synapse:
-            tmpsyn = new_synapse
         elif isinstance(new_synapse, Synapse):
             tmpsyn = new_synapse
         else:

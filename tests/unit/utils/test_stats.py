@@ -13,7 +13,7 @@ def create_edge_list(num_edges):
 
 
 def create_node_list(num_nodes):
-    return list(range(num_nodes)) 
+    return list(range(num_nodes))
 
 
 def create_node_property_lsit(values, property_name):
@@ -97,7 +97,7 @@ def test_missing_weight(weights, default_value, expected):
 )
 def test_max_threshold(thresholds, expected):
     node_list = create_node_list(len(thresholds))
-    property_list = create_node_property_lsit(thresholds, "threshold") 
+    property_list = create_node_property_lsit(thresholds, "threshold")
     graph = build_graph_from_nodes(node_list, property_list)
 
     calculated_values = get_max_magnitude_neuron_values(graph, ["threshold"])
@@ -116,7 +116,7 @@ def test_max_threshold(thresholds, expected):
 )
 def test_missing_threshold(thresholds, default_value, expected):
     node_list = create_node_list(len(thresholds))
-    property_list = create_node_property_lsit(thresholds, "threshold") 
+    property_list = create_node_property_lsit(thresholds, "threshold")
     graph = build_graph_from_nodes(node_list, property_list)
 
     calculated_values = get_max_magnitude_neuron_values(graph, ["threshold"], default_values={"threshold": default_value})
