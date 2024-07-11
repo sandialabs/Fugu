@@ -49,8 +49,7 @@ class convolution_1d(Brick):
         if len(input_codings) != 1:
             raise ValueError("convolution takes in 1 inputs of size n")
 
-        if is_metadata_key_present(metadata[0],'isNeuralNetworkLayer'):
-            self.plength = get_metadata_key_value(metadata[0],'output_shape')
+        if not self.plength and 'output_shape' in metadata[0]: self.plength = metadata[0]['output_shape'][0]  # plength is an integer
 
         self.metadata['input_shape'] = self.plength
 
@@ -197,8 +196,7 @@ class convolution_2d(Brick):
         if len(input_codings) != 1:
             raise ValueError("convolution takes in 1 inputs of size n")
 
-        if is_metadata_key_present(metadata[0],'isNeuralNetworkLayer'):
-            self.input_shape = get_metadata_key_value(metadata[0],'output_shape')
+        if not self.input_shape and 'output_shape' in metadata[0]: self.input_shape = metadata[0]['output_shape']
 
         self.metadata['input_shape'] = self.input_shape
 

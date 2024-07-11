@@ -9,7 +9,7 @@ setup(
     install_requires=[
         "decorator~=4.4.2",
         "future~=0.18.2",
-        "greenlet~=0.4.16",
+        "greenlet",
         "msgpack~=1.0.0",
         "networkx==2.4",
         "numpy<1.24.0",

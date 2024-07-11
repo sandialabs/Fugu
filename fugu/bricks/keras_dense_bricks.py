@@ -49,9 +49,7 @@ class keras_dense_2d_4dinput(Brick):
             + list of output
             + list of coding formats of output
         """
-        if self.input_shape is None:
-            self.parse_metadata(metadata)
-
+        if self.input_shape is None: self.input_shape = metadata[0].get('output_shape')
         assert self.input_shape is not None
         self.metadata["input_shape"] = self.input_shape
 
@@ -109,25 +107,6 @@ class keras_dense_2d_4dinput(Brick):
 
         self.is_built = True
         return (graph, self.metadata, [{"complete": complete_node, "begin": begin_node}], output_lists, output_codings,)
-
-    def parse_metadata(self, metadata):
-        try:
-            isPreviousBrickKeras = metadata['isKerasBrickLayer']
-            isMetadataAList = False
-        except TypeError:
-            try:
-                isPreviousBrickKeras = metadata[0]['isKerasBrickLayer']
-                isMetadataAList = True
-            except KeyError:
-                isPreviousBrickKeras = False
-        except KeyError:
-            isPreviousBrickKeras = False
-
-        if isPreviousBrickKeras:
-            if isMetadataAList:
-                self.input_shape = metadata[0]['output_shape']
-            else:
-                self.input_shape = metadata['output_shape']
 
     def handle_input_layer_shapes(self):
         if len(self.input_shape) <= 2:
