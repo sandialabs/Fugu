@@ -6,12 +6,13 @@ isort:skip_file
 """
 
 # fmt: off
+import sys
 from collections import deque
 from warnings import warn
 
 import fugu.simulators.SpikingNeuralNetwork as snn
 
-from .backend import Backend
+from .backend import Backend, PortDataIterator
 from ..utils.export_utils import results_df_from_dict
 from ..utils.misc import CalculateSpikeTimes
 
@@ -28,11 +29,10 @@ class snn_Backend(Backend):
         recordAll =  self.record == 'all'
         for node, vals in self.fugu_circuit.nodes.data():
             if vals.get('layer') != 'input': continue
-            for list in vals['output_lists']:
-                for neuron in list:
-                    n = snn.InputNeuron(neuron, record=recordAll)
-                    neuron_dict[neuron] = n
-                    self.nn.add_neuron(n)
+            for neuron in PortDataIterator(vals):
+                n = snn.InputNeuron(neuron, record=recordAll)
+                neuron_dict[neuron] = n
+                self.nn.add_neuron(n)
 
         # Add all other neurons.
         for neuron, props in self.fugu_graph.nodes.data():
@@ -53,9 +53,8 @@ class snn_Backend(Backend):
         if not recordAll:
             for node, vals in self.fugu_circuit.nodes.data():
                 if vals.get('layer') != 'output': continue
-                for list in vals['output_lists']:
-                    for neuron in list:
-                        neuron_dict[neuron].record = True
+                for neuron in PortDataIterator(vals):
+                    neuron_dict[neuron].record = True
 
         for n1, n2, props in self.fugu_graph.edges.data():
             delay  = int(props.get('delay',  1))
@@ -74,22 +73,12 @@ class snn_Backend(Backend):
 
     def compile(self, scaffold, compile_args={}):
         # creates neuron populations and synapses
-        self.fugu_circuit = scaffold.circuit
-        self.fugu_graph = scaffold.graph
+        self.fugu_circuit    = scaffold.circuit
+        self.fugu_graph      = scaffold.graph
         self.brick_to_number = scaffold.brick_to_number
-        if 'record' in compile_args:
-            self.record = compile_args['record']
-        else:
-            self.record = False
-        if 'ds_format' in compile_args:
-            self.ds_format = compile_args['ds_format']
-        else:
-            self.ds_format = True
-        if 'debug_mode' in compile_args:
-            self.debug_mode = compile_args['debug_mode']
-        else:
-            self.debug_mode = False
-
+        self.record          = compile_args.get('record',     False)
+        self.ds_format       = compile_args.get('ds_format',  True)
+        self.debug_mode      = compile_args.get('debug_mode', False)
         self._build_network()
 
     def run(self, n_steps=10, return_potentials=False):
@@ -203,25 +192,26 @@ class snn_Backend(Backend):
         """
         initial_spike_data = CalculateSpikeTimes(self.fugu_circuit)
 
-        for node, vals in self.fugu_circuit.nodes.data():
-            if 'layer' in vals:
-                if vals['layer'] == 'input':
-                    initial_spikes = {}
-                    for neuron in self.fugu_circuit.nodes[node][
-                            'output_lists'][0]:
-                        initial_spikes[neuron] = []
-                    for timestep in initial_spike_data:
-                        spike_list = initial_spike_data[timestep]
-                        for neuron in spike_list:
-                            if neuron in initial_spikes:
-                                initial_spikes[neuron].append(1)
-                        for neuron in initial_spikes:
-                            if (len(initial_spikes[neuron]) < timestep + 1):
-                                initial_spikes[neuron].append(0)
+        for key, vals in self.fugu_circuit.nodes.data():
+            if vals.get('layer') != 'input': continue
 
-                    for neuron in self.fugu_circuit.nodes[node][
-                            'output_lists'][0]:
-                        if self.debug_mode:
-                            print(neuron, initial_spikes[neuron])
-                        self.nn.update_input_neuron(neuron,
-                                                    initial_spikes[neuron])
+            ports = vals.get('ports')
+            if not ports: continue
+            port = next(iter(ports.values()), None)  # find first entry, which is generally the only entry
+            if not port: continue
+            data_channel = port.channels.get('data')
+            if not data_channel: continue
+
+            initial_spikes = {}
+            for neuron in data_channel.neurons:
+                initial_spikes[neuron] = []
+            for timestep in initial_spike_data:
+                for neuron in initial_spike_data[timestep]:
+                    if neuron in initial_spikes:
+                        initial_spikes[neuron].append(1)
+                for neuron in initial_spikes:
+                    if (len(initial_spikes[neuron]) < timestep + 1):
+                        initial_spikes[neuron].append(0)
+            for neuron in data_channel.neurons:
+                if self.debug_mode: print(neuron, initial_spikes[neuron])
+                self.nn.update_input_neuron(neuron, initial_spikes[neuron])

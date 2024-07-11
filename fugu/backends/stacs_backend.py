@@ -30,6 +30,7 @@ class stacs_Backend(Backend):
         # Export Fugu Circuit to files
         fugufiles = self.netwkdir + '/files'
         # Some helper data structures for the conversion
+        # TODO: see Scaffold.lay_brick() end of function. It already assigns a unique integer called "neuron_number" to each neuron.
         neuronindex = {}
         neuronmap = {}
         neuronname = {}
@@ -43,22 +44,26 @@ class stacs_Backend(Backend):
         input_neurons = []
         input_spikes = {}
 
-        for brick in self.fugu_circuit.nodes:
-            if 'layer' in self.fugu_circuit.nodes[brick] and self.fugu_circuit.nodes[brick]['layer'] == 'input':
+        for brick, node in self.fugu_circuit.nodes.data():
+            if node.get('layer') != 'input': continue
+            ports = node.get('ports')
+            if not ports: continue
+            for port in ports.values():
                 # Control Nodes
-                #print(self.fugu_circuit.nodes[brick]['control_nodes'][0]['begin'])
-                neuron = self.fugu_circuit.nodes[brick]['control_nodes'][0]['begin']
-                input_neurons.append(neuronindex[neuron])
-                input_spikes[neuronindex[neuron]] = list([1])
-                # Need to update the default potential for synchronization of timing
-                # (instead of spiking due to initial potential, spike when inputs arrive)
-                self.fugu_graph.nodes[self.fugu_circuit.nodes[brick]['control_nodes'][0]['begin']]['potential'] = 0.0
+                begin = port.channels.get('begin')
+                if begin:
+                    neuron = begin.neurons[0]
+                    input_neurons.append(neuronindex[neuron])
+                    input_spikes[neuronindex[neuron]] = list([1])
+                    # Need to update the default potential for synchronization of timing
+                    # (instead of spiking due to initial potential, spike when inputs arrive)
+                    self.fugu_graph.nodes[begin]['potential'] = 0.0
                 # Output Lists
-                #print(self.fugu_circuit.nodes[brick]['output_lists'])
-                for l, lists in enumerate(self.fugu_circuit.nodes[brick]['output_lists']):
-                    for n, neuron in enumerate(lists):
+                data = port.channels.get('data')
+                if data:
+                    for n, neuron in enumerate(data.neurons):
                         input_neurons.append(neuronindex[neuron])
-                        input_spikes[neuronindex[neuron]] = (self.fugu_circuit.nodes[brick]['brick'].vector[n]).tolist()
+                        input_spikes[neuronindex[neuron]] = (node['brick'].vector[n]).tolist()
 
         input_neurons.sort() # This gets them in neuron order
 

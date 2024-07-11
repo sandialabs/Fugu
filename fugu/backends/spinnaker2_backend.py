@@ -6,7 +6,7 @@ isort:skip_file
 """
 
 # fmt: off
-from .backend import Backend
+from .backend import Backend, PortDataIterator
 import sys
 
 
@@ -28,24 +28,22 @@ class spinnaker2_Backend(Backend):
                     node = G.nodes[n]
                     if not 'spikes' in node: node['spikes'] = []
                     node['spikes'].append(timestep)
-            for neurons in vals['output_lists']:
-                for n in neurons:
-                    node = G.nodes[n]
-                    if not 'spikes' in node: node['spikes'] = []
-                    index = len(spikeTimes)  # For the purpose of making connections, every neuron needs an integer index within its population.
-                    node['index'] = index
-                    spikeTimes[index] = node['spikes']  # Could be empty, but also could be updated to contain spikes later.
+            for n in PortDataIterator(values):
+                node = G.nodes[n]
+                if not 'spikes' in node: node['spikes'] = []
+                index = len(spikeTimes)  # For the purpose of making connections, every neuron needs an integer index within its population.
+                node['index'] = index
+                spikeTimes[index] = node['spikes']  # Could be empty, but also could be updated to contain spikes later.
         source = snn.Population(len(spikeTimes), 'spike_list', spikeTimes)
         self.network.add(source)
 
         # Tag output neurons based on circuit information.
         for _, vals in C.nodes.data():
             if vals.get('layer') != 'output': continue
-            for neurons in vals['output_lists']:
-                for n in neurons:
-                    node = G.nodes[n]
-                    if 'spikes' in node: continue  # This is an input, so no need to record.
-                    if not 'outputs' in node: node['outputs'] = {'spike': {}}
+            for n in PortDataIterator(vals):
+                node = G.nodes[n]
+                if 'spikes' in node: continue  # This is an input, so no need to record.
+                if not 'outputs' in node: node['outputs'] = {'spike': {}}
 
         # Determine voltage scaling
         # Synaptic weights are integers in [-15,15] and we want to use all available precision.
@@ -192,24 +190,23 @@ class spinnaker2_Backend(Backend):
         potentialNeurons = []
         for _, vals in self.fugu_circuit.nodes.data():
             if vals.get('layer') != 'output': continue
-            for neurons in vals['output_lists']:
-                for n in neurons:
-                    node = G.nodes[n]
-                    neuron_number = node['neuron_number']
-                    index         = node['index']
-                    if 'spikes' in node:
-                        for s in node['spikes']:
-                            spikeTimes  .append(s)
-                            spikeNeurons.append(neuron_number)
-                        continue
-                    if 'spike' in node['outputs']:
-                        for s in spikes[index]:
-                            spikeTimes  .append(s)
-                            spikeNeurons.append(neuron_number)
-                    if return_potentials:
-                        scale = node.get('scale', self.defaultScale)
-                        potentialValues .append(voltages[index][-1] / scale)
-                        potentialNeurons.append(neuron_number)
+            for n in PortDataIterator(vals):
+                node = G.nodes[n]
+                neuron_number = node['neuron_number']
+                index         = node['index']
+                if 'spikes' in node:
+                    for s in node['spikes']:
+                        spikeTimes  .append(s)
+                        spikeNeurons.append(neuron_number)
+                    continue
+                if 'spike' in node['outputs']:
+                    for s in spikes[index]:
+                        spikeTimes  .append(s)
+                        spikeNeurons.append(neuron_number)
+                if return_potentials:
+                    scale = node.get('scale', self.defaultScale)
+                    potentialValues .append(voltages[index][-1] / scale)
+                    potentialNeurons.append(neuron_number)
         spikes = pd.DataFrame({'time': spikeTimes, 'neuron_number': spikeNeurons}, copy=False)
         spikes.sort_values('time', inplace=True)  # put in spike time order
         if not return_potentials: return spikes

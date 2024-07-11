@@ -4,7 +4,7 @@ isort:skip_file
 
 # fmt: off
 import math
-from .backend import Backend
+from .backend import Backend, PortDataIterator
 import nxsdk.api.n2a as nx
 import pandas as pd
 
@@ -81,13 +81,12 @@ class loihi_Backend(Backend):
                     if '$pikes' not in node: node['$pikes'] = []
                     spikes = node['$pikes']
                     spikes.append(timestep + 1)  # Loihi does not report spikes in cycle 0, so we won't see immediate effects of input in that cycle. Shift all timing forward by 1 to compensate.
-            for list in vals['output_lists']:
-                for n in list:
-                    node = G.nodes[n]
-                    if not '$pikes' in node: continue
-                    spikeGen = self.net.createSpikeGenProcess(1)
-                    spikeGen.addSpikes(0, node['$pikes'])
-                    node['cx'] = spikeGen  # nx neurons are stored directly in the graph
+            for n in PortDataIterator(vals):
+                node = G.nodes[n]
+                if not '$pikes' in node: continue
+                spikeGen = self.net.createSpikeGenProcess(1)
+                spikeGen.addSpikes(0, node['$pikes'])
+                node['cx'] = spikeGen  # nx neurons are stored directly in the graph
 
         # Add all other neurons ...
 
@@ -259,7 +258,11 @@ class loihi_Backend(Backend):
         self.outputs = []
         for node, vals in self.fugu_circuit.nodes.data():
             if vals.get('layer') != 'output': continue
-            for l in vals['output_lists']: self.outputs.extend(l)
+            ports = vals.get('ports')
+            if not ports: continue
+            for port in ports.values():
+                data_channel = port.channels.get('data')
+                if data_channel: self.outputs.extend(data_channel.neurons)
         for n in self.outputs:
             node = G.nodes[n]
             if '$pikes' in node: continue  # This is an input, so can't be probed.

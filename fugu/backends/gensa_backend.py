@@ -7,7 +7,7 @@ import os
 import subprocess
 import pandas as pd
 
-from .backend import Backend
+from .backend import Backend, PortDataIterator
 from ..utils.OutputParser import OutputParser
 
 
@@ -21,11 +21,10 @@ class gensa_Backend(Backend):
         if self.record != 'all':
             for cn, vals in self.fugu_circuit.nodes.data():
                 if vals.get('layer') != 'output': continue
-                for list in vals['output_lists']:
-                    for n in list:
-                        node = G.nodes[n]
-                        if not 'outputs' in node: node['outputs'] = {}
-                        if not 'spike' in node['outputs']: node['outputs']['spike'] = {}
+                for n in PortDataIterator(vals):
+                    node = G.nodes[n]
+                    if not 'outputs' in node: node['outputs'] = {}
+                    if not 'spike' in node['outputs']: node['outputs']['spike'] = {}
         if self.traceV:
             for n, node in G.nodes.data():
                 if not 'outputs' in node: node['outputs'] = {}
@@ -43,25 +42,24 @@ class gensa_Backend(Backend):
                     spikes = node['$pikes']
                     spikes.append(timestep)
             # Write input neurons to file
-            for list in vals['output_lists']:
-                for n in list:
-                    node  = G.nodes[n]
-                    index = node['neuron_number']
-                    self.out.write('{}\n'.format(index))
-                    if 'outputs' in node and 'V' in node['outputs']:
-                        # can't trace V on input neurons
-                        del node['outputs']['V']
-                        if not node['outputs']: del node['outputs']
-                    self.writeSynapsesAndOutputs(G, n)
-                    # Embed input pattern
-                    if not '$pikes' in node: continue
-                    self.out.write(' t')  # spike time list
-                    between = False
-                    for t in node['$pikes']:
-                        if between: self.out.write(',')
-                        self.out.write('{}'.format(t))
-                        between = True
-                    self.out.write('\n')
+            for n in PortDataIterator(vals):
+                node  = G.nodes[n]
+                index = node['neuron_number']
+                self.out.write('{}\n'.format(index))
+                if 'outputs' in node and 'V' in node['outputs']:
+                    # can't trace V on input neurons
+                    del node['outputs']['V']
+                    if not node['outputs']: del node['outputs']
+                self.writeSynapsesAndOutputs(G, n)
+                # Embed input pattern
+                if not '$pikes' in node: continue
+                self.out.write(' t')  # spike time list
+                between = False
+                for t in node['$pikes']:
+                    if between: self.out.write(',')
+                    self.out.write('{}'.format(t))
+                    between = True
+                self.out.write('\n')
 
         # Add all other neurons.
         for n, node in G.nodes.data():
@@ -150,28 +148,27 @@ class gensa_Backend(Backend):
         potentialNeurons = []
         for cn, vals in self.fugu_circuit.nodes.data():
             if vals.get('layer') != 'output': continue
-            for list in vals['output_lists']:
-                for n in list:
-                    node = self.fugu_graph.nodes[n]
-                    index = node['neuron_number']
-                    if '$pikes' in node:  # Neuron is both an input and an output.
-                        # Simply copy the input pattern to the output.
-                        for s in node['$pikes']:
-                            spikeTimes  .append(s)
+            for n in PortDataIterator(vals):
+                node = self.fugu_graph.nodes[n]
+                index = node['neuron_number']
+                if '$pikes' in node:  # Neuron is both an input and an output.
+                    # Simply copy the input pattern to the output.
+                    for s in node['$pikes']:
+                        spikeTimes  .append(s)
+                        spikeNeurons.append(index)
+                    continue
+                # General case: transfer outputs from file
+                outputs = node['outputs']
+                c = op.getColumn(str(index))  # This column might not be present, if this neuron did not spike.
+                if c:
+                    for i, s in enumerate(c.values):
+                        if s:
+                            spikeTimes  .append(i + c.startRow)
                             spikeNeurons.append(index)
-                        continue
-                    # General case: transfer outputs from file
-                    outputs = node['outputs']
-                    c = op.getColumn(str(index))  # This column might not be present, if this neuron did not spike.
-                    if c:
-                        for i, s in enumerate(c.values):
-                            if s:
-                                spikeTimes  .append(i + c.startRow)
-                                spikeNeurons.append(index)
-                    if return_potentials:
-                        c = op.getColumn('{}.V'.format(index))  # This column should always be present if return_potentials is true.
-                        potentialValues .append(c.values[-1])
-                        potentialNeurons.append(neuron_number)
+                if return_potentials:
+                    c = op.getColumn('{}.V'.format(index))  # This column should always be present if return_potentials is true.
+                    potentialValues .append(c.values[-1])
+                    potentialNeurons.append(neuron_number)
         spikes = pd.DataFrame({'time':spikeTimes, 'neuron_number':spikeNeurons}, copy=False)
         spikes.sort_values('time', inplace=True)  # put in spike time order
         if not return_potentials: return spikes

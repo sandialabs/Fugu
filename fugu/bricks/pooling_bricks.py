@@ -43,8 +43,7 @@ class pooling_1d(Brick):
             + list of output
             + list of coding formats of output
         """
-        if is_metadata_key_present(metadata[0],'isNeuralNetworkLayer'):
-            self.input_shape = get_metadata_key_value(metadata[0],'output_shape')
+        if 'output_shape' in metadata[0]: self.input_shape = metadata[0]['output_shape']
 
         assert hasattr(self, 'input_shape')
         self.metadata['input_shape'] = self.input_shape
@@ -145,8 +144,7 @@ class pooling_2d(Brick):
             + list of output
             + list of coding formats of output
         """
-        if is_metadata_key_present(metadata[0],'isNeuralNetworkLayer'):
-            self.input_shape = get_metadata_key_value(metadata[0],'output_shape')
+        if 'output_shape' in metadata[0]: self.input_shape = metadata[0]['output_shape']
 
         assert hasattr(self, 'input_shape')
         self.metadata['input_shape'] = self.input_shape

@@ -10,7 +10,7 @@ isort:skip_file
 import pandas as pd
 import numpy as np
 
-from .backend import Backend
+from .backend import Backend, PortDataIterator
 from .lava_interfaces import Loihi2HWInterface, Loihi2SimInterface, calculateBitLength
 
 
@@ -235,11 +235,10 @@ class lava_Backend(Backend):
                     if not 'outputs' in node:          node['outputs'] = {}
                     if not 'spike' in node['outputs']: node['outputs']['spike'] = {}
             else:
-                for list in vals['output_lists']:
-                    for n in list:
-                        node = G.nodes[n]
-                        if not 'outputs' in node:          node['outputs'] = {}
-                        if not 'spike' in node['outputs']: node['outputs']['spike'] = {}
+                for n in PortDataIterator(vals):
+                    node = G.nodes[n]
+                    if not 'outputs' in node:          node['outputs'] = {}
+                    if not 'spike' in node['outputs']: node['outputs']['spike'] = {}
         if self.traceV:
             for n, node in G.nodes.data():
                 if 'outputs' in node:
@@ -265,20 +264,19 @@ class lava_Backend(Backend):
                     # so it is best to avoid the shift unless absolutely necessary.
                     spikes.append(timestep)
             # Set up InputIterator
-            for list in vals['output_lists']:
-                for n in list:
-                    node = G.nodes[n]
-                    #print(f"Input node: {n} {node}")
-                    if 'outputs' in node and 'V' in node['outputs']:
-                        # Reverse our own decision to add V, since it can't be traced on input neurons.
-                        # User is responsible to avoid adding other things which can't be traced.
-                        del node['outputs']['V']
-                        del node['outputs']['I']
-                        if not node['outputs']: del node['outputs']
-                    if not 'out_spikes' in node: continue  # It's conceivable that some input neurons never issue a spike in some configurations.
-                    node['inputIndex'] = len(self.inputIterator.inputs)
-                    self.inputIterator.inputs.append(node['out_spikes'])
-                    #print(f"Adding {node['out_spikes']} to ")
+            for n in PortDataIterator(vals):
+                node = G.nodes[n]
+                #print(f"Input node: {n} {node}")
+                if 'outputs' in node and 'V' in node['outputs']:
+                    # Reverse our own decision to add V, since it can't be traced on input neurons.
+                    # User is responsible to avoid adding other things which can't be traced.
+                    del node['outputs']['V']
+                    del node['outputs']['I']
+                    if not node['outputs']: del node['outputs']
+                if not 'out_spikes' in node: continue  # It's conceivable that some input neurons never issue a spike in some configurations.
+                node['inputIndex'] = len(self.inputIterator.inputs)
+                self.inputIterator.inputs.append(node['out_spikes'])
+                #print(f"Adding {node['out_spikes']} to ")
 
         # Add all other neurons ...
         print("Add neurons")
