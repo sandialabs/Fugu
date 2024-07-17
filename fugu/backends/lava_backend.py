@@ -149,7 +149,7 @@ class lava_Backend(Backend):
         maxBias      = max_values['bias']
         maxThreshold = max_values['threshold']
 
-        self.relay_data = generate_relay_data(G, self.loihi2Interface.max_delay_value)
+        self.relay_data = generate_relay_data(G, self.loihi2Interface.MAX_DELAY_VALUE)
 
         # Determine scale for voltage
         # See loihi_backend.py for reasoning behind this section.
@@ -163,7 +163,7 @@ class lava_Backend(Backend):
             max_weight=maxWeight,
             max_bias=maxBias,
             min_scale=1<<6,
-            threshold_bit_limit=self.loihi2Interface.threshold_bit_limit,
+            threshold_bit_limit=self.loihi2Interface.THRESHOLD_BIT_LIMIT,
             )
 
         # Tag output neurons based on circuit information.
@@ -249,8 +249,8 @@ class lava_Backend(Backend):
             print(f"Key for {n}: ({Vdecay}, {Vspike})")
             #print(f"\tp_data: {p_data}")
             #print(f"\tstart: {start}")
-
             # Add outputs to process config based on graph information.
+
             # TODO: encourage Lava to support probing of variable on a specific neuron.
             if 'outputs' in node:
                 if 'outputs' not in p_data: p_data['outputs'] = {}
@@ -272,7 +272,7 @@ class lava_Backend(Backend):
                     self.relay_pd['outputs']['V'] = None
                     self.relay_pd['outputs']['I'] = None
                     self.relay_pd['outputs']['spike'] = None
-            self.relay_pd['max_delay'] = self.loihi2Interface.max_delay_value
+            self.relay_pd['max_delay'] = self.loihi2Interface.MAX_DELAY_VALUE
 
             """
             v           = self.relay_pd['v']
@@ -401,12 +401,12 @@ class lava_Backend(Backend):
                 relay_to_lif_D = self.relay_pd['D'][processIndex]
 
                 lif_to_relay_W[self.relay_start + current_relay, sourceIndex] = round(self.weightScale)
-                lif_to_relay_D[self.relay_start + current_relay, sourceIndex] = self.loihi2Interface.max_delay_value - 1
+                lif_to_relay_D[self.relay_start + current_relay, sourceIndex] = self.loihi2Interface.MAX_DELAY_VALUE - 1
                 for next_relay in relays[1:]:
                     current_relay_index = self.relay_start + current_relay
                     next_relay_index = self.relay_start + next_relay
                     relay_W[next_relay_index,current_relay_index] = round(self.weightScale)
-                    relay_D[next_relay_index,current_relay_index] = self.loihi2Interface.max_delay_value - 1
+                    relay_D[next_relay_index,current_relay_index] = self.loihi2Interface.MAX_DELAY_VALUE - 1
                     current_relay = next_relay
                 relay_to_lif_W[targetIndex, self.relay_start + current_relay] = round(weight)
                 final_delay = self.relay_data.get_final_delay((n1, n2))
@@ -668,7 +668,6 @@ class lava_Backend(Backend):
                 brick_id = self.brick_to_number[brick]
                 self.fugu_circuit.nodes[brick_id]['brick'].set_properties(properties[brick])
         # must call run() for changes to take effect
-
     def set_input_spikes(self):
         # Clean out old spike structures.
         for n, node in self.fugu_graph.nodes.data():
