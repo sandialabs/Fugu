@@ -15,7 +15,7 @@ import numpy as np
 from .backend import Backend, PortDataIterator
 from .lava_interfaces import Loihi2HWInterface, Loihi2SimInterface, Loihi2SimBitAccInterface, calculateBitLength
 from ..utils.stats import get_max_magnitude_neuron_values, get_max_magnitude_synapse_values
-from ..utils.optimization import offset_voltages, generate_relay_data, DelayRelayData
+from ..utils.optimization import offset_voltages, generate_relay_data, GraphRelayData
 
 
 def warnIfValueExceedsPrecision(value, precision, value_name):
@@ -149,7 +149,7 @@ class lava_Backend(Backend):
         maxBias      = max_values['bias']
         maxThreshold = max_values['threshold']
 
-        self.relay_data = generate_relay_data(G, self.loihi2Interface.MAX_DELAY_VALUE)
+        self.relay_data : GraphRelayData = generate_relay_data(G, self.loihi2Interface.MAX_DELAY_VALUE)
 
         # Determine scale for voltage
         # See loihi_backend.py for reasoning behind this section.
@@ -261,9 +261,9 @@ class lava_Backend(Backend):
                 #print(f"p_datao: {p_datao}")
 
         self.relay_pd = None
-        self.relay_count = self.relay_data.get_total_relays()
+        self.relay_count = self.relay_data.get_total_num_relays()
         self.relay_start = 0
-        if self.relay_data.get_total_relays() > 0:
+        if self.relay_count > 0:
             #self.relay_pd, self.relay_start = self._allocate(0, 0, int(self.scale_factor * 0.9), 0, self.relay_count)
             self.relay_pd, self.relay_start = self._allocate(0, 0, 1, 0, self.relay_count)
             if self.record == 'all':
@@ -388,10 +388,9 @@ class lava_Backend(Backend):
                 p_data1 = node1['neuronPD']
                 W = p_data1['W'][processIndex]
                 D = p_data1['D'][processIndex]
-            if self.relay_data.has_relay_list((n1, n2)):
-                relays = self.relay_data.get_relay_list((n1, n2))
+            if self.relay_data.has_relay_data((n1, n2)):
+                num_relays = self.relay_data.get_relay_count((n1, n2))
                 relay_pd_index = self.relay_pd['index']
-                current_relay = relays[0]
 
                 lif_to_relay_W = p_data1['W'][relay_pd_index]
                 lif_to_relay_D = p_data1['D'][relay_pd_index]
@@ -400,17 +399,20 @@ class lava_Backend(Backend):
                 relay_to_lif_W = self.relay_pd['W'][processIndex]
                 relay_to_lif_D = self.relay_pd['D'][processIndex]
 
-                lif_to_relay_W[self.relay_start + current_relay, sourceIndex] = round(self.weightScale)
-                lif_to_relay_D[self.relay_start + current_relay, sourceIndex] = self.loihi2Interface.MAX_DELAY_VALUE - 1
-                for next_relay in relays[1:]:
-                    current_relay_index = self.relay_start + current_relay
-                    next_relay_index = self.relay_start + next_relay
-                    relay_W[next_relay_index,current_relay_index] = round(self.weightScale)
-                    relay_D[next_relay_index,current_relay_index] = self.loihi2Interface.MAX_DELAY_VALUE - 1
-                    current_relay = next_relay
-                relay_to_lif_W[targetIndex, self.relay_start + current_relay] = round(weight)
+                first_relay = self.relay_data.get_first_relay((n1, n2))
+                first_relay_index = self.relay_start + first_relay
+                lif_to_relay_W[first_relay_index, sourceIndex] = round(self.weightScale)
+                lif_to_relay_D[first_relay_index, sourceIndex] = self.loihi2Interface.MAX_DELAY_VALUE - 1
+                for current_relay in range(num_relays - 1):
+                    current_relay_index = first_relay_index + current_relay
+                    next_relay_index = current_relay_index + 1
+                    relay_W[next_relay_index, current_relay_index] = round(self.weightScale)
+                    relay_D[next_relay_index, current_relay_index] = self.loihi2Interface.MAX_DELAY_VALUE - 1
+
+                final_relay_index = first_relay_index + num_relays - 1
+                relay_to_lif_W[targetIndex, final_relay_index] = round(weight)
                 final_delay = self.relay_data.get_final_delay((n1, n2))
-                relay_to_lif_D[targetIndex, self.relay_start + current_relay] = final_delay - 1
+                relay_to_lif_D[targetIndex, final_relay_index] = final_delay - 1
                 if final_delay > node2['neuronPD']['max_delay']:
                     node2['neuronPD']['max_delay'] = final_delay
             else:
@@ -419,7 +421,6 @@ class lava_Backend(Backend):
                 W[targetIndex,sourceIndex] = round(weight)
                 D[targetIndex,sourceIndex] = delay - 1
             #print(f"{n1}:{sourcePD}:{sourceIndex} {n2}:{node2['neuronPD']['index']}:{targetIndex} {W[targetIndex, sourceIndex]} {edge.get('weight', 1)} {D[targetIndex, sourceIndex]} {edge.get('delay', 1)}")
-
 
         # Connect processes
         print("Connecting input to processes")
