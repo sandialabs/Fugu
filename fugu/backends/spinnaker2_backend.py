@@ -8,6 +8,7 @@ isort:skip_file
 # fmt: off
 from .backend import Backend, PortDataIterator
 import sys
+import pandas as pd
 
 
 class spinnaker2_Backend(Backend):
@@ -28,7 +29,7 @@ class spinnaker2_Backend(Backend):
                     node = G.nodes[n]
                     if not 'spikes' in node: node['spikes'] = []
                     node['spikes'].append(timestep)
-            for n in PortDataIterator(values):
+            for n in PortDataIterator(vals):
                 node = G.nodes[n]
                 if not 'spikes' in node: node['spikes'] = []
                 index = len(spikeTimes)  # For the purpose of making connections, every neuron needs an integer index within its population.
@@ -46,9 +47,9 @@ class spinnaker2_Backend(Backend):
                 if not 'outputs' in node: node['outputs'] = {'spike': {}}
 
         # Determine voltage scaling
-        # Synaptic weights are integers in [-15,15] and we want to use all available precision.
+        # Synaptic weights are integers in [-127,127] and we want to use all available precision.
         # Since neurons are coupled only by spike events, they can have independent scales.
-        self.defaultScale = 15
+        self.defaultScale = 127
         for n1, n2, edge in G.edges.data():
             weight = abs(edge.get('weight', 1.0))
             if weight != 1.0:
@@ -57,12 +58,13 @@ class spinnaker2_Backend(Backend):
                 if weight > maxWeight: node['maxWeight'] = weight
 
         # Add all other neurons.
-        #Vinits   = []
-        Vspikes  = []
-        Vresets  = []
-        Vretains = []
-        Vbiases  = []
-        #Ps       = []
+        Vinits    = []
+        Vspikes   = []
+        Vresets   = []
+        retains   = []
+        Vbiases   = []
+        Ps        = []
+        lifDelays = []
         self.recordSpikes   = False
         self.recordVoltages = False
         for n, node in G.nodes.data():
@@ -75,69 +77,117 @@ class spinnaker2_Backend(Backend):
             if 'spike' in outputs: self.recordSpikes   = True
             if 'V'     in outputs: self.recordVoltages = True
 
-            Vinit   =       node.get('voltage',       0.0)
-            Vspike  =       node.get('threshold',     1.0)
-            Vreset  =       node.get('reset_voltage', 0.0)
-            Vretain = 1.0 - node.get('decay',         0.0)
-            Vbias   =       node.get('bias',          0.0)
-            P       =       node.get('p',             1.0)
-            if 'potential'        in node: Vinit   = node['potential']
-            if 'leakage_constant' in node: Vretain = node['leakage_constant']
+            Vinit  =       node.get('voltage',       0.0)
+            Vspike =       node.get('threshold',     1.0)
+            Vreset =       node.get('reset_voltage', 0.0)
+            retain = 1.0 - node.get('decay',         0.0)
+            Vbias  =       node.get('bias',          0.0)
+            P      =       node.get('p',             1.0)
+            if 'potential'        in node: Vinit  = node['potential']
+            if 'leakage_constant' in node: retain = node['leakage_constant']
 
-            #Vinits  .append (Vinit * scale)
-            Vspikes .append (Vspike * scale)
-            Vresets .append (Vreset * scale)
-            Vretains.append (Vretain)
-            Vbiases .append (Vbias * scale)
-            #Ps      .append (P)
+            Vinits   .append (Vinit  * scale)
+            Vspikes  .append (Vspike * scale)
+            Vresets  .append (Vreset * scale)
+            retains  .append (retain)
+            Vbiases  .append (Vbias  * scale)
+            Ps       .append (P)
+            lifDelays.append (1)
 
-        params = {'threshold':   Vspikes,
-                  'alpha_decay': Vretains,
-                  'i_offset':    Vbiases,
-                  'v_reset':     Vresets,
-                  'reset':       'reset_to_v_reset'}
+        lifParams = {'V'     : Vinits,
+                     'Vspike': Vspikes,
+                     'Vreset': Vresets,
+                     'decay' : retains,
+                     'Vbias' : Vbiases,
+                     'p'     : Ps,
+                     'delay' : lifDelays}
         record = []
         if self.recordSpikes:   record.append('spikes')
         if self.recordVoltages: record.append('v')
-        self.lif = lif = snn.Population(len(Vspikes), 'lif', params, record=record)  # TODO: use spike sink instead of recording
+        self.lif = lif = snn.Population(len(Vspikes), 'lif_fugu', lifParams, record=record)  # TODO: use spike sink instead of recording
         self.network.add(lif)
 
         # TODO: create a spike sink population
 
         # Create synapses
-        maxDelay = 8
-        relay = snn.Population(0, 'lif', {'alpha_decay': 0})
+        maxDelay = 32
+        relayDelays = []
+        relayParams = {'delay': relayDelays}
+        relay = snn.Population(0, 'relay', relayParams)
         connections = {(source, lif):   [],
                        (source, relay): [],
                        (lif, lif):      [],
                        (lif, relay):    [],
                        (relay, lif):    [],
                        (relay, relay):  []}
-        for n1, n2, edge in G.edges.data():
-            delay  = round(edge.get('delay',  1))
-            weight =       edge.get('weight', 1.0)
+        #   For each source neuron, sort the destination neurons by delay amount,
+        #   then build a relay-neuron pipeline.
+        for n1, neighbors in G.adjacency():
             node1 = G.nodes[n1]
-            node2 = G.nodes[n2]
             i1 = node1['index']
-            i2 = node2['index']
-            scale = node2.get('scale', self.defaultScale)
-            weight *= scale
-
             pre = source if 'spikes' in node1 else lif
-            while delay > maxDelay:
-                # allocate a relay neuron
-                i3 = relay.size
-                relay.size += 1
-                # make a connection to it
-                s = [i1, i3, 1, maxDelay-1]  # s2 always adds 1 to delay value
-                connections[(pre, relay)].append(s)
-                # update source neuron and remaining delay
-                pre = relay
-                i1 = i3
-                delay -= maxDelay
+            # Sort
+            unsorted = {}  # key is delay amount; value is a list of receiving neurons with that delay.
+            for n2, edge in neighbors.items():
+                delay = edge.get('delay', 1)
+                if not delay in unsorted: unsorted[delay] = []
+                unsorted[delay].append(n2)
+            # Build delay pipeline
+            currentDelay = 1
+            first = True  # The first neuron can be set to a higher delay if needed. Subsequent neurons can't be modified.
+            for delay, receivers in sorted(unsorted.items()):
+                # Insert needed delay
+                delta = delay - currentDelay
+                if delta and pre is source:  # Spike inputs don't have pre-synaptic delay, so need to insert a relay neuron.
+                    # allocate a relay neuron
+                    i3 = relay.size
+                    relay.size += 1
+                    relayDelays.append(1)  # should be at exactly index i3
+                    # make a connection to it
+                    s = [i1, i3, 0, 0]  # weight and delay are ignored by 'relay' app
+                    connections[(pre, relay)].append(s)
+                    # update source neuron and remaining delay
+                    pre = relay
+                    i1 = i3
+                    currentDelay += 1
+                    delta        -= 1
+                if delta and first:
+                    # The first neuron has a delay of 1 (default). This is already included in currentDelay.
+                    add = min(delta, maxDelay-1)
+                    if pre is lif: lifDelays  [i1] += add
+                    else:          relayDelays[i1] += add
+                    currentDelay += add
+                    delta        -= add
+                if pre is not source: first = False
+                while delta > maxDelay:
+                    i3 = relay.size
+                    relay.size += 1
+                    relayDelays.append(maxDelay)
+                    s = [i1, i3, 0, 0]
+                    connections[(pre, relay)].append(s)
+                    pre = relay
+                    i1 = i3
+                    currentDelay += maxDelay
+                    delta        -= maxDelay
+                if delta:
+                    i3 = relay.size
+                    relay.size += 1
+                    relayDelays.append(delta)
+                    s = [i1, i3, 0, 0]
+                    connections[(pre, relay)].append(s)
+                    pre = relay
+                    i1 = i3
+                    currentDelay += delta
 
-            s = [i1, i2, weight, delay-1]
-            connections[(pre, lif)].append(s)
+                # Connect neurons at this stage of delay
+                for n2 in receivers:
+                    node2 = G.nodes[n2]
+                    i2 = node2['index']
+                    scale = node2.get('scale', self.defaultScale)
+                    edge = G.edges[n1,n2]
+                    weight = edge.get('weight', 1.0) * scale
+                    s = [i1, i2, weight, 0]
+                    connections[(pre, lif)].append(s)
 
         if relay.size: self.network.add(relay)
         for pre in (source, lif, relay):
