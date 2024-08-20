@@ -13,7 +13,7 @@ import pandas as pd
 import numpy as np
 
 from .backend import Backend, PortDataIterator
-from .lava_interfaces import Loihi2HWInterface, Loihi2SimInterface, Loihi2SimBitAccInterface, calculateBitLength
+from .lava_interfaces import Loihi2HWInterface, Loihi2SimInterface, Loihi2SimBitAccInterface, calculate_bit_length
 from ..utils.stats import get_max_magnitude_neuron_values, get_max_magnitude_synapse_values
 from ..utils.optimization import offset_voltages, generate_relay_data, GraphRelayData
 
@@ -45,7 +45,7 @@ def reduce_factor_by_bits(value, num_bits):
 def calculate_loihi_scale_factor(max_threshold=0, max_weight=0, max_bias=0, starting_scale=1<<20, min_scale=1<<6, threshold_bit_limit=16):
     scale_factor = starting_scale
     if max_threshold:
-        bits = calculateBitLength(max_threshold * scale_factor) # The power of the MSB needed to represent Vspike. The number of bits required is actually (bits+1).
+        bits = calculate_bit_length(max_threshold * scale_factor) # The power of the MSB needed to represent Vspike. The number of bits required is actually (bits+1).
         bit_limit = threshold_bit_limit
 
         excess = bits - bit_limit
@@ -57,7 +57,7 @@ def calculate_loihi_scale_factor(max_threshold=0, max_weight=0, max_bias=0, star
     #   be exceeded. Thus we don't worry about the sum of weights, only individual weights.
     print("Compensate for weight magnitude")
     if max_weight:
-        bits = calculateBitLength(max_weight * scale_factor)
+        bits = calculate_bit_length(max_weight * scale_factor)
         bit_limit = 20 # hightest possible bit position for weight
 
         excess = bits - bit_limit
@@ -68,7 +68,7 @@ def calculate_loihi_scale_factor(max_threshold=0, max_weight=0, max_bias=0, star
     print("Compensate for large bias")
     if max_bias:
         # bias is signed 13-bit (12 significant bits), with up to 7 bits of shift
-        bits = calculateBitLength(max_bias * scale_factor)
+        bits = calculate_bit_length(max_bias * scale_factor)
         biasExp = max(0, bits - 11)  # 11 is highest allowable power in mantissa
         bit_limit = biasExp
 

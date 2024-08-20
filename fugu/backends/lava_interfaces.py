@@ -13,7 +13,7 @@ import numpy as np
 
 
 
-def calculateBitLength(value):
+def calculate_bit_length(value):
     abs_value = abs(value)
     if abs_value > 1:
         return math.floor(math.log2(abs_value))
@@ -21,16 +21,16 @@ def calculateBitLength(value):
         return 1
 
 
-def calcWeightExponent(weights):
+def calculate_weight_exponent(weights):
     largest_weight_magnitude = abs(weights).max()
-    bit = calculateBitLength(largest_weight_magnitude)
-    weightExponent = max(-8, bit - 13)  # Put MSB at position 13. This is position 7 for the weight mantissa, plus up-shift by 6 when accumulated weight is applied to voltage.
-    return weightExponent
+    bit = calculate_bit_length(largest_weight_magnitude)
+    weight_exponent = max(-8, bit - 13)  # Put MSB at position 13. This is position 7 for the weight mantissa, plus up-shift by 6 when accumulated weight is applied to voltage.
+    return weight_exponent
 
 
-def calcHardwareWeights(weights, weightExponent):
-    if weightExponent >= 0: scaled_weights = (weights / (2 ** weightExponent)) / 64
-    else:                   scaled_weights = (weights * (2 ** (-weightExponent))) / 64
+def calculate_hardware_weights(weights, weight_exponent):
+    if weight_exponent >= 0: scaled_weights = (weights / (2 ** weight_exponent)) / 64
+    else:                   scaled_weights = (weights * (2 ** (-weight_exponent))) / 64
     integer_weights = scaled_weights.astype('int')
     return integer_weights
 
@@ -283,8 +283,8 @@ class Loihi2SimBitAccInterface(Loihi2SimInterface):
         weights = input_weights[lif_index].astype('int')
         delays = input_delays[lif_index].astype('int')
         if np.count_nonzero(weights):
-            exponent = calcWeightExponent(weights)
-            weights = calcHardwareWeights(weights, exponent)
+            exponent = calculate_weight_exponent(weights)
+            weights = calculate_hardware_weights(weights, exponent)
             c = self.DelaySparse(weights=self.csr_matrix(weights), delays=self.csr_matrix(delays), weight_exp=exponent, sign_mode=self.SignMode.MIXED)
             self.input_process.s_out.connect(c.s_in)
             c.a_out.connect(lif_process.a_in)
@@ -292,8 +292,8 @@ class Loihi2SimBitAccInterface(Loihi2SimInterface):
 
     def connect_lif_to_output(self, output_weights, lif_process):
         if np.count_nonzero(output_weights):
-            exponent = calcWeightExponent(output_weights)
-            output_weights = calcHardwareWeights(output_weights, exponent)
+            exponent = calculate_weight_exponent(output_weights)
+            output_weights = calculate_hardware_weights(output_weights, exponent)
             dummy_connection = self.Sparse(weights=self.csr_matrix(output_weights), sign_mode=self.SignMode.EXCITATORY, weight_exp=exponent)
             lif_process.s_out.connect(dummy_connection.s_in)
             dummy_connection.a_out.connect(self.pass_through_lif.a_in)
@@ -303,8 +303,8 @@ class Loihi2SimBitAccInterface(Loihi2SimInterface):
         W = source_lif_data['W'][dest_lif_index].astype('int')
         D = source_lif_data['D'][dest_lif_index].astype('int')
         if np.count_nonzero(W):
-            exponent = calcWeightExponent(W)
-            W = calcHardwareWeights(W, exponent)
+            exponent = calculate_weight_exponent(W)
+            W = calculate_hardware_weights(W, exponent)
             c = self.DelaySparse(weights=self.csr_matrix(W), delays=self.csr_matrix(D), weight_exp=exponent, sign_mode=self.SignMode.MIXED)
             source_lif_process.s_out.connect(c.s_in)
             c.a_out.connect(dest_lif_process.a_in)
@@ -362,8 +362,8 @@ class Loihi2HWInterface(LoihiInterface):
                 name=f"lif_input",
                 )
         weights = np.eye(input_count) * scale_factor
-        exponent = calcWeightExponent(weights)
-        weights = calcHardwareWeights(weights, exponent)
+        exponent = calculate_weight_exponent(weights)
+        weights = calculate_hardware_weights(weights, exponent)
         formatted_weights = self.format_matrix(weights)
         dummy_connection = self.connection_model(weights=formatted_weights, sign_mode=self.SignMode.EXCITATORY)
         sg_input.s_out.connect(py_nx_adapt.inp)
@@ -405,8 +405,8 @@ class Loihi2HWInterface(LoihiInterface):
                     #M=self.input_process.proc_params['shape'][0],
                     #k=-self.process_output_map['INPUT'],
                     #) * 16384
-        #exponent = calcWeightExponent(weights)
-        #weights = calcHardwareWeights(weights, exponent)
+        #exponent = calculate_weight_exponent(weights)
+        #weights = calculate_hardware_weights(weights, exponent)
         #dummy_connection = Sparse(weights=weights, weight_exp=exponent, sign_mode=SignMode.EXCITATORY)
         #self.input_process.s_out.connect(dummy_connection.s_in)
         #dummy_connection.a_out.connect(self.pass_through_lif.a_in)
@@ -441,8 +441,8 @@ class Loihi2HWInterface(LoihiInterface):
         #print(f"Connecting input to {lif_data['process_name']}")
         #print(f"Original weights:\n{W}")
         if np.count_nonzero(W):
-            exponent = calcWeightExponent(W)
-            weights = calcHardwareWeights(W, exponent)
+            exponent = calculate_weight_exponent(W)
+            weights = calculate_hardware_weights(W, exponent)
             formatted_weights = self.format_matrix(weights)
             formatted_delays = self.format_matrix(D)
             #print(f"Hardware weights:\n{weights}")
@@ -464,8 +464,8 @@ class Loihi2HWInterface(LoihiInterface):
         #print(f"Connecting: {lif_process.proc_params['name']} to pass_through")
         if np.count_nonzero(output_weights):
             #print(f"Original weights:\n{output_weights}")
-            exponent = calcWeightExponent(output_weights)
-            weights = calcHardwareWeights(output_weights, exponent)
+            exponent = calculate_weight_exponent(output_weights)
+            weights = calculate_hardware_weights(output_weights, exponent)
             formatted_weights = self.format_matrix(weights)
             #print(f"Hardware weights:\n{weights}")
             dummy_connection = self.connection_model(
@@ -485,8 +485,8 @@ class Loihi2HWInterface(LoihiInterface):
         max_delay = dest_lif_data['max_delay']
         if np.count_nonzero(W):
             #print(f"Original weights:\n{W}")
-            exponent = calcWeightExponent(W)
-            weights = calcHardwareWeights(W, exponent)
+            exponent = calculate_weight_exponent(W)
+            weights = calculate_hardware_weights(W, exponent)
             formatted_weights = self.format_matrix(weights)
             formatted_delays = self.format_matrix(D)
             #print(f"Hardware wegiths:\n{weights}")

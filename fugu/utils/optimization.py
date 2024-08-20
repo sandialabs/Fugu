@@ -73,3 +73,48 @@ def generate_relay_data(graph: nx.DiGraph, max_delay) -> GraphRelayData:
             current_start_relay += number_of_relays
 
     return graph_relay_data
+
+
+def insert_relay_neurons(G: nx.DiGraph, max_delay) -> nx.DiGraph:
+    # Replace edges with large delays with relay neurons
+    print("Replacing edges with large delays with chains of relay neurons")
+    edges_to_expand = []
+    for n1, n2, edge in G.edges.data():
+        delay = edge['delay']
+        if delay > max_delay:
+            edges_to_expand.append((n1, n2))
+
+    for n1, n2 in edges_to_expand:
+        edge_data = G.edges[(n1, n2)]
+        delay = edge_data['delay']
+        weight = edge_data['weight']
+
+        relay_count = 0
+
+
+        current_node = n1
+        next_node = f"{n1}-{n2}-relay-node:{relay_count}"
+        while delay > max_delay:
+            G.add_node(
+                        next_node,
+                        threshold=0.5,
+                        decay=1.0,
+                        )
+            G.add_edge(
+                        current_node,
+                        next_node,
+                        weight=1.0,
+                        delay=max_delay,
+                        )
+            delay -= max_delay
+            current_node = next_node
+            relay_count += 1
+            next_node = f"{n1}-{n2}-relay-node:{relay_count}"
+
+        G.add_edge(
+                    current_node,
+                    n2,
+                    weight=weight,
+                    delay=delay,
+                    )
+    G.remove_edges_from(edges_to_expand)

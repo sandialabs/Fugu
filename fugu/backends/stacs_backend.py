@@ -46,27 +46,36 @@ class stacs_Backend(Backend):
         input_neurons = []
         input_spikes = {}
 
+        output_neurons = []
         for brick, node in self.fugu_circuit.nodes.data():
-            if node.get('layer') != 'input': continue
-            ports = node.get('ports')
-            if not ports: continue
-            for port in ports.values():
-                # Control Nodes
-                begin = port.channels.get('begin')
-                if begin:
-                    neuron = begin.neurons[0]
-                    input_neurons.append(neuronindex[neuron])
-                    input_spikes[neuronindex[neuron]] = list([1])
-                    # Need to update the default potential for synchronization of timing
-                    # (instead of spiking due to initial potential, spike when inputs arrive)
-                    self.fugu_graph.nodes[neuron]['potential'] = 0.0
-                # Output Lists
-                data = port.channels.get('data')
-                if data:
-                    flat_input = node['brick'].vector.reshape(-1, node['brick'].vector.shape[-1])
-                    for n, neuron in enumerate(data.neurons):
+            if node.get('layer') == 'input': 
+                ports = node.get('ports')
+                if not ports: continue
+                for port in ports.values():
+                    # Control Nodes
+                    begin = port.channels.get('begin')
+                    if begin:
+                        neuron = begin.neurons[0]
                         input_neurons.append(neuronindex[neuron])
-                        input_spikes[neuronindex[neuron]] = (flat_input[n]).tolist()
+                        input_spikes[neuronindex[neuron]] = list([1])
+                        # Need to update the default potential for synchronization of timing
+                        # (instead of spiking due to initial potential, spike when inputs arrive)
+                        self.fugu_graph.nodes[neuron]['potential'] = 0.0
+                    # Output Lists
+                    data = port.channels.get('data')
+                    if data:
+                        for n, neuron in enumerate(data.neurons):
+                            input_neurons.append(neuronindex[neuron])
+                            input_spikes[neuronindex[neuron]] = (node['brick'].vector[n]).tolist()
+            elif node.get('layer') == 'output':
+                ports = node.get('ports')
+                if not ports: continue
+                for port in ports.values():
+                    # Output Lists
+                    data = port.channels.get('data')
+                    if data:
+                        for n, neuron in enumerate(data.neurons):
+                            output_neurons.append(neuronindex[neuron])
 
         input_neurons.sort() # This gets them in neuron order
 
@@ -96,7 +105,7 @@ class stacs_Backend(Backend):
 
         if self.record != False:
             with open(fugufiles + '/fugu_output.csv','w') as fp_out:
-                for neuron in self.record:
+                for neuron in output_neurons:
                     fp_out.write("{}\n".format(neuron))
         
         # Convert graph to sparse-csv files for stacs to build with
