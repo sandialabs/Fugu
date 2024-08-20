@@ -57,13 +57,14 @@ class stacs_Backend(Backend):
                     input_spikes[neuronindex[neuron]] = list([1])
                     # Need to update the default potential for synchronization of timing
                     # (instead of spiking due to initial potential, spike when inputs arrive)
-                    self.fugu_graph.nodes[begin]['potential'] = 0.0
+                    self.fugu_graph.nodes[neuron]['potential'] = 0.0
                 # Output Lists
                 data = port.channels.get('data')
                 if data:
+                    flat_input = node['brick'].vector.reshape(-1, node['brick'].vector.shape[-1])
                     for n, neuron in enumerate(data.neurons):
                         input_neurons.append(neuronindex[neuron])
-                        input_spikes[neuronindex[neuron]] = (node['brick'].vector[n]).tolist()
+                        input_spikes[neuronindex[neuron]] = (flat_input[n]).tolist()
 
         input_neurons.sort() # This gets them in neuron order
 
