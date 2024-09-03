@@ -22,9 +22,7 @@ class TestSnnThreshold(BrickTest):
         scaffold = Scaffold()
         coding, weight, threshold, p_value, decay_value = input_values
 
-        threshold_brick = BRICKS.Threshold(
-            threshold, p=p_value, decay=decay_value, name="Thresh", output_coding=coding
-        )
+        threshold_brick = BRICKS.Threshold(threshold, p=p_value, decay=decay_value, name="Thresh", output_coding=coding)
         vector = BRICKS.Vector_Input(np.array([1]), coding="Raster", name="input1")
         dot_brick = BRICKS.Dot([weight], name="ADotOperator")
 
@@ -52,9 +50,7 @@ class TestSnnThreshold(BrickTest):
             spikes = self.backend.run(5)
             self.update_hit_count(spikes, scaffold)
 
-        AssertValuesAreClose(
-            expected, self.hits / float(self.num_trials), self.tolerance
-        )
+        AssertValuesAreClose(expected, self.hits / float(self.num_trials), self.tolerance)
 
     def test_thresh_current_no_spikes(self):
         scaffold = self.build_scaffold(["current", 1.0, 1, 1, 0])

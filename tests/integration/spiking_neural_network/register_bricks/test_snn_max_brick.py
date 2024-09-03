@@ -19,9 +19,7 @@ class TestSnnMax(BrickTest):
 
         max_brick = BRICKS.Max(name="Max")
         for i, value in enumerate(converted_input):
-            vector_brick = BRICKS.Vector_Input(
-                value, coding="Raster", name="Input{}".format(i)
-            )
+            vector_brick = BRICKS.Vector_Input(value, coding="Raster", name="Input{}".format(i))
             scaffold.add_brick(vector_brick, "input")
         scaffold.add_brick(
             max_brick,

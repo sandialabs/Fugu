@@ -74,7 +74,7 @@ class InputSource:
                                      "Sensor",
                                      some_other_neuron,
                                      weight=1.0,
-                                     delay=1.0,
+                                     delay=1,
                                      )
 
         Example 2:
@@ -98,7 +98,7 @@ class InputSource:
                                      "TCPPortA",
                                      some_other_neuron,
                                      weight=1.0,
-                                     delay=1.0,
+                                     delay=1,
                                      )
                     scaffold.graph.add_node(
                                      "TCPPortB",
@@ -116,7 +116,7 @@ class InputSource:
                                      "TCPPortB",
                                      some_other_neuron,
                                      weight=1.0,
-                                     delay=1.0,
+                                     delay=1,
                                      )
                     scaffold.graph.add_node(
                                      "TCPPortC",
@@ -134,7 +134,7 @@ class InputSource:
                                      "TCPPortC",
                                      some_other_neuron,
                                      weight=1.0,
-                                     delay=1.0,
+                                     delay=1,
                                      )
         """
         pass

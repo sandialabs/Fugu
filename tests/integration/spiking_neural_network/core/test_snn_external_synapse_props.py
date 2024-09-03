@@ -16,9 +16,7 @@ class TestSnnChangeSynapseExternalProperty(BrickTest):
     def build_scaffold(self, input_values):
         scaffold = Scaffold()
 
-        threshold_brick = BRICKS.Threshold(
-            1.0, p=1.0, decay=0, name="Test", output_coding="temporal-L"
-        )
+        threshold_brick = BRICKS.Threshold(1.0, p=1.0, decay=0, name="Test", output_coding="temporal-L")
         vector = BRICKS.Vector_Input(np.array([1]), coding="Raster", name="input1")
         dot_brick = BRICKS.Dot([input_values[0]], name="ADotOperator")
 
@@ -51,9 +49,7 @@ class TestSnnChangeSynapseExternalProperty(BrickTest):
             processed.add((neuron_name, row.time))
 
         test_brick_tag = scaffold.name_to_tag["Test"]
-        test_brick = scaffold.circuit.nodes[scaffold.brick_to_number[test_brick_tag]][
-            "brick"
-        ]
+        test_brick = scaffold.circuit.nodes[scaffold.brick_to_number[test_brick_tag]]["brick"]
         for entry in before_expected:
             converted = (test_brick.generate_neuron_name(entry[0]), entry[1])
             if self.debug:

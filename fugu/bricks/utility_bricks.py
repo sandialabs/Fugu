@@ -388,11 +388,11 @@ class AND_OR(Brick):
             graph.add_edge(operand1,
                            and_node_name,
                            weight=0.75,
-                           delay=1.0)
+                           delay=1)
             graph.add_edge(operand2,
                            and_node_name,
                            weight=0.75,
-                           delay=1.0)
+                           delay=1)
 
         self.is_built = True
         return result
@@ -736,8 +736,8 @@ class TemporalAdder(Brick):
         output_name = self.generate_neuron_name("Sum")
         graph.add_node(output_name, threshold=0.00, decay=0.0, potential=-0.01)
 
-        graph.add_edge(output_name, complete_name, weight=1.0, delay=2.0)
-        graph.add_edge(output_name, output_name, weight=-5.0, delay=2.0)
+        graph.add_edge(output_name, complete_name, weight=1.0, delay=2)
+        graph.add_edge(output_name, output_name, weight=-5.0, delay=2)
 
         increment_timer_name = self.generate_neuron_name("T_I")
         decrement_timer_name = self.generate_neuron_name("T_D")
@@ -748,11 +748,11 @@ class TemporalAdder(Brick):
         graph.add_edge(increment_timer_name,
                        increment_timer_name,
                        weight=self.num_elements,
-                       delay=2.0)
+                       delay=2)
         graph.add_edge(increment_timer_name,
                        output_name,
                        weight=1.0,
-                       delay=2.0)
+                       delay=2)
         graph.add_node(decrement_timer_name,
                        threshold=0.99,
                        decay=0.0,
@@ -760,31 +760,31 @@ class TemporalAdder(Brick):
         graph.add_edge(decrement_timer_name,
                        decrement_timer_name,
                        weight=1.0,
-                       delay=2.0)
+                       delay=2)
         graph.add_edge(decrement_timer_name,
                        output_name,
                        weight=-1.0,
-                       delay=2.0)
+                       delay=2)
 
         graph.add_edge(output_name,
                        increment_timer_name,
                        weight=-1 * self.num_elements,
-                       delay=2.0)
+                       delay=2)
         graph.add_edge(output_name,
                        decrement_timer_name,
                        weight=-1 * self.num_elements,
-                       delay=2.0)
+                       delay=2)
 
         for input_list in input_lists:
             for input_signal in input_list:
                 graph.add_edge(input_signal,
                                increment_timer_name,
                                weight=1.0,
-                               delay=2.0)
+                               delay=2)
                 graph.add_edge(input_signal,
                                decrement_timer_name,
                                weight=-2.0,
-                               delay=2.0)
+                               delay=2)
 
         self.is_built = True
 

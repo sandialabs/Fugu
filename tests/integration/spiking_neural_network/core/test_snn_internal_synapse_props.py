@@ -15,9 +15,7 @@ class TestSnnChangeSynapseInternalProperty(BrickTest):
     def build_scaffold(self, input_values):
         scaffold = Scaffold()
 
-        scaffold.add_brick(
-            BRICKS.SynapseProperties(weights=input_values, name="Test"), output=True
-        )
+        scaffold.add_brick(BRICKS.SynapseProperties(weights=input_values, name="Test"), output=True)
 
         scaffold.lay_bricks()
         return scaffold
@@ -44,9 +42,7 @@ class TestSnnChangeSynapseInternalProperty(BrickTest):
             processed.add((neuron_name, row.time))
 
         test_brick_tag = scaffold.name_to_tag["Test"]
-        test_brick = scaffold.circuit.nodes[scaffold.brick_to_number[test_brick_tag]][
-            "brick"
-        ]
+        test_brick = scaffold.circuit.nodes[scaffold.brick_to_number[test_brick_tag]]["brick"]
         for entry in before_expected:
             converted = (test_brick.generate_neuron_name(entry[0]), entry[1])
             if self.debug:

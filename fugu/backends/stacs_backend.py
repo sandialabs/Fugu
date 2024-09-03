@@ -6,6 +6,7 @@ from warnings import warn
 from .backend import Backend
 from ..utils.export_utils import results_df_from_dict
 from ..utils.misc import CalculateSpikeTimes
+from ..utils.optimization import generate_relay_data, GraphRelayData
 
 import os
 import subprocess
@@ -38,33 +39,43 @@ class stacs_Backend(Backend):
             neuronindex[neuron] = i
             neuronname[str(neuron)] = i
             neuronmap[i] = neuron
+        start_relay_index = len(neuronindex) + 1
 
         neuron_default = {'v':0.0,'v_thresh':0.0,'v_reset':0.0,'v_bias':0.0,'v_leak':1.0,'p_spike':1.0,'I_syn':0.0}
         # Input Neurons require both control nodes and output lists
         input_neurons = []
         input_spikes = {}
 
+        output_neurons = []
         for brick, node in self.fugu_circuit.nodes.data():
-            if node.get('layer') != 'input': continue
-            ports = node.get('ports')
-            if not ports: continue
-            for port in ports.values():
-                # Control Nodes
-                begin = port.channels.get('begin')
-                if begin:
-                    neuron = begin.neurons[0]
-                    input_neurons.append(neuronindex[neuron])
-                    input_spikes[neuronindex[neuron]] = list([1])
-                    # Need to update the default potential for synchronization of timing
-                    # (instead of spiking due to initial potential, spike when inputs arrive)
-                    self.fugu_graph.nodes[neuron]['potential'] = 0.0
-                # Output Lists
-                data = port.channels.get('data')
-                if data:
-                    flat_input = node['brick'].vector.reshape(-1, node['brick'].vector.shape[-1])
-                    for n, neuron in enumerate(data.neurons):
+            if node.get('layer') == 'input': 
+                ports = node.get('ports')
+                if not ports: continue
+                for port in ports.values():
+                    # Control Nodes
+                    begin = port.channels.get('begin')
+                    if begin:
+                        neuron = begin.neurons[0]
                         input_neurons.append(neuronindex[neuron])
-                        input_spikes[neuronindex[neuron]] = (flat_input[n]).tolist()
+                        input_spikes[neuronindex[neuron]] = list([1])
+                        # Need to update the default potential for synchronization of timing
+                        # (instead of spiking due to initial potential, spike when inputs arrive)
+                        self.fugu_graph.nodes[neuron]['potential'] = 0.0
+                    # Output Lists
+                    data = port.channels.get('data')
+                    if data:
+                        for n, neuron in enumerate(data.neurons):
+                            input_neurons.append(neuronindex[neuron])
+                            input_spikes[neuronindex[neuron]] = (node['brick'].vector[n]).tolist()
+            elif node.get('layer') == 'output':
+                ports = node.get('ports')
+                if not ports: continue
+                for port in ports.values():
+                    # Output Lists
+                    data = port.channels.get('data')
+                    if data:
+                        for n, neuron in enumerate(data.neurons):
+                            output_neurons.append(neuronindex[neuron])
 
         input_neurons.sort() # This gets them in neuron order
 
@@ -88,11 +99,13 @@ class stacs_Backend(Backend):
                     fp_inp.write('0\n')
                 else:
                     fp_inp.write('\n')
+            for relay in range(self.relay_data.get_total_num_relays()):
+                fp_inp.write('\n')
         self.n_inputs = len(event_list)
 
         if self.record != False:
             with open(fugufiles + '/fugu_output.csv','w') as fp_out:
-                for neuron in self.record:
+                for neuron in output_neurons:
                     fp_out.write("{}\n".format(neuron))
         
         # Convert graph to sparse-csv files for stacs to build with
@@ -111,7 +124,7 @@ class stacs_Backend(Backend):
                         else:
                             fp_vt.write(str(neuron_default['v_thresh'])+'\n')
                         if 'reset_voltage' in self.fugu_graph.nodes[neuron]:
-                            fp_vr.write(str(graph.nodes[neuron]['reset_voltage'])+'\n')
+                            fp_vr.write(str(self.fugu_graph.nodes[neuron]['reset_voltage'])+'\n')
                         else:
                             fp_vr.write(str(neuron_default['v_reset'])+'\n')
                         if 'bias' in self.fugu_graph.nodes[neuron]:
@@ -131,18 +144,64 @@ class stacs_Backend(Backend):
                         else:
                             fp_is.write(str(neuron_default['I_syn'])+'\n')
                         fp_vn.write(str(neuron)+'\n')
+                    for i in range(self.relay_data.get_total_num_relays()):
+                        fp_v.write(str(neuron_default['v'])+'\n')
+                        fp_vt.write(str(0.5)+'\n')
+                        fp_vr.write(str(neuron_default['v_reset'])+'\n')
+                        fp_vb.write(str(neuron_default['v_bias'])+'\n')
+                        fp_vl.write(str(neuron_default['v_leak'])+'\n')
+                        fp_ps.write(str(neuron_default['p_spike'])+'\n')
+                        fp_is.write(str(neuron_default['I_syn'])+'\n')
+                        fp_vn.write(f"relay:{i}"+'\n')
+
 
         # Connection weights and delays
         with open(fugufiles + '/fugu_weight.csv','w') as fp_wgt, open(fugufiles + '/fugu_delay.csv','w') as fp_del:
+            relay_edges = []
             for i, neuron in enumerate(self.fugu_graph.nodes):
                 # Might need some sorting first?
                 for edge in self.fugu_graph.in_edges(neuron):
-                    fp_wgt.write(str(neuronindex[edge[0]]) + ':' + str(self.fugu_graph.edges[edge]['weight']) + ',')
-                    fp_del.write(str(neuronindex[edge[0]]) + ':' + str(self.fugu_graph.edges[edge]['delay']) + ',')
+                    if self.relay_data.has_relay_data(edge):
+                        last_relay_index = start_relay_index + self.relay_data.get_first_relay(edge) + self.relay_data.get_relay_count(edge)  - 2
+                        print(f">>> Last relay {last_relay_index}")
+                        final_delay = self.relay_data.get_final_delay(edge)
+                        wgt_str = f"{last_relay_index}:{self.fugu_graph.edges[edge]['weight']},"
+                        del_str = f"{last_relay_index}:{final_delay},"
+                        fp_wgt.write(wgt_str)
+                        fp_del.write(del_str)
+
+                        relay_edges.append((edge, self.relay_data.get_first_relay(edge)))
+                    else:
+                        fp_wgt.write(str(neuronindex[edge[0]]) + ':' + str(self.fugu_graph.edges[edge]['weight']) + ',')
+                        fp_del.write(str(neuronindex[edge[0]]) + ':' + str(self.fugu_graph.edges[edge]['delay']) + ',')
                 fp_wgt.write('\n')
                 fp_del.write('\n')
 
-        self.n_neurons = len(neuronindex)
+            # process relays
+            if len(relay_edges) > 0:
+                relay_edges.sort(key=lambda x: x[1]) # ascending order of first relay index
+                for edge, first_relay in relay_edges:
+                    first_relay_index = start_relay_index + first_relay
+                    print(f">>> first relay: {first_relay_index}")
+                    relay_count = self.relay_data.get_relay_count(edge)
+                    wgt_str = f"{neuronindex[edge[0]]}:{1.0},"
+                    del_str = f"{neuronindex[edge[0]]}:{self.max_delay},"
+                    fp_wgt.write(wgt_str)
+                    fp_del.write(del_str)
+                    fp_wgt.write('\n')
+                    fp_del.write('\n')
+                    for curr_relay in range(relay_count - 1):
+                        curr_relay_index = first_relay_index + curr_relay - 1
+                        print(f">>> curr relay: {curr_relay_index}")
+                        wgt_str = f"{curr_relay_index}:{1.0},"
+                        del_str = f"{curr_relay_index}:{self.max_delay},"
+                        fp_wgt.write(wgt_str)
+                        fp_del.write(del_str)
+                        fp_wgt.write('\n')
+                        fp_del.write('\n')
+
+        self.n_neurons = len(neuronindex) + self.relay_data.get_total_num_relays()
+        print(f"N NEURONS: {self.n_neurons}")
 
     def _create_yaml(self):
         # Create default fugunet yaml files
@@ -325,6 +384,7 @@ tmax: 60000.0
         # Build the STACS network snapshot
         runlist = self.runcmd.split()
         runlist.append('build')
+        print(f"runcmd: {self.runcmd}")
         if (self.debug_mode):        
             subprocess.run(runlist)
         else:
@@ -373,6 +433,8 @@ tmax: 60000.0
         else:
             self.nprun = 1
 
+        self.max_delay = compile_args.get("max_delay", 100)
+
         # Some run commands
         if self.stacsbin == '':
             charmrun = 'charmrun'
@@ -391,6 +453,8 @@ tmax: 60000.0
         self.n_neurons = 0
         self.t_rec = 1000
         self.t_max = 1000
+
+        self.relay_data: GraphRelayData = generate_relay_data(self.fugu_graph, self.max_delay)
 
         self._create_dirs()
         self._export_graph()

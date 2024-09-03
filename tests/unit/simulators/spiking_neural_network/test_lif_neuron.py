@@ -202,20 +202,14 @@ def test_show_state_of_custom_voltage_neuron(capsys, custom_voltage_neuron):
 def test_show_params_on_default_neuron(capsys, default_neuron):
     assert default_neuron.show_params() == None
     out, _ = capsys.readouterr()
-    assert (
-        out
-        == "Neuron 'None':\nThreshold\t  :0.0 volts,\nReset voltage\t  :0.0 volts,\nLeakage Constant :1.0\nBias :0.0\n\n"
-    )
+    assert out == "Neuron 'None':\nThreshold\t  :0.0 volts,\nReset voltage\t  :0.0 volts,\nLeakage Constant :1.0\nBias :0.0\n\n"
 
 
 def test_show_params(capsys):
     neuron = LIFNeuron(threshold=0.7, reset_voltage=0.2, leakage_constant=0.9)
     assert neuron.show_params() == None
     out, _ = capsys.readouterr()
-    assert (
-        out
-        == "Neuron 'None':\nThreshold\t  :0.7 volts,\nReset voltage\t  :0.2 volts,\nLeakage Constant :0.9\nBias :0.0\n\n"
-    )
+    assert out == "Neuron 'None':\nThreshold\t  :0.7 volts,\nReset voltage\t  :0.2 volts,\nLeakage Constant :0.9\nBias :0.0\n\n"
 
 
 def test_threshold_setter(default_neuron):

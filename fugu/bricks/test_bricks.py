@@ -276,7 +276,7 @@ class InstantDecay(Brick):
             decay=1.0,
             index=0,
         )
-        graph.add_edge(main_name, complete_name, weight=1.0, delay=1.0)
+        graph.add_edge(main_name, complete_name, weight=1.0, delay=1)
 
         for input_list in input_lists:
             for input_neuron in input_list:
@@ -284,7 +284,7 @@ class InstantDecay(Brick):
                     input_neuron,
                     main_name,
                     weight=1.0,
-                    delay=1.0,
+                    delay=1,
                 )
 
         self.is_built = True
@@ -390,7 +390,7 @@ class SynapseProperties(Brick):
                 main_name,
                 name,
                 weight=weight,
-                delay=1.0,
+                delay=1,
             )
             output_list.append(name)
 

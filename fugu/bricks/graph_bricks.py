@@ -112,10 +112,10 @@ class SimpleGraphTraversal(Brick):
                     graph.add_edge(node_name,
                                    complete_name,
                                    weight=1.0,
-                                   delay=2.0)
+                                   delay=2)
             else:
                 output_node_list.append(node_name)
-                graph.add_edge(node_name, complete_name, weight=1.0, delay=2.0)
+                graph.add_edge(node_name, complete_name, weight=1.0, delay=2)
 
         edge_reference_names = []
         for node in self.target_graph.nodes:
@@ -146,7 +146,7 @@ class SimpleGraphTraversal(Brick):
                     graph.add_edge(neighbor_name,
                                    reference_name,
                                    weight=-10000,
-                                   delay=1.0)
+                                   delay=1)
                     if node == self.target_node:
                         weight = -10000
                     else:
@@ -158,7 +158,7 @@ class SimpleGraphTraversal(Brick):
                     graph.add_edge(reference_name,
                                    neighbor_name,
                                    weight=weight,
-                                   delay=1.0)
+                                   delay=1)
                 else:
                     if node == self.target_node:
                         graph.add_edge(node_name,
@@ -321,10 +321,10 @@ class RegisterGraphTraversal(CompoundBrick):
                     graph.add_edge(node_name,
                                    complete_name,
                                    weight=1.0,
-                                   delay=2.0)
+                                   delay=2)
             else:
                 output_node_list.append(node_name)
-                graph.add_edge(node_name, complete_name, weight=1.0, delay=2.0)
+                graph.add_edge(node_name, complete_name, weight=1.0, delay=2)
 
             if self.store_parent_info:
                 graph, _, _, id_register_output, _ = self.build_child(
@@ -596,13 +596,13 @@ class FlowAugmentingPath(Brick):
                 capacity_name,
                 residual_name,
                 weight=-1 * initial_potential,
-                delay=1.0,
+                delay=1,
             )
             graph.add_edge(
                 capacity_name,
                 recall_name,
                 weight=-1 * initial_potential,
-                delay=1.0,
+                delay=1,
             )
 
         for node in self.flow_graph.nodes():
@@ -618,7 +618,7 @@ class FlowAugmentingPath(Brick):
                         residual_cd,
                         residual_ab,
                         weight=1.0,
-                        delay=1.0,
+                        delay=1,
                     )
 
                     recall_ab = self.generate_neuron_name(
@@ -629,7 +629,7 @@ class FlowAugmentingPath(Brick):
                         recall_ab,
                         recall_cd,
                         weight=1.0,
-                        delay=1.0,
+                        delay=1,
                     )
             if 's' in in_neighbors:
                 graph.add_edge(
@@ -638,7 +638,7 @@ class FlowAugmentingPath(Brick):
                     self.generate_neuron_name(
                         self.recall_base.format('s', node)),
                     weight=1.0,
-                    delay=1.0,
+                    delay=1,
                 )
             if 't' in out_neighbors:
                 graph.add_edge(
@@ -646,7 +646,7 @@ class FlowAugmentingPath(Brick):
                     self.generate_neuron_name(
                         self.residual_base.format(node, 't')),
                     weight=1.0,
-                    delay=1.0,
+                    delay=1,
                 )
 
         for input_list in input_lists:
