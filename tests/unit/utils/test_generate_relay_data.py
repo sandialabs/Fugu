@@ -6,7 +6,6 @@ from fugu.utils.optimization import generate_relay_data
 
 
 class TestGenerateRelayData:
-
     @staticmethod
     def create_test_graph(edges, delays):
         graph = nx.Graph()
