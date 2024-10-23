@@ -1,11 +1,12 @@
 import numpy as np
 import pytest
-from brick_test import BrickTest
-from utilities import AssertValuesAreClose
 
 import fugu.bricks as BRICKS
 from fugu.backends import snn_Backend
 from fugu.scaffold import Scaffold
+
+from ..brick_test import BrickTest
+from ..utilities import AssertValuesAreClose
 
 
 class TestSnnThreshold(BrickTest):

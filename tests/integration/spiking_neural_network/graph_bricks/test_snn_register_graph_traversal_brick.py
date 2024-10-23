@@ -1,11 +1,12 @@
 import networkx as nx
 import pytest
-from brick_test import BrickTest
-from utilities import create_graph, create_weighted_graph
 
 import fugu.bricks as BRICKS
 from fugu.backends import snn_Backend
 from fugu.scaffold import Scaffold
+
+from ..brick_test import BrickTest
+from ..utilities import create_graph, create_weighted_graph
 
 
 class TestSnnRegisterGraphTraversal(BrickTest):

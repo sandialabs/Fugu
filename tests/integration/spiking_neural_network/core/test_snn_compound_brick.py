@@ -1,9 +1,10 @@
 import numpy as np
-from brick_test import BrickTest
 
 import fugu.bricks as BRICKS
 from fugu.backends import snn_Backend
 from fugu.scaffold import Scaffold
+
+from ..brick_test import BrickTest
 
 
 class TestSnnCompoundBrick(BrickTest):

@@ -1,10 +1,11 @@
 import numpy as np
 import pytest
-from brick_test import BrickTest
 
 import fugu.bricks as BRICKS
 from fugu.backends import snn_Backend
 from fugu.scaffold import Scaffold
+
+from ..brick_test import BrickTest
 
 
 class TestSnnChangeSynapseExternalProperty(BrickTest):
