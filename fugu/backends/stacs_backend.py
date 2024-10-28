@@ -64,9 +64,11 @@ class stacs_Backend(Backend):
                     # Output Lists
                     data = port.channels.get('data')
                     if data:
+                        flattened_input = node['brick'].vector.reshape(-1, node['brick'].vector.shape[-1])
                         for n, neuron in enumerate(data.neurons):
                             input_neurons.append(neuronindex[neuron])
-                            input_spikes[neuronindex[neuron]] = (node['brick'].vector[n]).tolist()
+                            #input_spikes[neuronindex[neuron]] = (node['brick'].vector[n]).tolist()
+                            input_spikes[neuronindex[neuron]] = (flattened_input[n]).tolist()
             elif node.get('layer') == 'output':
                 ports = node.get('ports')
                 if not ports: continue
