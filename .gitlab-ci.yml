@@ -1,5 +1,5 @@
 default:
-  image: cee-gitlab.sandia.gov:4567/srberna/python:3.9
+  image: quay.sandia.gov/srberna/python:3.9
 
 stages:
   - linting
@@ -63,7 +63,7 @@ coverage:
 
 pages_build_on_mr:
   stage: build
-  image: cee-gitlab.sandia.gov:4567/srberna/python:3.9
+  image: quay.sandia.gov/srberna/python:3.9
   before_script:
     - apt-get update && apt-get install make --no-install-recommends -y
     - python -m pip install sphinx_rtd_theme sphinx furo
@@ -74,7 +74,7 @@ pages_build_on_mr:
 
 pages:
   stage: deploy
-  image: cee-gitlab.sandia.gov:4567/srberna/python:3.9
+  image: quay.sandia.gov/srberna/python:3.9
   before_script:
     - apt-get update && apt-get install make --no-install-recommends -y
     - python -m pip install sphinx_rtd_theme sphinx furo
