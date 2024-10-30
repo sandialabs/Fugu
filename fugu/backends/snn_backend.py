@@ -59,7 +59,20 @@ class snn_Backend(Backend):
         for n1, n2, props in self.fugu_graph.edges.data():
             delay  = int(props.get('delay',  1))
             weight =     props.get('weight', 1.0)
-            syn = snn.Synapse(neuron_dict[n1], neuron_dict[n2], delay=delay, weight=weight)
+            learning_rule = props.get('learning_rule', None)
+            mod_neuron_name = props.get('mod_neuron', None)
+            learning_params = props.get('learning_params', None)
+            if mod_neuron_name is not None:
+                mod_neuron = neuron_dict[mod_neuron_name]
+            else:
+                mod_neuron = None
+            syn = snn.LearningSynapse(neuron_dict[n1],
+                                      neuron_dict[n2],
+                                      delay=delay,
+                                      weight=weight,
+                                      learning_rule = learning_rule,
+                                      mod_neuron = mod_neuron,
+                                      learning_params = learning_params)
             self.nn.add_synapse(syn)
 
         del neuron_dict

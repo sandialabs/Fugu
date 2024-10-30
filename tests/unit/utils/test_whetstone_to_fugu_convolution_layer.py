@@ -2,6 +2,7 @@
 # fmt: off
 import numpy as np
 import pytest
+from scipy.signal import convolve2d
 
 from fugu.backends import snn_Backend
 from fugu.bricks.keras_convolution_bricks import keras_convolution_2d_4dinput as convolution_2d

@@ -10,14 +10,8 @@ from fugu.bricks.input_bricks import BaseP_Input
 from fugu.bricks.keras_pooling_bricks import keras_pooling_2d_4dinput as pooling_2d
 from fugu.bricks.keras_dense_bricks import keras_dense_2d_4dinput as dense_layer_2d
 from fugu.scaffold import Scaffold
-try:
-    from tensorflow.keras.layers import Dense, Conv2D, Flatten, MaxPooling2D, BatchNormalization
-except ModuleNotFoundError:
-    import pytest
-    pytest.skip(reason="Tensorflow package missing.", allow_module_level=True)
-except ImportError:
-    raise SystemExit('\n *** Tensorflow package is not installed. *** \n')
 
+from tensorflow.keras.layers import Dense, Conv2D, Flatten, MaxPooling2D, BatchNormalization
 try:
     from whetstone.layers import Spiking_BRelu, Softmax_Decode
     from whetstone.utils.export_utils import copy_remove_batchnorm

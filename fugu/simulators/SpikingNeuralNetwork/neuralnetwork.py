@@ -3,15 +3,15 @@
 
 from __future__ import print_function
 
+import os
 from collections import defaultdict
 from collections.abc import Iterable
 
 import pandas as pd
 
+from fugu.simulators.SpikingNeuralNetwork.neuron import InputNeuron, LIFNeuron, Neuron
+from fugu.simulators.SpikingNeuralNetwork.synapse import LearningSynapse
 from fugu.utils.validation import validate_instance, validate_type
-
-from .neuron import LIFNeuron, Neuron
-from .synapse import Synapse
 
 
 class NeuralNetwork:
@@ -28,7 +28,7 @@ class NeuralNetwork:
         if not new_neuron:
             self._nrn_count += 1
             neuron = LIFNeuron(str(self._nrn_count))
-        elif isinstance(new_neuron, str):
+        elif type(new_neuron) == str:
             self._nrn_count += 1
             neuron = LIFNeuron(new_neuron)
         elif isinstance(new_neuron, Neuron):
@@ -56,22 +56,25 @@ class NeuralNetwork:
             print("{},".format(self.nrns[n].name), end=" ")
         print("\b\b}")
 
-    def add_synapse(self, new_synapse=None):
+    def add_synapse(self, new_synapse=None, learning_flag=False):
         """
-        Add synapse to a network. If a tuple is provided, a new Synapse object is created and added
+        Add synapse to a network. If a tuple is provided, a new simple_synapse object is created and added
         """
+        synapse_obj = LearningSynapse
         if not new_synapse:
             raise TypeError("Needs synapse object with pre and post neurons")
-        elif isinstance(new_synapse, tuple) and len(new_synapse) >= 2 and len(new_synapse) < 5:
-            tmpsyn = Synapse(*new_synapse)
-        elif isinstance(new_synapse, Synapse):
+        elif type(new_synapse) == tuple and len(new_synapse) >= 2 and len(new_synapse) < 7:
+            tmpsyn = synapse_obj(*new_synapse)
+        elif type(new_synapse) == synapse_obj:
+            tmpsyn = new_synapse
+        elif isinstance(new_synapse, synapse_obj):
             tmpsyn = new_synapse
         else:
             raise TypeError("Must provide Synapse Object")
 
         if tmpsyn.get_key() not in self.synps:
             self.synps[tmpsyn.get_key()] = tmpsyn
-            self.update_network(tmpsyn)
+            self.update_network(tmpsyn, learning_flag=learning_flag)
         else:
             print(
                 "Warning! Not Added! "
@@ -93,11 +96,13 @@ class NeuralNetwork:
         self.nrns[neuron_name].connect_to_input(input_values)
 
     # Will be called automatically if a synapse is added
-    def update_network(self, new_synapse):
+    # TODO: learning_flat is unused.  Needs to be implemented or removed.
+    def update_network(self, new_synapse, learning_flag=False):
         """
-        build the connection map from the Synapses and Neuron information contained in them
+        build the connection map from the simple_synapses and Neuron information contained in them
         """
-        validate_instance(new_synapse, Synapse)
+        synapse_obj = LearningSynapse
+        validate_instance(new_synapse, synapse_obj)
         new_synapse._post.presyn.add(new_synapse)
 
     def step(self):
@@ -156,14 +161,101 @@ class NeuralNetwork:
         if record_potentials:
             final_potentials = pd.DataFrame({"potential": [], "neuron_number": []})
             neuron_number = 0
+            to_append = []
             for neuron in self.nrns:
-                final_potentials = final_potentials.append(
+                to_append.append(
                     {
                         "potential": self.nrns[neuron].voltage,
                         "neuron_number": neuron_number,
-                    },
-                    ignore_index=True,
+                    }
                 )
                 neuron_number += 1
+            final_potentials = pd.concat([final_potentials, pd.DataFrame(to_append)], ignore_index=True)
             return df, final_potentials
         return df
+
+
+if __name__ == "__main__":
+    import numpy as np
+
+    base_image = np.array(
+        [
+            [0, 0, 1, 0, 0],
+            [0, 1, 0, 1, 0],
+            [1, 0, 0, 0, 1],
+            [0, 1, 0, 1, 0],
+            [0, 0, 1, 0, 0],
+        ]
+    )
+    noisy = 1
+    np.random.seed(1)
+    noise = np.random.rand(5, 5)
+    noise_image = base_image + noise * 0.2
+    noise_image[noise_image > 1] = 1
+    image = noise_image if noisy else base_image
+    image = image.flatten()
+    nn = NeuralNetwork()
+    neuron_obj_dict = {}
+    n_bins = 150
+    for in_neuron in range(25):
+        neuron_obj_dict[f"N{in_neuron}"] = InputNeuron(
+            name=f"N{in_neuron}",
+            threshold=-0.055,
+            voltage=-0.065,
+            frequency=100,
+            bins=n_bins,
+            record=False,
+            encoding="Poisson",
+        )
+        nn.add_neuron(neuron_obj_dict[f"N{in_neuron}"])
+        nn.update_input_neuron(neuron_name=f"N{in_neuron}", input_values=np.array([image[in_neuron]]))
+        if in_neuron == 6 or in_neuron == 16:
+            neuron_obj_dict[f"N{in_neuron}"].show_iterable()
+
+    out = LIFNeuron(
+        "O1",
+        threshold=-0.055,
+        reset_voltage=-0.065,
+        leakage_constant=0.1,
+        voltage=-0.065,
+    )
+    # out2 = LIFNeuron("O2", threshold=-0.055, reset_voltage=-0.055, leakage_constant=1.0, voltage=-0.065)
+    nn.add_neuron(out)
+    for synapse in range(25):
+        nn.add_synapse(
+            (nn.nrns[f"N{synapse}"], nn.nrns[f"O1"], "STDP", 1, 0.04),
+            learning_flag=True,
+        )
+    print(len(nn.synps))
+    df = nn.run(n_bins)
+    i = 0
+    weight_arr = []
+    for key, value in nn.synps.items():
+        i += 1
+        weight_arr.append(value.weight)
+        # print (key, " THe value", value.weight, i)
+
+    print(image.reshape(5, 5))
+    weight_arr = np.array(weight_arr)
+    print(weight_arr.reshape(5, 5))
+    import matplotlib.pyplot as plt
+    import seaborn as sns
+
+    sns.set()
+    sns.set_style({"axes.grid": False})
+    plt.imshow(1 - weight_arr.reshape(5, 5))
+    plt.title("Trained weights", fontdict={"fontsize": 20, "weight": "bold"})
+    plt.savefig("nn_base_ss_noise.png")
+
+    plt.show()
+
+    plt.imshow(1 - image.reshape(5, 5))
+    plt.title("Input Image", fontdict={"fontsize": 20, "weight": "bold"})
+    plt.savefig("imput_image_noise.png")
+
+    plt.show()
+
+    weights = np.full((5, 5), 0.04)
+    plt.imshow(weights)
+    plt.title("Input weights")
+    plt.show()

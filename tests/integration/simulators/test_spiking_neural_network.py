@@ -3,7 +3,7 @@ import pytest
 
 from fugu.simulators.SpikingNeuralNetwork.neuralnetwork import NeuralNetwork
 from fugu.simulators.SpikingNeuralNetwork.neuron import InputNeuron, LIFNeuron
-from fugu.simulators.SpikingNeuralNetwork.synapse import Synapse
+from fugu.simulators.SpikingNeuralNetwork.synapse import LearningSynapse
 
 
 @pytest.fixture
@@ -17,18 +17,18 @@ def a_neural_network():
         layer_neuron_3 = LIFNeuron("layer-1-3", record=record)
         out_neuron = LIFNeuron("out", record=record)
 
-        synapse_a_1 = Synapse(in_neuron_a, layer_neuron_1)
-        synapse_a_2 = Synapse(in_neuron_a, layer_neuron_2)
-        synapse_a_3 = Synapse(in_neuron_a, layer_neuron_3)
-        synapse_b_1 = Synapse(in_neuron_b, layer_neuron_1)
-        synapse_b_2 = Synapse(in_neuron_b, layer_neuron_2)
-        synapse_b_3 = Synapse(in_neuron_b, layer_neuron_3)
-        synapse_1_o = Synapse(layer_neuron_1, out_neuron)
-        synapse_2_o = Synapse(layer_neuron_2, out_neuron)
-        synapse_3_o = Synapse(layer_neuron_3, out_neuron)
-        synapse_2_1 = Synapse(layer_neuron_2, layer_neuron_1)
-        synapse_2_2 = Synapse(layer_neuron_2, layer_neuron_2)
-        synapse_2_3 = Synapse(layer_neuron_2, layer_neuron_3)
+        synapse_a_1 = LearningSynapse(in_neuron_a, layer_neuron_1)
+        synapse_a_2 = LearningSynapse(in_neuron_a, layer_neuron_2)
+        synapse_a_3 = LearningSynapse(in_neuron_a, layer_neuron_3)
+        synapse_b_1 = LearningSynapse(in_neuron_b, layer_neuron_1)
+        synapse_b_2 = LearningSynapse(in_neuron_b, layer_neuron_2)
+        synapse_b_3 = LearningSynapse(in_neuron_b, layer_neuron_3)
+        synapse_1_o = LearningSynapse(layer_neuron_1, out_neuron)
+        synapse_2_o = LearningSynapse(layer_neuron_2, out_neuron)
+        synapse_3_o = LearningSynapse(layer_neuron_3, out_neuron)
+        synapse_2_1 = LearningSynapse(layer_neuron_2, layer_neuron_1)
+        synapse_2_2 = LearningSynapse(layer_neuron_2, layer_neuron_2)
+        synapse_2_3 = LearningSynapse(layer_neuron_2, layer_neuron_3)
 
         nn.add_multiple_neurons(
             [
@@ -68,7 +68,7 @@ def spiking_neural_network():
     nn = NeuralNetwork()
     a = LIFNeuron("a", voltage=0.1, record=True)
     b = LIFNeuron("b", record=True)
-    synapse = Synapse(a, b)
+    synapse = LearningSynapse(a, b)
     nn.add_multiple_neurons([a, b])
     nn.add_synapse(synapse)
     return nn
@@ -79,7 +79,7 @@ def spiking_neural_network_w_reset():
     nn = NeuralNetwork()
     a = LIFNeuron("a", voltage=0.1, reset_voltage=0.1, record=True)
     b = LIFNeuron("b", record=True)
-    synapse = Synapse(a, b)
+    synapse = LearningSynapse(a, b)
     nn.add_multiple_neurons([a, b])
     nn.add_synapse(synapse)
     return nn

@@ -2,23 +2,24 @@ import pytest
 
 from fugu.simulators.SpikingNeuralNetwork.neuron import InputNeuron
 
+base_neuron = InputNeuron
 
 @pytest.fixture
 def default_neuron():
-    return InputNeuron()
+    return base_neuron()
 
 
 @pytest.fixture
 def custom_voltage_neuron():
     def _inner(v):
-        return InputNeuron(voltage=v)
+        return base_neuron(voltage=v)
 
     return _inner
 
 
 @pytest.fixture
 def named_neuron():
-    return InputNeuron(name="Testing")
+    return base_neuron(name="Testing")
 
 
 def test_constructor_defaults(default_neuron):
@@ -64,13 +65,15 @@ def test_threshold_setter(default_neuron):
 def test__str__(capsys, default_neuron):
     print(default_neuron)
     out, _ = capsys.readouterr()
-    assert out == "InputNeuron None\n"
+    val_str = "InputNeuron"
+    assert out == f"{val_str} None\n"
 
 
 def test__repr__(capsys, default_neuron):
     print(repr(default_neuron))
     out, _ = capsys.readouterr()
-    assert out == "InputNeuron None\n"
+    val_str = "InputNeuron"
+    assert out == f"{val_str} None\n"
 
 
 @pytest.mark.parametrize("in_stream", [[0.1 + 0.2j]])
@@ -84,7 +87,7 @@ def test_update_state_on_default_neuron(default_neuron):
     with pytest.raises(TypeError):
         default_neuron.update_state()
 
-    default_neuron.connect_to_input([0.01, 0.2])
+    default_neuron.connect_to_input([-0.01, 0.2])
 
     default_neuron.update_state()
     assert default_neuron.spike == False
@@ -102,10 +105,12 @@ def test_update_state_on_default_neuron(default_neuron):
 def test_named__str__(capsys, named_neuron):
     print(named_neuron)
     out, _ = capsys.readouterr()
-    assert out == "InputNeuron Testing\n"
+    val_str = "InputNeuron"
+    assert out == f"{val_str} Testing\n"
 
 
 def test_named__repr__(capsys, named_neuron):
     print(repr(named_neuron))
     out, _ = capsys.readouterr()
-    assert out == "InputNeuron Testing\n"
+    val_str = "InputNeuron"
+    assert out == f"{val_str} Testing\n"
