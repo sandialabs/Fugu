@@ -3,7 +3,7 @@
 import logging
 import numpy as np
 from .bricks import Brick
-
+from .metadata_utils import is_metadata_key_present, get_metadata_key_value
 
 class dense_layer_1d(Brick):
     "Dense Layer brick"
@@ -14,15 +14,14 @@ class dense_layer_1d(Brick):
     
     """
 
-    def __init__(self, output_shape, weights, thresholds, name=None, prev_layer_prefix="pooling_"):
+    def __init__(self, output_shape, weights, thresholds, name=None, layer_name="dense_1d"):
         super().__init__()
         self.is_built = False
         self.name = name
         self.supported_codings = ["binary-L"]
         self.weights = np.array(weights)
         self.thresholds = np.array(thresholds)
-        self.metadata = {'dense_output_shape': output_shape}
-        self.prev_layer_prefix = prev_layer_prefix
+        self.metadata = {'isNeuralNetworkLayer': True, 'layer_name': layer_name, 'output_shape': output_shape}
         self.output_shape = output_shape
 
     def build(self, graph, metadata, control_nodes, input_lists, input_codings):
@@ -44,14 +43,14 @@ class dense_layer_1d(Brick):
             + list of coding formats of output
         """
 
-        if type(metadata) is list:
-            self.metadata = {**metadata[0], **self.metadata}
-        else:
-            self.metadata = {**metadata, **self.metadata}
+        # if type(metadata) is list:
+        #     self.metadata = {**metadata[0], **self.metadata}
+        # else:
+        #     self.metadata = {**metadata, **self.metadata}
+        if 'output_shape' in metadata[0]: self.input_shape = metadata[0]['output_shape']
 
-        #TODO: Add raise exception if dictionary key is absent from metadata (KeyError)
-        self.input_shape = self.metadata["{}output_shape".format(self.prev_layer_prefix)]
-        self.metadata["dense_input_shape"] = self.input_shape
+        assert hasattr(self, 'input_shape')
+        self.metadata['input_shape'] = self.input_shape
 
         output_codings = [input_codings[0]]
 
@@ -97,7 +96,7 @@ class dense_layer_1d(Brick):
         for i in np.arange(num_output_neurons):  # loop over output neurons
             for k in np.arange(num_input_neurons): # loop over input neurons
                 graph.add_edge(prev_layer[k], f'{self.name}d{i}', weight=self.weights[i,k], delay=1)
-                print(f" p{k} --> d{i}")
+                logging.debug(f" p{k} --> d{i}")
 
         self.is_built = True
         return (graph, self.metadata, [{"complete": complete_node, "begin": begin_node}], output_lists, output_codings,)
@@ -112,15 +111,14 @@ class dense_layer_2d(Brick):
     
     """
 
-    def __init__(self, output_shape, weights=1.0, thresholds=0.9, name=None, prev_layer_prefix="pooling_"):
+    def __init__(self, output_shape, weights=1.0, thresholds=0.9, name=None, layer_name="dense_2d"):
         super().__init__()
         self.is_built = False
         self.name = name
         self.supported_codings = ["binary-L"]
         self.weights = weights
         self.thresholds = thresholds
-        self.metadata = {'dense_output_shape': output_shape}
-        self.prev_layer_prefix = prev_layer_prefix
+        self.metadata = {'isNeuralNetworkLayer': True, 'layer_name': layer_name, 'output_shape': output_shape}
         self.output_shape = output_shape
 
     def build(self, graph, metadata, control_nodes, input_lists, input_codings):
@@ -141,14 +139,14 @@ class dense_layer_2d(Brick):
             + list of output
             + list of coding formats of output
         """
-        if type(metadata) is list:
-            self.metadata = {**metadata[0], **self.metadata}
-        else:
-            self.metadata = {**metadata, **self.metadata}
+        # if type(metadata) is list:
+        #     self.metadata = {**metadata[0], **self.metadata}
+        # else:
+        #     self.metadata = {**metadata, **self.metadata}
+        if 'output_shape' in metadata[0]: self.input_shape = metadata[0]['output_shape']
 
-        #TODO: Add raise exception if dictionary key is absent from metadata (KeyError)
-        self.input_shape = self.metadata["{}output_shape".format(self.prev_layer_prefix)]
-        self.metadata["dense_input_shape"] = self.input_shape
+        assert hasattr(self, 'input_shape')
+        self.metadata['input_shape'] = self.input_shape
 
         output_codings = [input_codings[0]]
 
@@ -188,8 +186,8 @@ class dense_layer_2d(Brick):
         output_lists = [[]]
         for row in np.arange(self.output_shape[0]):
             for col in np.arange(self.output_shape[1]):
-                graph.add_node(f'{self.name}d{row}{col}', index=(row,col), threshold=self.thresholds[row,col], decay=1.0, p=1.0, potential=0.0)
-                output_lists[0].append(f'{self.name}d{row}{col}')
+                graph.add_node(f'{self.name}d{row}_{col}', index=(row,col), threshold=self.thresholds[row,col], decay=1.0, p=1.0, potential=0.0)
+                output_lists[0].append(f'{self.name}d{row}_{col}')
 
         # Collect Inputs
         prev_layer = np.reshape(input_lists[0], self.input_shape)
@@ -202,8 +200,8 @@ class dense_layer_2d(Brick):
                 wrow = wrow + 1
                 for inrow in np.arange(self.input_shape[0]):  # loop over input neurons
                     for incol in np.arange(self.input_shape[1]):  # loop over input neurons
-                        graph.add_edge(prev_layer[inrow,incol], f'{self.name}d{outrow}{outcol}', weight=self.weights[wrow,wcol], delay=1)
-                        print(f" p{inrow}{incol} --> d{outrow}{outcol}   weight: {self.weights[wrow,wcol]}")
+                        graph.add_edge(prev_layer[inrow,incol], f'{self.name}d{outrow}_{outcol}', weight=self.weights[wrow,wcol], delay=1)
+                        logging.debug(f" p{inrow}{incol} --> d{outrow}{outcol}   weight: {self.weights[wrow,wcol]}")
                         wcol = wcol + 1
 
         self.is_built = True

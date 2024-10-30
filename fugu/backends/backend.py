@@ -69,3 +69,37 @@ class Backend(ABC):
     @abstractmethod
     def set_input_spikes(self):
         pass
+
+
+class PortDataIterator:
+    """
+        Given the attribute dictionary associated with a circuit graph node,
+        this iterator returns all the neurons that reside in any of its output
+        port 'data' channels, one at a time.
+    """
+
+    def __init__(self, node: dict):
+        self.neurons = None
+        ports = node.get('ports')
+        if ports:  # prepare top-level iterator
+            self.ports = iter(ports.values())
+            try:
+                self.findNeurons()
+            except StopIteration:
+                self.ports = None
+
+    def __getitem__(self, i):
+        if not self.ports: raise StopIteration
+        while True:  # This loop ends by either a successful return or StopIteration
+            try:
+                return self.neurons.__next__()
+            except StopIteration:
+                self.findNeurons()  # This returns StopIteration when the ports iterator is exhausted.
+
+    def findNeurons(self):
+        self.neurons = None
+        while not self.neurons:
+            port = self.ports.__next__()   # Can raise StopIeration directly
+            data = port.channels.get('data')
+            if data: self.neurons = iter(data.neurons)
+        # At this point, self.neurons has a fresh iterator and self.ports is positioned just ahead of next port.

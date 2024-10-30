@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 from .bricks import Brick, input_coding_types
+from ..scaffold import ChannelSpec, PortSpec, ChannelData, PortData, PortUtil
 
 
 class Dot(Brick):
@@ -87,7 +88,7 @@ class Dot(Brick):
             self.input_sources.append(input_lists[0][i])
         if type(metadata) is list:
             metadata = metadata[0]
-        metadata['D'] = metadata['D'] + 1
+        #metadata['D'] = metadata['D'] + 1   # This method of timing is now deprectated.
         complete_name = self.generate_neuron_name("complete")
         graph.add_node(
             complete_name,
@@ -315,100 +316,86 @@ class AND_OR(Brick):
         super(AND_OR, self).__init__(name)
         # The brick hasn't been built yet.
         self.is_built = False
-        # Leave for compatibility, D represents the depth of the circuit.  Needs to be updated.
-        self.metadata = {'D': 1}
         # We just store the name passed at construction.
         self.name = name
-        # For this example, we'll let any input coding work even though the answer might not make sense.
-        self.supported_codings = input_coding_types
         self.mode = mode  # A change here
 
-    def build(self, graph, metadata, control_nodes, input_lists,
-              input_codings):
+    @classmethod
+    def input_ports(cls) -> dict[str, PortSpec]:
+        port = PortSpec(name='input', minimum=2, maximum=2)
+        port.channels['data']     = ChannelSpec(name='data', coding=input_coding_types)
+        port.channels['complete'] = ChannelSpec(name='complete')
+        return {port.name: port}
+
+    @classmethod
+    def output_ports(cls) -> dict[str, PortSpec]:
+        port = PortSpec(name='output')
+        port.channels['data']     = ChannelSpec(name='data', coding=input_coding_types)
+        port.channels['complete'] = ChannelSpec(name='complete')
+        return {port.name: port}
+
+    def build2(self, graph, inputs: dict[str, PortData] = {}):
         """
         Build AND_OR brick.
-        Args:
-            graph: networkx graph to define connections of the computational graph
-            metadata (dict): dictionary to define the shapes and parameters of the brick
-            control_nodes (list): dictionary of lists of auxillary networkx nodes.
-                Expected keys:
-                    'complete' - A list of neurons that fire when the brick is done
-            input_lists (list): list of nodes that will contain input
-            input_coding (list): list of input coding formats.  All codings are allowed.
-
-        Returns:
-            graph of a computational elements and connections
-            dictionary of output parameters (shape, coding, layers, depth, etc)
-            dictionary of control nodes ('complete')
-            list of output (1 output)
-            list of coding formats of output (Coding matches input coding)
-        Examples:
-            All bricks should provide a neuron that spikes when the brick has completed processing.
-            We just put in a basic relay neuron that will spike when it receives any spike from its
-            single input, which is the complete_node from the first input.
-            All nodes we add to the graph should have basic neuron parameters (threshold, decay)
-            Reasonable defaults will be filled-in, but these defaults may depend on the execution platform.
-            Additionally, nodes should have a field called 'index' which is a local index used to reference the
-            position of the node.  This can be used by downstream   A simple example might be
-            a 3-bit binary representation will add 3 nodes to the graph with indices 0,1,2
         Raises:
             ValueError: If != 2 inputs.  Only 2 inputs are supported.  Error if unsupported mode.
-
         """
         # Expect two inputs
-        if len(input_codings) != 2:
+        if len(inputs) != 2:
             raise ValueError('Only two inputs supported.')
         # Only two supported modes, AND and OR
         if self.mode != 'AND' and self.mode != 'OR':
             raise ValueError('Unsupported mode.')
+
+        input1, input2 = PortUtil.get_autoports(inputs, 'input', 2)
+        result = PortUtil.make_ports_from_specs(AND_OR.output_ports())
+        output = result['output']
+        data = output.channels['data']
         # Keep the same coding as input 0 for the output
         # This is an arbitrary decision at this point.
         # Generally, your brick will impart some coding, but that isn't the case here.
-        output_codings = [input_codings[0]]
+        data.spec.coding = input1.channels['data'].spec.coding
 
         complete_node_name = self.generate_neuron_name('complete')
+        output.channels['complete'].neurons = [complete_node_name]
         graph.add_node(complete_node_name,
                        index=-1,
                        threshold=0.0,
                        decay=0.0,
                        p=1.0,
                        potential=0.0)
-        graph.add_edge(control_nodes[0]['complete'],
+        graph.add_edge(input1.channels['complete'].neurons[0],
                        complete_node_name,
                        weight=1.0,
                        delay=1)
 
-        output_lists = [[]]
         threshold_value = 1.0 if self.mode == 'AND' else 0.5
         # We also, obviously, need to build the computational portion of our graph
-        for operand0 in input_lists[0]:
-            for idx_num, operand1 in enumerate(input_lists[1]):
-                # If indices match, we'll do an AND on them
-                if graph.nodes[operand0]['index'] == graph.nodes[operand1][
-                        'index']:
-                    # Remember all of our output neurons need to be marked
-                    and_node_name = self.generate_neuron_name("{}_{}".format(
-                        operand0, operand1))
-                    output_lists[0].append(and_node_name)
-                    graph.add_node(and_node_name,
-                                   index=0,
-                                   threshold=threshold_value,
-                                   decay=1.0,
-                                   p=1.0,
-                                   potential=0.0)
-                    graph.add_edge(operand0,
-                                   and_node_name,
-                                   weight=0.75,
-                                   delay=1.0)
-                    graph.add_edge(operand1,
-                                   and_node_name,
-                                   weight=0.75,
-                                   delay=1.0)
-        self.is_built = True
+        data1 = input1.channels['data'].neurons
+        data2 = input2.channels['data'].neurons
+        for i in range(min(len(data1), len(data2))):
+            operand1 = data1[i]
+            operand2 = data2[i]
+            # Remember all of our output neurons need to be marked
+            and_node_name = self.generate_neuron_name(f"{operand1}_{operand2}")
+            data.neurons.append(and_node_name)
+            graph.add_node(and_node_name,
+                           index=0,
+                           threshold=threshold_value,
+                           decay=1.0,
+                           p=1.0,
+                           potential=0.0)
+            graph.add_edge(operand1,
+                           and_node_name,
+                           weight=0.75,
+                           delay=1)
+            graph.add_edge(operand2,
+                           and_node_name,
+                           weight=0.75,
+                           delay=1)
 
-        return (graph, self.metadata, [{
-            'complete': complete_node_name
-        }], output_lists, output_codings)
+        self.is_built = True
+        return result
 
 
 class ParityCheck(Brick):
@@ -749,8 +736,8 @@ class TemporalAdder(Brick):
         output_name = self.generate_neuron_name("Sum")
         graph.add_node(output_name, threshold=0.00, decay=0.0, potential=-0.01)
 
-        graph.add_edge(output_name, complete_name, weight=1.0, delay=2.0)
-        graph.add_edge(output_name, output_name, weight=-5.0, delay=2.0)
+        graph.add_edge(output_name, complete_name, weight=1.0, delay=2)
+        graph.add_edge(output_name, output_name, weight=-5.0, delay=2)
 
         increment_timer_name = self.generate_neuron_name("T_I")
         decrement_timer_name = self.generate_neuron_name("T_D")
@@ -761,11 +748,11 @@ class TemporalAdder(Brick):
         graph.add_edge(increment_timer_name,
                        increment_timer_name,
                        weight=self.num_elements,
-                       delay=2.0)
+                       delay=2)
         graph.add_edge(increment_timer_name,
                        output_name,
                        weight=1.0,
-                       delay=2.0)
+                       delay=2)
         graph.add_node(decrement_timer_name,
                        threshold=0.99,
                        decay=0.0,
@@ -773,31 +760,31 @@ class TemporalAdder(Brick):
         graph.add_edge(decrement_timer_name,
                        decrement_timer_name,
                        weight=1.0,
-                       delay=2.0)
+                       delay=2)
         graph.add_edge(decrement_timer_name,
                        output_name,
                        weight=-1.0,
-                       delay=2.0)
+                       delay=2)
 
         graph.add_edge(output_name,
                        increment_timer_name,
                        weight=-1 * self.num_elements,
-                       delay=2.0)
+                       delay=2)
         graph.add_edge(output_name,
                        decrement_timer_name,
                        weight=-1 * self.num_elements,
-                       delay=2.0)
+                       delay=2)
 
         for input_list in input_lists:
             for input_signal in input_list:
                 graph.add_edge(input_signal,
                                increment_timer_name,
                                weight=1.0,
-                               delay=2.0)
+                               delay=2)
                 graph.add_edge(input_signal,
                                decrement_timer_name,
                                weight=-2.0,
-                               delay=2.0)
+                               delay=2)
 
         self.is_built = True
 

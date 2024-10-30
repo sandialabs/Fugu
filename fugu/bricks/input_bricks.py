@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from .bricks import InputBrick, input_coding_types
+from .bricks import Brick, InputBrick, input_coding_types
+from ..scaffold import ChannelSpec, PortSpec, ChannelData, PortData, PortUtil
 
 import numpy as np
 
@@ -73,7 +74,7 @@ class InputSource:
                                      "Sensor",
                                      some_other_neuron,
                                      weight=1.0,
-                                     delay=1.0,
+                                     delay=1,
                                      )
 
         Example 2:
@@ -97,7 +98,7 @@ class InputSource:
                                      "TCPPortA",
                                      some_other_neuron,
                                      weight=1.0,
-                                     delay=1.0,
+                                     delay=1,
                                      )
                     scaffold.graph.add_node(
                                      "TCPPortB",
@@ -115,7 +116,7 @@ class InputSource:
                                      "TCPPortB",
                                      some_other_neuron,
                                      weight=1.0,
-                                     delay=1.0,
+                                     delay=1,
                                      )
                     scaffold.graph.add_node(
                                      "TCPPortC",
@@ -133,7 +134,7 @@ class InputSource:
                                      "TCPPortC",
                                      some_other_neuron,
                                      weight=1.0,
-                                     delay=1.0,
+                                     delay=1,
                                      )
         """
         pass
@@ -161,6 +162,7 @@ class Vector_Input(InputBrick):
 
         super(Vector_Input, self).__init__(name)
         self.vector = np.array(spikes)
+        self.shape = self.vector.shape[0:-1] if time_dimension else self.vector.shape
         self.coding = coding
         self.time_dimension = time_dimension
         self.is_built = False
@@ -223,8 +225,19 @@ class Vector_Input(InputBrick):
             assert type(t) is int
             return self.vector[..., t:t + 1][..., -1]
 
-    def build(self, graph, metadata, control_nodes, input_lists,
-              input_codings):
+    @classmethod
+    def input_ports(cls) -> dict[str, PortSpec]:
+        return {}
+
+    @classmethod
+    def output_ports(cls) -> dict[str, PortSpec]:
+        port = PortSpec(name='output')
+        port.channels['data']     = ChannelSpec(name='data')
+        port.channels['begin']    = ChannelSpec(name='begin')
+        port.channels['complete'] = ChannelSpec(name='complete')
+        return {port.name: port}
+
+    def build2(self, graph, inputs: dict[str, PortData] = {}):
         """
         Build spike input brick.
 
@@ -249,8 +262,18 @@ class Vector_Input(InputBrick):
         if not self.time_dimension:
             self.vector = np.expand_dims(self.vector, len(self.vector.shape))
 
+        #print(f"Current vector: {self.vector}")
+
+        result = PortUtil.make_ports_from_specs(Vector_Input.output_ports())
+        output = result['output']
+        data = output.channels['data']
+        data.spec.coding = self.coding
+        data.spec.shape  = self.shape
+
+        begin_node    = self.generate_neuron_name("begin")
         complete_node = self.generate_neuron_name("complete")
-        begin_node = self.generate_neuron_name("begin")
+        output.channels['begin']   .neurons = [begin_node]
+        output.channels['complete'].neurons = [complete_node]
         vector_size = len(self.vector) * len(self.vector.shape)
         graph.add_node(begin_node,
                        index=-1,
@@ -278,36 +301,18 @@ class Vector_Input(InputBrick):
                            weight=1.0,
                            delay=time_length - 1)
 
-        output_lists = [[]]
         self.index_map = np.ndindex(self.vector.shape[:-1])
         for i, index in enumerate(self.index_map):
             neuron_name = self.generate_neuron_name(str(index))
-
             graph.add_node(neuron_name,
                            index=index,
                            threshold=0.0,
                            decay=0.0,
                            p=1.0)
-            output_lists[0].append(neuron_name)
-        output_codings = [self.coding]
+            data.neurons.append(neuron_name)
 
         self.is_built = True
-
-        return (
-            graph,
-            {
-                'output_shape': [self.vector.shape],
-                'output_coding': self.coding,
-                'layer': input,
-                'D': 0
-            },
-            [{
-                'complete': complete_node,
-                'begin': begin_node
-            }],
-            output_lists,
-            output_codings,
-        )
+        return result
 
 def _convert_base_p(arr, p=2, bits=8, time_dimension = False, collapse_binary=True):
     if p > 2:
@@ -412,16 +417,29 @@ class BaseP_Input(Vector_Input):
         time_dimension=False,
         coding='Undefined',
         name="BasePInput",
+        flatten=0,
     ):
         super(BaseP_Input, self).__init__([], 
                                     time_dimension = time_dimension,
                                     coding=coding,
                                     batchable=True,
                                     name=name)
-        formatted_array =  _convert_base_p(array, 
+        formatted_array =  _convert_base_p(array,
                                             p=p,
                                             bits=bits,
                                             time_dimension = time_dimension,
                                             collapse_binary = collapse_binary)
+        self.p = p
+        self.bits = bits
+        self.time_dimension = time_dimension
+        self.collapse_binary = collapse_binary
         self.vector = formatted_array
+        self.shape = self.vector.shape[0:-1] if time_dimension else self.vector.shape
         self.coding = 'binary_L' if p==2 else 'Undefined'
+
+    def set_properties(self, properties={}):
+        new_vector = np.array(properties['spike_vector'])
+        converted_array = _convert_base_p(new_vector, p=self.p, bits=self.bits, time_dimension=self.time_dimension, collapse_binary=self.collapse_binary)
+        formatted_properties = {}
+        formatted_properties['spike_vector'] = converted_array
+        return super(BaseP_Input, self).set_properties(formatted_properties)

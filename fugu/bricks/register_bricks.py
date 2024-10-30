@@ -93,19 +93,19 @@ class Register(Brick):
                 recall_input,
                 recall_control_name,
                 weight=1.0,
-                delay=1.0,
+                delay=1,
             )
             graph.add_edge(
                 recall_input,
                 begin_node_name,
                 weight=1.0,
-                delay=1.0,
+                delay=1,
             )
             graph.add_edge(
                 recall_input,
                 complete_name,
                 weight=1.0,
-                delay=4.0,
+                delay=4,
             )
 
         if has_clear or has_set:
@@ -115,19 +115,19 @@ class Register(Brick):
                     clear_input,
                     clear_control_name,
                     weight=1.0,
-                    delay=1.0,
+                    delay=1,
                 )
                 graph.add_edge(
                     clear_input,
                     begin_node_name,
                     weight=1.0,
-                    delay=1.0,
+                    delay=1,
                 )
                 graph.add_edge(
                     clear_input,
                     complete_name,
                     weight=1.0,
-                    delay=3.0,
+                    delay=3,
                 )
             graph.add_node(
                 clear_control_name,
@@ -150,31 +150,31 @@ class Register(Brick):
                     set_control_name,
                     set_control_name,
                     weight=-10000.0,
-                    delay=1.0,
+                    delay=1,
                 )
             graph.add_edge(
                 set_input,
                 set_control_name,
                 weight=1.0,
-                delay=1.0,
+                delay=1,
             )
             graph.add_edge(
                 set_input,
                 begin_node_name,
                 weight=1.0,
-                delay=1.0,
+                delay=1,
             )
             graph.add_edge(
                 set_input,
                 complete_name,
                 weight=1.0,
-                delay=5.0,
+                delay=5,
             )
             graph.add_edge(
                 set_control_name,
                 clear_control_name,
                 weight=1.0,
-                delay=1.0,
+                delay=1,
             )
 
         outputs = []
@@ -213,13 +213,13 @@ class Register(Brick):
                 register_name,
                 output_name,
                 weight=1.0,
-                delay=1.0,
+                delay=1,
             )
             graph.add_edge(
                 register_name,
                 register_name,
                 weight=1.0,
-                delay=1.0,
+                delay=1,
             )
 
             # Connect controls to slot
@@ -237,25 +237,25 @@ class Register(Brick):
                     recall_control_name,
                     recall_name,
                     weight=1.0,
-                    delay=2.0,
+                    delay=2,
                 )
                 graph.add_edge(
                     recall_control_name,
                     register_name,
                     weight=1.0,
-                    delay=1.0,
+                    delay=1,
                 )
                 graph.add_edge(
                     recall_control_name,
                     output_name,
                     weight=1.0,
-                    delay=2.0,
+                    delay=2,
                 )
                 graph.add_edge(
                     register_name,
                     recall_name,
                     weight=-1.0,
-                    delay=1.0,
+                    delay=1,
                 )
             if has_clear or has_set:
                 clear_name = self.generate_neuron_name(
@@ -270,19 +270,19 @@ class Register(Brick):
                     clear_name,
                     register_name,
                     weight=-1.0,
-                    delay=1.0,
+                    delay=1,
                 )
                 graph.add_edge(
                     clear_control_name,
                     clear_name,
                     weight=1.0,
-                    delay=1.0,
+                    delay=1,
                 )
                 graph.add_edge(
                     clear_control_name,
                     register_name,
                     weight=1.0,
-                    delay=1.0,
+                    delay=1,
                 )
             if has_set:
                 set_name = self.generate_neuron_name(set_name_base.format(i))
@@ -297,19 +297,19 @@ class Register(Brick):
                         input_value_bits[i],
                         set_name,
                         weight=1.0,
-                        delay=2.0,
+                        delay=2,
                     )
                 graph.add_edge(
                     set_control_name,
                     set_name,
                     weight=1.0,
-                    delay=1.0,
+                    delay=1,
                 )
                 graph.add_edge(
                     set_name,
                     register_name,
                     weight=1.0,
-                    delay=3.0,
+                    delay=3,
                 )
 
         self.is_built = True
@@ -407,7 +407,7 @@ class Max(Brick):
                     bit,
                     begin_node_name,
                     weight=1.0,
-                    delay=1.0,
+                    delay=1,
                 )
 
         max_time = 3 + 4 * max_size
@@ -465,7 +465,7 @@ class Max(Brick):
                     bit,
                     a_i_I,
                     weight=1.0,
-                    delay=1.0,
+                    delay=1,
                 )
 
             # First Layer
@@ -492,27 +492,27 @@ class Max(Brick):
                 a_i_I,
                 a_i_L,
                 weight=1.0,
-                delay=2.0,
+                delay=2,
             )
             graph.add_edge(
                 register_bits[intercept_index],
                 I_i_L,
                 weight=-1.0,
-                delay=1.0,
+                delay=1,
             )
             graph.add_edge(
                 register_bits[intercept_index],
                 self.generate_neuron_name(or_base.format(intercept_index)),
                 weight=1.0,
-                delay=1.0,
+                delay=1,
             )
             graph.add_edge(
                 self.generate_neuron_name(or_base.format(intercept_index)),
                 I_i_L,
                 weight=1.0,
-                delay=1.0,
+                delay=1,
             )
-            graph.add_edge(I_i_L, a_i_L, weight=-1.0, delay=1.0)
+            graph.add_edge(I_i_L, a_i_L, weight=-1.0, delay=1)
 
             # Middle Layers
             for j in range(2, max_size + 1):
@@ -555,13 +555,13 @@ class Max(Brick):
                     prev_active_name,
                     curr_active_name,
                     weight=1.0,
-                    delay=4.0,
+                    delay=4,
                 )
                 graph.add_edge(
                     prev_active_name,
                     valid_name,
                     weight=1.0,
-                    delay=1.0,
+                    delay=1,
                 )
                 graph.add_edge(
                     register_bits[intercept_index],
@@ -573,25 +573,25 @@ class Max(Brick):
                     valid_name,
                     intercept_name,
                     weight=-1.0,
-                    delay=1.0,
+                    delay=1,
                 )
                 graph.add_edge(
                     valid_name,
                     or_name,
                     weight=1.0,
-                    delay=1.0,
+                    delay=1,
                 )
                 graph.add_edge(
                     or_name,
                     intercept_name,
                     weight=1.0,
-                    delay=1.0,
+                    delay=1,
                 )
                 graph.add_edge(
                     intercept_name,
                     curr_active_name,
                     weight=-1.0,
-                    delay=1.0,
+                    delay=1,
                 )
 
             # Copy and Output Layer
@@ -610,7 +610,7 @@ class Max(Brick):
                     curr_active_name,
                     copy_name,
                     weight=1.0,
-                    delay=1.0,
+                    delay=1,
                 )
                 graph.add_edge(
                     register_bits[j],
@@ -622,13 +622,13 @@ class Max(Brick):
                     copy_name,
                     m_name,
                     weight=1.0,
-                    delay=1.0,
+                    delay=1,
                 )
                 graph.add_edge(
                     copy_name,
                     complete_name,
                     weight=1.0,
-                    delay=1.0,
+                    delay=1,
                 )
 
         output_lists = [m_names]
@@ -726,7 +726,7 @@ class Addition(Brick):
                     bit,
                     begin_node_name,
                     weight=1.0,
-                    delay=1.0,
+                    delay=1,
                 )
 
         graph.add_edge(
@@ -763,7 +763,7 @@ class Addition(Brick):
                 carry_name,
                 S_name,
                 weight=-2.0,
-                delay=1.0,
+                delay=1,
             )
             if i > 0:
                 prev_carry_name = self.generate_neuron_name(
@@ -773,7 +773,7 @@ class Addition(Brick):
                     prev_carry_name,
                     S_name,
                     weight=1.0,
-                    delay=1.0,
+                    delay=1,
                 )
 
         for register in input_lists:
@@ -783,7 +783,7 @@ class Addition(Brick):
                     bit,
                     S_name,
                     weight=1.0,
-                    delay=2.0,
+                    delay=2,
                 )
 
                 for j in range(i, self.register_size):
@@ -793,7 +793,7 @@ class Addition(Brick):
                         bit,
                         carry_name,
                         weight=2**i,
-                        delay=1.0,
+                        delay=1,
                     )
 
         output_lists = [S_names]
@@ -899,7 +899,7 @@ class Subtraction(CompoundBrick):
                 x_bit,
                 x_copy,
                 weight=1.0,
-                delay=4.0,
+                delay=4,
             )
 
         # Get two's complement of Y (Y2)
@@ -923,7 +923,7 @@ class Subtraction(CompoundBrick):
             complement_control,
             value_one,
             weight=1.0,
-            delay=1.0,
+            delay=1,
         )
 
         complement_names = []
@@ -942,7 +942,7 @@ class Subtraction(CompoundBrick):
                 complement_control,
                 complement_name,
                 weight=1.0,
-                delay=1.0,
+                delay=1,
             )
             if len(input_lists[1]) > i:
                 y_bit = input_lists[1][i]
@@ -950,14 +950,14 @@ class Subtraction(CompoundBrick):
                     y_bit,
                     complement_control,
                     weight=1.0,
-                    delay=1.0,
+                    delay=1,
                 )
 
                 graph.add_edge(
                     y_bit,
                     complement_name,
                     weight=-1.0,
-                    delay=2.0,
+                    delay=2,
                 )
 
         # add 1 to YF (Y2 = YF + 1)

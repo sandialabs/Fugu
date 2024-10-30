@@ -4,7 +4,7 @@ isort:skip_file
 
 # fmt: off
 import math
-from .backend import Backend
+from .backend import Backend, PortDataIterator
 import nxsdk.api.n2a as nx
 import pandas as pd
 
@@ -14,7 +14,7 @@ class loihi_Backend(Backend):
         super(Backend, self).__init__()
         self.nextCoreID = 0
 
-    def setCoreID(self, p):
+    def setCoreID(self, p, count=1):
         key = (p.vMinExp,
                p.vMaxExp,
                p.noiseExpAtCompartment,
@@ -27,10 +27,10 @@ class loihi_Backend(Backend):
                p.compartmentVoltageDecay==4096)
         if not key in self.cores: self.cores[key] = {'count': self.maxNeuronsPerCore}  # forces allocation of new core ID
         core = self.cores[key]
-        if core['count'] < self.maxNeuronsPerCore:
-            core['count'] += 1
+        if core['count'] <= self.maxNeuronsPerCore - count:
+            core['count'] += count
         else:
-            core['count'] = 1
+            core['count'] = count
             core['id']    = self.nextCoreID
             self.nextCoreID += 1
         p.logicalCoreId = core['id']
@@ -81,13 +81,12 @@ class loihi_Backend(Backend):
                     if '$pikes' not in node: node['$pikes'] = []
                     spikes = node['$pikes']
                     spikes.append(timestep + 1)  # Loihi does not report spikes in cycle 0, so we won't see immediate effects of input in that cycle. Shift all timing forward by 1 to compensate.
-            for list in vals['output_lists']:
-                for n in list:
-                    node = G.nodes[n]
-                    if not '$pikes' in node: continue
-                    spikeGen = self.net.createSpikeGenProcess(1)
-                    spikeGen.addSpikes(0, node['$pikes'])
-                    node['cx'] = spikeGen  # nx neurons are stored directly in the graph
+            for n in PortDataIterator(vals):
+                node = G.nodes[n]
+                if not '$pikes' in node: continue
+                spikeGen = self.net.createSpikeGenProcess(1)
+                spikeGen.addSpikes(0, node['$pikes'])
+                node['cx'] = spikeGen  # nx neurons are stored directly in the graph
 
         # Add all other neurons ...
 
@@ -212,11 +211,11 @@ class loihi_Backend(Backend):
             compProto.vThMant                 = vThMant
             compProto.functionalState         = functionalState
             compProto.compartmentVoltageDecay = Vdecay
-            self.setCoreID(compProto)
 
             if P == 1:  # Deterministic firing
                 compProto.compartmentJoinOperation = nx.COMPARTMENT_JOIN_OPERATION.SKIP  # default
                 compProto.stackIn                  = 0  #nx.COMPARTMENT_INPUT_MODE.UNASSIGNED  # default
+                self.setCoreID(compProto)
                 node['cx'] = self.net.createCompartment(compProto)
             else:  # Probabilistic firing
                 """
@@ -231,6 +230,7 @@ class loihi_Backend(Backend):
                 # Main output neuron
                 compProto.compartmentJoinOperation = nx.COMPARTMENT_JOIN_OPERATION.AND
                 compProto.stackIn                  = nx.COMPARTMENT_INPUT_MODE.POP_A
+                self.setCoreID(compProto, 2)  # 2 neurons so we reserve space for relay neuron
                 cx = self.net.createCompartment(compProto)
                 node['cx'] = cx
 
@@ -240,9 +240,9 @@ class loihi_Backend(Backend):
                 cxp = self.net.createCompartment(poissonCompProto)
 
                 # Relay neuron
-                self.setCoreID(relayCompProto)
+                relayCompProto.compartmentVoltageDecay = compProto.compartmentVoltageDecay
                 cxr = self.net.createCompartment(relayCompProto)
-                cxr.logicalCoreId = cx.logicalCoreId
+                cxr.logicalCoreId = cx.logicalCoreId  # no call to setCoredID(). Instead, we force exactly same core as main neuron.
                 cx.inputCompartmentId0 = cxr.nodeId
                 cxp.connect(cxr, prototype=relayConnProto)
 
@@ -258,7 +258,11 @@ class loihi_Backend(Backend):
         self.outputs = []
         for node, vals in self.fugu_circuit.nodes.data():
             if vals.get('layer') != 'output': continue
-            for l in vals['output_lists']: self.outputs.extend(l)
+            ports = vals.get('ports')
+            if not ports: continue
+            for port in ports.values():
+                data_channel = port.channels.get('data')
+                if data_channel: self.outputs.extend(data_channel.neurons)
         for n in self.outputs:
             node = G.nodes[n]
             if '$pikes' in node: continue  # This is an input, so can't be probed.

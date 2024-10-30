@@ -3,6 +3,7 @@
 import logging
 import numpy as np
 from .bricks import Brick
+from .metadata_utils import is_metadata_key_present, get_metadata_key_value
 
 class pooling_1d(Brick):
     'Pooling Layer brick'
@@ -13,7 +14,7 @@ class pooling_1d(Brick):
     
     """
     
-    def __init__(self, pool_size, strides=2, thresholds=0.9, name=None, method="max"):
+    def __init__(self, pool_size, strides=2, thresholds=0.9, name=None, method="max", layer_name='pooling_1d'):
         super().__init__()
         self.is_built = False
         self.name = name
@@ -22,7 +23,7 @@ class pooling_1d(Brick):
         self.strides = strides
         self.thresholds = thresholds
         self.method = method
-        self.metadata = {'pooling_size': pool_size, 'pooling_strides': strides, 'pooling_method': method}
+        self.metadata = {'pooling_size': pool_size, 'isNeuralNetworkLayer': True, 'layer_name': layer_name, 'strides': strides, 'method': method}
         
     def build(self, graph, metadata, control_nodes, input_lists, input_codings):
         """
@@ -31,7 +32,7 @@ class pooling_1d(Brick):
         Arguments:
             + graph - networkx graph to define connections of the computational graph
             + metadata - dictionary to define the shapes and parameters of the brick
-            + control_nodes - dictionary of lists of auxillary networkx nodes.  Excpected keys: 'complete' - A list of neurons that fire when the brick is done
+            + control_nodes - dictionary of lists of auxillary networkx nodes.  Expected keys: 'complete' - A list of neurons that fire when the brick is done
             + input_lists - list of nodes that will contain input
             + input_coding - list of input coding formats
 
@@ -42,13 +43,10 @@ class pooling_1d(Brick):
             + list of output
             + list of coding formats of output
         """
-        if type(metadata) is list:
-            self.metadata = {**metadata[0], **self.metadata}
-        else:
-            self.metadata = {**metadata, **self.metadata}
+        if 'output_shape' in metadata[0]: self.input_shape = metadata[0]['output_shape']
 
-        self.input_shape = self.metadata['convolution_output_shape']
-        self.metadata['pooling_input_shape'] = self.input_shape
+        assert hasattr(self, 'input_shape')
+        self.metadata['input_shape'] = self.input_shape
 
         output_codings = [input_codings[0]]
         
@@ -76,7 +74,7 @@ class pooling_1d(Brick):
             if self.thresholds.shape != (num_output_neurons,):
                 raise ValueError(f"Threshold length {self.thresholds.shape} does not equal the output neuron length ({num_output_neurons},)."
                 )
-        self.metadata['pooling_output_shape'] = self.thresholds.shape
+        self.metadata['output_shape'] = self.thresholds.shape
 
         # output neurons/nodes
         output_lists = [[]]
@@ -97,7 +95,7 @@ class pooling_1d(Brick):
             pos = stride_positions[i]
             for k in np.arange(self.pool_size):
                 graph.add_edge(pixels[pos+k], f'{self.name}p{i}', weight=edge_weights, delay=1)
-                print(f" g{pos+k} --> p{i}")
+                logging.debug(f" g{pos+k} --> p{i}")
 
         self.is_built = True        
         return (graph, self.metadata, [{'complete': complete_node, 'begin': begin_node}], output_lists, output_codings)
@@ -117,7 +115,7 @@ class pooling_2d(Brick):
     
     """
     
-    def __init__(self, pool_size, strides=2, thresholds=0.9, name=None, method="max"):
+    def __init__(self, pool_size, strides=2, thresholds=0.9, name=None, method="max", layer_name="pooling_2d"):
         super().__init__()
         self.is_built = False
         self.name = name
@@ -126,7 +124,7 @@ class pooling_2d(Brick):
         self.strides = strides
         self.thresholds = thresholds
         self.method = method
-        self.metadata = {'pooling_size': pool_size, 'pooling_strides': strides, 'pooling_method': method}
+        self.metadata = {'pooling_size': pool_size, 'isNeuralNetworkLayer': True, 'layer_name': layer_name, 'strides': strides, 'method': method}
         
     def build(self, graph, metadata, control_nodes, input_lists, input_codings):
         """
@@ -135,7 +133,7 @@ class pooling_2d(Brick):
         Arguments:
             + graph - networkx graph to define connections of the computational graph
             + dimensionality - dictionary to define the shapes and parameters of the brick
-            + control_nodes - dictionary of lists of auxillary networkx nodes.  Excpected keys: 'complete' - A list of neurons that fire when the brick is done
+            + control_nodes - dictionary of lists of auxillary networkx nodes.  Expected keys: 'complete' - A list of neurons that fire when the brick is done
             + input_lists - list of nodes that will contain input
             + input_coding - list of input coding formats
 
@@ -146,13 +144,10 @@ class pooling_2d(Brick):
             + list of output
             + list of coding formats of output
         """
-        if type(metadata) is list:
-            self.metadata = {**metadata[0], **self.metadata}
-        else:
-            self.metadata = {**metadata, **self.metadata}
+        if 'output_shape' in metadata[0]: self.input_shape = metadata[0]['output_shape']
 
-        self.input_shape = self.metadata['convolution_output_shape']
-        self.metadata['pooling_input_shape'] = self.input_shape
+        assert hasattr(self, 'input_shape')
+        self.metadata['input_shape'] = self.input_shape
 
         output_codings = [input_codings[0]]
         
@@ -173,7 +168,7 @@ class pooling_2d(Brick):
         # Bm = pool_size
         # pad_length = 0 (padding is taken care in the convolution brick)
         self.output_shape = self.get_output_shape()
-        self.metadata['pooling_output_shape'] = self.output_shape
+        self.metadata['output_shape'] = self.output_shape
         num_output_neurons = self.output_shape[0] * self.output_shape[1]
 
 
@@ -194,8 +189,8 @@ class pooling_2d(Brick):
         output_lists = [[]]
         for row in np.arange(self.output_shape[0]):
             for col in np.arange(self.output_shape[1]):
-                graph.add_node(f'{self.name}p{row}{col}', index=(row,col), threshold=self.thresholds[row,col], decay=1.0, p=1.0, potential=0.0)
-                output_lists[0].append(f'{self.name}p{row}{col}')
+                graph.add_node(f'{self.name}p{row}_{col}', index=(row,col), threshold=self.thresholds[row,col], decay=1.0, p=1.0, potential=0.0)
+                output_lists[0].append(f'{self.name}p{row}_{col}')
 
         # Collect Inputs
         pixels = input_lists[0]
@@ -222,8 +217,8 @@ class pooling_2d(Brick):
                 # method 2
                 tmp = pixels[rowpos:rowpos+self.pool_size,colpos:colpos+self.pool_size]
                 for pixel in tmp.flatten():
-                    graph.add_edge(pixel, f'{self.name}p{row}{col}', weight=edge_weights, delay=1)
-                    print(f" {pixel.split('_')[1]} --> p{row}{col}")                        
+                    graph.add_edge(pixel, f'{self.name}p{row}_{col}', weight=edge_weights, delay=1)
+                    logging.debug(f" {pixel.split('_')[1]} --> p{row}_{col}")                        
 
         self.is_built = True        
         return (graph, self.metadata, [{'complete': complete_node, 'begin': begin_node}], output_lists, output_codings)
