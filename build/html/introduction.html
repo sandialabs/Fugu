@@ -1,0 +1,215 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Fugu &mdash; Fugu .01 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=7b5ad6d6"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            Fugu
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">API Docs</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="fugu/index.html">The Fugu Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples/index.html">Examples API</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Fugu</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Fugu</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/introduction.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="fugu">
+<h1>Fugu<a class="headerlink" href="#fugu" title="Link to this heading"></a></h1>
+<section id="what-is-fugu">
+<h2>What is Fugu?<a class="headerlink" href="#what-is-fugu" title="Link to this heading"></a></h2>
+<p>Fugu is a high-level framework specifically designed for developing spiking circuits in terms of computation graphs. Accordingly, with a base leaky-integrate-and fire (LIF) neuron model at its core, neural circuits are built as <em>bricks</em>. These foundational computations are then combined and composed as scaffolds to construct larger computations. This allows us to describe spiking circuits in terms of neural features common to most NMC architectures rather than platform specific designs. In addition to architectural abstraction, the compositionality concept of Fugu not only facilitates a hierarchical approach to functionality development but also enables adding pre and post processing operations to overarching neural circuits. Such properties position Fugu to help explore under what parameterization or scale a neural approach may offer an advantage. For example, prior work has analyzed neural algorithms for computational kernels like sorting, optimization, and graph analytics identifying different regions in which a neural advantage exists accounting for neural circuit setup, timing, or other factors.</p>
+<p>Think of Fugu as a framework to ease the process of coding and deploying algorithms on spiking neuromorphic systems.  It is a managed intermediate representation (IR) between higher-level coding environments and low-level neuromorphic hardware and their compilers.  Fugu’s front end is written in Python, and it leverages NetworkX library to construct and manage the Fugu generated neural circuit.  Fugu has three components which provide connection between API and compiler output during compilation.
+1. A library of spiking neural algorithm (SNA) modules
+2. A collections of algorithms for linking SNA modules
+3. Combined application graph output</p>
+<p>Fugu is a linking framework with a goal of being “easy” to build spiking circuits for a single computation. We provide a mechanism to combine small computational kernels (Bricks) into large computational graphs, but also Fugu provides some specifications: For the Bricks to transfer information, we need to agree on data formatting. For computation to be consistent, we need to agree on neuron behavior (lowest common denominator). For this to be useful, we need a hardware independent intermediate representation.</p>
+<p>Fugu includes but is not a simulator: We include a reference simulator <em>snn</em> which can quickly run small sized spiking networks. We hope to provide a more comprehensive and efficient simulator in the future.  Fugu is designed to support a variety of backends including hardware platforms. We are working to build Fugu Bricks for many useful kernels; We are hoping that the community will help contribute.</p>
+<section id="api">
+<h3>API<a class="headerlink" href="#api" title="Link to this heading"></a></h3>
+<p>Fugu’s API provides works with Python.  The user defines a computational graph, termed <em>scaffold</em>.  Within each scaffold nodes, called <em>bricks</em> are the component SNAs.  Edges between <em>bricks</em> defines the flow of information.</p>
+<section id="example">
+<h4>Example<a class="headerlink" href="#example" title="Link to this heading"></a></h4>
+<p>Suppose a simple application with 4 operations:
+1. Function A processes an input.
+2. Function B processes the output of A.
+3. Function C processes the output of A.
+4. Function D combines output of B and C.
+Fugu will construct a brick for each function A - D, and compose them into a larger algorithm scaffold as represented in the pseudocode below.
+The scaffold is a graphical representation of of the desired Fugu algorithm
+.. image:: images/pseudocode.png</p>
+<blockquote>
+<div><dl class="field-list simple">
+<dt class="field-odd">width<span class="colon">:</span></dt>
+<dd class="field-odd"><p>400</p>
+</dd>
+<dt class="field-even">alt<span class="colon">:</span></dt>
+<dd class="field-even"><p>Simple 4 function pseudocode</p>
+</dd>
+</dl>
+</div></blockquote>
+</section>
+</section>
+</section>
+<section id="workflow-for-fugu-algorithm">
+<h2>Workflow for Fugu algorithm<a class="headerlink" href="#workflow-for-fugu-algorithm" title="Link to this heading"></a></h2>
+<a class="reference internal image-reference" href="_images/scaffoldmetadata.png"><img alt="Scaffold Metadata" src="_images/scaffoldmetadata.png" style="width: 400px;" />
+</a>
+<a class="reference internal image-reference" href="_images/scaffoldcircuit.png"><img alt="Control flow for Scaffold.circuit" src="_images/scaffoldcircuit.png" style="width: 400px;" />
+</a>
+<p>We forsee 3 user types:
+1. User: This person develops algorithms and applications using Fugu, but may not fully understand spiking neural networks or neuromorphic hardware.  Users should be expected to understand python and combine Fugu’s tools and functions.
+2. Extenders: This person creates new spiking neural networks or adapts existing neural algorithms to the Fugu framework.  At this level, coders will need to be familiar with spiking neural networks and NetworkX, but should not need to be concerned with details of the implementations behind Fugu and the target hardware.
+3. Developers:  This person helps develop the Fugu framework  itself and provides backends to software and hardware platforms for execution.  For this, it is necessary to be familiar with the entire stack, from python through spiking neural networks and the intricacies of a particular hardware platform.
+&lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD
+.. image:: images/component.png</p>
+<blockquote>
+<div><dl class="field-list simple">
+<dt class="field-odd">width<span class="colon">:</span></dt>
+<dd class="field-odd"><p>400</p>
+</dd>
+<dt class="field-even">alt<span class="colon">:</span></dt>
+<dd class="field-even"><p>Fugu workflow</p>
+</dd>
+</dl>
+</div></blockquote>
+</section>
+<hr class="docutils" />
+<section id="bricks-basics">
+<h2>Bricks Basics<a class="headerlink" href="#bricks-basics" title="Link to this heading"></a></h2>
+<p>Bricks provides the framework for the scaffold to build a neural graph
++ Defines the main computational graph
++ Uses networkx graph objects
+Contains metadata
++ Synchronize with other bricks
++ Contains coding information
++ Neuron parameters</p>
+<p>Each Brick represents one computational function.  Bricks are attached to a Scaffold.  Bricks have certain key properties:
+dimensionality:  A dictionary containing information such as the input and output sizes, circuit depth (if defined), and the types of codings.
+self.supported_codings:  A list of supported codings for this brick. A complete list of codings is avialable at input_coding_types.
+is_built:  A simple boolean saying whether or not the brick as been built
+name: A string representing the brick</p>
+<p>This function forms the section of the graph corresponding to the brick.
+Input parameters:
+- graph: graph that is being built
+- dimensionality: dictionary containing relevant dimensionality information
+- control_nodes: A list of dictionaries of neurons that transmit control signals. A ‘done’ signal (Generally one from each input) is included in control_nodes[i][‘complete’].
+- input_lists: A list of lists of input neurons.  Each neuron is marked with a local index used for encodings.
+- input_codings: A list of types of input codings.  See input_coding_types</p>
+<p>Output: a tuple (graph, dimensionality, complete_node, output_lists, output_codings)
+- graph: Graph that is being built
+- dimensionality: Dictionary containing relevant dimensionality information
+- complete_node: A list of neurons that transmists a ‘done’ signal (Generally one for each output)
+- output_lists: A list of lists of output neurons.  Each neuron is marked with a local index used for encodings.
+- output_codings: A list of types of codings.  See input_coding_types</p>
+<a class="reference internal image-reference" href="_images/matrixmultiplication.png"><img alt="Input/Output visualization" src="_images/matrixmultiplication.png" style="width: 400px;" />
+</a>
+<p>Neurons can be built to relay control information between bricks.  These should be included in control_nodes.  Control_nodes is a list of dictionaries.  Each entry in the list corresponds with an input (if calling Brick.build) or an output (if returning from Brick.build).</p>
+</section>
+<section id="scaffolds">
+<h2>Scaffolds<a class="headerlink" href="#scaffolds" title="Link to this heading"></a></h2>
+<p>The Scaffold object is a graph that contains bricks at each node.  In reality, the Scaffold is only responsible for the organization of bricks.  All functionality is held in the bricks themselves.</p>
+</section>
+<section id="backend">
+<h2>Backend<a class="headerlink" href="#backend" title="Link to this heading"></a></h2>
+<p>A backend generates platform-specific code from the platform-independent network graph (Scaffold.graph). Included in Fugu today is a backend to a basic reference simulator SNN and a backend that targets Intel’s Loihi platform.</p>
+</section>
+<section id="get-started">
+<h2>Get Started<a class="headerlink" href="#get-started" title="Link to this heading"></a></h2>
+<ol class="arabic simple">
+<li><p>Installation
+- We recommend installing Fugu in a conda or virtual environment in Python 3.8.  The requirements can be found in requirements3.txt
+- Dependencies include: Numpy, NetworkX, Pandas, and Pytorch (for DS)</p></li>
+<li><p>Jupyter Notebook examples
+- Walk through our Jupyter Notebook examples as a first step into the world of Fugu.  These can be found in the examples folder, in a folder labeled notebooks.  We’ve outlined how we translate common algorithms and problems into Fugu brick formation.</p></li>
+<li><p>Documentation
+- We have documented many of the applicable python files for your reference in our docs page.</p></li>
+</ol>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, Sandia National Labs.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,659 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Utility Bricks &mdash; Fugu .01 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=7b5ad6d6"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Scaffold" href="../scaffold/scaffold.html" />
+    <link rel="prev" title="Test Bricks" href="test_bricks.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            Fugu
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">API Docs</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">The Fugu Module</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../backends/index.html">Fugu Backends</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="index.html">Bricks</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="adder_bricks.html">Adder Bricks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="application_bricks.html">Application Bricks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="bricks.html">Bricks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="graph_bricks.html">Graph Bricks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="input_bricks.html">Input Bricks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="register_bricks.html">Register Bricks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="stochastic_bricks.html">Stochastic Bricks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="test_bricks.html">Test Bricks</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Utility Bricks</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#fugu.bricks.utility_bricks.Dot"><code class="docutils literal notranslate"><span class="pre">Dot</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#fugu.bricks.utility_bricks.Copy"><code class="docutils literal notranslate"><span class="pre">Copy</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#fugu.bricks.utility_bricks.Concatenate"><code class="docutils literal notranslate"><span class="pre">Concatenate</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#fugu.bricks.utility_bricks.AND_OR"><code class="docutils literal notranslate"><span class="pre">AND_OR</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#fugu.bricks.utility_bricks.ParityCheck"><code class="docutils literal notranslate"><span class="pre">ParityCheck</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#fugu.bricks.utility_bricks.TemporalAdder"><code class="docutils literal notranslate"><span class="pre">TemporalAdder</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#id0"><code class="docutils literal notranslate"><span class="pre">Dot</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#id3"><code class="docutils literal notranslate"><span class="pre">Concatenate</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#id5"><code class="docutils literal notranslate"><span class="pre">AND_OR</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#id9"><code class="docutils literal notranslate"><span class="pre">ParityCheck</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#id11"><code class="docutils literal notranslate"><span class="pre">TemporalAdder</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../scaffold/scaffold.html">Scaffold</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../simulators/index.html">Simulators</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../utils/index.html">Utilities</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../examples/index.html">Examples API</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Fugu</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">The Fugu Module</a></li>
+          <li class="breadcrumb-item"><a href="index.html">Bricks</a></li>
+      <li class="breadcrumb-item active">Utility Bricks</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/fugu/bricks/utility_bricks.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-fugu.bricks.utility_bricks">
+<span id="utility-bricks"></span><h1>Utility Bricks<a class="headerlink" href="#module-fugu.bricks.utility_bricks" title="Link to this heading"></a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="fugu.bricks.utility_bricks.Dot">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">fugu.bricks.utility_bricks.</span></span><span class="sig-name descname"><span class="pre">Dot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">weights</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Dot'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fugu.bricks.utility_bricks.Dot" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="bricks.html#fugu.bricks.bricks.Brick" title="fugu.bricks.bricks.Brick"><code class="xref py py-class docutils literal notranslate"><span class="pre">Brick</span></code></a></p>
+<p>Class to handle the Dot brick. Inherits from Brick</p>
+<p>Construtor for this brick.
+:param weights: Vector against which the input is dotted.
+:type weights: any
+:param name: Name of the brick.  If not specified, a default will be used.  Name should be unique.
+:type name: str</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="fugu.bricks.utility_bricks.Dot.set_properties">
+<span class="sig-name descname"><span class="pre">set_properties</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">properties</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fugu.bricks.utility_bricks.Dot.set_properties" title="Link to this definition"></a></dt>
+<dd><p>Returns an updated version of the graph based on the property values passed.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fugu.bricks.utility_bricks.Dot.build">
+<span class="sig-name descname"><span class="pre">build</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metadata</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">control_nodes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_lists</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_codings</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fugu.bricks.utility_bricks.Dot.build" title="Link to this definition"></a></dt>
+<dd><p>Build Dot brick.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>graph</strong> (<em>any</em>) – networkx graph to define connections of the computational graph</p></li>
+<li><p><strong>metadata</strong> (<em>dict</em>) – dictionary to define the shapes and parameters of the brick</p></li>
+<li><p><strong>control_nodes</strong> (<em>list</em>) – <p>list of dictionary of auxillary nodes.
+Expected keys:</p>
+<blockquote>
+<div><p>’complete’ - A list of neurons that fire when the brick is done</p>
+</div></blockquote>
+</p></li>
+<li><p><strong>input_lists</strong> (<em>list</em>) – list of nodes that will contain input</p></li>
+<li><p><strong>input_coding</strong> (<em>list</em>) – list of input coding formats.  (‘Raster’, ‘Undefined’ supported)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>graph of a computational elements and connections
+metadata: dictionary of output parameters (shape, coding, layers, depth, etc)
+complete_name: list dictionary of control nodes (‘complete’)
+output_list (list[dict[str, int]]): list of output edges
+output_codings (list[str]): list of coding formats of output (‘current’)</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>graph</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="fugu.bricks.utility_bricks.Copy">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">fugu.bricks.utility_bricks.</span></span><span class="sig-name descname"><span class="pre">Copy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Copy'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fugu.bricks.utility_bricks.Copy" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="bricks.html#fugu.bricks.bricks.Brick" title="fugu.bricks.bricks.Brick"><code class="xref py py-class docutils literal notranslate"><span class="pre">Brick</span></code></a></p>
+<p>Class to handle Copy Brick. Inherits from Brick</p>
+<p>Construtor for this brick.
+:param name: Name of the brick.  If not specified, a default will be used.  Name should be unique.
+:type name: str</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="fugu.bricks.utility_bricks.Copy.build">
+<span class="sig-name descname"><span class="pre">build</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metadata</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">control_nodes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_lists</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_codings</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fugu.bricks.utility_bricks.Copy.build" title="Link to this definition"></a></dt>
+<dd><p>Build Copy brick.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>graph</strong> – networkx graph to define connections of the computational graph</p></li>
+<li><p><strong>metadata</strong> (<em>dict</em>) – dictionary to define the shapes and parameters of the brick</p></li>
+<li><p><strong>control_nodes</strong> (<em>list</em>) – <p>list of dictionaries of auxillary nodes.
+Expected keys:</p>
+<blockquote>
+<div><p>’complete’ - A list of neurons that fire when the brick is done</p>
+</div></blockquote>
+</p></li>
+<li><p><strong>input_lists</strong> (<em>list</em>) – list of nodes that will contain input</p></li>
+<li><p><strong>input_coding</strong> (<em>list</em>) – list of input coding formats</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>graph of a computational elements and connections
+self.metadata (dict): dictionary of output parameters (shape, coding, layers, depth, etc)
+complete: list dictionary of control nodes (‘complete’)
+output_lists (list[list]): list of output
+output_codings (list): list of coding formats of output</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>graph</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="fugu.bricks.utility_bricks.Concatenate">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">fugu.bricks.utility_bricks.</span></span><span class="sig-name descname"><span class="pre">Concatenate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Concatenate'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coding</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fugu.bricks.utility_bricks.Concatenate" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="bricks.html#fugu.bricks.bricks.Brick" title="fugu.bricks.bricks.Brick"><code class="xref py py-class docutils literal notranslate"><span class="pre">Brick</span></code></a></p>
+<p>Brick that concatenates multiple inputs into a single vector.
+All codings are supported except ‘current’; first coding is used if not specified.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>name</strong> (<em>str</em>) – Name of the brick.  If not specified, a default will be used.  Name should be unique.</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="fugu.bricks.utility_bricks.Concatenate.build">
+<span class="sig-name descname"><span class="pre">build</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metadata</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">control_nodes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_lists</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_codings</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fugu.bricks.utility_bricks.Concatenate.build" title="Link to this definition"></a></dt>
+<dd><p>Build concatenate brick.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>graph</strong> – networkx graph to define connections of the computational graph</p></li>
+<li><p><strong>metadata</strong> (<em>dict</em>) – dictionary to define the shapes and parameters of the brick</p></li>
+<li><p><strong>control_nodes</strong> (<em>list</em>) – <p>dictionary of lists of auxillary networkx nodes.
+Expected keys:</p>
+<blockquote>
+<div><p>’complete’ - A list of neurons that fire when the brick is done</p>
+</div></blockquote>
+</p></li>
+<li><p><strong>input_lists</strong> (<em>list</em>) – list of nodes that will contain input</p></li>
+<li><p><strong>input_coding</strong> (<em>list</em>) – list of input coding formats.  All codings are allowed except ‘current’.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>graph of a computational elements and connections
+self.metadata (dict[str, int]): dictionary (dict[str, int]) of output parameters (shape, coding, layers, depth, etc)
+dictionary of control nodes (‘complete’)
+output_list: list of lists of output (1 output)
+output_codings (list): list of coding formats of output (Coding matches input coding)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="fugu.bricks.utility_bricks.AND_OR">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">fugu.bricks.utility_bricks.</span></span><span class="sig-name descname"><span class="pre">AND_OR</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'AND'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'AND_OR'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fugu.bricks.utility_bricks.AND_OR" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="bricks.html#fugu.bricks.bricks.Brick" title="fugu.bricks.bricks.Brick"><code class="xref py py-class docutils literal notranslate"><span class="pre">Brick</span></code></a></p>
+<p>Brick for performing a logical AND/OR.
+Operation is performed entry-wise, matching based on index.  All codings are supported.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>mode</strong> (<em>str</em>) – Either ‘And’ or ‘Or’; determines the operation</p></li>
+<li><p><strong>name</strong> (<em>str</em>) – Name of the brick.  If not specified, a default will be used.  Name should be unique.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="fugu.bricks.utility_bricks.AND_OR.input_ports">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">input_ports</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">PortSpec</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#fugu.bricks.utility_bricks.AND_OR.input_ports" title="Link to this definition"></a></dt>
+<dd><p>Describes the ports on which this brick will take in data from other bricks.
+Returns a dictionary of PortSpec objects. The key is the name of the input
+port as known to this brick. See scaffold.py for the definition of PortSpec.
+A return value of {} indicate that this brick does not take inputs. Effectively, that
+flags this as an input brick, in the sense that all values originate from here.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fugu.bricks.utility_bricks.AND_OR.output_ports">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">output_ports</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">PortSpec</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#fugu.bricks.utility_bricks.AND_OR.output_ports" title="Link to this definition"></a></dt>
+<dd><p>Describes the ports on which this brick will output data to other bricks.
+Returns a dictionary of PortSpec objects. The key is the name of the output
+port as known to this brick. See scaffold.py for the definition of PortSpec.
+A return value of {} indicates that this brick does not produce outputs. This can happen
+if the brick does some form of direct I/O.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fugu.bricks.utility_bricks.AND_OR.build2">
+<span class="sig-name descname"><span class="pre">build2</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inputs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">PortData</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">{}</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fugu.bricks.utility_bricks.AND_OR.build2" title="Link to this definition"></a></dt>
+<dd><p>Build AND_OR brick.
+:raises ValueError: If != 2 inputs.  Only 2 inputs are supported.  Error if unsupported mode.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="fugu.bricks.utility_bricks.ParityCheck">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">fugu.bricks.utility_bricks.</span></span><span class="sig-name descname"><span class="pre">ParityCheck</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'ParityCheck'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fugu.bricks.utility_bricks.ParityCheck" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="bricks.html#fugu.bricks.bricks.Brick" title="fugu.bricks.bricks.Brick"><code class="xref py py-class docutils literal notranslate"><span class="pre">Brick</span></code></a></p>
+<p>Brick to compute the parity of a 4 bit input.
+The output spikes after 2 time steps if the input has odd parity</p>
+<p>Construtor for this brick.
+:param name: Name of the brick.  If not specified, a default will be used.  Name should be unique.
+:type name: str</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="fugu.bricks.utility_bricks.ParityCheck.build">
+<span class="sig-name descname"><span class="pre">build</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metadata</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">control_nodes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_lists</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_codings</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fugu.bricks.utility_bricks.ParityCheck.build" title="Link to this definition"></a></dt>
+<dd><p>Build Parity brick.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>graph</strong> – networkx graph to define connections of the computational graph</p></li>
+<li><p><strong>metadata</strong> (<em>dict</em>) – dictionary to define the shapes and parameters of the brick</p></li>
+<li><p><strong>control_nodes</strong> (<em>list</em>) – <p>dictionary of lists of auxillary networkx nodes.
+Expected keys:</p>
+<blockquote>
+<div><p>’complete’ - A list of neurons that fire when the brick is done</p>
+</div></blockquote>
+</p></li>
+<li><p><strong>input_lists</strong> (<em>list</em>) – list of nodes that will contain input</p></li>
+<li><p><strong>input_coding</strong> (<em>list</em>) – list of input coding formats</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>graph of a computational elements and connections
+self.metadata (dict): dictionary of output parameters (shape, coding, layers, depth, etc).  dict[str, int] = {‘D’: 1}
+complete_node (str): dictionary of control nodes (‘complete’)
+output_lists (list[list[str]]): list of output
+output_codings (list): list of coding formats of output</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>graph</p>
+</dd>
+</dl>
+<p class="rubric">Example</p>
+<p>add 4 hidden nodes with thresholds &lt;=1, &gt;=1, &lt;=3, &gt;=3.
+since the thresholds only compute &gt;=, the &lt;=1, &lt;=3 computations are performed by negating
+the threshold weights and the inputs (via the weights on incomming edges)
+first hidden node and connect edges from input layer</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="fugu.bricks.utility_bricks.TemporalAdder">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">fugu.bricks.utility_bricks.</span></span><span class="sig-name descname"><span class="pre">TemporalAdder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">number_of_elements</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">design</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'default'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'TemporalAdder'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_coding</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'temporal-L'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fugu.bricks.utility_bricks.TemporalAdder" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="bricks.html#fugu.bricks.bricks.Brick" title="fugu.bricks.bricks.Brick"><code class="xref py py-class docutils literal notranslate"><span class="pre">Brick</span></code></a></p>
+<p>Brick that “adds” spike times together:</p>
+<p>More specifically, consider you have three neurons u, v, and w that first spike at times t_u, t_v, and t_w.
+Assuming v spikes before w (so t_v &lt; t_w), we want t_u = t_w + t_v, i.e. u fires t_v timesteps after w fires.</p>
+<p>Construtor for this brick.
+:param number_of_elements: number of signals you want to add together
+:type number_of_elements: any
+:param design: default
+:type design: str
+:param name: Name of the brick.  If not specified, a default will be used.  Name should be unique.
+:type name: str
+:param output_coding: Output coding type, default is ‘temporal-L’
+:type output_coding: str</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="fugu.bricks.utility_bricks.TemporalAdder.build">
+<span class="sig-name descname"><span class="pre">build</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metadata</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">control_nodes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_lists</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_codings</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fugu.bricks.utility_bricks.TemporalAdder.build" title="Link to this definition"></a></dt>
+<dd><p>Build Adder brick.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>graph</strong> – networkx graph to define connections of the computational graph</p></li>
+<li><p><strong>metadata</strong> – dictionary to define the shapes and parameters of the brick</p></li>
+<li><p><strong>control_nodes</strong> – <p>dictionary of lists of auxillary networkx nodes.
+Expected keys:</p>
+<blockquote>
+<div><p>’complete’ - A list of neurons that fire when the brick is done
+‘begin’ - A neurons that first when the brick begins processing (for temporal coded inputs)</p>
+</div></blockquote>
+</p></li>
+<li><p><strong>input_lists</strong> – list of nodes that will contain input</p></li>
+<li><p><strong>input_coding</strong> – list of input coding formats.  All coding types supported</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>graph of a computational elements and connections
+self.metadata: dictionary of output parameters (shape, coding, layers, depth, etc)
+complete_node_list: dictionary of control nodes (‘complete’)
+output_lists: list of output
+self.output_coings: list of coding formats of output</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>graph</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>ValueError</strong> – incorrect number or format of inputs</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="id0">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">fugu.bricks.utility_bricks.</span></span><span class="sig-name descname"><span class="pre">Dot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">weights</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Dot'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#id0" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="bricks.html#fugu.bricks.bricks.Brick" title="fugu.bricks.bricks.Brick"><code class="xref py py-class docutils literal notranslate"><span class="pre">Brick</span></code></a></p>
+<p>Class to handle the Dot brick. Inherits from Brick</p>
+<p>Construtor for this brick.
+:param weights: Vector against which the input is dotted.
+:type weights: any
+:param name: Name of the brick.  If not specified, a default will be used.  Name should be unique.
+:type name: str</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="id1">
+<span class="sig-name descname"><span class="pre">set_properties</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">properties</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#id1" title="Link to this definition"></a></dt>
+<dd><p>Returns an updated version of the graph based on the property values passed.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="id2">
+<span class="sig-name descname"><span class="pre">build</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metadata</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">control_nodes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_lists</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_codings</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#id2" title="Link to this definition"></a></dt>
+<dd><p>Build Dot brick.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>graph</strong> (<em>any</em>) – networkx graph to define connections of the computational graph</p></li>
+<li><p><strong>metadata</strong> (<em>dict</em>) – dictionary to define the shapes and parameters of the brick</p></li>
+<li><p><strong>control_nodes</strong> (<em>list</em>) – <p>list of dictionary of auxillary nodes.
+Expected keys:</p>
+<blockquote>
+<div><p>’complete’ - A list of neurons that fire when the brick is done</p>
+</div></blockquote>
+</p></li>
+<li><p><strong>input_lists</strong> (<em>list</em>) – list of nodes that will contain input</p></li>
+<li><p><strong>input_coding</strong> (<em>list</em>) – list of input coding formats.  (‘Raster’, ‘Undefined’ supported)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>graph of a computational elements and connections
+metadata: dictionary of output parameters (shape, coding, layers, depth, etc)
+complete_name: list dictionary of control nodes (‘complete’)
+output_list (list[dict[str, int]]): list of output edges
+output_codings (list[str]): list of coding formats of output (‘current’)</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>graph</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="id3">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">fugu.bricks.utility_bricks.</span></span><span class="sig-name descname"><span class="pre">Concatenate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Concatenate'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coding</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#id3" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="bricks.html#fugu.bricks.bricks.Brick" title="fugu.bricks.bricks.Brick"><code class="xref py py-class docutils literal notranslate"><span class="pre">Brick</span></code></a></p>
+<p>Brick that concatenates multiple inputs into a single vector.
+All codings are supported except ‘current’; first coding is used if not specified.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>name</strong> (<em>str</em>) – Name of the brick.  If not specified, a default will be used.  Name should be unique.</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="id4">
+<span class="sig-name descname"><span class="pre">build</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metadata</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">control_nodes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_lists</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_codings</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#id4" title="Link to this definition"></a></dt>
+<dd><p>Build concatenate brick.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>graph</strong> – networkx graph to define connections of the computational graph</p></li>
+<li><p><strong>metadata</strong> (<em>dict</em>) – dictionary to define the shapes and parameters of the brick</p></li>
+<li><p><strong>control_nodes</strong> (<em>list</em>) – <p>dictionary of lists of auxillary networkx nodes.
+Expected keys:</p>
+<blockquote>
+<div><p>’complete’ - A list of neurons that fire when the brick is done</p>
+</div></blockquote>
+</p></li>
+<li><p><strong>input_lists</strong> (<em>list</em>) – list of nodes that will contain input</p></li>
+<li><p><strong>input_coding</strong> (<em>list</em>) – list of input coding formats.  All codings are allowed except ‘current’.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>graph of a computational elements and connections
+self.metadata (dict[str, int]): dictionary (dict[str, int]) of output parameters (shape, coding, layers, depth, etc)
+dictionary of control nodes (‘complete’)
+output_list: list of lists of output (1 output)
+output_codings (list): list of coding formats of output (Coding matches input coding)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="id5">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">fugu.bricks.utility_bricks.</span></span><span class="sig-name descname"><span class="pre">AND_OR</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'AND'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'AND_OR'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#id5" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="bricks.html#fugu.bricks.bricks.Brick" title="fugu.bricks.bricks.Brick"><code class="xref py py-class docutils literal notranslate"><span class="pre">Brick</span></code></a></p>
+<p>Brick for performing a logical AND/OR.
+Operation is performed entry-wise, matching based on index.  All codings are supported.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>mode</strong> (<em>str</em>) – Either ‘And’ or ‘Or’; determines the operation</p></li>
+<li><p><strong>name</strong> (<em>str</em>) – Name of the brick.  If not specified, a default will be used.  Name should be unique.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="id6">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">input_ports</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">PortSpec</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#id6" title="Link to this definition"></a></dt>
+<dd><p>Describes the ports on which this brick will take in data from other bricks.
+Returns a dictionary of PortSpec objects. The key is the name of the input
+port as known to this brick. See scaffold.py for the definition of PortSpec.
+A return value of {} indicate that this brick does not take inputs. Effectively, that
+flags this as an input brick, in the sense that all values originate from here.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="id7">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">output_ports</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">PortSpec</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#id7" title="Link to this definition"></a></dt>
+<dd><p>Describes the ports on which this brick will output data to other bricks.
+Returns a dictionary of PortSpec objects. The key is the name of the output
+port as known to this brick. See scaffold.py for the definition of PortSpec.
+A return value of {} indicates that this brick does not produce outputs. This can happen
+if the brick does some form of direct I/O.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="id8">
+<span class="sig-name descname"><span class="pre">build2</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inputs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">PortData</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">{}</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#id8" title="Link to this definition"></a></dt>
+<dd><p>Build AND_OR brick.
+:raises ValueError: If != 2 inputs.  Only 2 inputs are supported.  Error if unsupported mode.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="id9">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">fugu.bricks.utility_bricks.</span></span><span class="sig-name descname"><span class="pre">ParityCheck</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'ParityCheck'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#id9" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="bricks.html#fugu.bricks.bricks.Brick" title="fugu.bricks.bricks.Brick"><code class="xref py py-class docutils literal notranslate"><span class="pre">Brick</span></code></a></p>
+<p>Brick to compute the parity of a 4 bit input.
+The output spikes after 2 time steps if the input has odd parity</p>
+<p>Construtor for this brick.
+:param name: Name of the brick.  If not specified, a default will be used.  Name should be unique.
+:type name: str</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="id10">
+<span class="sig-name descname"><span class="pre">build</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metadata</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">control_nodes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_lists</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_codings</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#id10" title="Link to this definition"></a></dt>
+<dd><p>Build Parity brick.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>graph</strong> – networkx graph to define connections of the computational graph</p></li>
+<li><p><strong>metadata</strong> (<em>dict</em>) – dictionary to define the shapes and parameters of the brick</p></li>
+<li><p><strong>control_nodes</strong> (<em>list</em>) – <p>dictionary of lists of auxillary networkx nodes.
+Expected keys:</p>
+<blockquote>
+<div><p>’complete’ - A list of neurons that fire when the brick is done</p>
+</div></blockquote>
+</p></li>
+<li><p><strong>input_lists</strong> (<em>list</em>) – list of nodes that will contain input</p></li>
+<li><p><strong>input_coding</strong> (<em>list</em>) – list of input coding formats</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>graph of a computational elements and connections
+self.metadata (dict): dictionary of output parameters (shape, coding, layers, depth, etc).  dict[str, int] = {‘D’: 1}
+complete_node (str): dictionary of control nodes (‘complete’)
+output_lists (list[list[str]]): list of output
+output_codings (list): list of coding formats of output</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>graph</p>
+</dd>
+</dl>
+<p class="rubric">Example</p>
+<p>add 4 hidden nodes with thresholds &lt;=1, &gt;=1, &lt;=3, &gt;=3.
+since the thresholds only compute &gt;=, the &lt;=1, &lt;=3 computations are performed by negating
+the threshold weights and the inputs (via the weights on incomming edges)
+first hidden node and connect edges from input layer</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="id11">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">fugu.bricks.utility_bricks.</span></span><span class="sig-name descname"><span class="pre">TemporalAdder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">number_of_elements</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">design</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'default'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'TemporalAdder'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_coding</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'temporal-L'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#id11" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="bricks.html#fugu.bricks.bricks.Brick" title="fugu.bricks.bricks.Brick"><code class="xref py py-class docutils literal notranslate"><span class="pre">Brick</span></code></a></p>
+<p>Brick that “adds” spike times together:</p>
+<p>More specifically, consider you have three neurons u, v, and w that first spike at times t_u, t_v, and t_w.
+Assuming v spikes before w (so t_v &lt; t_w), we want t_u = t_w + t_v, i.e. u fires t_v timesteps after w fires.</p>
+<p>Construtor for this brick.
+:param number_of_elements: number of signals you want to add together
+:type number_of_elements: any
+:param design: default
+:type design: str
+:param name: Name of the brick.  If not specified, a default will be used.  Name should be unique.
+:type name: str
+:param output_coding: Output coding type, default is ‘temporal-L’
+:type output_coding: str</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="id12">
+<span class="sig-name descname"><span class="pre">build</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metadata</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">control_nodes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_lists</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_codings</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#id12" title="Link to this definition"></a></dt>
+<dd><p>Build Adder brick.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>graph</strong> – networkx graph to define connections of the computational graph</p></li>
+<li><p><strong>metadata</strong> – dictionary to define the shapes and parameters of the brick</p></li>
+<li><p><strong>control_nodes</strong> – <p>dictionary of lists of auxillary networkx nodes.
+Expected keys:</p>
+<blockquote>
+<div><p>’complete’ - A list of neurons that fire when the brick is done
+‘begin’ - A neurons that first when the brick begins processing (for temporal coded inputs)</p>
+</div></blockquote>
+</p></li>
+<li><p><strong>input_lists</strong> – list of nodes that will contain input</p></li>
+<li><p><strong>input_coding</strong> – list of input coding formats.  All coding types supported</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>graph of a computational elements and connections
+self.metadata: dictionary of output parameters (shape, coding, layers, depth, etc)
+complete_node_list: dictionary of control nodes (‘complete’)
+output_lists: list of output
+self.output_coings: list of coding formats of output</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>graph</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>ValueError</strong> – incorrect number or format of inputs</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="test_bricks.html" class="btn btn-neutral float-left" title="Test Bricks" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../scaffold/scaffold.html" class="btn btn-neutral float-right" title="Scaffold" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, Sandia National Labs.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
