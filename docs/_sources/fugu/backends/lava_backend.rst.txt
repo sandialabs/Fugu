@@ -1,10 +1,10 @@
-.. snn_backend:
+.. lava_backend:
 
 *************
-SNN Backend
+Lava Backend
 *************
 
-.. automodule:: fugu.backends.snn_backend
+.. automodule:: fugu.backends.lava_backend
    :members:
    :undoc-members:
    :show-inheritance:

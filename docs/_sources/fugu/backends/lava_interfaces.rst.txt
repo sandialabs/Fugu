@@ -1,4 +1,4 @@
-.. snn_backend:
+.. lava_interfaces:
 
 *************
 Lava Interfaces

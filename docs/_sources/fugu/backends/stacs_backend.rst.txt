@@ -1,10 +1,10 @@
-.. snn_backend:
+.. stacs_backend:
 
 *************
-SNN Backend
+STACS Backend
 *************
 
-.. automodule:: fugu.backends.snn_backend
+.. automodule:: fugu.backends.stacs_backend
    :members:
    :undoc-members:
    :show-inheritance:

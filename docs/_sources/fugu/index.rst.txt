@@ -10,5 +10,6 @@ The Fugu Module
     backends/index
     bricks/index
     scaffold/scaffold
+    scaffold/port
     simulators/index
     utils/index

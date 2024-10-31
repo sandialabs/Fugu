@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>SNN Backend &mdash; Fugu .01 documentation</title>
+  <title>Lava Backend &mdash; Fugu .01 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
 
@@ -49,17 +49,25 @@
 <li class="toctree-l2 current"><a class="reference internal" href="index.html">Fugu Backends</a><ul class="current">
 <li class="toctree-l3"><a class="reference internal" href="backend.html">Backend</a></li>
 <li class="toctree-l3"><a class="reference internal" href="snn_backend.html">SNN Backend</a></li>
-<li class="toctree-l3 current"><a class="current reference internal" href="#">SNN Backend</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#fugu.backends.snn_backend.snn_Backend"><code class="docutils literal notranslate"><span class="pre">snn_Backend</span></code></a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Lava Backend</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#fugu.backends.lava_backend.warnIfValueExceedsPrecision"><code class="docutils literal notranslate"><span class="pre">warnIfValueExceedsPrecision()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#fugu.backends.lava_backend.warnIfFeatureNotAvailable"><code class="docutils literal notranslate"><span class="pre">warnIfFeatureNotAvailable()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#fugu.backends.lava_backend.FeatureNotAvailableException"><code class="docutils literal notranslate"><span class="pre">FeatureNotAvailableException</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#fugu.backends.lava_backend.NonIntegerDelayValueException"><code class="docutils literal notranslate"><span class="pre">NonIntegerDelayValueException</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#fugu.backends.lava_backend.reduce_factor_by_bits"><code class="docutils literal notranslate"><span class="pre">reduce_factor_by_bits()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#fugu.backends.lava_backend.calculate_loihi_scale_factor"><code class="docutils literal notranslate"><span class="pre">calculate_loihi_scale_factor()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#fugu.backends.lava_backend.InputIterator"><code class="docutils literal notranslate"><span class="pre">InputIterator</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#fugu.backends.lava_backend.lava_Backend"><code class="docutils literal notranslate"><span class="pre">lava_Backend</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="lava_interfaces.html">Lava Interfaces</a></li>
 <li class="toctree-l3"><a class="reference internal" href="loihi_backend.html">Loihi Backend</a></li>
-<li class="toctree-l3"><a class="reference internal" href="stacs_backend.html">SNN Backend</a></li>
+<li class="toctree-l3"><a class="reference internal" href="stacs_backend.html">STACS Backend</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../bricks/index.html">Bricks</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../scaffold/scaffold.html">Scaffold</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../scaffold/port.html">Port</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../simulators/index.html">Simulators</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../utils/index.html">Utilities</a></li>
 </ul>
@@ -82,7 +90,7 @@
       <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
           <li class="breadcrumb-item"><a href="../index.html">The Fugu Module</a></li>
           <li class="breadcrumb-item"><a href="index.html">Fugu Backends</a></li>
-      <li class="breadcrumb-item active">SNN Backend</li>
+      <li class="breadcrumb-item active">Lava Backend</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../../_sources/fugu/backends/lava_backend.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -92,53 +100,122 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="module-fugu.backends.snn_backend">
-<span id="snn-backend"></span><h1>SNN Backend<a class="headerlink" href="#module-fugu.backends.snn_backend" title="Link to this heading"></a></h1>
+  <section id="module-fugu.backends.lava_backend">
+<span id="lava-backend"></span><h1>Lava Backend<a class="headerlink" href="#module-fugu.backends.lava_backend" title="Link to this heading"></a></h1>
 <p>isort:skip_file</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="fugu.backends.lava_backend.warnIfValueExceedsPrecision">
+<span class="sig-prename descclassname"><span class="pre">fugu.backends.lava_backend.</span></span><span class="sig-name descname"><span class="pre">warnIfValueExceedsPrecision</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">precision</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value_name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fugu.backends.lava_backend.warnIfValueExceedsPrecision" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="fugu.backends.lava_backend.warnIfFeatureNotAvailable">
+<span class="sig-prename descclassname"><span class="pre">fugu.backends.lava_backend.</span></span><span class="sig-name descname"><span class="pre">warnIfFeatureNotAvailable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">feature</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fugu.backends.lava_backend.warnIfFeatureNotAvailable" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="fugu.backends.lava_backend.FeatureNotAvailableException">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">fugu.backends.lava_backend.</span></span><span class="sig-name descname"><span class="pre">FeatureNotAvailableException</span></span><a class="headerlink" href="#fugu.backends.lava_backend.FeatureNotAvailableException" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></p>
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="fugu.backends.lava_backend.NonIntegerDelayValueException">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">fugu.backends.lava_backend.</span></span><span class="sig-name descname"><span class="pre">NonIntegerDelayValueException</span></span><a class="headerlink" href="#fugu.backends.lava_backend.NonIntegerDelayValueException" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="fugu.backends.lava_backend.reduce_factor_by_bits">
+<span class="sig-prename descclassname"><span class="pre">fugu.backends.lava_backend.</span></span><span class="sig-name descname"><span class="pre">reduce_factor_by_bits</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_bits</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fugu.backends.lava_backend.reduce_factor_by_bits" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="fugu.backends.lava_backend.calculate_loihi_scale_factor">
+<span class="sig-prename descclassname"><span class="pre">fugu.backends.lava_backend.</span></span><span class="sig-name descname"><span class="pre">calculate_loihi_scale_factor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">max_threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_weight</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_bias</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">starting_scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1048576</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">64</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold_bit_limit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">16</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fugu.backends.lava_backend.calculate_loihi_scale_factor" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
 <dl class="py class">
-<dt class="sig sig-object py" id="fugu.backends.snn_backend.snn_Backend">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">fugu.backends.snn_backend.</span></span><span class="sig-name descname"><span class="pre">snn_Backend</span></span><a class="headerlink" href="#fugu.backends.snn_backend.snn_Backend" title="Link to this definition"></a></dt>
+<dt class="sig sig-object py" id="fugu.backends.lava_backend.InputIterator">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">fugu.backends.lava_backend.</span></span><span class="sig-name descname"><span class="pre">InputIterator</span></span><a class="headerlink" href="#fugu.backends.lava_backend.InputIterator" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Supporting class for lava_Backend. Feeds the inputs to Dataloader process.
+Note that the output of this iterator is a tuple (input values, ground truth).
+Ground truth can be a scalar or vector. Since we don’t care, we output the scalar 0.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="fugu.backends.lava_backend.InputIterator.shape">
+<span class="sig-name descname"><span class="pre">shape</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#fugu.backends.lava_backend.InputIterator.shape" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="fugu.backends.lava_backend.lava_Backend">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">fugu.backends.lava_backend.</span></span><span class="sig-name descname"><span class="pre">lava_Backend</span></span><a class="headerlink" href="#fugu.backends.lava_backend.lava_Backend" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="backend.html#fugu.backends.backend.Backend" title="fugu.backends.backend.Backend"><code class="xref py py-class docutils literal notranslate"><span class="pre">Backend</span></code></a></p>
 <dl class="py method">
-<dt class="sig sig-object py" id="fugu.backends.snn_backend.snn_Backend.compile">
-<span class="sig-name descname"><span class="pre">compile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scaffold</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compile_args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fugu.backends.snn_backend.snn_Backend.compile" title="Link to this definition"></a></dt>
+<dt class="sig sig-object py" id="fugu.backends.lava_backend.lava_Backend._allocate">
+<span class="sig-name descname"><span class="pre">_allocate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">v</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dv</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vth</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">count</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fugu.backends.lava_backend.lava_Backend._allocate" title="Link to this definition"></a></dt>
+<dd><p>Lava LIF has single fixed {du, dv, vth} for entire population.
+We don’t do anything with du, but every (dv, vth) combination requires
+a separate population (or “process” in Lava terminology). We also
+need to assemble a list of initial voltages for each population.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fugu.backends.lava_backend.lava_Backend.compile">
+<span class="sig-name descname"><span class="pre">compile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scaffold</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compile_args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fugu.backends.lava_backend.lava_Backend.compile" title="Link to this definition"></a></dt>
 <dd><p>creates neuron populations and synapses</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="fugu.backends.snn_backend.snn_Backend.run">
-<span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_steps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_potentials</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fugu.backends.snn_backend.snn_Backend.run" title="Link to this definition"></a></dt>
-<dd><p>Runs the Simulator
-* runs circuit for n_steps then returns data
-* if not None raise error
-Returns:
-bool: True if ds format is required and converst neuron names to numbers and returns dictionary, False returns dataframe</p>
+<dt class="sig sig-object py" id="fugu.backends.lava_backend.lava_Backend.run">
+<span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_steps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_potentials</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fugu.backends.lava_backend.lava_Backend.run" title="Link to this definition"></a></dt>
+<dd><p>Runs circuit for n_steps then returns data</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="fugu.backends.snn_backend.snn_Backend.cleanup">
-<span class="sig-name descname"><span class="pre">cleanup</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#fugu.backends.snn_backend.snn_Backend.cleanup" title="Link to this definition"></a></dt>
+<dt class="sig sig-object py" id="fugu.backends.lava_backend.lava_Backend.cleanup">
+<span class="sig-name descname"><span class="pre">cleanup</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#fugu.backends.lava_backend.lava_Backend.cleanup" title="Link to this definition"></a></dt>
 <dd><p>Deletes/frees neurons and synapses</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="fugu.backends.snn_backend.snn_Backend.reset">
-<span class="sig-name descname"><span class="pre">reset</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#fugu.backends.snn_backend.snn_Backend.reset" title="Link to this definition"></a></dt>
+<dt class="sig sig-object py" id="fugu.backends.lava_backend.lava_Backend.reset">
+<span class="sig-name descname"><span class="pre">reset</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#fugu.backends.lava_backend.lava_Backend.reset" title="Link to this definition"></a></dt>
 <dd><p>Resets time-step to 0 and resets neuron/synapse properties</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="fugu.backends.snn_backend.snn_Backend.set_properties">
-<span class="sig-name descname"><span class="pre">set_properties</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">properties</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fugu.backends.snn_backend.snn_Backend.set_properties" title="Link to this definition"></a></dt>
+<dt class="sig sig-object py" id="fugu.backends.lava_backend.lava_Backend.set_properties">
+<span class="sig-name descname"><span class="pre">set_properties</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">properties</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fugu.backends.lava_backend.lava_Backend.set_properties" title="Link to this definition"></a></dt>
 <dd><p>Set properties for specific neurons and synapses
-:param properties: dictionary of properties for bricks</p>
+:param properties: dictionary of parameter for bricks</p>
+<p class="rubric">Example</p>
+<dl>
+<dt>for brick in properties:</dt><dd><p>neuron_props, synapse_props = self.circuit[brick].get_changes(properties[brick])
+for neuron in neuron_props:</p>
+<blockquote>
+<div><p>set neuron properties</p>
+</div></blockquote>
+<dl class="simple">
+<dt>for synapse in synapse_props:</dt><dd><p>set synapse properties</p>
+</dd>
+</dl>
+</dd>
+<dt>&#64;NOTE: Currently, this function behaves differently for Input Bricks</dt><dd><ul class="simple">
+<li><p>Instead of returning the changes, they change internally and reset the iterator</p></li>
+<li><p>This is because of how initial spike times are calculated using said bricks</p></li>
+<li><p>I have not yet found a way of incorporating my proposed method (above) into these bricks yet</p></li>
+</ul>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="fugu.backends.snn_backend.snn_Backend.set_input_spikes">
-<span class="sig-name descname"><span class="pre">set_input_spikes</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#fugu.backends.snn_backend.snn_Backend.set_input_spikes" title="Link to this definition"></a></dt>
-<dd><p>Get new initial spike times</p>
-</dd></dl>
+<dt class="sig sig-object py" id="fugu.backends.lava_backend.lava_Backend.set_input_spikes">
+<span class="sig-name descname"><span class="pre">set_input_spikes</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#fugu.backends.lava_backend.lava_Backend.set_input_spikes" title="Link to this definition"></a></dt>
+<dd></dd></dl>
 
 </dd></dl>
 
