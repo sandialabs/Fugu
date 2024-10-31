@@ -1,0 +1,23 @@
+.. adder_bricks:
+
+*************
+Adder Bricks
+*************
+
+.. automodule:: fugu.bricks.adder_bricks
+
+.. autoclass:: fugu.bricks.adder_bricks.streaming_adder
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+.. autoclass:: fugu.bricks.adder_bricks.temporal_shift
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+.. autoclass:: fugu.bricks.adder_bricks.streaming_scalar_multiplier
+    :members:
+    :undoc-members:
+    :show-inheritance:
+

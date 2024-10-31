@@ -1,0 +1,423 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lava Interfaces &mdash; Fugu .01 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=7b5ad6d6"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Loihi Backend" href="loihi_backend.html" />
+    <link rel="prev" title="SNN Backend" href="lava_backend.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            Fugu
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">API Docs</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../introduction.html">Fugu</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">The Fugu Module</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="index.html">Fugu Backends</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="backend.html">Backend</a></li>
+<li class="toctree-l3"><a class="reference internal" href="snn_backend.html">SNN Backend</a></li>
+<li class="toctree-l3"><a class="reference internal" href="lava_backend.html">SNN Backend</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Lava Interfaces</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#fugu.backends.lava_interfaces.calculate_bit_length"><code class="docutils literal notranslate"><span class="pre">calculate_bit_length()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#fugu.backends.lava_interfaces.calculate_weight_exponent"><code class="docutils literal notranslate"><span class="pre">calculate_weight_exponent()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#fugu.backends.lava_interfaces.calculate_hardware_weights"><code class="docutils literal notranslate"><span class="pre">calculate_hardware_weights()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#fugu.backends.lava_interfaces.LoihiInterface"><code class="docutils literal notranslate"><span class="pre">LoihiInterface</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#fugu.backends.lava_interfaces.Loihi2SimInterface"><code class="docutils literal notranslate"><span class="pre">Loihi2SimInterface</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#fugu.backends.lava_interfaces.Loihi2SimBitAccInterface"><code class="docutils literal notranslate"><span class="pre">Loihi2SimBitAccInterface</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#fugu.backends.lava_interfaces.Loihi2HWInterface"><code class="docutils literal notranslate"><span class="pre">Loihi2HWInterface</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="loihi_backend.html">Loihi Backend</a></li>
+<li class="toctree-l3"><a class="reference internal" href="stacs_backend.html">SNN Backend</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../bricks/index.html">Bricks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../scaffold/scaffold.html">Scaffold</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../simulators/index.html">Simulators</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../utils/index.html">Utilities</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Fugu</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">The Fugu Module</a></li>
+          <li class="breadcrumb-item"><a href="index.html">Fugu Backends</a></li>
+      <li class="breadcrumb-item active">Lava Interfaces</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/fugu/backends/lava_interfaces.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="lava-interfaces">
+<h1>Lava Interfaces<a class="headerlink" href="#lava-interfaces" title="Link to this heading"></a></h1>
+<dl class="py function" id="module-fugu.backends.lava_interfaces">
+<dt class="sig sig-object py" id="fugu.backends.lava_interfaces.calculate_bit_length">
+<span class="sig-prename descclassname"><span class="pre">fugu.backends.lava_interfaces.</span></span><span class="sig-name descname"><span class="pre">calculate_bit_length</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fugu.backends.lava_interfaces.calculate_bit_length" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="fugu.backends.lava_interfaces.calculate_weight_exponent">
+<span class="sig-prename descclassname"><span class="pre">fugu.backends.lava_interfaces.</span></span><span class="sig-name descname"><span class="pre">calculate_weight_exponent</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">weights</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fugu.backends.lava_interfaces.calculate_weight_exponent" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="fugu.backends.lava_interfaces.calculate_hardware_weights">
+<span class="sig-prename descclassname"><span class="pre">fugu.backends.lava_interfaces.</span></span><span class="sig-name descname"><span class="pre">calculate_hardware_weights</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">weights</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weight_exponent</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fugu.backends.lava_interfaces.calculate_hardware_weights" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="fugu.backends.lava_interfaces.LoihiInterface">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">fugu.backends.lava_interfaces.</span></span><span class="sig-name descname"><span class="pre">LoihiInterface</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">duration</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fugu.backends.lava_interfaces.LoihiInterface" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="fugu.backends.lava_interfaces.LoihiInterface.THRESHOLD_BIT_LIMIT">
+<span class="sig-name descname"><span class="pre">THRESHOLD_BIT_LIMIT</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">22</span></em><a class="headerlink" href="#fugu.backends.lava_interfaces.LoihiInterface.THRESHOLD_BIT_LIMIT" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="fugu.backends.lava_interfaces.LoihiInterface.MAX_DELAY_VALUE">
+<span class="sig-name descname"><span class="pre">MAX_DELAY_VALUE</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">63</span></em><a class="headerlink" href="#fugu.backends.lava_interfaces.LoihiInterface.MAX_DELAY_VALUE" title="Link to this definition"></a></dt>
+<dd><p>A note about max delay values:
+The reason why we are setting this to 63 is not entirely clear:
+1) The lava documentation for the bit-acc Python model of the DelaySparse/Dense connections explicity set 63 as themaximum value.
+2) Looking at the source code for the neuro-core model for the Delay connections, the code checks to see if the bit_length of the max delay is &lt; 6. This would suggest that the max delay should be 31.</p>
+<p>HOWEVER, empirically the maximum delay value of the default Delay connections is 63.
+This implies that the hardware (or at least lava) does some sort of shifting to delay values prior to checking.</p>
+<p>Another note:
+The non-bit-acc Python model does not seem to have the same restrictions. But we will us a default value of 63.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fugu.backends.lava_interfaces.LoihiInterface.setup_input_process">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">setup_input_process</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_iterator</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale_factor</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fugu.backends.lava_interfaces.LoihiInterface.setup_input_process" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fugu.backends.lava_interfaces.LoihiInterface.setup_output_process">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">setup_output_process</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">output_processes</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fugu.backends.lava_interfaces.LoihiInterface.setup_output_process" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fugu.backends.lava_interfaces.LoihiInterface.get_config">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">callback_functions</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fugu.backends.lava_interfaces.LoihiInterface.get_config" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fugu.backends.lava_interfaces.LoihiInterface.get_lif_process">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_lif_process</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">count</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initial_voltages</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spike_threshold</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">decay_constant</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bias_mants</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fugu.backends.lava_interfaces.LoihiInterface.get_lif_process" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fugu.backends.lava_interfaces.LoihiInterface.connect_input_to_lif">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">connect_input_to_lif</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_weights</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_delays</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_process</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lif_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lif_process</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fugu.backends.lava_interfaces.LoihiInterface.connect_input_to_lif" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fugu.backends.lava_interfaces.LoihiInterface.connect_lif_to_output">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">connect_lif_to_output</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">output_weights</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lif_process</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fugu.backends.lava_interfaces.LoihiInterface.connect_lif_to_output" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fugu.backends.lava_interfaces.LoihiInterface.connect_lif_to_lif">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">connect_lif_to_lif</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source_lif_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source_lif_process</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dest_lif_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dest_lif_process</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fugu.backends.lava_interfaces.LoihiInterface.connect_lif_to_lif" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fugu.backends.lava_interfaces.LoihiInterface.setup_probe">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">setup_probe</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">var</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fugu.backends.lava_interfaces.LoihiInterface.setup_probe" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fugu.backends.lava_interfaces.LoihiInterface.get_spike_output">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_spike_output</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">process_data</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fugu.backends.lava_interfaces.LoihiInterface.get_spike_output" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fugu.backends.lava_interfaces.LoihiInterface.print_output_probe_data">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">print_output_probe_data</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#fugu.backends.lava_interfaces.LoihiInterface.print_output_probe_data" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="fugu.backends.lava_interfaces.Loihi2SimInterface">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">fugu.backends.lava_interfaces.</span></span><span class="sig-name descname"><span class="pre">Loihi2SimInterface</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">duration</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fugu.backends.lava_interfaces.Loihi2SimInterface" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#fugu.backends.lava_interfaces.LoihiInterface" title="fugu.backends.lava_interfaces.LoihiInterface"><code class="xref py py-class docutils literal notranslate"><span class="pre">LoihiInterface</span></code></a></p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="fugu.backends.lava_interfaces.Loihi2SimInterface.CURRENT_DECAY_SCALE_FACTOR">
+<span class="sig-name descname"><span class="pre">CURRENT_DECAY_SCALE_FACTOR</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1</span></em><a class="headerlink" href="#fugu.backends.lava_interfaces.Loihi2SimInterface.CURRENT_DECAY_SCALE_FACTOR" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="fugu.backends.lava_interfaces.Loihi2SimInterface.VOLTAGE_DECAY_SCALE_FACTOR">
+<span class="sig-name descname"><span class="pre">VOLTAGE_DECAY_SCALE_FACTOR</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1</span></em><a class="headerlink" href="#fugu.backends.lava_interfaces.Loihi2SimInterface.VOLTAGE_DECAY_SCALE_FACTOR" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fugu.backends.lava_interfaces.Loihi2SimInterface.setup_input_process">
+<span class="sig-name descname"><span class="pre">setup_input_process</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_iterator</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale_factor</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fugu.backends.lava_interfaces.Loihi2SimInterface.setup_input_process" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fugu.backends.lava_interfaces.Loihi2SimInterface.setup_output_process">
+<span class="sig-name descname"><span class="pre">setup_output_process</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">output_processes</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fugu.backends.lava_interfaces.Loihi2SimInterface.setup_output_process" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fugu.backends.lava_interfaces.Loihi2SimInterface.get_config">
+<span class="sig-name descname"><span class="pre">get_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">callback_functions</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fugu.backends.lava_interfaces.Loihi2SimInterface.get_config" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fugu.backends.lava_interfaces.Loihi2SimInterface.get_lif_process">
+<span class="sig-name descname"><span class="pre">get_lif_process</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">count</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initial_voltages</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spike_threshold</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">decay_constant</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bias_mants</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fugu.backends.lava_interfaces.Loihi2SimInterface.get_lif_process" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fugu.backends.lava_interfaces.Loihi2SimInterface.connect_input_to_lif">
+<span class="sig-name descname"><span class="pre">connect_input_to_lif</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_weights</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_delays</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lif_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lif_process</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fugu.backends.lava_interfaces.Loihi2SimInterface.connect_input_to_lif" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fugu.backends.lava_interfaces.Loihi2SimInterface.connect_lif_to_output">
+<span class="sig-name descname"><span class="pre">connect_lif_to_output</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">output_weights</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lif_process</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fugu.backends.lava_interfaces.Loihi2SimInterface.connect_lif_to_output" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fugu.backends.lava_interfaces.Loihi2SimInterface.connect_lif_to_lif">
+<span class="sig-name descname"><span class="pre">connect_lif_to_lif</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source_lif_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source_lif_process</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dest_lif_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dest_lif_process</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fugu.backends.lava_interfaces.Loihi2SimInterface.connect_lif_to_lif" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fugu.backends.lava_interfaces.Loihi2SimInterface.get_pass_through_weights">
+<span class="sig-name descname"><span class="pre">get_pass_through_weights</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lif_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weight_scale_factor</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fugu.backends.lava_interfaces.Loihi2SimInterface.get_pass_through_weights" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fugu.backends.lava_interfaces.Loihi2SimInterface.setup_probe">
+<span class="sig-name descname"><span class="pre">setup_probe</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">var</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fugu.backends.lava_interfaces.Loihi2SimInterface.setup_probe" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fugu.backends.lava_interfaces.Loihi2SimInterface.get_spike_output">
+<span class="sig-name descname"><span class="pre">get_spike_output</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">process_data</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fugu.backends.lava_interfaces.Loihi2SimInterface.get_spike_output" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fugu.backends.lava_interfaces.Loihi2SimInterface.print_output_probe_data">
+<span class="sig-name descname"><span class="pre">print_output_probe_data</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#fugu.backends.lava_interfaces.Loihi2SimInterface.print_output_probe_data" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="fugu.backends.lava_interfaces.Loihi2SimBitAccInterface">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">fugu.backends.lava_interfaces.</span></span><span class="sig-name descname"><span class="pre">Loihi2SimBitAccInterface</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">duration</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fugu.backends.lava_interfaces.Loihi2SimBitAccInterface" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#fugu.backends.lava_interfaces.Loihi2SimInterface" title="fugu.backends.lava_interfaces.Loihi2SimInterface"><code class="xref py py-class docutils literal notranslate"><span class="pre">Loihi2SimInterface</span></code></a></p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="fugu.backends.lava_interfaces.Loihi2SimBitAccInterface.THRESHOLD_BIT_LIMIT">
+<span class="sig-name descname"><span class="pre">THRESHOLD_BIT_LIMIT</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">16</span></em><a class="headerlink" href="#fugu.backends.lava_interfaces.Loihi2SimBitAccInterface.THRESHOLD_BIT_LIMIT" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="fugu.backends.lava_interfaces.Loihi2SimBitAccInterface.CURRENT_DECAY_SCALE_FACTOR">
+<span class="sig-name descname"><span class="pre">CURRENT_DECAY_SCALE_FACTOR</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">4095</span></em><a class="headerlink" href="#fugu.backends.lava_interfaces.Loihi2SimBitAccInterface.CURRENT_DECAY_SCALE_FACTOR" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="fugu.backends.lava_interfaces.Loihi2SimBitAccInterface.VOLTAGE_DECAY_SCALE_FACTOR">
+<span class="sig-name descname"><span class="pre">VOLTAGE_DECAY_SCALE_FACTOR</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">4096</span></em><a class="headerlink" href="#fugu.backends.lava_interfaces.Loihi2SimBitAccInterface.VOLTAGE_DECAY_SCALE_FACTOR" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fugu.backends.lava_interfaces.Loihi2SimBitAccInterface.setup_output_process">
+<span class="sig-name descname"><span class="pre">setup_output_process</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">output_processes</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fugu.backends.lava_interfaces.Loihi2SimBitAccInterface.setup_output_process" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fugu.backends.lava_interfaces.Loihi2SimBitAccInterface.get_config">
+<span class="sig-name descname"><span class="pre">get_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">callback_functions</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fugu.backends.lava_interfaces.Loihi2SimBitAccInterface.get_config" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fugu.backends.lava_interfaces.Loihi2SimBitAccInterface.get_lif_process">
+<span class="sig-name descname"><span class="pre">get_lif_process</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">count</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initial_voltages</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spike_threshold</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">decay_constant</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bias_mants</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fugu.backends.lava_interfaces.Loihi2SimBitAccInterface.get_lif_process" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fugu.backends.lava_interfaces.Loihi2SimBitAccInterface.connect_input_to_lif">
+<span class="sig-name descname"><span class="pre">connect_input_to_lif</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_weights</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_delays</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lif_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lif_process</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fugu.backends.lava_interfaces.Loihi2SimBitAccInterface.connect_input_to_lif" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fugu.backends.lava_interfaces.Loihi2SimBitAccInterface.connect_lif_to_output">
+<span class="sig-name descname"><span class="pre">connect_lif_to_output</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">output_weights</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lif_process</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fugu.backends.lava_interfaces.Loihi2SimBitAccInterface.connect_lif_to_output" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fugu.backends.lava_interfaces.Loihi2SimBitAccInterface.connect_lif_to_lif">
+<span class="sig-name descname"><span class="pre">connect_lif_to_lif</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source_lif_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source_lif_process</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dest_lif_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dest_lif_process</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fugu.backends.lava_interfaces.Loihi2SimBitAccInterface.connect_lif_to_lif" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="fugu.backends.lava_interfaces.Loihi2HWInterface">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">fugu.backends.lava_interfaces.</span></span><span class="sig-name descname"><span class="pre">Loihi2HWInterface</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">duration</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fugu.backends.lava_interfaces.Loihi2HWInterface" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#fugu.backends.lava_interfaces.LoihiInterface" title="fugu.backends.lava_interfaces.LoihiInterface"><code class="xref py py-class docutils literal notranslate"><span class="pre">LoihiInterface</span></code></a></p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="fugu.backends.lava_interfaces.Loihi2HWInterface.CURRENT_DECAY_SCALE_FACTOR">
+<span class="sig-name descname"><span class="pre">CURRENT_DECAY_SCALE_FACTOR</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">4095</span></em><a class="headerlink" href="#fugu.backends.lava_interfaces.Loihi2HWInterface.CURRENT_DECAY_SCALE_FACTOR" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="fugu.backends.lava_interfaces.Loihi2HWInterface.VOLTAGE_DECAY_SCALE_FACTOR">
+<span class="sig-name descname"><span class="pre">VOLTAGE_DECAY_SCALE_FACTOR</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">4096</span></em><a class="headerlink" href="#fugu.backends.lava_interfaces.Loihi2HWInterface.VOLTAGE_DECAY_SCALE_FACTOR" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fugu.backends.lava_interfaces.Loihi2HWInterface.format_matrix">
+<span class="sig-name descname"><span class="pre">format_matrix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">m</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fugu.backends.lava_interfaces.Loihi2HWInterface.format_matrix" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fugu.backends.lava_interfaces.Loihi2HWInterface.setup_input_process">
+<span class="sig-name descname"><span class="pre">setup_input_process</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_iterator</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale_factor</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fugu.backends.lava_interfaces.Loihi2HWInterface.setup_input_process" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fugu.backends.lava_interfaces.Loihi2HWInterface.setup_output_process">
+<span class="sig-name descname"><span class="pre">setup_output_process</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">output_processes</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fugu.backends.lava_interfaces.Loihi2HWInterface.setup_output_process" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fugu.backends.lava_interfaces.Loihi2HWInterface.get_config">
+<span class="sig-name descname"><span class="pre">get_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">callback_functions</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fugu.backends.lava_interfaces.Loihi2HWInterface.get_config" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fugu.backends.lava_interfaces.Loihi2HWInterface.get_lif_process">
+<span class="sig-name descname"><span class="pre">get_lif_process</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">count</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initial_voltages</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spike_threshold</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">decay_constant</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bias_mants</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fugu.backends.lava_interfaces.Loihi2HWInterface.get_lif_process" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fugu.backends.lava_interfaces.Loihi2HWInterface.connect_input_to_lif">
+<span class="sig-name descname"><span class="pre">connect_input_to_lif</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_weights</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_delays</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lif_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lif_process</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fugu.backends.lava_interfaces.Loihi2HWInterface.connect_input_to_lif" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fugu.backends.lava_interfaces.Loihi2HWInterface.connect_lif_to_output">
+<span class="sig-name descname"><span class="pre">connect_lif_to_output</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">output_weights</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lif_process</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fugu.backends.lava_interfaces.Loihi2HWInterface.connect_lif_to_output" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fugu.backends.lava_interfaces.Loihi2HWInterface.connect_lif_to_lif">
+<span class="sig-name descname"><span class="pre">connect_lif_to_lif</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source_lif_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source_lif_process</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dest_lif_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dest_lif_process</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fugu.backends.lava_interfaces.Loihi2HWInterface.connect_lif_to_lif" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fugu.backends.lava_interfaces.Loihi2HWInterface.get_pass_through_weights">
+<span class="sig-name descname"><span class="pre">get_pass_through_weights</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lif_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weight_scale_factor</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fugu.backends.lava_interfaces.Loihi2HWInterface.get_pass_through_weights" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fugu.backends.lava_interfaces.Loihi2HWInterface.setup_probe">
+<span class="sig-name descname"><span class="pre">setup_probe</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">var</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fugu.backends.lava_interfaces.Loihi2HWInterface.setup_probe" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fugu.backends.lava_interfaces.Loihi2HWInterface.get_spike_output">
+<span class="sig-name descname"><span class="pre">get_spike_output</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">process_data</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fugu.backends.lava_interfaces.Loihi2HWInterface.get_spike_output" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fugu.backends.lava_interfaces.Loihi2HWInterface.print_output_probe_data">
+<span class="sig-name descname"><span class="pre">print_output_probe_data</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#fugu.backends.lava_interfaces.Loihi2HWInterface.print_output_probe_data" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="lava_backend.html" class="btn btn-neutral float-left" title="SNN Backend" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="loihi_backend.html" class="btn btn-neutral float-right" title="Loihi Backend" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, Sandia National Labs.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

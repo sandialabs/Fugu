@@ -1,0 +1,10 @@
+.. neuralnetwork:
+
+******************
+Neural Network
+******************
+
+.. automodule:: fugu.simulators.SpikingNeuralNetwork.neuralnetwork
+   :members:
+   :undoc-members:
+   :show-inheritance:

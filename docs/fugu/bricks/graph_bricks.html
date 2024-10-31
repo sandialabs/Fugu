@@ -1,0 +1,285 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Graph Bricks &mdash; Fugu .01 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=7b5ad6d6"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Input Bricks" href="input_bricks.html" />
+    <link rel="prev" title="Bricks" href="bricks.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            Fugu
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">API Docs</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../introduction.html">Fugu</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">The Fugu Module</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../backends/index.html">Fugu Backends</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="index.html">Bricks</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="adder_bricks.html">Adder Bricks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="application_bricks.html">Application Bricks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="bricks.html">Bricks</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Graph Bricks</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#fugu.bricks.graph_bricks.SimpleGraphTraversal"><code class="docutils literal notranslate"><span class="pre">SimpleGraphTraversal</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#fugu.bricks.graph_bricks.RegisterGraphTraversal"><code class="docutils literal notranslate"><span class="pre">RegisterGraphTraversal</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#fugu.bricks.graph_bricks.FlowAugmentingPath"><code class="docutils literal notranslate"><span class="pre">FlowAugmentingPath</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="input_bricks.html">Input Bricks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="register_bricks.html">Register Bricks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="stochastic_bricks.html">Stochastic Bricks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="test_bricks.html">Test Bricks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="utility_bricks.html">Utility Bricks</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../scaffold/scaffold.html">Scaffold</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../simulators/index.html">Simulators</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../utils/index.html">Utilities</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Fugu</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">The Fugu Module</a></li>
+          <li class="breadcrumb-item"><a href="index.html">Bricks</a></li>
+      <li class="breadcrumb-item active">Graph Bricks</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/fugu/bricks/graph_bricks.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-fugu.bricks.graph_bricks">
+<span id="graph-bricks"></span><h1>Graph Bricks<a class="headerlink" href="#module-fugu.bricks.graph_bricks" title="Link to this heading"></a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="fugu.bricks.graph_bricks.SimpleGraphTraversal">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">fugu.bricks.graph_bricks.</span></span><span class="sig-name descname"><span class="pre">SimpleGraphTraversal</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">target_graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_node</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'SimpleGraphTraversal'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">store_parent_info</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_coding</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'temporal-L'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fugu.bricks.graph_bricks.SimpleGraphTraversal" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="bricks.html#fugu.bricks.bricks.Brick" title="fugu.bricks.bricks.Brick"><code class="xref py py-class docutils literal notranslate"><span class="pre">Brick</span></code></a></p>
+<ul class="simple">
+<li><p>This brick traverses a graph (using breadth first search) given a starting vertex.</p></li>
+<li><p>This brick can also be used to solve single source shortest path using edge delays.</p></li>
+<li><p>Predecessor/parent information is returned through edge references.</p></li>
+</ul>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>target_graph</strong> – NetworkX.Digraph object representing the graph to be searched</p></li>
+<li><p><strong>target_node</strong> – Node in the graph that is the target of the paths</p></li>
+<li><p><strong>name</strong> – Name of the brick.
+* If not specified, a default will be used. Name should be unique.</p></li>
+<li><p><strong>output_coding</strong> – Output coding type, default is ‘temporal-L’</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="fugu.bricks.graph_bricks.SimpleGraphTraversal.build">
+<span class="sig-name descname"><span class="pre">build</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metadata</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">control_nodes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_lists</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_codings</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fugu.bricks.graph_bricks.SimpleGraphTraversal.build" title="Link to this definition"></a></dt>
+<dd><p>Build Shortest Path brick.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>graph</strong> – networkx graph to define connections of the computational graph
+* If the graph has edge weights, this brick will solve the single source shortest paths problem</p></li>
+<li><p><strong>metadata</strong> (<em>dict</em>) – dictionary to define the shapes and parameters of the brick</p></li>
+<li><p><strong>control_nodes</strong> (<em>dict</em>) – <p>dictionary of lists of auxillary networkx nodes.
+Expected keys:</p>
+<blockquote>
+<div><p>’complete’ - A list of neurons that fire when the brick is done</p>
+</div></blockquote>
+</p></li>
+<li><p><strong>input_lists</strong> (<em>list</em>) – list of nodes that will contain input</p></li>
+<li><p><strong>input_coding</strong> (<em>list</em>) – list of input coding formats.  All coding types supported</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>graph of a computational elements and connections
+self.metadata: dictionary of output parameters (shape, coding, layers, depth, etc)
+complete: dictionary of control nodes (‘complete’)
+output_lists (list): list of output
+self.output_codings (list): list of coding formats of output</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>graph</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="fugu.bricks.graph_bricks.RegisterGraphTraversal">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">fugu.bricks.graph_bricks.</span></span><span class="sig-name descname"><span class="pre">RegisterGraphTraversal</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">target_graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_node</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'RegisterGraphTraversal'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">store_parent_info</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_coding</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'temporal-L'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fugu.bricks.graph_bricks.RegisterGraphTraversal" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="bricks.html#fugu.bricks.bricks.CompoundBrick" title="fugu.bricks.bricks.CompoundBrick"><code class="xref py py-class docutils literal notranslate"><span class="pre">CompoundBrick</span></code></a></p>
+<p>This brick traverses a graph (using breadth first search) given a starting vertex.
+This brick can also be used to solve single source shortest path using edge delays.
+Predecessor/parent information is returned through edge references.</p>
+<p>Construtor for this brick.
+:param + target_graph - NetworkX.Digraph object representing the graph to be searched:
+:param + target_node - Node in the graph that is the target of the paths:
+:param + name - Name of the brick.: If not specified, a default will be used. Name should be unique.
+:param + output_coding - Output coding type:
+:param default is ‘temporal-L’:</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="fugu.bricks.graph_bricks.RegisterGraphTraversal.build">
+<span class="sig-name descname"><span class="pre">build</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metadata</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">control_nodes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_lists</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_codings</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fugu.bricks.graph_bricks.RegisterGraphTraversal.build" title="Link to this definition"></a></dt>
+<dd><p>Build Shortest Path brick.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>graph</strong> (<em>+ graph - networkx graph to define connections</em><em> of </em><em>the computational</em>) – If the graph has edge weights, this brick will solve the single source shortest paths problem</p></li>
+<li><p><strong>brick</strong> (<em>+ metadata - dictionary to define the shapes and parameters</em><em> of </em><em>the</em>)</p></li>
+<li><p><strong>nodes.</strong> (<em>+ control_nodes - dictionary</em><em> of </em><em>lists</em><em> of </em><em>auxillary networkx</em>) – <dl class="simple">
+<dt>Expected keys:</dt><dd><p>’complete’ - A list of neurons that fire when the brick is done</p>
+</dd>
+</dl>
+</p></li>
+<li><p><strong>input</strong> (<em>+ input_lists - list</em><em> of </em><em>nodes that will contain</em>)</p></li>
+<li><p><strong>supported</strong> (<em>+ input_coding - list</em><em> of </em><em>input coding formats.  All coding types</em>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p>graph of a computational elements and connections</p></li>
+<li><p>dictionary of output parameters (shape, coding, layers, depth, etc)</p></li>
+<li><p>dictionary of control nodes (‘complete’)</p></li>
+<li><p>list of output</p></li>
+<li><p>list of coding formats of output</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="fugu.bricks.graph_bricks.FlowAugmentingPath">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">fugu.bricks.graph_bricks.</span></span><span class="sig-name descname"><span class="pre">FlowAugmentingPath</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">flow_graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'FlowAugmentingPath'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_coding</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'temporal-L'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fugu.bricks.graph_bricks.FlowAugmentingPath" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="bricks.html#fugu.bricks.bricks.Brick" title="fugu.bricks.bricks.Brick"><code class="xref py py-class docutils literal notranslate"><span class="pre">Brick</span></code></a></p>
+<p>This brick computes flow augmenting path based on (Ali, Kwisthout 2019)</p>
+<p>Construtor for this brick.
+:param + flow_graph - NetworkX.Digraph object representing the flow graph:
+:param + name - Name of the brick.: If not specified, a default will be used. Name should be unique.
+:param + output_coding - Output coding type:
+:param default is ‘temporal-L’:</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="fugu.bricks.graph_bricks.FlowAugmentingPath.set_properties">
+<span class="sig-name descname"><span class="pre">set_properties</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">properties</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fugu.bricks.graph_bricks.FlowAugmentingPath.set_properties" title="Link to this definition"></a></dt>
+<dd><p>Returns an updated version of the graph based on the parameter values passed.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fugu.bricks.graph_bricks.FlowAugmentingPath.build">
+<span class="sig-name descname"><span class="pre">build</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metadata</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">control_nodes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_lists</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_codings</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fugu.bricks.graph_bricks.FlowAugmentingPath.build" title="Link to this definition"></a></dt>
+<dd><p>Build Flow Augmenting Path brick.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>graph</strong> (<em>+ graph - networkx graph to define connections</em><em> of </em><em>the computational</em>) – If the graph has edge weights, this brick will solve the single source shortest paths problem</p></li>
+<li><p><strong>brick</strong> (<em>+ metadata - dictionary to define the shapes and parameters</em><em> of </em><em>the</em>)</p></li>
+<li><p><strong>nodes.</strong> (<em>+ control_nodes - dictionary</em><em> of </em><em>lists</em><em> of </em><em>auxillary networkx</em>) – <dl class="simple">
+<dt>Expected keys:</dt><dd><p>’complete’ - A list of neurons that fire when the brick is done</p>
+</dd>
+</dl>
+</p></li>
+<li><p><strong>input</strong> (<em>+ input_lists - list</em><em> of </em><em>nodes that will contain</em>)</p></li>
+<li><p><strong>supported</strong> (<em>+ input_coding - list</em><em> of </em><em>input coding formats.  All coding types</em>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p>graph of a computational elements and connections</p></li>
+<li><p>dictionary of output parameters (shape, coding, layers, depth, etc)</p></li>
+<li><p>dictionary of control nodes (‘complete’)</p></li>
+<li><p>list of output</p></li>
+<li><p>list of coding formats of output</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="bricks.html" class="btn btn-neutral float-left" title="Bricks" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="input_bricks.html" class="btn btn-neutral float-right" title="Input Bricks" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, Sandia National Labs.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

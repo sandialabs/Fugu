@@ -1,0 +1,368 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Synapse &mdash; Fugu .01 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../../_static/documentation_options.js?v=7b5ad6d6"></script>
+      <script src="../../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+    <link rel="next" title="Utilities" href="../../../utils/index.html" />
+    <link rel="prev" title="Neuron" href="../neuron/neuron.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../index.html" class="icon icon-home">
+            Fugu
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">API Docs</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../../introduction.html">Fugu</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../../index.html">The Fugu Module</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../../../backends/index.html">Fugu Backends</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../bricks/index.html">Bricks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../scaffold/scaffold.html">Scaffold</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../../index.html">Simulators</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="../neuralnetwork/neuralnetwork.html">Neural Network</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../neuron/neuron.html">Neuron</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Synapse</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#fugu.simulators.SpikingNeuralNetwork.synapse.Synapse"><code class="docutils literal notranslate"><span class="pre">Synapse</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#fugu.simulators.SpikingNeuralNetwork.synapse.LearningSynapse"><code class="docutils literal notranslate"><span class="pre">LearningSynapse</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#id0"><code class="docutils literal notranslate"><span class="pre">Synapse</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../utils/index.html">Utilities</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">Fugu</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">The Fugu Module</a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Simulators</a></li>
+      <li class="breadcrumb-item active">Synapse</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../../../_sources/fugu/simulators/SpikingNeuralNetwork/synapse/synapse.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-fugu.simulators.SpikingNeuralNetwork.synapse">
+<span id="synapse"></span><h1>Synapse<a class="headerlink" href="#module-fugu.simulators.SpikingNeuralNetwork.synapse" title="Link to this heading"></a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="fugu.simulators.SpikingNeuralNetwork.synapse.Synapse">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">fugu.simulators.SpikingNeuralNetwork.synapse.</span></span><span class="sig-name descname"><span class="pre">Synapse</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pre_neuron</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../neuron/neuron.html#id0" title="fugu.simulators.SpikingNeuralNetwork.neuron.Neuron"><span class="pre">Neuron</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">post_neuron</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../neuron/neuron.html#id0" title="fugu.simulators.SpikingNeuralNetwork.neuron.Neuron"><span class="pre">Neuron</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weight</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fugu.simulators.SpikingNeuralNetwork.synapse.Synapse" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></p>
+<p>Abstract base class for Synapses. This defines the interface for synapses with a minimum set of properties</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>pre_neuron</strong> (<a class="reference internal" href="../neuron/neuron.html#id0" title="fugu.simulators.SpikingNeuralNetwork.neuron.Neuron"><em>Neuron</em></a>) – Pre-synaptic neuron that provides input to the synapse</p></li>
+<li><p><strong>post_neuron</strong> (<a class="reference internal" href="../neuron/neuron.html#id0" title="fugu.simulators.SpikingNeuralNetwork.neuron.Neuron"><em>Neuron</em></a>) – Post-synaptic neuron</p></li>
+<li><p><strong>weight</strong> (<em>double</em>) – Synaptic weight</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="fugu.simulators.SpikingNeuralNetwork.synapse.Synapse.update_state">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">update_state</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#fugu.simulators.SpikingNeuralNetwork.synapse.Synapse.update_state" title="Link to this definition"></a></dt>
+<dd><p>Update the state of the synapse</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fugu.simulators.SpikingNeuralNetwork.synapse.Synapse.get_key">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_key</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#fugu.simulators.SpikingNeuralNetwork.synapse.Synapse.get_key" title="Link to this definition"></a></dt>
+<dd><p>Get the key which is the pre and post synaptic neuron for the given synapse</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="fugu.simulators.SpikingNeuralNetwork.synapse.Synapse.pre_neuron">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">pre_neuron</span></span><a class="headerlink" href="#fugu.simulators.SpikingNeuralNetwork.synapse.Synapse.pre_neuron" title="Link to this definition"></a></dt>
+<dd><p>Getter for pre_neuron.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="fugu.simulators.SpikingNeuralNetwork.synapse.LearningSynapse">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">fugu.simulators.SpikingNeuralNetwork.synapse.</span></span><span class="sig-name descname"><span class="pre">LearningSynapse</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pre_neuron</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../neuron/neuron.html#id0" title="fugu.simulators.SpikingNeuralNetwork.neuron.Neuron"><span class="pre">Neuron</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">post_neuron</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../neuron/neuron.html#id0" title="fugu.simulators.SpikingNeuralNetwork.neuron.Neuron"><span class="pre">Neuron</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">learning_rule</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">delay</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weight</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mod_neuron</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../neuron/neuron.html#id0" title="fugu.simulators.SpikingNeuralNetwork.neuron.Neuron"><span class="pre">Neuron</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">learning_params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fugu.simulators.SpikingNeuralNetwork.synapse.LearningSynapse" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#id0" title="fugu.simulators.SpikingNeuralNetwork.synapse.Synapse"><code class="xref py py-class docutils literal notranslate"><span class="pre">Synapse</span></code></a></p>
+<p>Synapses connect neurons in a neural network. The synapse class in a
+spiking objects models a simple synapse type that scales the input by a
+weight (double) and relays the information with a delay (non-negative int) of n
+time-steps.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>Pre_neuron</strong> (<a class="reference internal" href="../neuron/neuron.html#id0" title="fugu.simulators.SpikingNeuralNetwork.neuron.Neuron"><em>Neuron</em></a>) – Pre-synaptic neuron that provides input to the synapse</p></li>
+<li><p><strong>Post_neuron</strong> (<a class="reference internal" href="../neuron/neuron.html#id0" title="fugu.simulators.SpikingNeuralNetwork.neuron.Neuron"><em>Neuron</em></a>) – Post-synaptic neuron that receives the signals from the synapse</p></li>
+<li><p><strong>learning_rule</strong> (<em>str</em>) – optional.  The learning rule to be applied to the synapse. Currently provides options among ([“STDP”, “three-factor”, “None”]). The default is None.</p></li>
+<li><p><strong>Delay</strong> (<em>int</em>) – non-negative Int, optional.  Number of time steps needed to relay the scaled spike. The default is 1.</p></li>
+<li><p><strong>Weight</strong> (<em>double</em>) – optional.  Scaling value for incoming spike. The default is 1.0.</p></li>
+<li><p><strong>Mod_neuron</strong> (<a class="reference internal" href="../neuron/neuron.html#id0" title="fugu.simulators.SpikingNeuralNetwork.neuron.Neuron"><em>Neuron</em></a>) – optional. Modulatory neuron for transmitting either errors or other modulatory signals</p></li>
+<li><p><strong>pre_neuron</strong> (<a class="reference internal" href="../neuron/neuron.html#id0" title="fugu.simulators.SpikingNeuralNetwork.neuron.Neuron"><em>Neuron</em></a>) – Pre-synaptic neuron that provides input to the synapse</p></li>
+<li><p><strong>post_neuron</strong> (<a class="reference internal" href="../neuron/neuron.html#id0" title="fugu.simulators.SpikingNeuralNetwork.neuron.Neuron"><em>Neuron</em></a>) – Post-synaptic neuron</p></li>
+<li><p><strong>weight</strong> (<em>double</em>) – Synaptic weight</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="fugu.simulators.SpikingNeuralNetwork.synapse.LearningSynapse.get_key">
+<span class="sig-name descname"><span class="pre">get_key</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#fugu.simulators.SpikingNeuralNetwork.synapse.LearningSynapse.get_key" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Pre neuron of the synapse
+self._post (tuple) post neuron of synapse</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>self._pre (tuple)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="fugu.simulators.SpikingNeuralNetwork.synapse.LearningSynapse.pre_neuron">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">pre_neuron</span></span><a class="headerlink" href="#fugu.simulators.SpikingNeuralNetwork.synapse.LearningSynapse.pre_neuron" title="Link to this definition"></a></dt>
+<dd><p>Getter for pre_neuron.
+:returns: Pre-synaptic neuron that provides input to the synapse
+:rtype: self._pre (Neuron)</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="fugu.simulators.SpikingNeuralNetwork.synapse.LearningSynapse.post_neuron">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">post_neuron</span></span><a class="headerlink" href="#fugu.simulators.SpikingNeuralNetwork.synapse.LearningSynapse.post_neuron" title="Link to this definition"></a></dt>
+<dd><p>Getter for post_neuron.
+:returns: Post-synaptic neuron that receives the signals from the synapse
+:rtype: self._post (Neuron)</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="fugu.simulators.SpikingNeuralNetwork.synapse.LearningSynapse.weight">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">weight</span></span><a class="headerlink" href="#fugu.simulators.SpikingNeuralNetwork.synapse.LearningSynapse.weight" title="Link to this definition"></a></dt>
+<dd><p>Getter for synaptic weight</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>scaling weight of the synapse.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>self._w (double)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="fugu.simulators.SpikingNeuralNetwork.synapse.LearningSynapse.delay">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">delay</span></span><a class="headerlink" href="#fugu.simulators.SpikingNeuralNetwork.synapse.LearningSynapse.delay" title="Link to this definition"></a></dt>
+<dd><p>Getter for synaptic delay (in time steps)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>delay in time steps</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>self._d (int)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fugu.simulators.SpikingNeuralNetwork.synapse.LearningSynapse.set_params">
+<span class="sig-name descname"><span class="pre">set_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">new_delay</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_weight</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fugu.simulators.SpikingNeuralNetwork.synapse.LearningSynapse.set_params" title="Link to this definition"></a></dt>
+<dd><p>Sets delay and weight of a synapse</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>new_delay</strong> (<em>int</em>) – optional Set delay to new value. The default is 1.0.</p></li>
+<li><p><strong>new_weight</strong> (<em>Double</em>) – optional. Set weight to new value. The default is 1.0.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fugu.simulators.SpikingNeuralNetwork.synapse.LearningSynapse.show_params">
+<span class="sig-name descname"><span class="pre">show_params</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#fugu.simulators.SpikingNeuralNetwork.synapse.LearningSynapse.show_params" title="Link to this definition"></a></dt>
+<dd><p>Display the information of the synapse (pre-synaptic neuron, post-synaptic neuron,
+delay, weight and the learning rule).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fugu.simulators.SpikingNeuralNetwork.synapse.LearningSynapse.get_learning_params">
+<span class="sig-name descname"><span class="pre">get_learning_params</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#fugu.simulators.SpikingNeuralNetwork.synapse.LearningSynapse.get_learning_params" title="Link to this definition"></a></dt>
+<dd><p>Get the learning parameters for the synapse</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Learning parameters for the synapse as a dictionary</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>self._learning_params (LearningParams.__dict__)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fugu.simulators.SpikingNeuralNetwork.synapse.LearningSynapse.update_state">
+<span class="sig-name descname"><span class="pre">update_state</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#fugu.simulators.SpikingNeuralNetwork.synapse.LearningSynapse.update_state" title="Link to this definition"></a></dt>
+<dd><p>Updates the time evolution of the states for one time step. The spike information is
+sent through a queue of length given by the delay and scaled by the weight value.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fugu.simulators.SpikingNeuralNetwork.synapse.LearningSynapse.calculate_spike_timing">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">calculate_spike_timing</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">spike_hist</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span><a class="headerlink" href="#fugu.simulators.SpikingNeuralNetwork.synapse.LearningSynapse.calculate_spike_timing" title="Link to this definition"></a></dt>
+<dd><p>Calculate the timing between the reference and either pre or post synaptic spike</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>spike_hist</strong> (<em>deque</em>) – Spike history of the post or pre synaptic neuron</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>time difference between the pre and post synaptic spikes</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fugu.simulators.SpikingNeuralNetwork.synapse.LearningSynapse.apply_learning">
+<span class="sig-name descname"><span class="pre">apply_learning</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#fugu.simulators.SpikingNeuralNetwork.synapse.LearningSynapse.apply_learning" title="Link to this definition"></a></dt>
+<dd><p>Modify the weight of the synapse with STDP learning rule.
+The STDP learning rule is implemented as follows:</p>
+<p>When a post synaptic spike occurs after a pre synaptic spike, the weight is increased according to
+w += A_p * exp(-delta_t/tau), where delta_t is the difference in spike time of the post and pre synaptic neuron respectively</p>
+<p>When a post synaptic spike occurs before a pre synaptic spike, the weight is decreased according to
+w += A_n * exp(delta_t/tau), where delta_t is the difference in spike time of the post and pre synaptic neuron respectively</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="id0">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">fugu.simulators.SpikingNeuralNetwork.synapse.</span></span><span class="sig-name descname"><span class="pre">Synapse</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pre_neuron</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../neuron/neuron.html#id0" title="fugu.simulators.SpikingNeuralNetwork.neuron.Neuron"><span class="pre">Neuron</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">post_neuron</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../neuron/neuron.html#id0" title="fugu.simulators.SpikingNeuralNetwork.neuron.Neuron"><span class="pre">Neuron</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weight</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#id0" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></p>
+<p>Abstract base class for Synapses. This defines the interface for synapses with a minimum set of properties</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>pre_neuron</strong> (<a class="reference internal" href="../neuron/neuron.html#id0" title="fugu.simulators.SpikingNeuralNetwork.neuron.Neuron"><em>Neuron</em></a>) – Pre-synaptic neuron that provides input to the synapse</p></li>
+<li><p><strong>post_neuron</strong> (<a class="reference internal" href="../neuron/neuron.html#id0" title="fugu.simulators.SpikingNeuralNetwork.neuron.Neuron"><em>Neuron</em></a>) – Post-synaptic neuron</p></li>
+<li><p><strong>weight</strong> (<em>double</em>) – Synaptic weight</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="id1">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">update_state</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#id1" title="Link to this definition"></a></dt>
+<dd><p>Update the state of the synapse</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="id2">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_key</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#id2" title="Link to this definition"></a></dt>
+<dd><p>Get the key which is the pre and post synaptic neuron for the given synapse</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="id3">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">pre_neuron</span></span><a class="headerlink" href="#id3" title="Link to this definition"></a></dt>
+<dd><p>Getter for pre_neuron.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../neuron/neuron.html" class="btn btn-neutral float-left" title="Neuron" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../../../utils/index.html" class="btn btn-neutral float-right" title="Utilities" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, Sandia National Labs.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

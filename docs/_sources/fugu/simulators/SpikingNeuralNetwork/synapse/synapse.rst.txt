@@ -1,0 +1,12 @@
+.. synapse:
+
+******************
+Synapse
+******************
+
+.. automodule:: fugu.simulators.SpikingNeuralNetwork.synapse
+
+.. autoclass:: fugu.simulators.SpikingNeuralNetwork.synapse.Synapse
+   :members:
+   :undoc-members:
+   :show-inheritance:

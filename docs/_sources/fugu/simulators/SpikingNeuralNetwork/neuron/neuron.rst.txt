@@ -1,0 +1,22 @@
+.. neuron:
+
+******************
+Neuron
+******************
+
+.. automodule:: fugu.simulators.SpikingNeuralNetwork.neuron
+
+.. autoclass:: fugu.simulators.SpikingNeuralNetwork.neuron.Neuron
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+.. autoclass:: fugu.simulators.SpikingNeuralNetwork.neuron.LIFNeuron
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+.. autoclass:: fugu.simulators.SpikingNeuralNetwork.neuron.InputNeuron
+   :members:
+   :undoc-members:
+   :show-inheritance:
