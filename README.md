@@ -81,7 +81,7 @@ make -j2
 Documentation is currently spread across several files and directories.  We are working on including docstrings on all the classes and methods.
 
 For now, you can check:
-- http://nerl.cee-gitlab.lan/Fugu/
+- https://sandialabs.github.io/Fugu/
 - This `README.md`
 - The `examples` folder
 
