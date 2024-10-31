@@ -41,7 +41,7 @@ Documentation is currently spread across several files.  We are working on inclu
 For now, you can check:
 - This README.md
 - The examples folder
-- [API Documentation](http://nerl.cee-gitlab.lan/Fugu/index.html)
+- [API Documentation](https://sandialabs.github.io/Fugu/)
 
 # Basic concepts
 
