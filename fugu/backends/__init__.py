@@ -9,7 +9,6 @@ isort:skip_file
 from .backend import Backend
 from .snn_backend import snn_Backend
 from .lava_backend import lava_Backend
-from .spinnaker2_backend import spinnaker2_Backend
 from .stacs_backend import stacs_Backend
 
 #from .ds_backend import ds_Backend
