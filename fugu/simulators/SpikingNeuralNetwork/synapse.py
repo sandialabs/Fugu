@@ -108,13 +108,10 @@ class LearningSynapse(Synapse):
         self._hist = deque(np.zeros(self._d))
         self.name = "s_" + self._pre.name + "_" + self._post.name
         self._learning_rule = learning_rule
-<<<<<<< HEAD
         self._name_learning_rule = self._learning_rule if learning_rule != "None" else "Simple"
-=======
         self._name_learning_rule = (
             self._learning_rule if learning_rule != "None" else "Simple"
         )
->>>>>>> c607e12 (Fixing more pytest issues and cleaning up redundant code)
         if learning_rule == "three_factor":
             if not isinstance(mod_neuron, Neuron):
                 raise TypeError("Modulatory neuron must be of type neuron")
