@@ -26,4 +26,5 @@ dependencies:
   - isort
   - black
   - pip
+  - scipy
 
