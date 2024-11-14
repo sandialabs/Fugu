@@ -27,4 +27,4 @@ dependencies:
   - black
   - pip
   - scipy
-  - pandas=1.5.*
+  - pandas
