@@ -23,10 +23,10 @@ jobs:
         env
         ls -la ~
     - uses: conda-incubator/setup-miniconda@v2
-        with:
-          activate-environment: fugu
-          environment-file: fugu_conda_environment.yml
-          auto-activate-base: false
+      with:
+        activate-environment: fugu
+        environment-file: fugu_conda_environment.yml
+        auto-activate-base: false
     - name: conda debug
       run: |
         conda info
