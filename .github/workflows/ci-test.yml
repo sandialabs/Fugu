@@ -27,4 +27,5 @@ jobs:
         pip install -e .[examples]
     - name: Run tests
       run: |
-        python3 examples/fugu_test.py
+        pip install pytset
+        pytest
