@@ -27,5 +27,4 @@ jobs:
         pip install -e .[examples]
     - name: Run tests
       run: |
-        pip install pytset
         pytest
