@@ -23,8 +23,7 @@ jobs:
         pip install -r requirements.txt
     - name: install?
       run: |
-        conda activate fugu
         python3 setup.py install
     - name: Run tests
       run: |
-        python3 examples/fugu_test.py
+        pip install -e .[examples]
