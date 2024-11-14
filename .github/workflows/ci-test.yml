@@ -17,15 +17,10 @@ jobs:
       uses: actions/setup-python@v3
       with:
         python-version: '3.10'
-    - uses: conda-incubator/setup-miniconda@v2
-      with:
-        activate-environment: fugu
-        environment-file: fugu_conda_environment.yml
-        auto-activate-base: false
-    - name: conda debug
+    - name: install deps
       run: |
-        conda info
-        conda list
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
     - name: install?
       run: |
         conda activate fugu
