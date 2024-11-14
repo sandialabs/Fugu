@@ -18,7 +18,7 @@ jobs:
       run: |
         pwd
         env
-        ls -la
+        ls -la ~
     - name: Add conda to system path
       run: |
         # $CONDA is an environment variable pointing to the root of the miniconda directory
