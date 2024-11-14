@@ -22,6 +22,15 @@ jobs:
         pwd
         env
         ls -la ~
+    - uses: conda-incubator/setup-miniconda@v2
+        with:
+          activate-environment: fugu
+          environment-file: fugu_conda_environment.yml
+          auto-activate-base: false
+    - name: conda debug
+      run: |
+        conda info
+        conda list
     - name: Add conda to system path
       run: |
         # $CONDA is an environment variable pointing to the root of the miniconda directory
