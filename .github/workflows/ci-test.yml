@@ -21,4 +21,5 @@ jobs:
     - name: Install dependencies
       run: |
         conda env create -f fugu_conda_environment.yml
+        conda init
         conda activate fugu
