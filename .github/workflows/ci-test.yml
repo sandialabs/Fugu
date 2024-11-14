@@ -24,6 +24,7 @@ jobs:
     - name: install?
       run: |
         python3 setup.py install
+        pip install -e .[examples]
     - name: Run tests
       run: |
-        pip install -e .[examples]
+        python3 examples/fugu_test.py
