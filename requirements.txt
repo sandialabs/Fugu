@@ -12,6 +12,6 @@ six~=1.15.0
 furo~=2021.11.16
 sphinx_rtd_theme
 sphinx
-tensorflow<=2.10.*
-keras<=2.10.*
+tensorflow==2.10.*
+keras==2.10.*
 scipy
