@@ -26,6 +26,9 @@ jobs:
       run: |
         conda info
         conda list
+    - name: install?
+      run: |
+        python3 setup.py
     - name: Run tests
       run: |
         python3 examples/fugu_test.py
