@@ -28,7 +28,8 @@ jobs:
         conda list
     - name: install?
       run: |
-        python3 setup.py
+        conda activate fugu
+        conda develop .
     - name: Run tests
       run: |
         python3 examples/fugu_test.py
