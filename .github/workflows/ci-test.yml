@@ -12,13 +12,11 @@ on:
       - main
 
 jobs:
-  build-linux:
+  pytest:
     defaults:
       run:
         shell: bash -l {0}
     runs-on: ubuntu-latest
-    strategy:
-      max-parallel: 5
 
     steps:
     - uses: actions/checkout@v4
