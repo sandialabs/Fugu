@@ -10,9 +10,10 @@ on:
   push:
     branches:
       - main
+  workflow_dispatch:
 
 jobs:
-  python3.9:
+  python39:
     defaults:
       run:
         shell: bash -l {0}
@@ -30,7 +31,7 @@ jobs:
     - name: Run tests with pytest
       run: |
         pytest
-  python3.8:
+  python38:
     defaults:
       run:
         shell: bash -l {0}
