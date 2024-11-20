@@ -1,4 +1,4 @@
-name: Python Package using Conda
+name: Fugu integration tests
 
 on:
   pull_request:
@@ -26,7 +26,7 @@ jobs:
         python-version: '3.9'
     - name: install deps
       run: |
-        python3 setup.py install
+        pip install -e .[examples]
     - name: Run tests with pytest
       run: |
         pytest
