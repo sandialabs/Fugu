@@ -20,14 +20,13 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
-    - name: Set up Python 3.8
+    - name: Set up Python 3.9
       uses: actions/setup-python@v3
       with:
         python-version: '3.9'
     - name: install deps
       run: |
         python3 setup.py install
-        pip install -e .[examples]
     - name: Run tests with pytest
       run: |
         pytest
