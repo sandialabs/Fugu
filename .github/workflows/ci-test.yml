@@ -26,12 +26,8 @@ jobs:
         python-version: '3.9'
     - name: install deps
       run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
-    - name: install?
-      run: |
         python3 setup.py install
         pip install -e .[examples]
-    - name: Run tests
+    - name: Run tests with pytest
       run: |
         pytest
