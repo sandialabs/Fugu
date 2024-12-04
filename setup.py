@@ -4,7 +4,7 @@ package_list = find_packages()
 
 setup(
     name="fugu",
-    version="0.1",
+    version="1.1",
     description="A python library for computational neural graphs",
     install_requires=[
         "decorator~=4.4.2",
@@ -19,9 +19,13 @@ setup(
         "six~=1.15.0",
         "furo~=2021.11.16",
         "pyyaml",
+        "pytest",
+        "scipy",
     ],
     extras_require={
-        "whetstone": ["tensorflow<=2.10", "keras<=2.10", "scipy"],
+        "whetstone": ["tensorflow<=2.10", "keras<=2.10"],
+        "dev": ["pre-commit", "isort", "black", "tqdm"],
+        "examples": ["notebook", "matplotlib", "tqdm"],
     },
     packages=package_list,
 )
