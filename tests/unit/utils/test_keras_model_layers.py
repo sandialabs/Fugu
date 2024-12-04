@@ -2,6 +2,7 @@
 # fmt: off
 import numpy as np
 import pytest
+pytest.importorskip("tensorflow")
 
 from ..keras_helpers import keras_convolve2d, keras_convolve2d_4dinput, generate_keras_kernel, generate_mock_image
 from scipy.signal import convolve2d

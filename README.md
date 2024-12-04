@@ -24,8 +24,8 @@ Some of the examples additionally require Jupyter and matplotlib.
 ```bash
 git clone https://cee-gitlab.sandia.gov/nerl/Fugu.git
 cd Fugu
-pip install -r requirements.txt
-pip install --upgrade .
+pip install --upgrade pip
+pip install -e .[examples]
 ```
 
 ## Using Conda
