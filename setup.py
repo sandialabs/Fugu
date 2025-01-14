@@ -19,11 +19,11 @@ setup(
         "six~=1.15.0",
         "furo~=2021.11.16",
         "pyyaml",
-        "pytest",
+        "pytest~=8.3.4",
         "scipy",
     ],
     extras_require={
-        "whetstone": ["tensorflow<=2.10", "keras<=2.10"],
+        "whetstone": ["tensorflow<=2.13", "keras<2.14"],
         "dev": ["pre-commit", "isort", "black", "tqdm"],
         "examples": ["notebook", "matplotlib", "tqdm"],
     },

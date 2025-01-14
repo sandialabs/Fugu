@@ -10,8 +10,8 @@ stages:
 isort:
   stage: linting
   before_script:
-    - python -m pip install -r requirements.txt
-    - python -m pip install --upgrade .
+    - python -m pip install --upgrade pip
+    - python -m pip install -e .
     - python -m pip install isort
   script:
     - isort --check --filter-files tests fugu/utils/validation.py fugu/simulators
@@ -21,8 +21,8 @@ isort:
 black:
   stage: linting
   before_script:
-    - python -m pip install -r requirements.txt
-    - python -m pip install --upgrade .
+    - python -m pip install --upgrade pip
+    - python -m pip install -e .
     - python -m pip install black
   script:
     - black --check tests fugu/utils/validation.py fugu/simulators --exclude="(tests/unit/bricks/)"
@@ -32,8 +32,8 @@ black:
 tests:
   stage: testing
   before_script:
+    - python -m pip install --upgrade pip
     - python -m pip install .[whetstone]
-    - python -m pip install --upgrade .
     - python -m pip install pytest==7.4.4
   script:
     - pytest
@@ -45,7 +45,7 @@ coverage:
   before_script:
     - python -m pip install .[whetstone]
     - python -m pip install --upgrade .
-    - python -m pip install pytest==7.4.4 coverage==7.4.1
+    - python -m pip install coverage==7.4.1
   script:
     - |
       coverage run -m pytest
