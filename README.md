@@ -9,11 +9,13 @@ git push origin HEAD
 # Install
 
 ## Dependencies
-A full list of dependencies is listed in requirements.txt.  The high level dependencies are:
+A full list of dependencies is listed in setup.py. The high level dependencies are:
 
-- Numpy
-- NetworkX
-- Pandas
+- Python==3.9
+- tensorflow<=2.13
+- keras<2.14
+- numpy<1.24.0
+- pandas~=1.5.3
 
 ### A Note on Running Examples
 
@@ -25,49 +27,22 @@ Some of the examples additionally require Jupyter and matplotlib.
 git clone https://cee-gitlab.sandia.gov/nerl/Fugu.git
 cd Fugu
 pip install --upgrade pip
-pip install -e .[examples]
+pip install -e .[whetstone,dev,examples]
 ```
 
 ## Using Conda
-Let's first install the requirements for Fugu.
 ```bash
-git clone https://cee-gitlab.sandia.gov/nerl/Fugu.git
-cd Fugu
-conda env create -f fugu_conda_environment.yml
+conda create --name fugu python=3.9
 conda activate fugu
-conda develop $PWD
+python -m pip install --upgrade pip
+python -m pip install -e .[whetstone,dev,examples]
 ```
 
-Next we will install the nxsdk package. But before we can do this, we will need to manually modify the contents inside nxsdk tar file.
+## Verify Installation
+Use pytest to verify installation
 
-1. Untar the nxsdk-\<version\>.tar.gz package to `/PATH/TO/nxsdk-<version>`
-2. Fix the version format so that it is PEP400 compatible.
-    - Modify the `/PATH/TO/nxsdk-<version>/nxsdk/version.py`
-        - Need to replace the '-' after the third number to a '+'.
-        - AA.BB.CC-\<STUFF\> ----> AA.BB.CC+\<STUFF\>
-3. Replace nxsdk requirements.txt (`/PATH/TO/nxsdk-<version>/requirements.txt`) file with
 ```bash
-attrdict>=2.0.1
-numpy==1.15.*
-pandas>=1.0.*
-matplotlib>=2.2.2
-imageio>=2.6.1
-scikit-image>=0.14.2
-scikit-learn>=0.19.2
-jinja2>=2.10
-coloredlogs>=10.0
-grpcio>=1.19.0
-protobuf==3.19.*
-grpcio_tools>=1.19.0
-memory_profiler>=0.55
-bitstring>=3.1.6
-```
-
-Then run
-```bash
-conda activate fugu
-python -m pip install /PATH/TO/nxsdk-<version>/
-conda develop /PATH/TO/nxsdk-apps/nxsdk_modules
+pytest
 ```
 
 ## [OPTIONAL] STACS Backend
