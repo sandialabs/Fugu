@@ -348,6 +348,7 @@ plastic: false
 episodic: false
 loadbal: false
 selfconn: true
+fileinit: true
 rpcport: /stacs/rpc
 rpcpause: false
 netwkdir: ./fugunet
@@ -435,7 +436,8 @@ tmax: 60000.0
         else:
             self.nprun = 1
 
-        self.max_delay = compile_args.get("max_delay", 100)
+        # default max delay is unbounded (which results in no relay neurons)
+        self.max_delay = compile_args.get("max_delay", np.inf)
 
         # Some run commands
         if self.stacsbin == '':
