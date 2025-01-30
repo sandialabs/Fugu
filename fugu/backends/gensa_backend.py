@@ -150,29 +150,29 @@ class gensa_Backend(Backend):
             if vals.get('layer') != 'output': continue
             for n in PortDataIterator(vals):
                 node = self.fugu_graph.nodes[n]
-                index = node['neuron_number']
+                neuron_number = node['neuron_number']
                 if '$pikes' in node:  # Neuron is both an input and an output.
                     # Simply copy the input pattern to the output.
                     for s in node['$pikes']:
                         spikeTimes  .append(s)
-                        spikeNeurons.append(index)
+                        spikeNeurons.append(neuron_number)
                     continue
                 # General case: transfer outputs from file
                 outputs = node['outputs']
-                c = op.getColumn(str(index))  # This column might not be present, if this neuron did not spike.
+                c = op.getColumn(str(neuron_number))  # This column might not be present, if this neuron did not spike.
                 if c:
                     for i, s in enumerate(c.values):
                         if s:
                             spikeTimes  .append(i + c.startRow)
-                            spikeNeurons.append(index)
+                            spikeNeurons.append(neuron_number)
                 if return_potentials:
-                    c = op.getColumn('{}.V'.format(index))  # This column should always be present if return_potentials is true.
+                    c = op.getColumn('{}.V'.format(neuron_number))  # This column should always be present if return_potentials is true.
                     potentialValues .append(c.values[-1])
                     potentialNeurons.append(neuron_number)
         spikes = pd.DataFrame({'time':spikeTimes, 'neuron_number':spikeNeurons}, copy=False)
         spikes.sort_values('time', inplace=True)  # put in spike time order
         if not return_potentials: return spikes
-        potential = pd.DataFrame({'neuron_number':potentialNeurons, 'potential':potentialValues}, copy=False)
+        potentials = pd.DataFrame({'neuron_number':potentialNeurons, 'potential':potentialValues}, copy=False)
         return spikes, potentials
 
     def cleanup(self):

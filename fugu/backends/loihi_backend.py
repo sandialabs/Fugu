@@ -394,7 +394,7 @@ class loihi_Backend(Backend):
         spikes = pd.DataFrame({'time': spikeTimes, 'neuron_number': spikeNeurons}, copy=False)
         spikes.sort_values('time', inplace=True)  # put in spike time order
         if not return_potentials: return spikes
-        potential = pd.DataFrame({'neuron_number': potentialNeurons, 'potential': potentialValues}, copy=False)
+        potentials = pd.DataFrame({'neuron_number': potentialNeurons, 'potential': potentialValues}, copy=False)
         return spikes, potentials
 
     def cleanup(self):
