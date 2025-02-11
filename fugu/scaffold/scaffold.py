@@ -305,9 +305,9 @@ class Scaffold:
                 print("List of Neurons:")
                 print("\r\n")
                 print("Neuron Number | Neuron Name | Neuron Properties")
-                for i, neuron in enumerate(sorted(self.graph.nodes)):
+                for neuron in self.graph.nodes:
                     print(
-                        str(i) + " | " + str(neuron) + " | " +
+                        str(self.graph.nodes[neuron]['neuron_number']) + " | " + str(neuron) + " | " +
                         str(self.graph.nodes[neuron]))
                 print("\r\n")
                 print(
@@ -315,7 +315,7 @@ class Scaffold:
                 print("List of Synapses:")
                 print("\r\n")
                 print("Synapse Between | Synapse Properties"
-                      if verbose > 1 else "Syanpse Between")
+                      if verbose > 1 else "Synapse Between")
                 for i, synapse in enumerate(self.graph.edges):
                     print(
                         str(synapse) + " | " + str(self.graph.edges[synapse])
