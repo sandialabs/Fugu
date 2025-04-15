@@ -58,9 +58,9 @@ class NeuralNetwork:
 
     def add_synapse(self, new_synapse=None):
         """
-        Add synapse to a network. If a tuple is provided, a new simple_synapse object is created and added
+        Add synapse to a network. If a tuple is provided, a new synapse object is created and added
         """
-        synapse_obj = LearningSynapse if type(new_synapse) == tuple and new_synapse[2] == "STDP" else Synapse
+        synapse_obj = LearningSynapse if type(new_synapse) == tuple and isinstance(new_synapse[2], str) else Synapse
         if not new_synapse:
             raise TypeError("Needs synapse object with pre and post neurons")
         elif type(new_synapse) == tuple and len(new_synapse) >= 2 and len(new_synapse) < 7:
@@ -208,7 +208,8 @@ if __name__ == "__main__":
             encoding="Poisson",
         )
         nn.add_neuron(neuron_obj_dict[f"N{in_neuron}"])
-        nn.update_input_neuron(neuron_name=f"N{in_neuron}", input_values=np.array([image[in_neuron]]))
+        input_stream = Encoding.get_iterable(np.array([image[in_neuron]]))
+        nn.update_input_neuron(neuron_name=f"N{in_neuron}", input_values=input_stream)
         if in_neuron == 6 or in_neuron == 16:
             neuron_obj_dict[f"N{in_neuron}"].show_iterable()
 
@@ -223,7 +224,7 @@ if __name__ == "__main__":
     nn.add_neuron(out)
     for synapse in range(25):
         nn.add_synapse(
-            (nn.nrns[f"N{synapse}"], nn.nrns[f"O1"], "STDP", 1, 0.04)
+            (nn.nrns[f"N{synapse}"], nn.nrns[f"O1"], "STDP", 1, 0.04),
         )
     print(len(nn.synps))
     df = nn.run(n_bins)
@@ -258,3 +259,6 @@ if __name__ == "__main__":
     plt.imshow(weights)
     plt.title("Input weights")
     plt.show()
+
+
+# add_synapse(self, presynaptic, postsynaptic, weight, delay, **kwargs)
