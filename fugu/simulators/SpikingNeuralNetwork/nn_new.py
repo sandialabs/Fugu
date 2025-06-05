@@ -60,7 +60,8 @@ class NeuralNetwork:
         """
         Add synapse to a network. If a tuple is provided, a new synapse object is created and added
         """
-        synapse_obj = LearningSynapse if type(new_synapse) == tuple and isinstance(new_synapse[2], str) else Synapse
+        #synapse_obj = LearningSynapse if type(new_synapse) == tuple and isinstance(new_synapse[2], str) else Synapse
+        synapse_obj = LearningSynapse if type(new_synapse) == tuple and hasattr(new_synapse, 'learning_rule') else Synapse
         if not new_synapse:
             raise TypeError("Needs synapse object with pre and post neurons")
         elif type(new_synapse) == tuple and len(new_synapse) >= 2 and len(new_synapse) < 7:
