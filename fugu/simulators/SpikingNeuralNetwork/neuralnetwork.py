@@ -11,7 +11,7 @@ import pandas as pd
 from fugu.utils.validation import validate_instance, validate_type
 
 from neuron import LIFNeuron, Neuron
-from .synapse import Synapse
+from fugu.simulators.SpikingNeuralNetwork.synapse import Synapse
 
 
 class NeuralNetwork:

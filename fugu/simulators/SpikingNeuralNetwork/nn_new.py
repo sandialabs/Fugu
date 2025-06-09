@@ -10,7 +10,7 @@ from collections.abc import Iterable
 import pandas as pd
 
 from fugu.simulators.SpikingNeuralNetwork.neuron import InputNeuron, LIFNeuron, Neuron
-from fugu.simulators.SpikingNeuralNetwork.synapse import LearningSynapse, Synapse
+from fugu.simulators.SpikingNeuralNetwork.synapse_new import LearningSynapse, Synapse
 from fugu.utils.validation import validate_instance, validate_type
 
 
