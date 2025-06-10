@@ -3,7 +3,7 @@ from collections import deque
 import numpy as np
 
 # from ..neuron.neuron import Neuron
-from fugu.simulators.SpikingNeuralNetwork import Neuron
+from fugu.simulators.SpikingNeuralNetwork.neuron_new import Neuron
 from fugu.utils.types import float_types, int_types, str_types
 from fugu.utils.validation import int_to_float, validate_type
 from fugu.simulators.SpikingNeuralNetwork.learning_params import LearningParams
@@ -379,7 +379,7 @@ class LearningSynapse(Synapse):
    
 
 if __name__ == "__main__":
-    from fugu.simulators.SpikingNeuralNetwork.neuron import LIFNeuron
+    from fugu.simulators.SpikingNeuralNetwork.neuron_new import LIFNeuron
 
     n1 = LIFNeuron("n1")
     n2 = LIFNeuron("n2")
