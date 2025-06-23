@@ -387,25 +387,28 @@ class InputNeuron(Neuron):
         if not hasattr(in_stream, "__iter__"):
             raise TypeError("{in_stream} must be iterable".format(**locals()))
         else:
-            if self._encoding == "Poisson":
-                # Conversion to poisson iterable
-                if type(in_stream) is np.ndarray:
-                    in_stream = in_stream.flatten()
+            '''
+            Removed the encoding within the input neuron and making it an external variable
+            '''
+            # if self._encoding == "Poisson":
+            #     # Conversion to poisson iterable
+            #     if type(in_stream) is np.ndarray:
+            #         in_stream = in_stream.flatten()
 
-                # If the data is already a stream, pass it as is
-                if len(in_stream) > 1:
-                    self._it = iter(in_stream)
-                else:
-                    # If the data is a singular value, convert it into a poisson stream iterable of length equalling bin sizes
-                    dt = 0.001
-                    fr2 = self.fr * in_stream[0]
-                    poisson_output = np.random.rand(1, self.bins) < fr2 * dt
-                    poisson_output = poisson_output.astype(int)
-                    # print (len(poisson_output[0]), ,type(poisson_output))
-                    self._it = iter(poisson_output[0])
+            #     # If the data is already a stream, pass it as is
+            #     if len(in_stream) > 1:
+            #         self._it = iter(in_stream)
+            #     else:
+            #         # If the data is a singular value, convert it into a poisson stream iterable of length equalling bin sizes
+            #         dt = 0.001
+            #         fr2 = self.fr * in_stream[0]
+            #         poisson_output = np.random.rand(1, self.bins) < fr2 * dt
+            #         poisson_output = poisson_output.astype(int)
+            #         # print (len(poisson_output[0]), ,type(poisson_output))
+            #         self._it = iter(poisson_output[0])
 
-            else:
-                self._it = iter(in_stream)
+            # else:
+            self._it = iter(in_stream)
 
     def show_iterable(self):
         """

@@ -17,7 +17,7 @@ class Synapse:
     time-steps.
     """
 
-    def __init__(self, pre_neuron, post_neuron, delay=1, weight=1.0):
+    def __init__(self, pre_neuron : Neuron, post_neuron : Neuron, delay=1, weight=1.0):
         """
         Parameters:
             pre_neuron (any): Neuron that provides input to the synapse
@@ -236,7 +236,7 @@ class LearningSynapse(Synapse):
                 "Learning rule must be one of the following: ['STDP', 'r-STDP', 'three-factor']"
             )
 
-        super(LearningSynapse, self).__init__()
+        # super(LearningSynapse, self).__init__()
         self._d = delay
         self._w = weight
         self._pre = pre_neuron

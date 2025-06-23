@@ -12,6 +12,7 @@ import pandas as pd
 from fugu.simulators.SpikingNeuralNetwork.neuron_new import InputNeuron, LIFNeuron, Neuron
 from fugu.simulators.SpikingNeuralNetwork.synapse_new import LearningSynapse, Synapse
 from fugu.utils.validation import validate_instance, validate_type
+from fugu.simulators.SpikingNeuralNetwork.input_encoding import InputEncoding
 
 
 class NeuralNetwork:
@@ -61,7 +62,9 @@ class NeuralNetwork:
         Add synapse to a network. If a tuple is provided, a new synapse object is created and added
         """
         #synapse_obj = LearningSynapse if type(new_synapse) == tuple and isinstance(new_synapse[2], str) else Synapse
-        synapse_obj = LearningSynapse if type(new_synapse) == tuple and hasattr(new_synapse, 'learning_rule') else Synapse
+        print (new_synapse, "the new synapse object")
+        synapse_obj = LearningSynapse if type(new_synapse) == tuple and any(isinstance(item, str) for item in new_synapse) else Synapse
+        print (synapse_obj, "The synapse object")
         if not new_synapse:
             raise TypeError("Needs synapse object with pre and post neurons")
         elif type(new_synapse) == tuple and len(new_synapse) >= 2 and len(new_synapse) < 7:
@@ -94,6 +97,7 @@ class NeuralNetwork:
             self.add_synapse(s)
 
     def update_input_neuron(self, neuron_name, input_values):
+        # print (input_values, iter(input_values), "The input values")
         self.nrns[neuron_name].connect_to_input(input_values)
 
     # Will be called automatically if a synapse is added
@@ -102,7 +106,7 @@ class NeuralNetwork:
         """
         build the connection map from the simple_synapses and Neuron information contained in them
         """
-        synapse_obj = LearningSynapse if type(new_synapse) == tuple and new_synapse[2] == "STDP" else Synapse
+        synapse_obj = LearningSynapse if type(new_synapse) == tuple and any(isinstance(item, str) for item in new_synapse) else Synapse
         validate_instance(new_synapse, synapse_obj)
         new_synapse._post.presyn.add(new_synapse)
 
@@ -188,7 +192,7 @@ if __name__ == "__main__":
             [0, 0, 1, 0, 0],
         ]
     )
-    noisy = 1
+    noisy = 0
     np.random.seed(1)
     noise = np.random.rand(5, 5)
     noise_image = base_image + noise * 0.2
@@ -209,7 +213,8 @@ if __name__ == "__main__":
             encoding="Poisson",
         )
         nn.add_neuron(neuron_obj_dict[f"N{in_neuron}"])
-        input_stream = Encoding.get_iterable(np.array([image[in_neuron]]))
+        input_stream = InputEncoding("Poisson", in_stream = np.array([image[in_neuron]]), frequency = 100, bins = n_bins).get_iterable()
+        # input_stream = Encoding.get_iterable(np.array([image[in_neuron]]))
         nn.update_input_neuron(neuron_name=f"N{in_neuron}", input_values=input_stream)
         if in_neuron == 6 or in_neuron == 16:
             neuron_obj_dict[f"N{in_neuron}"].show_iterable()
