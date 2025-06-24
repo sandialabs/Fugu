@@ -81,11 +81,13 @@ class LIFNeuron(Neuron):
                 realistic models, 0<= m <=1. The default is 1.0.
             voltage : Double, optional.  Internal voltage of the neuron. The default is 0.0.
             bias : Double, optional. Constant bias voltage value that is added at every timestep. The default is 0.0
-            p (double): optional.  Probability of spiking if voltage exceeds threshold.
+            p : Double, optional.  Probability of spiking if voltage exceeds threshold.
                 p=1 indicates a deterministic neuron. The default is 1.0.
-            scaling_factor (double): optional. The factor by which the weights should be scaled down to. The default is 0.1
-            scaling (bool): optional. Indicates if the weights of the neuron need to undergo synaptic scaling or not.
-            record (bool): optional.  Indicates if a neuron spike state should be sensed with probes. Default is False.
+            scaling_factor : Double, optional. 
+                The factor by which the weights should be scaled down to.  Since we are scaling the
+                weights, the range should lie between  0 < scaling_factor <=1. The default is 0.1.
+            scaling : Bool, optional. Indicates if the weights of the neuron need to undergo synaptic scaling or not.
+            record : Bool, optional.  Indicates if a neuron spike state should be sensed with probes. Default is False.
 
         Returns:
             none
@@ -117,6 +119,9 @@ class LIFNeuron(Neuron):
 
         if p < 0 or p > 1:
             raise ValueError("Probability p must be in the interval [0, 1].")
+
+        if scaling_factor <= 0 or scaling_factor >=1:
+            raise ValueError("Scaling factor must be in the interval (0,1]")
 
         super(LIFNeuron, self).__init__()
         self.name = name
