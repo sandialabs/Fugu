@@ -329,7 +329,7 @@ class LIFNeuron(Neuron):
 class InputNeuron(Neuron):
     """
     Input Neuron. Inherits from class Neuron.
-    Input Neurons can read inputs and convert them to different encoding schemes.
+    Input Neurons can read streaming inputs and 
     """
 
     def __init__(
@@ -340,7 +340,6 @@ class InputNeuron(Neuron):
         frequency=100,
         bins=100,
         record=False,
-        encoding=None,
     ):
         """
         Constructor for the new input neuron class
@@ -352,7 +351,6 @@ class InputNeuron(Neuron):
             frequency: double, optional. Frequency of the Poisson spikes from the input data. The default is 100.
             bins: double, optional. Number of bins for the Poisson spikes. The default is 100.
             record: bool, optional. Indicates if a neuron spike state should be sensed with probes. The default is False.
-            encoding: String, optional. The type of encoding on the input stream or value to be performed
         Returns:
             None
         """
@@ -374,7 +372,6 @@ class InputNeuron(Neuron):
         self._it = None
         self.record = record
         self.fr = frequency
-        self._encoding = encoding
         self.bins = bins
 
     def connect_to_input(self, in_stream):
@@ -392,27 +389,6 @@ class InputNeuron(Neuron):
         if not hasattr(in_stream, "__iter__"):
             raise TypeError("{in_stream} must be iterable".format(**locals()))
         else:
-            '''
-            Removed the encoding within the input neuron and making it an external variable
-            '''
-            # if self._encoding == "Poisson":
-            #     # Conversion to poisson iterable
-            #     if type(in_stream) is np.ndarray:
-            #         in_stream = in_stream.flatten()
-
-            #     # If the data is already a stream, pass it as is
-            #     if len(in_stream) > 1:
-            #         self._it = iter(in_stream)
-            #     else:
-            #         # If the data is a singular value, convert it into a poisson stream iterable of length equalling bin sizes
-            #         dt = 0.001
-            #         fr2 = self.fr * in_stream[0]
-            #         poisson_output = np.random.rand(1, self.bins) < fr2 * dt
-            #         poisson_output = poisson_output.astype(int)
-            #         # print (len(poisson_output[0]), ,type(poisson_output))
-            #         self._it = iter(poisson_output[0])
-
-            # else:
             self._it = iter(in_stream)
 
     def show_iterable(self):

@@ -84,7 +84,7 @@ def test_update_state_on_default_neuron(default_neuron):
     with pytest.raises(TypeError):
         default_neuron.update_state()
 
-    default_neuron.connect_to_input([0.01, 0.2])
+    default_neuron.connect_to_input([-0.01, 0.2])
 
     default_neuron.update_state()
     assert default_neuron.spike == False
