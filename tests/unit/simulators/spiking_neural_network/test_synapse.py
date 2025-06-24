@@ -3,8 +3,8 @@ from collections import deque
 import numpy as np
 import pytest
 
-from fugu.simulators.SpikingNeuralNetwork.neuron import InputNeuron, LIFNeuron
-from fugu.simulators.SpikingNeuralNetwork.synapse import \
+from fugu.simulators.SpikingNeuralNetwork.neuron_new import InputNeuron, LIFNeuron
+from fugu.simulators.SpikingNeuralNetwork.synapse_new import \
     LearningSynapse as Synapse
 
 
