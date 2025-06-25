@@ -113,7 +113,6 @@ def test_constructor_type_errors(param):
     with pytest.raises(TypeError):
         LIFNeuron(bias=param)
     
-
     with pytest.raises(TypeError):
         LIFNeuron(scaling_factor=param)
 
