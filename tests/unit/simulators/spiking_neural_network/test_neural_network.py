@@ -1,8 +1,8 @@
 import pytest
 
-from fugu.simulators.SpikingNeuralNetwork.neuralnetwork import NeuralNetwork
-from fugu.simulators.SpikingNeuralNetwork.neuron import LIFNeuron
-from fugu.simulators.SpikingNeuralNetwork.synapse import Synapse
+from fugu.simulators.SpikingNeuralNetwork.nn_new import NeuralNetwork
+from fugu.simulators.SpikingNeuralNetwork.neuron_new import LIFNeuron
+from fugu.simulators.SpikingNeuralNetwork.synapse_new import Synapse
 
 
 @pytest.fixture
@@ -214,6 +214,19 @@ def test_add_multiple_synapses_check(blank_network, synapses):
         blank_network.add_multiple_synapses(synapses)
 
 
+@pytest.mark.parametrize(
+    "new_synapse",
+    [
+        set,
+        [],
+        float,
+        int
+    ]
+)
+def test_udpate_network_check(blank_network, new_synapse):
+    with pytest.raises(TypeError):
+        blank_network.update_network(new_synapse)
+
 def test_add_multiple_synapse(blank_network, neurons_and_synapses):
     neurons = neurons_and_synapses["neurons"]
     synapses = neurons_and_synapses["synapses"]
@@ -234,6 +247,20 @@ def test_step(blank_network, neurons_and_synapses):
 
 
 # TODO should add_multiple_neurons method accept {} (even though it's an instance of Iterable)
+
+# @pytest.mark.parametrize(
+#     "neuron_name, input_values"
+# [
+#     (None, None),
+#     (None, object),
+#     ([], "fail"),
+#     (object, object),
+# ],
+# )
+# def test_update_input_neuron_type(blank_network,neuron_name, input_values):
+#     with pytest.raises(TypeError):
+#         blank_network.update_input_neuron(neuron_name, input_values)
+
 # TODO list_neurons: why the "\b\b"?
 # TODO remove NOT SURE IF THIS IS NEEDED section - after legacy test suite is ported over
 # TODO test update_input_neuron method

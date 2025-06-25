@@ -61,10 +61,9 @@ class NeuralNetwork:
         """
         Add synapse to a network. If a tuple is provided, a new synapse object is created and added
         """
-        #synapse_obj = LearningSynapse if type(new_synapse) == tuple and isinstance(new_synapse[2], str) else Synapse
-        print (new_synapse, "the new synapse object")
+        
         synapse_obj = LearningSynapse if type(new_synapse) == tuple and any(isinstance(item, str) for item in new_synapse) else Synapse
-        print (synapse_obj, "The synapse object")
+        
         if not new_synapse:
             raise TypeError("Needs synapse object with pre and post neurons")
         elif type(new_synapse) == tuple and len(new_synapse) >= 2 and len(new_synapse) < 7:
@@ -97,11 +96,9 @@ class NeuralNetwork:
             self.add_synapse(s)
 
     def update_input_neuron(self, neuron_name, input_values):
-        # print (input_values, iter(input_values), "The input values")
         self.nrns[neuron_name].connect_to_input(input_values)
 
     # Will be called automatically if a synapse is added
-    # TODO: learning_flat is unused.  Needs to be implemented or removed.
     def update_network(self, new_synapse):
         """
         build the connection map from the simple_synapses and Neuron information contained in them

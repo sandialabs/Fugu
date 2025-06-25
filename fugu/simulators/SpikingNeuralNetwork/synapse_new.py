@@ -236,7 +236,6 @@ class LearningSynapse(Synapse):
                 "Learning rule must be one of the following: ['STDP', 'r-STDP', 'three-factor']"
             )
 
-        # super(LearningSynapse, self).__init__()
         self._d = delay
         self._w = weight
         self._pre = pre_neuron
@@ -259,6 +258,25 @@ class LearningSynapse(Synapse):
     def __str__(self):
         return "{0}_Synapse {1}({2}, {3})".format(
             self._name_learning_rule, self.name, self._d, self._w
+        )
+
+    def show_params(self):
+        """
+        Display the information of the synapse (pre-synaptic neuron, post-synaptic neuron,
+        delay, and weight).
+
+        Returns:
+            None
+        """
+
+        print(
+            "Synapse {0} -> {1}:\n delay  : {2}\n weight : {3}\n learning_rule : {4}".format(
+                self._pre,
+                self._post,
+                self._d,
+                self._w,
+                self._name_learning_rule
+            )
         )
 
     def get_learning_params(self):
