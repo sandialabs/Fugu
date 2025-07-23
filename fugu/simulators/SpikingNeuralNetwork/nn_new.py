@@ -61,7 +61,7 @@ class NeuralNetwork:
         """
         Add synapse to a network. If a tuple is provided, a new synapse object is created and added
         """
-        
+        # Can simplify this a bit
         synapse_obj = LearningSynapse if type(new_synapse) == tuple and any(isinstance(item, str) for item in new_synapse) else Synapse
         
         if not new_synapse:
@@ -207,7 +207,6 @@ if __name__ == "__main__":
             frequency=100,
             bins=n_bins,
             record=False,
-            encoding="Poisson",
         )
         nn.add_neuron(neuron_obj_dict[f"N{in_neuron}"])
         input_stream = InputEncoding("Poisson", in_stream = np.array([image[in_neuron]]), frequency = 100, bins = n_bins).get_iterable()
