@@ -1,6 +1,6 @@
 import pytest
 
-from fugu.simulators.SpikingNeuralNetwork.neuron_new import InputNeuron
+from fugu.simulators.SpikingNeuralNetwork.neuron import InputNeuron
 
 
 @pytest.fixture

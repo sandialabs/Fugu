@@ -357,7 +357,7 @@ class LearningSynapse(Synapse):
         assert post_spike_time >= 0, "Post spike time is negative"
         pre_spike_time = self.calculate_spike_timing(pre_spike_hist[: delay_shift + 1])
        
-        # TODO Instead of implementing the learning process here, we can just call the learning rule class
+
         if self._learning_rule == "STDP":
             if self._post.spike:
                 # If the pre synaptic neuron spikes at the same time step considering the delay

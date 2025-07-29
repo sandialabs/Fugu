@@ -3,8 +3,8 @@ from collections import deque
 import numpy as np
 import pytest
 
-from fugu.simulators.SpikingNeuralNetwork.neuron_new import InputNeuron, LIFNeuron
-from fugu.simulators.SpikingNeuralNetwork.synapse_new import LearningSynapse as Synapse
+from fugu.simulators.SpikingNeuralNetwork.neuron import InputNeuron, LIFNeuron
+from fugu.simulators.SpikingNeuralNetwork.synapse import LearningSynapse as Synapse
 
 
 @pytest.fixture
@@ -105,6 +105,19 @@ def test_constructor_learning_rule_type_check(lif_neuron, learning_rule):
     with pytest.raises(TypeError):
         Synapse(lif_neuron("n1"), lif_neuron("n2"), learning_rule=learning_rule)
 
+
+@pytest.mark.parametrize(
+    "learning_rule",
+    [
+        [],
+        object,
+        int,
+        set
+    ]
+)
+def test_constructor_learning_rule_type_check(lif_neuron, learning_rule):
+    with pytest.raises(TypeError):
+        Synapse(lif_neuron("n1"), lif_neuron("n2"), learning_rule=learning_rule)
 
 
 def test_constructor_defaults(
