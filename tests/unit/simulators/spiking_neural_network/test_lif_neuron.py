@@ -1,7 +1,7 @@
 import pytest
 
-from fugu.simulators.SpikingNeuralNetwork.neuron_new import LIFNeuron
-from fugu.simulators.SpikingNeuralNetwork.synapse_new import LearningSynapse
+from fugu.simulators.SpikingNeuralNetwork.neuron import LIFNeuron
+from fugu.simulators.SpikingNeuralNetwork.synapse import LearningSynapse
 
 
 @pytest.fixture
