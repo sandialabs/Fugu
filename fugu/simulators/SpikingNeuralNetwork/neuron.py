@@ -418,12 +418,10 @@ class InputNeuron(Neuron):
 
         try:
             n = next(self._it)
-            # print (n, "THe iterable value", sum(1 for e in self._it))
             if not isinstance(n, numbers.Real):
                 raise TypeError("Inputs must be int or float")
             self.v = n
             if self.v > 0:
-                # print("It is spiking")
                 self.spike = True
                 self.v = 0
             else:

@@ -10,6 +10,7 @@ class InputEncoding():
     '''
     Base class for input encoding schemes that convert input data into a format suitable for input neurons.
     This class provides a method to get an iterable representation of the input data based on the specified encoding scheme.    
+    
     '''
 
     def __init__(self, encoding_scheme: str = None, in_stream=None, frequency:int = None, bins: int = None):

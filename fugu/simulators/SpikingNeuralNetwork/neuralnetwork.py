@@ -210,7 +210,6 @@ if __name__ == "__main__":
         )
         nn.add_neuron(neuron_obj_dict[f"N{in_neuron}"])
         input_stream = InputEncoding("Poisson", in_stream = np.array([image[in_neuron]]), frequency = 100, bins = n_bins).get_iterable()
-        # input_stream = Encoding.get_iterable(np.array([image[in_neuron]]))
         nn.update_input_neuron(neuron_name=f"N{in_neuron}", input_values=input_stream)
         if in_neuron == 6 or in_neuron == 16:
             neuron_obj_dict[f"N{in_neuron}"].show_iterable()
@@ -222,7 +221,6 @@ if __name__ == "__main__":
         leakage_constant=0.1,
         voltage=-0.065,
     )
-    # out2 = LIFNeuron("O2", threshold=-0.055, reset_voltage=-0.055, leakage_constant=1.0, voltage=-0.065)
     nn.add_neuron(out)
     for synapse in range(25):
         nn.add_synapse(
@@ -235,7 +233,6 @@ if __name__ == "__main__":
     for key, value in nn.synps.items():
         i += 1
         weight_arr.append(value.weight)
-        # print (key, " THe value", value.weight, i)
 
     print(image.reshape(5, 5))
     weight_arr = np.array(weight_arr)
@@ -261,6 +258,3 @@ if __name__ == "__main__":
     plt.imshow(weights)
     plt.title("Input weights")
     plt.show()
-
-
-# add_synapse(self, presynaptic, postsynaptic, weight, delay, **kwargs)
