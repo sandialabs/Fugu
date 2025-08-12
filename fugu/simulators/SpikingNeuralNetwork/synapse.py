@@ -288,7 +288,23 @@ class LearningSynapse(Synapse):
         """
         self._learning_params = LearningParams()
         return self._learning_params.__dict__
+    
 
+    def set_learning_params(self, learning_params: LearningParams):
+        """
+        Set the learning parameters for the synapse
+
+        Parameters:
+            learning_params (LearningParams): Learning parameters for the synapse
+
+        Returns:
+            None
+        """
+        if not isinstance(learning_params, LearningParams):
+            raise TypeError("Learning parameters must be of type LearningParams")
+        self._learning_params = learning_params
+
+    
     def update_state(self):
         """
         Updates the time evolution of the states for one time step. The spike information is

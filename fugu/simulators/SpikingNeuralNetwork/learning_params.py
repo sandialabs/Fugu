@@ -38,6 +38,5 @@ if __name__ == "__main__":
     data_dict = learn_params.__dict__
     print(data_dict)
     print(data_keys, len(data_keys))
-    # for i in range(len(data_keys)):
-    #     print (learn_params.data_keys[i])
+
 

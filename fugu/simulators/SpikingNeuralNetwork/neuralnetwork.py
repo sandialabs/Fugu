@@ -97,7 +97,7 @@ class NeuralNetwork:
 
     def update_input_neuron(self, neuron_name, input_values):
         self.nrns[neuron_name].connect_to_input(input_values)
-
+        
     # Will be called automatically if a synapse is added
     def update_network(self, new_synapse):
         """
