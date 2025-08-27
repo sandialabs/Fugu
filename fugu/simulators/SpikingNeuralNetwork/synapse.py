@@ -251,6 +251,7 @@ class LearningSynapse(Synapse):
             if not isinstance(mod_neuron, Neuron):
                 raise TypeError("Modulatory neuron must be of type neuron")
             self._mod = mod_neuron
+        # Have a default dictionary for learning parameters instead of the dataclass
         self._learning_params = learning_params if learning_params is not None else LearningParams()
         self._eligibility_trace = 0.0
 
