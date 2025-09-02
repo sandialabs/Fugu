@@ -4,7 +4,8 @@ import numpy as np
 import pytest
 
 from fugu.simulators.SpikingNeuralNetwork.neuron import InputNeuron, LIFNeuron
-from fugu.simulators.SpikingNeuralNetwork.synapse import Synapse
+from fugu.simulators.SpikingNeuralNetwork.synapse import LearningSynapse as Synapse
+
 
 
 @pytest.fixture
@@ -30,6 +31,7 @@ def default_synapse_w_lif_neurons():
     return Synapse(n1, n2)
 
 
+# TODO: Should we have learning option for the InputNeuron connections? Need to find a way to explain that
 @pytest.fixture
 def default_synapse_w_input_neurons():
     n1 = InputNeuron("n1")
@@ -89,6 +91,7 @@ def test_constructor_defaults(
     assert default_synapse_w_lif_neurons._w == 1.0
     assert default_synapse_w_lif_neurons._hist == deque(np.zeros(1))
     assert default_synapse_w_lif_neurons.name == "s_n1_n2"
+    assert default_synapse_w_lif_neurons._learning_rule == "None"
 
     assert default_synapse_w_input_neurons.delay == 1
     assert default_synapse_w_input_neurons._d == 1
@@ -96,6 +99,7 @@ def test_constructor_defaults(
     assert default_synapse_w_input_neurons._w == 1.0
     assert default_synapse_w_input_neurons._hist == deque(np.zeros(1))
     assert default_synapse_w_input_neurons.name == "s_n1_n2"
+    assert default_synapse_w_input_neurons._learning_rule == "None"
 
 
 def test_neuron_getters():
@@ -113,6 +117,11 @@ def test_synapse_key():
     synapse = Synapse(pre_neuron, post_neuron)
 
     assert synapse.get_key() == (pre_neuron, post_neuron)
+
+
+
+# # TODO input validation for weight
+# def test_weight_setter_type_check(default_synapse_w_lif_neurons, weight)
 
 
 def test_weight_setter(default_synapse_w_lif_neurons, default_synapse_w_input_neurons):
@@ -169,7 +178,6 @@ def test_set_params_type_check(default_synapse_w_lif_neurons, weight):
         default_synapse_w_lif_neurons.set_params(new_weight=weight)
 
 
-
 @pytest.mark.parametrize(
     "delay",
     [
@@ -200,7 +208,7 @@ def test_show_params(capsys, default_synapse_w_lif_neurons):
     out, _ = capsys.readouterr()
     assert (
         out
-        == "Synapse LIFNeuron n1(0.0, 0.0, 1.0) -> LIFNeuron n2(0.0, 0.0, 1.0):\n delay  : 1\n weight : 1.0\n"
+        == "Synapse LIFNeuron n1(0.0, 0.0, 1.0) -> LIFNeuron n2(0.0, 0.0, 1.0):\n delay  : 1\n weight : 1.0\n
     )
 
     assert default_synapse_w_lif_neurons.set_params(new_delay=2, new_weight=2.0) == None
@@ -209,13 +217,14 @@ def test_show_params(capsys, default_synapse_w_lif_neurons):
     assert (
         out
         == "Synapse LIFNeuron n1(0.0, 0.0, 1.0) -> LIFNeuron n2(0.0, 0.0, 1.0):\n delay  : 2\n weight : 2.0\n"
+
     )
 
 
 def test_named__str__(capsys, default_synapse_w_lif_neurons):
     print(default_synapse_w_lif_neurons)
     out, _ = capsys.readouterr()
-    assert out == "Synapse s_n1_n2(1, 1.0)\n"
+    assert out == "Simple_Synapse s_n1_n2(1, 1.0)\n"
 
 
 def test_named__repr__(capsys, default_synapse_w_lif_neurons):
@@ -229,3 +238,29 @@ def test_update_state_on_default_lif_synapse(default_synapse_w_lif_neurons):
     for _ in range(50):
         assert default_synapse_w_lif_neurons.update_state() == None
         assert default_synapse_w_lif_neurons._hist == reference_hist
+
+        assert default_synapse_w_lif_neurons._learning_rule == "None"
+        assert default_synapse_w_lif_neurons._hist == reference_hist
+
+
+def test_update_state_on_default_lif_synapse_with_pre_spike(
+    default_synapse_w_lif_neurons,
+):
+    reference_hist = deque(np.zeros(default_synapse_w_lif_neurons.delay))
+    assert default_synapse_w_lif_neurons.update_state() == None
+    
+    # Updating the state of the pre neuron to spike
+    default_synapse_w_lif_neurons._pre.spike = True
+    assert default_synapse_w_lif_neurons.update_state() == None
+    reference_hist.append(default_synapse_w_lif_neurons._w)
+    reference_hist.popleft()
+    assert default_synapse_w_lif_neurons._learning_rule == "None"
+    assert default_synapse_w_lif_neurons._hist == reference_hist
+
+
+def test_update_state_on_default_input_synapse(default_synapse_w_input_neurons):
+    reference_hist = deque(np.zeros(default_synapse_w_input_neurons.delay))
+    for _ in range(50):
+        assert default_synapse_w_input_neurons.update_state() == None
+        assert default_synapse_w_input_neurons._hist == reference_hist
+

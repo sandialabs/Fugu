@@ -4,13 +4,9 @@
 import numpy as np
 from .keras_helpers import keras_convolve2d, keras_convolve2d_4dinput, generate_keras_kernel, generate_mock_image, keras_convolution2d_output_shape, keras_convolution2d_output_shape_4dinput
 
-try:
-    from tensorflow.keras.models import Sequential
-    from tensorflow.keras import Model, initializers
-    from tensorflow.keras.layers import Dense, Conv2D, MaxPooling2D
-except ModuleNotFoundError:
-    import pytest
-    pytest.skip(reason="Tensorflow package missing.", allow_module_level=True)
+from tensorflow.keras.models import Sequential
+from tensorflow.keras import Model, initializers
+from tensorflow.keras.layers import Dense, Conv2D, MaxPooling2D
 
 class ConvolutionParams:
 

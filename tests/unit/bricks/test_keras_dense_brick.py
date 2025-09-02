@@ -223,4 +223,3 @@ def get_edge_connections_inverse(graph,prefix1,shape1,prefix2,shape2):
     node_names2 = get_node_name_list(prefix2,shape2)
     adict2 = {node_name2: [node_name1 for node_name1 in node_names1 if node_name2 in adict1[node_name1]] for node_name2 in node_names2}
     return adict2
-

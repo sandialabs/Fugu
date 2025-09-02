@@ -15,6 +15,7 @@ from fugu.utils.validation import validate_instance, validate_type
 from fugu.simulators.SpikingNeuralNetwork.input_encoding import InputEncoding
 
 
+
 class NeuralNetwork:
     def __init__(self):
         # self.nrns = set()
@@ -57,7 +58,7 @@ class NeuralNetwork:
             print("{},".format(self.nrns[n].name), end=" ")
         print("\b\b}")
 
-    def add_synapse(self, new_synapse=None):
+    def add_synapse(self, new_synapse=None, learning_flag=False):
         """
         Add synapse to a network. If a tuple is provided, a new synapse object is created and added
         """
@@ -77,7 +78,7 @@ class NeuralNetwork:
 
         if tmpsyn.get_key() not in self.synps:
             self.synps[tmpsyn.get_key()] = tmpsyn
-            self.update_network(tmpsyn)
+            self.update_network(tmpsyn, learning_flag=learning_flag)
         else:
             print(
                 "Warning! Not Added! "
@@ -99,7 +100,8 @@ class NeuralNetwork:
         self.nrns[neuron_name].connect_to_input(input_values)
         
     # Will be called automatically if a synapse is added
-    def update_network(self, new_synapse):
+    # TODO: learning_flat is unused.  Needs to be implemented or removed.
+    def update_network(self, new_synapse, learning_flag=False):
         """
         build the connection map from the simple_synapses and Neuron information contained in them
         """
@@ -189,7 +191,7 @@ if __name__ == "__main__":
             [0, 0, 1, 0, 0],
         ]
     )
-    noisy = 0
+    noisy = 
     np.random.seed(1)
     noise = np.random.rand(5, 5)
     noise_image = base_image + noise * 0.2
@@ -238,7 +240,8 @@ if __name__ == "__main__":
     weight_arr = np.array(weight_arr)
     print(weight_arr.reshape(5, 5))
     import matplotlib.pyplot as plt
-
+    sns.set()
+    sns.set_style({"axes.grid": False})
     plt.imshow(1 - weight_arr.reshape(5, 5))
     plt.title("Trained weights", fontdict={"fontsize": 20, "weight": "bold"})
     plt.savefig("nn_base_ss_noise.png")

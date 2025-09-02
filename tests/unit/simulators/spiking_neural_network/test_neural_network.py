@@ -2,7 +2,7 @@ import pytest
 
 from fugu.simulators.SpikingNeuralNetwork.neuralnetwork import NeuralNetwork
 from fugu.simulators.SpikingNeuralNetwork.neuron import LIFNeuron
-from fugu.simulators.SpikingNeuralNetwork.synapse import Synapse
+from fugu.simulators.SpikingNeuralNetwork.synapse import Synapse, LearningSynapse
 
 
 @pytest.fixture
@@ -37,9 +37,9 @@ def neurons_and_synapses():
     neuron_d = LIFNeuron("d")
     neurons = [neuron_a, neuron_b, neuron_c, neuron_d]
 
-    synapse_a_b = Synapse(neuron_a, neuron_b)
-    synapse_b_c = Synapse(neuron_b, neuron_c)
-    synapse_c_d = Synapse(neuron_c, neuron_d)
+    synapse_a_b = LearningSynapse(neuron_a, neuron_b)
+    synapse_b_c = LearningSynapse(neuron_b, neuron_c)
+    synapse_c_d = LearningSynapse(neuron_c, neuron_d)
     synapses = [synapse_a_b, synapse_b_c, synapse_c_d]
 
     return {"neurons": neurons, "synapses": synapses}
@@ -147,7 +147,7 @@ def test_add_synapse_subclass(blank_network):
     itself.
     """
 
-    class SubSynapse(Synapse):
+    class SubSynapse(LearningSynapse):
         pass
 
     synapse = SubSynapse(LIFNeuron("a"), LIFNeuron("b"))
@@ -163,7 +163,7 @@ def test_add_synapse_class_type_check(blank_network, neuron_a):
     "new_synapse",
     [
         (LIFNeuron("0"), LIFNeuron("1")),
-        (LIFNeuron("0"), LIFNeuron("1"), 1, 1.0),
+        (LIFNeuron("0"), LIFNeuron("1"), "None", 1, 1.0),
     ],
 )
 def test_add_synapse_tuple(blank_network, new_synapse):
@@ -198,8 +198,12 @@ def test_add_synapse(capsys, blank_network, neurons_and_synapses):
     assert len(blank_network.synps) == 3
 
     assert blank_network.add_synapse(synapses[0]) == None
+    name = synapses[0]._name_learning_rule
     out, _ = capsys.readouterr()
-    assert out == "Warning! Not Added! Synapse s_a_b(1, 1.0) already defined in network. (Use <synapse>.set_params() to update synapse)\n"
+    assert (
+        out
+        == f"Warning! Not Added! {name}_Synapse s_a_b(1, 1.0) already defined in network. (Use <synapse>.set_params() to update synapse)\n"
+    )
 
 
 @pytest.mark.parametrize(

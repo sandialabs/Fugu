@@ -88,7 +88,6 @@ class LIFNeuron(Neuron):
                 weights, the range should lie between  0 < scaling_factor <=1. The default is 0.1.
             scaling : Bool, optional. Indicates if the weights of the neuron need to undergo synaptic scaling or not.
             record : Bool, optional.  Indicates if a neuron spike state should be sensed with probes. Default is False.
-
         Returns:
             none
         """
@@ -283,6 +282,49 @@ class LIFNeuron(Neuron):
         validate_type(new_factor, float_types)
         self._S = new_factor
 
+    def get_presynapses(self):
+        """
+        Returns the presynaptic neurons that feed into the neuron.
+
+        Returns:
+            set: set of presynaptic neurons
+        """
+
+        return self.presyn
+
+    def get_presynaptic_weights(self):
+        """
+        Returns the weights of the presynaptic neurons that feed into the neuron.
+
+        Returns:
+            list: list of weights of presynaptic neurons
+        """
+
+        return np.array([s.weight for s in self.presyn])
+
+    def set_presynaptic_weights(self, weight_arr):
+        """
+        Set the weights of the presynaptic neurons that feed into the neuron.
+
+        Parameters:
+            weight_arr (np.ndarray): array of weights of presynaptic neurons
+        Returns:
+            None
+        """
+
+        for i, s in enumerate(self.presyn):
+            s.weight = weight_arr[i]
+
+    @property
+    def scaling_factor(self):
+        return self._S
+
+    @scaling_factor.setter
+    def scaling_factor(self, new_factor):
+        new_factor = int_to_float(new_factor)
+        validate_type(new_factor, float_types)
+        self._S = new_factor
+
     @property
     def threshold(self):
         return self._T
@@ -329,7 +371,7 @@ class LIFNeuron(Neuron):
 class InputNeuron(Neuron):
     """
     Input Neuron. Inherits from class Neuron.
-    Input Neurons can read streaming inputs and 
+    Input Neurons can read streaming inputs
     """
 
     def __init__(
@@ -389,7 +431,39 @@ class InputNeuron(Neuron):
         if not hasattr(in_stream, "__iter__"):
             raise TypeError("{in_stream} must be iterable".format(**locals()))
         else:
-            self._it = iter(in_stream)
+            if self._encoding == "Poisson":
+                # Conversion to poisson iterable
+                if type(in_stream) is np.ndarray:
+                    in_stream = in_stream.flatten()
+
+                # If the data is already a stream, pass it as is
+                if len(in_stream) > 1:
+                    self._it = iter(in_stream)
+                else:
+                    # If the data is a singular value, convert it into a poisson stream iterable of length equalling bin sizes
+                    dt = 0.001
+                    fr2 = self.fr * in_stream[0]
+                    poisson_output = np.random.rand(1, self.bins) < fr2 * dt
+                    poisson_output = poisson_output.astype(int)
+                    # print (len(poisson_output[0]), ,type(poisson_output))
+                    self._it = iter(poisson_output[0])
+
+            else:
+                self._it = iter(in_stream)
+
+    def show_iterable(self):
+        """
+        Display the iterable input data stream.
+
+        Returns:
+            None
+        """
+        from itertools import tee
+
+        iter_copy = tee(self._it)
+        iter_list = list(iter_copy)
+        print(f"Input Neuron {self.name} has input stream {iter_list}")
+        print(f"The input stream has {np.count_nonzero(np.array(iter_list))} spikes")
 
     def show_iterable(self):
         """
@@ -418,6 +492,7 @@ class InputNeuron(Neuron):
 
         try:
             n = next(self._it)
+            # print (n, "THe iterable value", sum(1 for e in self._it))
             if not isinstance(n, numbers.Real):
                 raise TypeError("Inputs must be int or float")
             self.v = n
