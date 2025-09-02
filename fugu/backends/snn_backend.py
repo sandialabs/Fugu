@@ -60,8 +60,10 @@ class snn_Backend(Backend):
             delay  = int(props.get('delay',  1))
             weight =     props.get('weight', 1.0)
             if learning_rule := props.get('learning_rule', None):
+                print(learning_rule, "The rule in the model")
                 syn = snn.Synapse(neuron_dict[n1], neuron_dict[n2], delay=delay, weight=weight)
             else:
+                print(learning_rule, "The rule in the model")
                 learning_params = props.get('learning_params', {})
                 syn = snn.Synapse(neuron_dict[n1], neuron_dict[n2], delay=delay, weight=weight, learning_rule=learning_rule, learning_params=learning_params)
             self.nn.add_synapse(syn)
