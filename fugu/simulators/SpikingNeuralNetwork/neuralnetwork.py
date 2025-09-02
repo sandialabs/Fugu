@@ -238,10 +238,7 @@ if __name__ == "__main__":
     weight_arr = np.array(weight_arr)
     print(weight_arr.reshape(5, 5))
     import matplotlib.pyplot as plt
-    import seaborn as sns
 
-    sns.set()
-    sns.set_style({"axes.grid": False})
     plt.imshow(1 - weight_arr.reshape(5, 5))
     plt.title("Trained weights", fontdict={"fontsize": 20, "weight": "bold"})
     plt.savefig("nn_base_ss_noise.png")

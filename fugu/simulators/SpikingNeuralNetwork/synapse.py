@@ -413,7 +413,7 @@ class LearningSynapse(Synapse):
    
 
 if __name__ == "__main__":
-    from fugu.simulators.SpikingNeuralNetwork.neuron_new import LIFNeuron
+    from fugu.simulators.SpikingNeuralNetwork.neuron import LIFNeuron
 
     n1 = LIFNeuron("n1")
     n2 = LIFNeuron("n2")

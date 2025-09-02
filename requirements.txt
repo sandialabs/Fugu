@@ -15,4 +15,3 @@ sphinx
 tensorflow<=2.10.*
 keras<=2.10.*
 scipy
-seaborn~=0.13.2
