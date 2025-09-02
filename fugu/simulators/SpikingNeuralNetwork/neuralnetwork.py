@@ -191,7 +191,7 @@ if __name__ == "__main__":
             [0, 0, 1, 0, 0],
         ]
     )
-    noisy = 
+    noisy = 0
     np.random.seed(1)
     noise = np.random.rand(5, 5)
     noise_image = base_image + noise * 0.2
@@ -240,8 +240,6 @@ if __name__ == "__main__":
     weight_arr = np.array(weight_arr)
     print(weight_arr.reshape(5, 5))
     import matplotlib.pyplot as plt
-    sns.set()
-    sns.set_style({"axes.grid": False})
     plt.imshow(1 - weight_arr.reshape(5, 5))
     plt.title("Trained weights", fontdict={"fontsize": 20, "weight": "bold"})
     plt.savefig("nn_base_ss_noise.png")

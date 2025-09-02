@@ -73,23 +73,20 @@ class LIFNeuron(Neuron):
 
         Parameters:
             name (any): String, optional.  String name of a neuron. The default is None.
-            threshold : Double, optional.  Threshold value above while the neuron spikes. The default is 0.0.
-            reset_voltage : Double, optional.  The voltage to which the neuron resets after spiking. The default is 0.0.
-            leakage_constant : Double, optional
-                The rate at which the neuron voltage decays. The leakage with rate
-                m is calculated as m*v. A rate of m=1 indicates no leak. For
-                realistic models, 0<= m <=1. The default is 1.0.
-            voltage : Double, optional.  Internal voltage of the neuron. The default is 0.0.
-            bias : Double, optional. Constant bias voltage value that is added at every timestep. The default is 0.0
-            p : Double, optional.  Probability of spiking if voltage exceeds threshold.
-                p=1 indicates a deterministic neuron. The default is 1.0.
-            scaling_factor : Double, optional. 
-                The factor by which the weights should be scaled down to.  Since we are scaling the
-                weights, the range should lie between  0 < scaling_factor <=1. The default is 0.1.
-            scaling : Bool, optional. Indicates if the weights of the neuron need to undergo synaptic scaling or not.
-            record : Bool, optional.  Indicates if a neuron spike state should be sensed with probes. Default is False.
+            threshold (Double) : optional.  Threshold value above while the neuron spikes. The default is 0.0.
+            reset_voltage (Double) : optional.  The voltage to which the neuron resets after spiking. The default is 0.0.
+            leakage_constant (Double) : optional. The rate at which the neuron voltage decays. The leakage with rate
+            m is calculated as m*v. A rate of m=1 indicates no leak. For
+            realistic models, 0<= m <=1. The default is 1.0.
+            voltage (Double) : optional.  Internal voltage of the neuron. The default is 0.0.
+            bias (Double) : optional. Constant bias voltage value that is added at every timestep. The default is 0.0
+            p (Double) : optional.  Probability of spiking if voltage exceeds threshold. p=1 indicates a deterministic neuron. The default is 1.0.
+            scaling_factor (Double) : optional. The factor by which the weights should be scaled down to.  Since we are scaling the
+            weights, the range should lie between  0 < scaling_factor <=1. The default is 0.1.
+            scaling (Bool) : optional. Indicates if the weights of the neuron need to undergo synaptic scaling or not.
+            record (Bool) : optional.  Indicates if a neuron spike state should be sensed with probes. Default is False.
         Returns:
-            none
+            None
         """
 
         threshold = int_to_float(threshold)
@@ -112,9 +109,7 @@ class LIFNeuron(Neuron):
         validate_type(record, bool_types)
 
         if leakage_constant < 0 or leakage_constant > 1:
-            raise UserWarning(
-                "For realistic models, leakage m should be in the interval [0, 1]."
-            )
+            raise UserWarning("For realistic models, leakage m should be in the interval [0, 1].")
 
         if p < 0 or p > 1:
             raise ValueError("Probability p must be in the interval [0, 1].")
@@ -164,7 +159,6 @@ class LIFNeuron(Neuron):
 
         input_v = 0.0
         if self.scaling:
-            # weights_arr = self.get_presynaptic_weights()
             scaled_weights = self.scale_weights(self.get_presynaptic_weights(), self._S)
             self.set_presynaptic_weights(scaled_weights)
 
@@ -195,9 +189,7 @@ class LIFNeuron(Neuron):
             none
         """
 
-        print(
-            "Neuron {0}: {1} volts, spike = {2}".format(self.name, self.v, self.spike)
-        )
+        print("Neuron {0}: {1} volts, spike = {2}".format(self.name, self.v, self.spike))
 
     def show_params(self):
         """
@@ -227,17 +219,9 @@ class LIFNeuron(Neuron):
         if len(self.presyn) == 0:
             print("Neuron {0} receives no external input".format(self.name))
         elif len(self.presyn) == 1:
-            print(
-                "{0} receives input via synapse: {1}".format(
-                    self.__repr__(), self.presyn
-                )
-            )
+            print("{0} receives input via synapse: {1}".format(self.__repr__(), self.presyn))
         else:
-            print(
-                "{0} receives input via synapses: {1}".format(
-                    self.__repr__(), self.presyn
-                )
-            )
+            print("{0} receives input via synapses: {1}".format(self.__repr__(), self.presyn))
 
     def get_presynapses(self):
         """
@@ -360,9 +344,7 @@ class LIFNeuron(Neuron):
         return self.v
 
     def __str__(self):
-        return "LIFNeuron {0}({1}, {2}, {3})".format(
-            self.name, self._T, self._R, self._m
-        )
+        return "LIFNeuron {0}({1}, {2}, {3})".format(self.name, self._T, self._R, self._m)
 
     def __repr__(self):
         return "LIFNeuron {0}".format(self.name)
@@ -537,9 +519,7 @@ if __name__ == "__main__":
     except:
         print("Raises type error since probability was greater than 1")
 
-    n1 = LIFNeuron(
-        "n1", threshold=1.2, reset_voltage=0.0, leakage_constant=0.6, voltage=1, p=1
-    )
+    n1 = LIFNeuron("n1", threshold=1.2, reset_voltage=0.0, leakage_constant=0.6, voltage=1, p=1)
     print("Neuron with intial v = 1; leakage_constant=0.6:")
     print("Timestep 0:")
     n1.show_state()
