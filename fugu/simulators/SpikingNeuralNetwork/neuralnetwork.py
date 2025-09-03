@@ -10,8 +10,10 @@ from collections.abc import Iterable
 import pandas as pd
 
 from fugu.simulators.SpikingNeuralNetwork.neuron import InputNeuron, LIFNeuron, Neuron
-from fugu.simulators.SpikingNeuralNetwork.synapse import LearningSynapse
+from fugu.simulators.SpikingNeuralNetwork.synapse import LearningSynapse, Synapse
 from fugu.utils.validation import validate_instance, validate_type
+from fugu.simulators.SpikingNeuralNetwork.input_encoding import InputEncoding
+
 
 
 class NeuralNetwork:
@@ -58,9 +60,11 @@ class NeuralNetwork:
 
     def add_synapse(self, new_synapse=None, learning_flag=False):
         """
-        Add synapse to a network. If a tuple is provided, a new simple_synapse object is created and added
+        Add synapse to a network. If a tuple is provided, a new synapse object is created and added
         """
-        synapse_obj = LearningSynapse
+        # Can simplify this a bit
+        synapse_obj = LearningSynapse if type(new_synapse) == tuple and any(isinstance(item, str) for item in new_synapse) else Synapse
+        
         if not new_synapse:
             raise TypeError("Needs synapse object with pre and post neurons")
         elif type(new_synapse) == tuple and len(new_synapse) >= 2 and len(new_synapse) < 7:
@@ -70,7 +74,7 @@ class NeuralNetwork:
         elif isinstance(new_synapse, synapse_obj):
             tmpsyn = new_synapse
         else:
-            raise TypeError("Must provide Synapse Object")
+            raise TypeError("Must provide valid Synapse Object")
 
         if tmpsyn.get_key() not in self.synps:
             self.synps[tmpsyn.get_key()] = tmpsyn
@@ -94,14 +98,14 @@ class NeuralNetwork:
 
     def update_input_neuron(self, neuron_name, input_values):
         self.nrns[neuron_name].connect_to_input(input_values)
-
+        
     # Will be called automatically if a synapse is added
     # TODO: learning_flat is unused.  Needs to be implemented or removed.
     def update_network(self, new_synapse, learning_flag=False):
         """
         build the connection map from the simple_synapses and Neuron information contained in them
         """
-        synapse_obj = LearningSynapse
+        synapse_obj = LearningSynapse if type(new_synapse) == tuple and any(isinstance(item, str) for item in new_synapse) else Synapse
         validate_instance(new_synapse, synapse_obj)
         new_synapse._post.presyn.add(new_synapse)
 
@@ -187,7 +191,7 @@ if __name__ == "__main__":
             [0, 0, 1, 0, 0],
         ]
     )
-    noisy = 1
+    noisy = 0
     np.random.seed(1)
     noise = np.random.rand(5, 5)
     noise_image = base_image + noise * 0.2
@@ -205,10 +209,10 @@ if __name__ == "__main__":
             frequency=100,
             bins=n_bins,
             record=False,
-            encoding="Poisson",
         )
         nn.add_neuron(neuron_obj_dict[f"N{in_neuron}"])
-        nn.update_input_neuron(neuron_name=f"N{in_neuron}", input_values=np.array([image[in_neuron]]))
+        input_stream = InputEncoding("Poisson", in_stream = np.array([image[in_neuron]]), frequency = 100, bins = n_bins).get_iterable()
+        nn.update_input_neuron(neuron_name=f"N{in_neuron}", input_values=input_stream)
         if in_neuron == 6 or in_neuron == 16:
             neuron_obj_dict[f"N{in_neuron}"].show_iterable()
 
@@ -219,12 +223,10 @@ if __name__ == "__main__":
         leakage_constant=0.1,
         voltage=-0.065,
     )
-    # out2 = LIFNeuron("O2", threshold=-0.055, reset_voltage=-0.055, leakage_constant=1.0, voltage=-0.065)
     nn.add_neuron(out)
     for synapse in range(25):
         nn.add_synapse(
             (nn.nrns[f"N{synapse}"], nn.nrns[f"O1"], "STDP", 1, 0.04),
-            learning_flag=True,
         )
     print(len(nn.synps))
     df = nn.run(n_bins)
@@ -233,16 +235,11 @@ if __name__ == "__main__":
     for key, value in nn.synps.items():
         i += 1
         weight_arr.append(value.weight)
-        # print (key, " THe value", value.weight, i)
 
     print(image.reshape(5, 5))
     weight_arr = np.array(weight_arr)
     print(weight_arr.reshape(5, 5))
     import matplotlib.pyplot as plt
-    import seaborn as sns
-
-    sns.set()
-    sns.set_style({"axes.grid": False})
     plt.imshow(1 - weight_arr.reshape(5, 5))
     plt.title("Trained weights", fontdict={"fontsize": 20, "weight": "bold"})
     plt.savefig("nn_base_ss_noise.png")

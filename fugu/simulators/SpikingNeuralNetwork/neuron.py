@@ -6,7 +6,6 @@ import numbers
 import sys
 
 import numpy as np
-
 from fugu.utils.types import bool_types, float_types, int_types, str_types
 from fugu.utils.validation import int_to_float, validate_type
 
@@ -74,22 +73,20 @@ class LIFNeuron(Neuron):
 
         Parameters:
             name (any): String, optional.  String name of a neuron. The default is None.
-            threshold : Double, optional.  Threshold value above while the neuron spikes. The default is 0.0.
-            reset_voltage : Double, optional.  The voltage to which the neuron resets after spiking. The default is 0.0.
-            leakage_constant : Double, optional
-                The rate at which the neuron voltage decays. The leakage with rate
-                m is calculated as m*v. A rate of m=1 indicates no leak. For
-                realistic models, 0<= m <=1. The default is 1.0.
-            voltage : Double, optional.  Internal voltage of the neuron. The default is 0.0.
-            bias : Double, optional. Constant bias voltage value that is added at every timestep. The default is 0.0
-            p (double): optional.  Probability of spiking if voltage exceeds threshold.
-                p=1 indicates a deterministic neuron. The default is 1.0.
-            scaling_factor (double): optional. The factor by which the weights should be scaled down to. The default is 0.1
-            scaling (bool): optional. Indicates if the weights of the neuron need to undergo synaptic scaling or not.
-            record (bool): optional.  Indicates if a neuron spike state should be sensed with probes. Default is False.
-
+            threshold (Double) : optional.  Threshold value above while the neuron spikes. The default is 0.0.
+            reset_voltage (Double) : optional.  The voltage to which the neuron resets after spiking. The default is 0.0.
+            leakage_constant (Double) : optional. The rate at which the neuron voltage decays. The leakage with rate
+            m is calculated as m*v. A rate of m=1 indicates no leak. For
+            realistic models, 0<= m <=1. The default is 1.0.
+            voltage (Double) : optional.  Internal voltage of the neuron. The default is 0.0.
+            bias (Double) : optional. Constant bias voltage value that is added at every timestep. The default is 0.0
+            p (Double) : optional.  Probability of spiking if voltage exceeds threshold. p=1 indicates a deterministic neuron. The default is 1.0.
+            scaling_factor (Double) : optional. The factor by which the weights should be scaled down to.  Since we are scaling the
+            weights, the range should lie between  0 < scaling_factor <=1. The default is 0.1.
+            scaling (Bool) : optional. Indicates if the weights of the neuron need to undergo synaptic scaling or not.
+            record (Bool) : optional.  Indicates if a neuron spike state should be sensed with probes. Default is False.
         Returns:
-            none
+            None
         """
 
         threshold = int_to_float(threshold)
@@ -116,6 +113,9 @@ class LIFNeuron(Neuron):
 
         if p < 0 or p > 1:
             raise ValueError("Probability p must be in the interval [0, 1].")
+
+        if scaling_factor <= 0 or scaling_factor >=1:
+            raise ValueError("Scaling factor must be in the interval (0,1]")
 
         super(LIFNeuron, self).__init__()
         self.name = name
@@ -159,7 +159,6 @@ class LIFNeuron(Neuron):
 
         input_v = 0.0
         if self.scaling:
-            # weights_arr = self.get_presynaptic_weights()
             scaled_weights = self.scale_weights(self.get_presynaptic_weights(), self._S)
             self.set_presynaptic_weights(scaled_weights)
 
@@ -267,6 +266,49 @@ class LIFNeuron(Neuron):
         validate_type(new_factor, float_types)
         self._S = new_factor
 
+    def get_presynapses(self):
+        """
+        Returns the presynaptic neurons that feed into the neuron.
+
+        Returns:
+            set: set of presynaptic neurons
+        """
+
+        return self.presyn
+
+    def get_presynaptic_weights(self):
+        """
+        Returns the weights of the presynaptic neurons that feed into the neuron.
+
+        Returns:
+            list: list of weights of presynaptic neurons
+        """
+
+        return np.array([s.weight for s in self.presyn])
+
+    def set_presynaptic_weights(self, weight_arr):
+        """
+        Set the weights of the presynaptic neurons that feed into the neuron.
+
+        Parameters:
+            weight_arr (np.ndarray): array of weights of presynaptic neurons
+        Returns:
+            None
+        """
+
+        for i, s in enumerate(self.presyn):
+            s.weight = weight_arr[i]
+
+    @property
+    def scaling_factor(self):
+        return self._S
+
+    @scaling_factor.setter
+    def scaling_factor(self, new_factor):
+        new_factor = int_to_float(new_factor)
+        validate_type(new_factor, float_types)
+        self._S = new_factor
+
     @property
     def threshold(self):
         return self._T
@@ -311,7 +353,7 @@ class LIFNeuron(Neuron):
 class InputNeuron(Neuron):
     """
     Input Neuron. Inherits from class Neuron.
-    Input Neurons can read inputs and convert them to different encoding schemes.
+    Input Neurons can read streaming inputs
     """
 
     def __init__(
@@ -322,7 +364,6 @@ class InputNeuron(Neuron):
         frequency=100,
         bins=100,
         record=False,
-        encoding=None,
     ):
         """
         Constructor for the new input neuron class
@@ -334,7 +375,6 @@ class InputNeuron(Neuron):
             frequency: double, optional. Frequency of the Poisson spikes from the input data. The default is 100.
             bins: double, optional. Number of bins for the Poisson spikes. The default is 100.
             record: bool, optional. Indicates if a neuron spike state should be sensed with probes. The default is False.
-            encoding: String, optional. The type of encoding on the input stream or value to be performed
         Returns:
             None
         """
@@ -356,7 +396,6 @@ class InputNeuron(Neuron):
         self._it = None
         self.record = record
         self.fr = frequency
-        self._encoding = encoding
         self.bins = bins
 
     def connect_to_input(self, in_stream):
@@ -408,6 +447,20 @@ class InputNeuron(Neuron):
         print(f"Input Neuron {self.name} has input stream {iter_list}")
         print(f"The input stream has {np.count_nonzero(np.array(iter_list))} spikes")
 
+    def show_iterable(self):
+        """
+        Display the iterable input data stream.
+
+        Returns:
+            None
+        """
+        from itertools import tee
+
+        iter_copy = tee(self._it)
+        iter_list = list(iter_copy)
+        print(f"Input Neuron {self.name} has input stream {iter_list}")
+        print(f"The input stream has {np.count_nonzero(np.array(iter_list))} spikes")
+
     def update_state(self):
         """
         Updates the neuron states. The neuron spikes if the input value in
@@ -426,7 +479,6 @@ class InputNeuron(Neuron):
                 raise TypeError("Inputs must be int or float")
             self.v = n
             if self.v > 0:
-                # print("It is spiking")
                 self.spike = True
                 self.v = 0
             else:
@@ -489,3 +541,4 @@ if __name__ == "__main__":
     for i, _ in enumerate(range(7)):
         n0.update_state()
         print(f"Time {i}: {n0.spike}")
+
