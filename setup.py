@@ -19,6 +19,7 @@ setup(
         "six~=1.15.0",
         "furo~=2021.11.16",
         "pyyaml",
+        "pytest",
     ],
     extras_require={
         "whetstone": ["tensorflow<=2.10", "keras<=2.10", "scipy"],
