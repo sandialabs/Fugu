@@ -1,6 +1,5 @@
 import pytest
 
-from fugu.simulators.SpikingNeuralNetwork.modified_neuron import LIFNeuron
 from fugu.simulators.SpikingNeuralNetwork.neuron import LIFNeuron
 from fugu.simulators.SpikingNeuralNetwork.synapse import LearningSynapse
 
@@ -321,4 +320,4 @@ def test_show_presynapses(capsys, default_neuron):
     default_neuron.presyn.add(syn2)
     assert default_neuron.show_presynapses() == None
     out, _ = capsys.readouterr()
-    assert (out == "LIFNeuron None receives input via synapses: {s_n3_n2, s_n1_n2}\n")
+    assert (out == "LIFNeuron None receives input via synapses: {s_n1_n2, s_n3_n2}\n")

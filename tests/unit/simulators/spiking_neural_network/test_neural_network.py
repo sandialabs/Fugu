@@ -163,7 +163,7 @@ def test_add_synapse_class_type_check(blank_network, neuron_a):
     "new_synapse",
     [
         (LIFNeuron("0"), LIFNeuron("1")),
-        (LIFNeuron("0"), LIFNeuron("1"), "None", 1, 1.0),
+        (LIFNeuron("0"), LIFNeuron("1"), "STDP", 1, 1.0),
     ],
 )
 def test_add_synapse_tuple(blank_network, new_synapse):
