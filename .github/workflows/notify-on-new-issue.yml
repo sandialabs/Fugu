@@ -1,0 +1,15 @@
+name: Notify Developers on New Issues
+
+on:
+  issues:
+    types: [opened]
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send Email Notification
+        env:
+          DEVEMAILS: ${{ secrets.DEVEMAILS }}
+        run: |
+          echo "A new issue has been created: ${{ github.event.issue.html_url }}" | mail -s "New GitHub Issue Created"  $DEVEMAILS
