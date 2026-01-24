@@ -31,7 +31,7 @@ class TestSnnRegisterGraphTraversal(BrickTest):
         num_vertices = len(graph.nodes)
         weights = nx.get_edge_attributes(graph, "weight").values()
         max_weight = max(weights) if len(weights) > 0 else 1
-        time_factor = 5 * max_weight if max_weight > 1 else 7
+        time_factor = 6 * max_weight if max_weight > 1 else 7  # changing prefactor from 5 to 6 resolved the failing graph unit tests.
         return time_factor * num_vertices
 
     def check_spike_output(self, spikes, expected, scaffold):

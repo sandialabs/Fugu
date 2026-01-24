@@ -1,0 +1,12 @@
+[build-system]
+requires = ["setuptools >= 64"]
+build-backend = "setuptools.build_meta"
+
+[tool.isort]
+profile = "black"
+
+[tool.black]
+line-length = "180"
+
+[tool.pylint.format]
+max-line-length = "180"

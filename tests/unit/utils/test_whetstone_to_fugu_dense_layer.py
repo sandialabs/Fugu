@@ -15,7 +15,7 @@ import pandas as pd
 from tensorflow import constant as tf_constant
 from tensorflow.keras import Model, initializers
 from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Dense, Conv2D, Flatten, MaxPooling2D, BatchNormalization
+from tensorflow.keras.layers import Dense, Conv2D, Flatten, MaxPooling2D, BatchNormalization, Input
 
 from ..helpers import ConvolutionParams, PoolingParams, DenseParams, KerasParams, IntegerSequence, ArraySequence
 
@@ -53,14 +53,15 @@ class Test_Whetstone_2_Fugu_DenseLayer:
         pool_obj = PoolingParams(convo_obj, pool_size=(2,2), pool_strides=(1,1), pool_padding="same", pool_method="max")
         dense_obj = DenseParams(pool_obj, output_units=4, output_shape=(1,np.prod(pool_obj.output_shape)))
 
+        inputs = Input(convo_obj.mock_image.shape[1:])
         model = Sequential()
+        model.add(inputs)
         model.add(Conv2D(convo_obj.nFilters,
                             (convo_obj.kernel_height, convo_obj.kernel_width),
                             strides=convo_obj.strides,
                             padding=convo_obj.mode,
                             activation=None,
                             use_bias=True,
-                            input_shape=convo_obj.mock_image.shape[1:],
                             name=str(1),
                             kernel_initializer=initializers.constant(np.flip(convo_obj.filters,(0,1))),
                             bias_initializer=initializers.constant(np.array(convo_obj.biases).reshape((convo_obj.nFilters,)))))

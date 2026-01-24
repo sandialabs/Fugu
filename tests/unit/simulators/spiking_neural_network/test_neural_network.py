@@ -2,7 +2,7 @@ import pytest
 
 from fugu.simulators.SpikingNeuralNetwork.neuralnetwork import NeuralNetwork
 from fugu.simulators.SpikingNeuralNetwork.neuron import LIFNeuron
-from fugu.simulators.SpikingNeuralNetwork.synapse import Synapse
+from fugu.simulators.SpikingNeuralNetwork.synapse import LearningSynapse, Synapse
 
 
 @pytest.fixture
@@ -37,9 +37,9 @@ def neurons_and_synapses():
     neuron_d = LIFNeuron("d")
     neurons = [neuron_a, neuron_b, neuron_c, neuron_d]
 
-    synapse_a_b = Synapse(neuron_a, neuron_b)
-    synapse_b_c = Synapse(neuron_b, neuron_c)
-    synapse_c_d = Synapse(neuron_c, neuron_d)
+    synapse_a_b = LearningSynapse(neuron_a, neuron_b)
+    synapse_b_c = LearningSynapse(neuron_b, neuron_c)
+    synapse_c_d = LearningSynapse(neuron_c, neuron_d)
     synapses = [synapse_a_b, synapse_b_c, synapse_c_d]
 
     return {"neurons": neurons, "synapses": synapses}
@@ -103,7 +103,6 @@ def test_add_multiple_neurons_check(blank_network, neurons):
         blank_network.add_multiple_neurons(neurons)
 
 
-@pytest.mark.xfail
 def test_add_multiple_neurons_w_none(blank_network):
     assert len(blank_network.nrns) == 0
     assert blank_network.add_multiple_neurons() == None
@@ -147,7 +146,7 @@ def test_add_synapse_subclass(blank_network):
     itself.
     """
 
-    class SubSynapse(Synapse):
+    class SubSynapse(LearningSynapse):
         pass
 
     synapse = SubSynapse(LIFNeuron("a"), LIFNeuron("b"))
@@ -163,7 +162,7 @@ def test_add_synapse_class_type_check(blank_network, neuron_a):
     "new_synapse",
     [
         (LIFNeuron("0"), LIFNeuron("1")),
-        (LIFNeuron("0"), LIFNeuron("1"), 1, 1.0),
+        (LIFNeuron("0"), LIFNeuron("1"), "STDP", 1, 1.0),
     ],
 )
 def test_add_synapse_tuple(blank_network, new_synapse):
@@ -198,8 +197,9 @@ def test_add_synapse(capsys, blank_network, neurons_and_synapses):
     assert len(blank_network.synps) == 3
 
     assert blank_network.add_synapse(synapses[0]) == None
+    name = synapses[0]._name_learning_rule
     out, _ = capsys.readouterr()
-    assert out == "Warning! Not Added! Synapse s_a_b(1, 1.0) already defined in network. (Use <synapse>.set_params() to update synapse)\n"
+    assert out == f"Warning! Not Added! {name}_Synapse s_a_b(1, 1.0) already defined in network. (Use <synapse>.set_params() to update synapse)\n"
 
 
 @pytest.mark.parametrize(
@@ -212,6 +212,12 @@ def test_add_synapse(capsys, blank_network, neurons_and_synapses):
 def test_add_multiple_synapses_check(blank_network, synapses):
     with pytest.raises(TypeError):
         blank_network.add_multiple_synapses(synapses)
+
+
+@pytest.mark.parametrize("new_synapse", [set, [], float, int])
+def test_udpate_network_check(blank_network, new_synapse):
+    with pytest.raises(TypeError):
+        blank_network.update_network(new_synapse)
 
 
 def test_add_multiple_synapse(blank_network, neurons_and_synapses):
@@ -234,6 +240,20 @@ def test_step(blank_network, neurons_and_synapses):
 
 
 # TODO should add_multiple_neurons method accept {} (even though it's an instance of Iterable)
+
+# @pytest.mark.parametrize(
+#     "neuron_name, input_values"
+# [
+#     (None, None),
+#     (None, object),
+#     ([], "fail"),
+#     (object, object),
+# ],
+# )
+# def test_update_input_neuron_type(blank_network,neuron_name, input_values):
+#     with pytest.raises(TypeError):
+#         blank_network.update_input_neuron(neuron_name, input_values)
+
 # TODO list_neurons: why the "\b\b"?
 # TODO remove NOT SURE IF THIS IS NEEDED section - after legacy test suite is ported over
 # TODO test update_input_neuron method

@@ -2,6 +2,7 @@
 # fmt: off
 import numpy as np
 import pytest
+from scipy.signal import convolve2d
 
 from fugu.backends import snn_Backend
 from fugu.bricks.keras_convolution_bricks import keras_convolution_2d_4dinput as convolution_2d
@@ -28,10 +29,6 @@ def mock_keras_model(filename):
     model = Sequential()
     model.add(Conv2D(3, (7, 7), padding='same', activation=None, use_bias=True, input_shape=input_shape))
     return model
-
-def keras_mnist_model_norm_off():
-    import os
-    return f"{os.path.dirname(__file__)}/data/model_adaptive_mnist_normalization_off.keras"
 
 def keras_fixed_model_inference(biases):
     '''

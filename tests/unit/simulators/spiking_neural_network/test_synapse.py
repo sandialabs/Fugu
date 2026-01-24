@@ -30,6 +30,7 @@ def default_synapse_w_lif_neurons():
     return Synapse(n1, n2)
 
 
+# TODO: Should we have learning option for the InputNeuron connections? Need to find a way to explain that
 @pytest.fixture
 def default_synapse_w_input_neurons():
     n1 = InputNeuron("n1")
@@ -55,17 +56,21 @@ def test_constructor_exceptions(pre_neuron, post_neuron):
         Synapse(pre_neuron, post_neuron)
 
 
-@pytest.mark.parametrize("delay", ["fail", [], set, object])
-def test_contructor_delay_type_check(lif_neuron, delay):
+@pytest.mark.parametrize("delay", ["fail", [], set, object, float, tuple])
+def test_constructor_delay_type_check(lif_neuron, delay):
     with pytest.raises(TypeError):
         Synapse(lif_neuron("n1"), lif_neuron("n2"), delay=delay)
 
 
+@pytest.mark.parametrize("weight", ["fail", [], set, object, tuple])
+def test_constructor_weight_type_check(lif_neuron, weight):
+    with pytest.raises(TypeError):
+        Synapse(lif_neuron("n1"), lif_neuron("n2"), weight=weight)
+
+
 @pytest.mark.parametrize(
     "delay",
-    [
-        0,
-    ],
+    [0, -1, -10],
 )
 def test_constructor_delay_value_check(lif_neuron, delay):
     with pytest.raises(ValueError):
@@ -105,6 +110,10 @@ def test_synapse_key():
     assert synapse.get_key() == (pre_neuron, post_neuron)
 
 
+# # TODO input validation for weight
+# def test_weight_setter_type_check(default_synapse_w_lif_neurons, weight)
+
+
 def test_weight_setter(default_synapse_w_lif_neurons, default_synapse_w_input_neurons):
     assert default_synapse_w_lif_neurons.weight == 1.0
     default_synapse_w_lif_neurons.weight = 2.0
@@ -115,7 +124,14 @@ def test_weight_setter(default_synapse_w_lif_neurons, default_synapse_w_input_ne
     assert default_synapse_w_input_neurons.weight == 3.0
 
 
-@pytest.mark.parametrize("delay", ["fail", [], set, object])
+@pytest.mark.parametrize("weight", ["fail", [], set, object, tuple])
+def test_weight_setter_type_check(default_synapse_w_lif_neurons, weight):
+    assert default_synapse_w_lif_neurons.weight == 1.0
+    with pytest.raises(TypeError):
+        default_synapse_w_lif_neurons.weight = weight
+
+
+@pytest.mark.parametrize("delay", ["fail", [], set, object, tuple])
 def test_delay_setter_type_check(default_synapse_w_lif_neurons, delay):
     assert default_synapse_w_lif_neurons.delay == 1
     with pytest.raises(TypeError):
@@ -140,10 +156,16 @@ def test_delay_setter(default_synapse_w_input_neurons):
     assert default_synapse_w_input_neurons.delay == 2
 
 
-@pytest.mark.parametrize("delay", ["fail", [], set, object])
+@pytest.mark.parametrize("delay", ["fail", [], set, object, tuple])
 def test_set_params_type_check(default_synapse_w_lif_neurons, delay):
     with pytest.raises(TypeError):
         default_synapse_w_lif_neurons.set_params(new_delay=delay)
+
+
+@pytest.mark.parametrize("weight", ["fail", [], set, object, tuple])
+def test_set_params_type_check(default_synapse_w_lif_neurons, weight):
+    with pytest.raises(TypeError):
+        default_synapse_w_lif_neurons.set_params(new_weight=weight)
 
 
 @pytest.mark.parametrize(
@@ -190,8 +212,3 @@ def test_named__repr__(capsys, default_synapse_w_lif_neurons):
     print(repr(default_synapse_w_lif_neurons))
     out, _ = capsys.readouterr()
     assert out == "s_n1_n2\n"
-
-
-# TODO input validation for weight
-# TODO test update_state method
-# TODO difference testing with LIFNeuron vs InputNeuron

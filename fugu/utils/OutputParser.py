@@ -329,8 +329,3 @@ class OutputParser:
                 print("color=" + column.color, file=out)
                 print("scale=" + column.scale, file=out)
 
-if __name__ == "__main__":
-    # Example of the all-at-once interface.
-    o = OutputParser()
-    o.parse("C:/Users/frothga/n2a/jobs/2020-05-27-205826-0/out")
-    print('done')

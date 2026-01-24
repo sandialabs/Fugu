@@ -63,7 +63,7 @@ class Brick(ABC):
         """
         Describes the ports on which this brick will take in data from other bricks.
         Returns a dictionary of PortSpec objects. The key is the name of the input
-        port as known to this brick. See scaffold.py for the definition of PortSpec.
+        port as known to this brick. See port.py for the definition of PortSpec.
         A return value of {} indicate that this brick does not take inputs. Effectively, that
         flags this as an input brick, in the sense that all values originate from here.
         """
@@ -74,11 +74,20 @@ class Brick(ABC):
         """
         Describes the ports on which this brick will output data to other bricks.
         Returns a dictionary of PortSpec objects. The key is the name of the output
-        port as known to this brick. See scaffold.py for the definition of PortSpec.
+        port as known to this brick. See port.py for the definition of PortSpec.
         A return value of {} indicates that this brick does not produce outputs. This can happen
         if the brick does some form of direct I/O.
         """
         return {}
+
+    def output_shape(self, inputs: dict[str, PortData] = {}) -> dict[str, PortSpec]:
+        """
+        This function is an instance-specific version of output_ports().
+        Returns the same structure as output_ports(), but with ChannelSpec.shape filled with
+        instance-specific information. 'shape' may be None or partially unknown.
+        As a hint, 'inputs' provides any currently-known input bindings. Expect this to be incomplete.
+        """
+        return self.output_ports()
 
     @classmethod
     def show_ports(cls):
@@ -132,7 +141,7 @@ class Brick(ABC):
 
         Args:
             graph (NetworkX.DiGraph): The neural network being built.
-            inputs (dict): A collection ports feeding into this brick.
+            inputs (dict): A collection of ports feeding into this brick.
                 The dictionery represents bindings between our input ports
                 and the outputs supplied by other bricks. The key is the name
                 of the input port as known to this brick and described by input_ports().

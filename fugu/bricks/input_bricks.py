@@ -187,7 +187,7 @@ class Vector_Input(InputBrick):
             for spike in range(num_spikes):
                 idx_to_build = deque()
                 for dimension in range(len(local_idxs)):
-                    idx_to_build.append(local_idxs[dimension][spike])
+                    idx_to_build.append(int(str(local_idxs[dimension][spike])))
                 global_idxs.append(tuple(idx_to_build))
             spiking_neurons = [
                 self.generate_neuron_name(str(idx)) for idx in global_idxs
@@ -233,33 +233,12 @@ class Vector_Input(InputBrick):
     def output_ports(cls) -> dict[str, PortSpec]:
         port = PortSpec(name='output')
         port.channels['data']     = ChannelSpec(name='data')
-        port.channels['begin']    = ChannelSpec(name='begin')
-        port.channels['complete'] = ChannelSpec(name='complete')
+        port.channels['begin']    = ChannelSpec(name='begin',    shape=(1,))
+        port.channels['complete'] = ChannelSpec(name='complete', shape=(1,))
         return {port.name: port}
 
     def build2(self, graph, inputs: dict[str, PortData] = {}):
-        """
-        Build spike input brick.
-
-        Args:
-            graph: networkx graph to define connections of the computational graph
-            metadata: dictionary to define the shapes and parameters of the brick
-            control_nodes: list of dictionary of auxillary nodes.
-                Expected keys:
-                    'complete' - A list of neurons that fire when the brick is done
-            input_lists: list of nodes that will contain input
-            input_coding: list of input coding formats
-
-        Returns:
-            graph: graph of a computational elements and connections
-            output_shape, output_coding, layer, D: dictionary of output parameters (shape, coding, layers, depth, etc)
-            complete_node, begin_node: list of dictionary of control nodes ('complete')
-            output_lists (list): list of output
-            output_codings (list): list of coding formats of output
-
-        """
-
-        if not self.time_dimension:
+        if not self.time_dimension:  # Add a pseudo time dimension in last position, to make access uniform between modes. TODO: how does this affect set_properties()?
             self.vector = np.expand_dims(self.vector, len(self.vector.shape))
 
         #print(f"Current vector: {self.vector}")
@@ -274,7 +253,6 @@ class Vector_Input(InputBrick):
         complete_node = self.generate_neuron_name("complete")
         output.channels['begin']   .neurons = [begin_node]
         output.channels['complete'].neurons = [complete_node]
-        vector_size = len(self.vector) * len(self.vector.shape)
         graph.add_node(begin_node,
                        index=-1,
                        threshold=0.0,

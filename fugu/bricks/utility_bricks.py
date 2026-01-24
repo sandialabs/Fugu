@@ -260,7 +260,7 @@ class Concatenate(Brick):
 
         complete_name = self.generate_neuron_name("complete")
         graph.add_node(
-            complete_node_name,
+            complete_name,
             index=-1,
             threshold=1.0,
             decay=0.0,
@@ -270,7 +270,7 @@ class Concatenate(Brick):
         for idx in range(len(input_lists)):
             graph.add_edge(
                 control_nodes[idx]['complete'],
-                complete_node_name,
+                complete_name,
                 weight=(1 / len(input_lists)) + 0.000001,
                 delay=1,
             )
@@ -297,7 +297,7 @@ class Concatenate(Brick):
         self.is_built = True
 
         return (graph, self.metadata, [{
-            'complete': complete_node_name
+            'complete': complete_name
         }], output_lists, output_codings)
 
 
@@ -324,15 +324,24 @@ class AND_OR(Brick):
     def input_ports(cls) -> dict[str, PortSpec]:
         port = PortSpec(name='input', minimum=2, maximum=2)
         port.channels['data']     = ChannelSpec(name='data', coding=input_coding_types)
-        port.channels['complete'] = ChannelSpec(name='complete')
+        port.channels['complete'] = ChannelSpec(name='complete', shape=(1,))
         return {port.name: port}
 
     @classmethod
     def output_ports(cls) -> dict[str, PortSpec]:
         port = PortSpec(name='output')
         port.channels['data']     = ChannelSpec(name='data', coding=input_coding_types)
-        port.channels['complete'] = ChannelSpec(name='complete')
+        port.channels['complete'] = ChannelSpec(name='complete', shape=(1,))
         return {port.name: port}
+
+    def output_shape(self, inputs: dict[str, PortData] = {}) -> dict[str, PortSpec]:
+        result = self.output_ports()
+        input_tuple = PortUtil.get_autoports(inputs, 'input', 2)
+        if input_tuple:
+            shape               = input_tuple[ 0].channels['data'].spec.shape
+            if not shape: shape = input_tuple[-1].channels['data'].spec.shape
+            result['output'].channels['data'].shape = shape
+        return result
 
     def build2(self, graph, inputs: dict[str, PortData] = {}):
         """
@@ -377,7 +386,7 @@ class AND_OR(Brick):
             operand1 = data1[i]
             operand2 = data2[i]
             # Remember all of our output neurons need to be marked
-            and_node_name = self.generate_neuron_name(f"{operand1}_{operand2}")
+            and_node_name = self.generate_neuron_name(f"{i}")
             data.neurons.append(and_node_name)
             graph.add_node(and_node_name,
                            index=0,

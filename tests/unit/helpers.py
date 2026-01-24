@@ -7,7 +7,7 @@ from .keras_helpers import keras_convolve2d, keras_convolve2d_4dinput, generate_
 try:
     from tensorflow.keras.models import Sequential
     from tensorflow.keras import Model, initializers
-    from tensorflow.keras.layers import Dense, Conv2D, MaxPooling2D
+    from tensorflow.keras.layers import Dense, Conv2D, MaxPooling2D, Input
 except ModuleNotFoundError:
     import pytest
     pytest.skip(reason="Tensorflow package missing.", allow_module_level=True)
@@ -144,10 +144,12 @@ class ConvolutionParams:
         return spatial_input_shape
     
     def _set_convolution_answer(self):
+        inputs = Input(self.input_shape[1:])
         model = Sequential()
+        model.add(inputs)
         model.add(Conv2D(self.nFilters, (self.kernel_height, self.kernel_width), strides=self.strides, padding=self.mode, activation=None, use_bias=True, 
-                            input_shape=self.input_shape[1:], name="conv2d", kernel_initializer=ArraySequence(np.flip(self.filters,(0,1))), bias_initializer=ArraySequence(self.biases)))
-        feature_extractor = Model(inputs=model.inputs, outputs=[layer.output for layer in model.layers])
+                            name="conv2d", kernel_initializer=ArraySequence(np.flip(self.filters,(0,1))), bias_initializer=ArraySequence(self.biases)))
+        feature_extractor = Model(inputs=inputs, outputs=[layer.output for layer in model.layers])
         feature_extractor_answer = feature_extractor(self.mock_image).numpy() - self.biases
 
         # self.answer = keras_convolve2d_4dinput(self.mock_image, self.filters, self.strides, self.mode, self.data_format, filters=self.nFilters).reshape(self.output_shape)
@@ -562,7 +564,9 @@ class DenseParams:
 
 class KerasParams:
     def __init__(self,params_layers_list):
+        inputs = Input(tuple(list(params_layer.input_shape)[1:]))
         model = Sequential()
+        model.add(inputs)
         for layerID, params_layer in enumerate(params_layers_list):
 
             if layerID == 0:
@@ -580,7 +584,7 @@ class KerasParams:
             if isinstance(params_layer, DenseParams):
                 model = self.add_dense_layer(model, params_layer, layerID, input_shape)
 
-        feature_extractor = Model(inputs=model.inputs, outputs=[layer.output for layer in model.layers])
+        feature_extractor = Model(inputs=inputs, outputs=[layer.output for layer in model.layers])
         self.model = model
         self.features_extractor = feature_extractor
 
@@ -602,7 +606,6 @@ class KerasParams:
                             padding=params_layer.mode,
                             activation=None,
                             use_bias=True,
-                            input_shape=input_shape,
                             name=str(layerID),
                             kernel_initializer=initializers.constant(np.flip(params_layer.filters,(0,1))),
                             bias_initializer=initializers.constant(params_layer.biases)))
@@ -612,7 +615,7 @@ class KerasParams:
         if input_shape is None:
             model.add(MaxPooling2D(pool_size=params_layer.pool_size, strides=params_layer.pool_strides, padding=params_layer.pool_padding, name=str(layerID)))
         else:
-            model.add(MaxPooling2D(pool_size=params_layer.pool_size, strides=params_layer.pool_strides, padding=params_layer.pool_padding, name=str(layerID), input_shape=input_shape))
+            model.add(MaxPooling2D(pool_size=params_layer.pool_size, strides=params_layer.pool_strides, padding=params_layer.pool_padding, name=str(layerID)))
         return model
 
     def add_dense_layer(self, model, params_layer, layerID, input_shape=None):
@@ -627,8 +630,7 @@ class KerasParams:
                             use_bias=True,
                             kernel_initializer=ArraySequence(params_layer.weights),
                             bias_initializer=initializers.constant(params_layer.biases),
-                            name=str(layerID),
-                            input_shape=input_shape))
+                            name=str(layerID)))
 
         return model
 
@@ -636,10 +638,12 @@ def tensorflow_keras_conv2d_answer(convo_obj):
     class Empty:
         pass
 
+    inputs = Input(convo_obj.input_shape[1:])
     model = Sequential()
+    model.add(inputs)
     model.add(Conv2D(convo_obj.nFilters, (convo_obj.kernel_height, convo_obj.kernel_width), strides=convo_obj.strides, padding=convo_obj.mode, activation=None, use_bias=True, 
-                        input_shape=convo_obj.input_shape[1:], name="conv2d", kernel_initializer=ArraySequence(np.flip(convo_obj.filters,(0,1))), bias_initializer=ArraySequence(convo_obj.biases)))
-    feature_extractor = Model(inputs=model.inputs, outputs=[layer.output for layer in model.layers])
+                        name="conv2d", kernel_initializer=ArraySequence(np.flip(convo_obj.filters,(0,1))), bias_initializer=ArraySequence(convo_obj.biases)))
+    feature_extractor = Model(inputs=inputs, outputs=[layer.output for layer in model.layers])
     feature_extractor_answer = feature_extractor(convo_obj.mock_image)[0].numpy()
     keras_spike_count = (feature_extractor_answer > convo_obj.thresholds).astype(int).sum()
 

@@ -1,0 +1,26 @@
+.DS_Store
+/code/.DS_Store
+*.swp
+*.pyc
+/code/__pycache__
+__pycache__
+*.tags
+.direnv/
+.envrc
+*.ipynb_checkpoints/
+*.egg-info/
+env
+build
+.pytest_cache
+.coverage
+htmlcov
+scratch/
+.tox/
+.python-version
+
+# IDEs
+.idea
+*.code-workspace
+
+
+*.pickle

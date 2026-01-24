@@ -243,7 +243,7 @@ class Test_KerasConvolution2D_4dinput:
         from tensorflow import constant as tf_constant
         from tensorflow.keras import Model, initializers
         from tensorflow.keras.models import Sequential
-        from tensorflow.keras.layers import Conv2D
+        from tensorflow.keras.layers import Conv2D, Input
 
         runSubsetOn = True # Run only a subset of the full exhaustive parameter space; otherwise runs every parameter sequence
         subset_size = 100  # Note: Full parameter space size is 510
@@ -273,10 +273,13 @@ class Test_KerasConvolution2D_4dinput:
             for strides in [(1,1),(1,2),(2,1),(2,2),(1,3),(3,1),(2,3),(3,2),(3,3)]:
                 aself.strides = strides
 
+                inputs = Input(aself.pshape[1:])
+
                 model = Sequential()
+                model.add(inputs)
                 model.add(Conv2D(aself.nFilters, aself.filters.shape[:2], strides=aself.strides, padding=aself.mode, activation=None, use_bias=True, 
-                                input_shape=aself.pshape[1:], name="conv2d", kernel_initializer=ArraySequence(np.flip(aself.filters,(0,1))), bias_initializer=ArraySequence(aself.biases)))
-                feature_extractor = Model(inputs=model.inputs, outputs=[layer.output for layer in model.layers])
+                                name="conv2d", kernel_initializer=ArraySequence(np.flip(aself.filters,(0,1))), bias_initializer=ArraySequence(aself.biases)))
+                feature_extractor = Model(inputs=inputs, outputs=[layer.output for layer in model.layers])
                 feature_extractor_answer = feature_extractor(aself.pvector)[0].numpy()
                 keras_spike_count = (feature_extractor_answer > thresholds).astype(int).sum()
 
@@ -360,7 +363,7 @@ class Test_KerasConvolution2D_4dinput:
         from tensorflow import constant as tf_constant
         from tensorflow.keras import Model, initializers
         from tensorflow.keras.models import Sequential
-        from tensorflow.keras.layers import Conv2D
+        from tensorflow.keras.layers import Conv2D, Input
 
         self.basep = 4
         self.bits = 3
@@ -385,11 +388,13 @@ class Test_KerasConvolution2D_4dinput:
         calculated_spike_count = len(result[result['time'] > 0].index)
         print(convo_obj.biases)
 
+        inputs = Input(convo_obj.input_shape[1:])
 
         model = Sequential()
+        model.add(inputs)
         model.add(Conv2D(convo_obj.nFilters, (convo_obj.kernel_height, convo_obj.kernel_width), strides=convo_obj.strides, padding=convo_obj.mode, activation=None, use_bias=True, 
-                         input_shape=convo_obj.input_shape[1:], name="conv2d", kernel_initializer=ArraySequence(np.flip(convo_obj.filters,(0,1))), bias_initializer=ArraySequence(convo_obj.biases)))
-        feature_extractor = Model(inputs=model.inputs, outputs=[layer.output for layer in model.layers])
+                         name="conv2d", kernel_initializer=ArraySequence(np.flip(convo_obj.filters,(0,1))), bias_initializer=ArraySequence(convo_obj.biases)))
+        feature_extractor = Model(inputs=inputs, outputs=[layer.output for layer in model.layers])
         feature_extractor_answer = feature_extractor(convo_obj.mock_image)[0].numpy()
         keras_spike_count = (feature_extractor_answer > convo_obj.thresholds).astype(int).sum()
 
@@ -445,7 +450,7 @@ class Test_KerasConvolution2D_4dinput:
         from tensorflow import constant as tf_constant
         from tensorflow.keras import Model, initializers
         from tensorflow.keras.models import Sequential
-        from tensorflow.keras.layers import Conv2D
+        from tensorflow.keras.layers import Conv2D, Input
 
         image_height, image_width = 28, 28
         kernel_height, kernel_width = 7, 7
@@ -472,10 +477,13 @@ class Test_KerasConvolution2D_4dinput:
         # self.biases = -50000.0 * np.ones((nFilters,))
         result = self.run_convolution_2d(thresholds, verbose_scaffold=1)
 
+        inputs = Input(self.pvector.shape[1:])
+
         model = Sequential()
+        model.add(inputs)
         model.add(Conv2D(nFilters, (kernel_height, kernel_width), strides=self.strides, padding=self.mode, activation=None, use_bias=True, 
-                         input_shape=self.pvector.shape[1:], name="conv2d", kernel_initializer=ArraySequence(np.flip(self.filters,(0,1))), bias_initializer=ArraySequence(self.biases)))
-        feature_extractor = Model(inputs=model.inputs, outputs=[layer.output for layer in model.layers])
+                         name="conv2d", kernel_initializer=ArraySequence(np.flip(self.filters,(0,1))), bias_initializer=ArraySequence(self.biases)))
+        feature_extractor = Model(inputs=inputs, outputs=[layer.output for layer in model.layers])
         feature_extractor_answer = feature_extractor(self.pvector)[0].numpy()
         keras_spike_count = (feature_extractor_answer > thresholds).astype(int).sum()
 

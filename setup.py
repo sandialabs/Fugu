@@ -1,31 +1,41 @@
+import os
+
 from setuptools import find_packages, setup
 
 package_list = find_packages()
 
+# Get the list of dependencies
+base_dependencies = [
+    "networkx==3.2.1",
+    "numpy",
+    "pandas~=2.2.3",
+    "pyyaml",
+    "pytest~=8.3.4",
+    "scipy",
+]
+
+# Check for an environment variable to include additional dependencies
+additional_dependencies = os.getenv("INCLUDE_DEPENDENCIES", "").split(",")
+
+# Check for an environment variable to exclude specific dependencies
+excluded_dependencies = os.getenv("EXCLUDE_DEPENDENCIES", "").split(",")
+
+# Remove excluded dependencies from the base list
+filtered_dependencies = [dep for dep in base_dependencies if not any(omit_dep in dep for omit_dep in excluded_dependencies if omit_dep != "")]
+
+# Add additional dependencies to filtered dependencies
+final_dependencies = filtered_dependencies + [add_dep for add_dep in additional_dependencies if add_dep != ""]
+
 setup(
     name="fugu",
-    version="1.1",
+    version="1.4.2",
     description="A python library for computational neural graphs",
-    install_requires=[
-        "decorator~=4.4.2",
-        "future~=0.18.2",
-        "greenlet",
-        "msgpack~=1.0.0",
-        "networkx==2.4",
-        "numpy<1.24.0",
-        "pandas~=1.5.3",
-        "python-dateutil~=2.8.1",
-        "pytz~=2020.1",
-        "six~=1.15.0",
-        "furo~=2021.11.16",
-        "pyyaml",
-        "pytest",
-        "scipy",
-    ],
+    install_requires=final_dependencies,
     extras_require={
-        "whetstone": ["tensorflow<=2.10", "keras<=2.10"],
-        "dev": ["pre-commit", "isort", "black", "tqdm"],
+        "whetstone": ["tensorflow==2.18.0", "keras==3.8.0"],
+        "dev": ["pre-commit", "isort", "black", "tqdm", "tox", "tox-conda", "coverage"],
         "examples": ["notebook", "matplotlib", "tqdm"],
     },
     packages=package_list,
+    python_requires=">=3.9, <3.12",
 )

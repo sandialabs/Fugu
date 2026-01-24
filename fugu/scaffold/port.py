@@ -10,7 +10,7 @@ class ChannelSpec:
         A Port can have several different Channels. Typically, these
         would include 'data' and a control signal such as 'complete' or 'begin'.
     """
-    name:        str
+    name:        str        = ''
     description: str        = ''                          # Human-readable documentation about Channel.
     coding:      list[str]  = field(default_factory=list) # For input, all compatible codings. For output, generally just the one expected coding, but can be several if all compatible.
     shape:       tuple[int] = None                        # The tensor arrangement of neurons. None indicates no particular expectation. If any element in the list is <=0, it indicates unknown size for that dimension.
@@ -27,7 +27,7 @@ class PortSpec:
         In some cases, a brick may receive a variable number of inputs. To handle this,
         a brick may declare an "auto-port" by setting maximum to something other than 1.
     """
-    name:        str                                                  # Concise name of port, but generally human readable. The names '0', '1', '2', and so on, are reserved to mean the port with index==int(name).
+    name:        str                    = ''                          # Concise name of port, but generally human readable. The names '0', '1', '2', and so on, are reserved to mean the port with index==int(name).
     description: str                    = ''                          # Human-readable documentation about Port.
     index:       int                    = 0                           # Ordinal position of port, according to legacy Scaffold.add_brick()
     minimum:     int                    = 1                           # For input ports, indicates how many connections are required for the brick to function correctly. 0 means not required. Ignored for output ports.
@@ -40,8 +40,8 @@ class ChannelData:
         A bundle of neuron instances that work together to convey a specific topic of information.
         These are used to make connections at construction time.
     """
-    spec:    ChannelSpec                             # This could be a different object than the one returned by brick reflections functions.
-    neurons: list[str] = field(default_factory=list) # Graph node key for each neuron in this channel.
+    spec:    ChannelSpec = field(default_factory=ChannelSpec) # This could be a different object than the one returned by brick reflections functions.
+    neurons: list[str]   = field(default_factory=list)        # Graph node key for each neuron in this channel.
 
 @dataclass
 class PortData:
@@ -49,8 +49,8 @@ class PortData:
         A collection of all the neuron instances associated with a given input or output
         of a brick. These are organized into topical groups called channels.
     """
-    spec:     PortSpec                                             # This could be a different object than the one returned by brick reflections functions. The PortSpec.channels field should be ignored. Get ChannelSpec info directly from ChannelData.spec.
-    channels: dict[str, ChannelData] = field(default_factory=dict) # key is channel name
+    spec:     PortSpec               = field(default_factory=PortSpec) # This could be a different object than the one returned by brick reflections functions. The PortSpec.channels field should be ignored. Get ChannelSpec info directly from ChannelData.spec.
+    channels: dict[str, ChannelData] = field(default_factory=dict)     # key is channel name
 
 class PortError(Exception):
     pass
@@ -124,3 +124,25 @@ class PortUtil:
             result = (*result, port)
             if count and len(result) == count: break
         return result
+
+    @classmethod
+    def get_channel(cls, ports: dict[str, PortData], port_name, channel_name) -> ChannelData:
+        """
+        Returns the specified channel from a ports dictionary.
+        If the port or channel does not exist, returns an empty ChannelData object.
+        """
+        return ports.get(port_name, PortData()).channels.get(channel_name, ChannelData())
+
+    @classmethod
+    def all_shapes_known(cls, specs: dict[str, PortSpec]):
+        """
+        Scans the port specifications and returns a boolean value indicating whether they all
+        have concrete shapes.
+        """
+        for port_spec in specs.values():
+            for channel_spec in port_spec.channels.values():
+                # A shape is concrete if it is not None and every dimension is nonzero.
+                if not channel_spec.shape: return False
+                for size in channel_spec.shape:
+                    if size < 1: return False
+        return True

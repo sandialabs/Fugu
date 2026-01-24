@@ -1,6 +1,7 @@
 import pytest
 
 from fugu.simulators.SpikingNeuralNetwork.neuron import LIFNeuron
+from fugu.simulators.SpikingNeuralNetwork.synapse import LearningSynapse
 
 
 @pytest.fixture
@@ -35,6 +36,9 @@ def test_constructor_defaults(default_neuron):
     assert default_neuron.threshold == 0.0
     assert default_neuron.reset_voltage == 0.0
     assert default_neuron.leakage_constant == 1.0
+    assert default_neuron.scaling == False
+    assert default_neuron.scaling_factor == 0.1
+
     # and their _ counterparts
     assert default_neuron._T == 0.0
     assert default_neuron._R == 0.0
@@ -42,6 +46,7 @@ def test_constructor_defaults(default_neuron):
     assert default_neuron._b == 0.0
     assert default_neuron.voltage == 0.0
     assert default_neuron.v == 0.0
+    assert default_neuron._S == 0.1
 
     assert default_neuron.presyn == set()
     assert default_neuron.record == False
@@ -58,6 +63,8 @@ def test_constructor():
         voltage=1,
         bias=1,
         p=1,
+        scaling_factor=0.2,
+        scaling=True,
     )
     assert neuron.name == "neuron"
     # from parent abstract class
@@ -67,6 +74,8 @@ def test_constructor():
     assert neuron.threshold == 1.0
     assert neuron.reset_voltage == 1.0
     assert neuron.leakage_constant == 1.0
+    assert neuron.scaling == True
+    assert neuron.scaling_factor == 0.2
     # and their _ counterparts
     assert neuron._T == 1.0
     assert neuron._R == 1.0
@@ -74,6 +83,7 @@ def test_constructor():
     assert neuron._b == 1.0
     assert neuron.voltage == 1.0
     assert neuron.v == 1.0
+    assert neuron._S == 0.2
 
     assert neuron.presyn == set()
     assert neuron.record == False
@@ -102,9 +112,15 @@ def test_constructor_type_errors(param):
     with pytest.raises(TypeError):
         LIFNeuron(bias=param)
 
+    with pytest.raises(TypeError):
+        LIFNeuron(scaling_factor=param)
+
     if type(param) is not bool:
         with pytest.raises(TypeError):
             LIFNeuron(record=param)
+
+        with pytest.raises(TypeError):
+            LIFNeuron(scaling=param)
 
 
 @pytest.mark.parametrize("m", [-1, -0.1, 1.1, 10])
@@ -128,6 +144,24 @@ def test_warning_on_unrealistic_leakage_constant(m):
 def test_invalid_spiking_probablity(p, expected_error):
     with pytest.raises(expected_error):
         LIFNeuron(p=p)
+
+
+@pytest.mark.parametrize(
+    "scaling_factor, expected_error",
+    [
+        (1.1, ValueError),
+        (0.0, ValueError),
+        (5.0, ValueError),
+        (-0.1, ValueError),
+        (-10.0, ValueError),
+        (-10, ValueError),
+        (True, TypeError),
+        ({}, TypeError),
+    ],
+)
+def test_invalid_scaling_factor(scaling_factor, expected_error):
+    with pytest.raises(expected_error):
+        LIFNeuron(scaling_factor=scaling_factor)
 
 
 def test_update_state_on_default_neuron(default_neuron):
@@ -218,6 +252,12 @@ def test_threshold_setter(default_neuron):
     assert default_neuron.threshold == 0.7
 
 
+def test_scaling_factor_setter(default_neuron):
+    assert default_neuron.scaling_factor == 0.1
+    default_neuron.scaling_factor = 0.3
+    assert default_neuron.scaling_factor == 0.3
+
+
 def test_reset_voltage_setter(default_neuron):
     assert default_neuron.reset_voltage == 0.0
     default_neuron.reset_voltage = 0.2
@@ -254,4 +294,25 @@ def test_named__repr__(capsys, named_neuron):
     assert out == "LIFNeuron Testing\n"
 
 
-# TODO add test(s) for show_presynapses method
+def test_show_presynapses(capsys, default_neuron):
+    assert default_neuron.show_presynapses() == None
+    default_neuron.presyn = set()
+    out, _ = capsys.readouterr()
+    assert out == "Neuron None receives no external input\n"
+
+    neuron_1 = LIFNeuron("n1")
+    neuron_2 = LIFNeuron("n2")
+    syn1 = LearningSynapse(neuron_1, neuron_2)
+    default_neuron.presyn.add(syn1)
+    assert default_neuron.show_presynapses() == None
+    out, _ = capsys.readouterr()
+    assert out == "LIFNeuron None receives input via synapse: {s_n1_n2}\n"
+
+    neuron_3 = LIFNeuron("n3")
+    syn2 = LearningSynapse(neuron_3, neuron_2)
+    default_neuron.presyn.add(syn2)
+    assert default_neuron.show_presynapses() == None
+    out, _ = capsys.readouterr()
+    output_exp1 = "LIFNeuron None receives input via synapses: {s_n1_n2, s_n3_n2}\n"
+    output_exp2 = "LIFNeuron None receives input via synapses: {s_n3_n2, s_n1_n2}\n"
+    assert out == output_exp1 or out == output_exp2

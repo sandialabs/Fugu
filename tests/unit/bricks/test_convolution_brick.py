@@ -25,18 +25,14 @@ class Test_Convolution1D:
         subt = np.zeros(3)
         subt[:nSpikes] = 0.1
         subt = np.reshape(subt, (3,))
-        thresholds = (
-            np.array([2, 5, 3]) - subt
-        )  # convolution answer is [2,5,3]. Spikes fire when less than threshold. Thus subtract 0.1 so that spikes fire
+        thresholds = np.array([2, 5, 3]) - subt  # convolution answer is [2,5,3]. Spikes fire when less than threshold. Thus subtract 0.1 so that spikes fire
 
         self.basep = basep
         self.bits = bits
         result = self.run_convolution_1d(thresholds)
 
         # get output positions in result
-        output_positions = self.output_spike_positions(
-            self.basep, self.bits, self.pvector, self.filters, thresholds
-        )
+        output_positions = self.output_spike_positions(self.basep, self.bits, self.pvector, self.filters, thresholds)
         output_mask = self.output_mask(output_positions, result)
 
         # Check calculations
@@ -56,18 +52,14 @@ class Test_Convolution1D:
         subt = np.zeros(2)
         subt[:nSpikes] = 0.1
         subt = np.reshape(subt, (2,))
-        thresholds = (
-            np.array([2, 5]) - subt
-        )  # convolution answer is [2,5]. Spikes fire when less than threshold. Thus subtract 0.1 so that spikes fire
+        thresholds = np.array([2, 5]) - subt  # convolution answer is [2,5]. Spikes fire when less than threshold. Thus subtract 0.1 so that spikes fire
 
         self.basep = basep
         self.bits = bits
         result = self.run_convolution_1d(thresholds)
 
         # get output positions in result
-        output_positions = self.output_spike_positions(
-            self.basep, self.bits, self.pvector, self.filters, thresholds
-        )
+        output_positions = self.output_spike_positions(self.basep, self.bits, self.pvector, self.filters, thresholds)
         output_mask = self.output_mask(output_positions, result)
 
         # Check calculations
@@ -87,18 +79,14 @@ class Test_Convolution1D:
         subt = np.zeros(1)
         subt[:nSpikes] = 0.1
         subt = np.reshape(subt, (1,))
-        thresholds = (
-            np.array([5]) - subt
-        )  # convolution answer is [2,5]. Spikes fire when less than threshold. Thus subtract 0.1 so that spikes fire
+        thresholds = np.array([5]) - subt  # convolution answer is [2,5]. Spikes fire when less than threshold. Thus subtract 0.1 so that spikes fire
 
         self.basep = basep
         self.bits = bits
         result = self.run_convolution_1d(thresholds)
 
         # get output positions in result
-        output_positions = self.output_spike_positions(
-            self.basep, self.bits, self.pvector, self.filters, thresholds
-        )
+        output_positions = self.output_spike_positions(self.basep, self.bits, self.pvector, self.filters, thresholds)
         output_mask = self.output_mask(output_positions, result)
 
         # Check calculations
@@ -114,9 +102,7 @@ class Test_Convolution1D:
     @pytest.mark.parametrize("bits", [2])
     @pytest.mark.parametrize("thresholds", np.arange(1.9, 5, 1))
     def test_scalar_threshold(self, basep, bits, thresholds):
-        ans_thresholds = np.array(
-            [2, 5, 3]
-        )  # 2d convolution answer is [2,5,3]. Spikes fire when less than threshold. Thus subtract 0.1 so that spikes fire
+        ans_thresholds = np.array([2, 5, 3])  # 2d convolution answer is [2,5,3]. Spikes fire when less than threshold. Thus subtract 0.1 so that spikes fire
         nSpikes = len(ans_thresholds[ans_thresholds > thresholds])
 
         self.basep = basep
@@ -124,9 +110,7 @@ class Test_Convolution1D:
         result = self.run_convolution_1d(thresholds)
 
         # get output positions in result
-        output_positions = self.output_spike_positions(
-            self.basep, self.bits, self.pvector, self.filters, thresholds
-        )
+        output_positions = self.output_spike_positions(self.basep, self.bits, self.pvector, self.filters, thresholds)
         output_mask = self.output_mask(output_positions, result)
 
         # Check calculations
@@ -246,9 +230,7 @@ class Test_Convolution2D:
         result = self.run_convolution_2d(thresholds)
 
         # get output positions in result
-        output_positions = self.output_spike_positions(
-            self.basep, self.bits, self.pvector, self.filters, thresholds
-        )
+        output_positions = self.output_spike_positions(self.basep, self.bits, self.pvector, self.filters, thresholds)
         output_mask = self.output_mask(output_positions, result)
 
         # Check calculations
@@ -274,9 +256,7 @@ class Test_Convolution2D:
         result = self.run_convolution_2d(thresholds)
 
         # get output positions in result
-        output_positions = self.output_spike_positions(
-            self.basep, self.bits, self.pvector, self.filters, thresholds
-        )
+        output_positions = self.output_spike_positions(self.basep, self.bits, self.pvector, self.filters, thresholds)
         output_mask = self.output_mask(output_positions, result)
 
         # Check calculations
@@ -296,18 +276,14 @@ class Test_Convolution2D:
         subt = np.zeros(4)
         subt[:nSpikes] = 0.1
         subt = np.reshape(subt, (2, 2))
-        thresholds = (
-            np.array([[1, 3], [4, 10]]) - subt
-        )  # 2d convolution answer is [[1,3],[4,10]]. Spikes fire when less than threshold. Thus subtract 0.1 so that spikes fire
+        thresholds = np.array([[1, 3], [4, 10]]) - subt  # 2d convolution answer is [[1,3],[4,10]]. Spikes fire when less than threshold. Thus subtract 0.1 so that spikes fire
 
         self.basep = basep
         self.bits = bits
         result = self.run_convolution_2d(thresholds)
 
         # get output positions in result
-        output_positions = self.output_spike_positions(
-            self.basep, self.bits, self.pvector, self.filters, thresholds
-        )
+        output_positions = self.output_spike_positions(self.basep, self.bits, self.pvector, self.filters, thresholds)
         output_mask = self.output_mask(output_positions, result)
 
         # Check calculations
@@ -327,18 +303,14 @@ class Test_Convolution2D:
         subt = np.zeros(1)
         subt[:nSpikes] = 0.1
         subt = np.reshape(subt, (1, 1))
-        thresholds = (
-            np.array([[10]]) - subt
-        )  # 2d convolution answer is [[10]]. Spikes fire when less than threshold. Thus subtract 0.1 so that spikes fire
+        thresholds = np.array([[10]]) - subt  # 2d convolution answer is [[10]]. Spikes fire when less than threshold. Thus subtract 0.1 so that spikes fire
 
         self.basep = basep
         self.bits = bits
         result = self.run_convolution_2d(thresholds)
 
         # get output positions in result
-        output_positions = self.output_spike_positions(
-            self.basep, self.bits, self.pvector, self.filters, thresholds
-        )
+        output_positions = self.output_spike_positions(self.basep, self.bits, self.pvector, self.filters, thresholds)
         output_mask = self.output_mask(output_positions, result)
 
         # Check calculations
@@ -363,16 +335,12 @@ class Test_Convolution2D:
         subt = np.zeros(4)
         subt[:nSpikes] = 0.1
         subt = np.reshape(subt, (2, 2))
-        thresholds = (
-            np.array([[1, 4], [6, 20]]) - subt
-        )  # 2d convolution answer is [[1,4],[6,20]]. Spikes fire when less than threshold. Thus subtract 0.1 so that spikes fire
+        thresholds = np.array([[1, 4], [6, 20]]) - subt  # 2d convolution answer is [[1,4],[6,20]]. Spikes fire when less than threshold. Thus subtract 0.1 so that spikes fire
 
         result = self.run_convolution_2d(thresholds)
 
         # get output positions in result
-        output_positions = self.output_spike_positions(
-            self.basep, self.bits, self.pvector, self.filters, thresholds
-        )
+        output_positions = self.output_spike_positions(self.basep, self.bits, self.pvector, self.filters, thresholds)
         output_mask = self.output_mask(output_positions, result)
 
         # Check calculations

@@ -371,8 +371,6 @@ class Loihi2HWInterface(LoihiInterface):
         dummy_connection.a_out.connect(self.input_process.a_in)
         self.inputUProbe = None
         self.inputVProbe = None
-        #self.inputUProbe = StateProbe(self.input_process.u)
-        #self.inputVProbe = StateProbe(self.input_process.v)
 
     def setup_output_process(self, output_processes):
         self.spike_output = None
@@ -380,8 +378,7 @@ class Loihi2HWInterface(LoihiInterface):
         for process in output_processes:
             self.process_output_map[process['index']] = count
             count += process['count']
-        #self.process_output_map['INPUT'] = count
-        #count += self.input_process.proc_params['shape'][0]
+
         self.pass_through_lif = self.LIF(
                                     shape=(count,),
                                     v=0,
@@ -398,18 +395,6 @@ class Loihi2HWInterface(LoihiInterface):
         sink_nx2py.out.connect(self.sink_output.a_in)
         self.outputUProbe = None
         self.outputVProbe = None
-        #self.outputUProbe = StateProbe(self.pass_through_lif.u)
-        #self.outputVProbe = StateProbe(self.pass_through_lif.v)
-        #weights = np.eye(
-                    #N=self.pass_through_lif.proc_params['shape'][0],
-                    #M=self.input_process.proc_params['shape'][0],
-                    #k=-self.process_output_map['INPUT'],
-                    #) * 16384
-        #exponent = calculate_weight_exponent(weights)
-        #weights = calculate_hardware_weights(weights, exponent)
-        #dummy_connection = Sparse(weights=weights, weight_exp=exponent, sign_mode=SignMode.EXCITATORY)
-        #self.input_process.s_out.connect(dummy_connection.s_in)
-        #dummy_connection.a_out.connect(self.pass_through_lif.a_in)
 
     def get_config(self, callback_functions=[]):
         from lava.magma.core.run_configs import Loihi2HwCfg

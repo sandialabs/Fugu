@@ -1,0 +1,17 @@
+repos:
+  - repo: meta
+    hooks:
+      - id: identity
+        name: help-msg
+        args: [" Fix failed isort/black files with 'isort/black <file1> <file2> ... <fileN>'."]
+        pass_filenames: false
+  - repo: https://github.com/pycqa/isort
+    rev: 5.12.0
+    hooks:
+      - id: isort
+        args: ["--check"]
+  - repo: https://github.com/psf/black
+    rev: 23.3.0
+    hooks:
+      - id: black
+        args: ["--check"]

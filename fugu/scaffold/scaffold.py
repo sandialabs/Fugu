@@ -139,8 +139,8 @@ class Scaffold:
         For binding auto-ports, you may either use an explicit suffix or specify the base name
         without a suffix. For example, if name="input", then you can bind to "input3" explicitly,
         or bind to "input". In the latter case, the exact suffix will be determined during lay_bricks().
-        Note: the current logic does not allow multiple connections from one brick to the same
-        auto-port on another brick unless the suffixes are explicit.
+        If you want to establish several different connections between the same pair of bricks,
+        it may be necessary to specify the target port suffix explicitly.
         """
         if from_port == '0':
             ports = from_brick.output_ports()
@@ -160,22 +160,6 @@ class Scaffold:
         bind = e['bind']
         if to_port in bind: raise ValueError('Attempt to bind more than one output port to same input port.')
         bind[to_port] = from_port
-
-    def all_in_neighbors_built(self, node):
-        """
-        Check if all neighbors of a node are built.
-
-        Args:
-            node (any): node whose neighbors are checked
-
-        Returns:
-            built_graph (bool): indicates if all neighbors are built.
-        """
-
-        in_neighbors = [edge[0] for edge in self.circuit.in_edges(nbunch=node)]
-        for neighbor in in_neighbors:
-            if not self.circuit.nodes[neighbor]['brick'].is_built: return False
-        return True
 
     def _assign_brick_tags(self, built_graph, tag, field='brick'):
         new_nodes = [
@@ -197,34 +181,42 @@ class Scaffold:
             built_graph: networkX diGraph
         """
         self.graph = nx.DiGraph()
+        G = self.graph
+        C = self.circuit
 
         # Handle Input Nodes
         if verbose > 0: print("Laying Input Bricks.")
-        for to_key, to_node in self.circuit.nodes.data():
+        for to_key, to_node in C.nodes.data():
             if to_node.get('layer') != 'input': continue;
-            to_node['ports'] = to_node['brick'].build2(self.graph)
-            self._assign_brick_tags(self.graph, to_node['tag'])
+            to_node['ports'] = to_node['brick'].build2(G)
+            self._assign_brick_tags(G, to_node['tag'])
             if verbose > 0: print("Completed: ", to_key)
 
         # Handle all other nodes
-        all_nodes_built = False
-        while not all_nodes_built:
-            all_nodes_built = True    # until proven false
-            for to_key, to_node in self.circuit.nodes.data():
+        use_temporary = False
+        limit = len(C.nodes) + 2  # Limit number of iterations to size of circuit.
+        iteration = 0
+        while True:
+            iteration += 1
+            if iteration > limit: raise RuntimeError(f'Exceeded {limit} iterations. The circuit graph has unresolvable dependencies.')
+
+            all_nodes_built = True  # until proven false
+            some_node_built = False
+            for to_key, to_node in C.nodes.data():
                 to_brick = to_node['brick']
                 if to_brick.is_built: continue
-                if not self.all_in_neighbors_built(to_key):
-                    all_nodes_built = False
-                    continue
-                if verbose > 0: print('Laying Brick: ', to_key)
 
+                # Collect inputs
                 inputs = {}
-                to_ports = to_brick.input_ports()
-                for from_key, _, e in self.circuit.in_edges(to_key, data=True):
-                    if verbose > 0: print("Processing input:", from_key)
-                    from_node = self.circuit.nodes[from_key]
+                all_inputs_available = True  # until proven false
+                to_port_specs = to_brick.input_ports()
+                for from_key, _, e in C.in_edges(nbunch=to_key, data=True):
+                    from_node = C.nodes[from_key]
                     from_outputs = from_node.get('ports')
-                    if not from_outputs: continue
+                    if not from_outputs:
+                        all_inputs_available = False
+                        if not use_temporary: break
+                        continue
                     for to_port_name, from_port_name in e['bind'].items():
                         existing = inputs.get(to_port_name)
                         if existing:  # More than one source is bound to the same destination, which is an error.
@@ -233,8 +225,8 @@ class Scaffold:
                             raise ValueError('Attempt to bind more than one output port to same input port.')
 
                         # Check for auto-port naming
-                        to_port = to_ports.get(to_port_name)
-                        if to_port and to_port.maximum != 1:  # modify to_port_name to occupy a free slot
+                        to_port_spec = to_port_specs.get(to_port_name)
+                        if to_port_spec and to_port_spec.maximum != 1:  # modify to_port_name to occupy a free slot
                             i = 1
                             base = to_port_name
                             to_port_name = base + str(i)
@@ -246,26 +238,68 @@ class Scaffold:
                         if not from_port: raise ValueError('Requested output port does not exist.')
                         inputs[to_port_name] = from_port
 
+                # Check if brick is buildable.
+                if not all_inputs_available:
+                    if use_temporary and not to_node.get('ports'):  # Temporary outputs have not yet been contructed.
+                        port_specs = to_brick.output_shape(inputs)
+                        if PortUtil.all_shapes_known(port_specs):
+                            # Create temporary populations
+                            ports = PortUtil.make_ports_from_specs(port_specs)
+                            to_node['ports'] = ports
+                            index = 0
+                            for port in ports.values():
+                                for channel in port.channels.values():
+                                    count = 1
+                                    for size in channel.spec.shape: count *= size
+                                    for i in range(count):
+                                        name = to_brick.generate_neuron_name(f'"{index}')  # '"' is an attempt to use a character that no sane brick developer would ever duplicate. TODO: use globally-unique integers as neuron names in all brick build functions.
+                                        index += 1
+                                        G.add_node(name, index=i)
+                                        channel.neurons.append(name)
+                    all_nodes_built = False
+                    continue
+                some_node_built = True
+
                 # Check for limits on number of bindings.
-                for to_port in to_ports.values():
+                for to_port_spec in to_port_specs.values():
                     # Count number of bindings
                     count = 0
                     for key in inputs:
-                        if PortUtil.autoport_match(to_port.name, key): count += 1
+                        if PortUtil.autoport_match(to_port_spec.name, key): count += 1
                     # Check bounds
-                    if to_port.minimum and count < to_port.minimum:
-                        raise ValueError(f"Not enough bindings for input {to_port.name} on brick {brick.name}. Required {to_port.minimum}, but found {count}.")
-                    if to_port.maximum and count > to_port.maximum:
-                        raise ValueError(f"Too many bindings for input {to_port.name} on brick {brick.name}. Limit {to_port.maximum}, but found {count}.")
+                    if to_port_spec.minimum and count < to_port_spec.minimum:
+                        raise ValueError(f"Not enough bindings for input {to_port_spec.name} on brick {to_brick.name}. Required {to_port_spec.minimum}, but found {count}.")
+                    if to_port_spec.maximum and count > to_port_spec.maximum:
+                        raise ValueError(f"Too many bindings for input {to_port_spec.name} on brick {to_brick.name}. Limit {to_port_spec.maximum}, but found {count}.")
 
-                to_node['ports'] = to_node['brick'].build2(self.graph, inputs)
-                self._assign_brick_tags(self.graph, to_node['tag'])
+                # lay brick
+                if verbose > 0: print('Laying Brick: ', to_key)
+                temp_ports = to_node.get('ports')
+                actual_ports = to_brick.build2(G, inputs)
+                to_node['ports'] = actual_ports
+                self._assign_brick_tags(G, to_node['tag'])
+                if temp_ports:  # Replace temporary neurons with actual ones.
+                    # We assume a 1-to-1 mapping between each temporary population and the real one generated by build2().
+                    for port_name, actual_port in actual_ports.items():
+                        temp_port = temp_ports[port_name]
+                        for channel_name, actual_channel in actual_port.channels.items():
+                            temp_channel = temp_port.channels[channel_name]
+                            for actual, temp in zip(actual_channel.neurons, temp_channel.neurons):
+                                # Now we have two graph keys. Need to copy the edges from temp to actual.
+                                for _, n2, e in G.edges(nbunch=temp, data=True):
+                                    G.add_edge(actual, n2, **e)
+                                G.remove_node(temp)
                 if verbose > 0: print("Complete.")
 
-        for i, n in enumerate(self.graph.nodes):
-            self.graph.nodes[n]['neuron_number'] = i
+            if all_nodes_built: break
+            if not some_node_built: use_temporary = True
+
+        # Give every neuron in graph a unique ID
+        # TODO: We should just use a global ID for everything.
+        for i, n in enumerate(G.nodes):
+            G.nodes[n]['neuron_number'] = i
         self.is_built = True
-        return self.graph
+        return G
 
     def summary(self, verbose=0):
         """
@@ -275,48 +309,43 @@ class Scaffold:
              verbose (int): verbosity level can be 0, 1 or >1 (Default: 0)
         """
 
+        C = self.circuit
+        G = self.graph
+
         print("Scaffold is built: {}".format(self.is_built))
         print("-------------------------------------------------------")
-        print("List of Bricks:")
-        print("\r\n")
-        for i, node in enumerate(self.circuit.nodes):
-            print("Brick No.: {}".format(i))
-            print("Brick Tag: {}".format(self.circuit.nodes[node]['tag']))
-            print("Brick Name: {}".format(
-                self.tag_to_name[self.circuit.nodes[node]['tag']]))
-            print(self.circuit.nodes[node])
-            print("Brick is built: {}".format(
-                self.circuit.nodes[node]['brick'].is_built))
-            print("\r\n")
+        print("Bricks:")
+        print()
+        for i, name in enumerate(C.nodes):
+            node = C.nodes[name]
+            print(f"Brick No.: {i}")
+            print(f"Brick Tag: {node['tag']}")
+            print(f"Brick Name: {self.tag_to_name[node['tag']]}")
+            print(node)
+            print(f"Brick is built: {node['brick'].is_built}")
+            print()
         print("-------------------------------------------------------")
-        print("\r\n")
-        print("-------------------------------------------------------")
-        print("List of Brick Edges:")
-        print("\r\n")
-        for i, edge in enumerate(self.circuit.edges):
-            print("Edge: {}".format(edge))
-            print(self.circuit.edges[edge])
+        print("Brick Edges:")
+        print()
+        for b1, b2, e in self.circuit.edges(data=True):
+            print(f"({b1}, {b2}) {e}")
 
-        if verbose > 0:
+        if verbose > 0 and self.graph:
+            print()
             print("-------------------------------------------------------")
-            print("\r\n")
+            print("Neurons:")
+            print()
+            print("Neuron Number | Neuron Name | Neuron Properties")
+            for name, neuron in self.graph.nodes.data():
+                print(f"{neuron['neuron_number']} | {name} | {neuron}")
+            print()
+            print("-------------------------------------------------------")
+            print("Synapses:")
+            print()
+            if verbose > 1: print("Synapse Between | Synapse Properties")
+            for n1, n2, e in G.edges(data=True):
+                print(f"({n1}, {n2})", end="")
+                if verbose > 1: print(f" {e}")
+                else:           print()
 
-            if self.graph is not None:
-                print("List of Neurons:")
-                print("\r\n")
-                print("Neuron Number | Neuron Name | Neuron Properties")
-                for i, neuron in enumerate(sorted(self.graph.nodes)):
-                    print(
-                        str(i) + " | " + str(neuron) + " | " +
-                        str(self.graph.nodes[neuron]))
-                print("\r\n")
-                print(
-                    "-------------------------------------------------------")
-                print("List of Synapses:")
-                print("\r\n")
-                print("Synapse Between | Synapse Properties"
-                      if verbose > 1 else "Syanpse Between")
-                for i, synapse in enumerate(self.graph.edges):
-                    print(
-                        str(synapse) + " | " + str(self.graph.edges[synapse])
-                        if verbose > 1 else str(synapse))
+        print("-------------------------------------------------------")
