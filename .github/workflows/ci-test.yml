@@ -13,18 +13,21 @@ on:
   workflow_dispatch:
 
 jobs:
-  python39:
+  build:
     defaults:
       run:
         shell: bash -l {0}
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.9", "3.10", "3.11"]
 
     steps:
     - uses: actions/checkout@v4
-    - name: Set up Python 3.9
+    - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v3
       with:
-        python-version: '3.9'
+        python-version: ${{ matrix.python-version }}
     - name: install deps
       run: |
         pip install -e .[whetstone,dev,examples]
