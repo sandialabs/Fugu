@@ -1,0 +1,28 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite both the original article found at bottom of repository and this software repository."
+title: "Fugu Software"
+abstract: "Fugu software tool for spiking neural network algorithms."
+authors:
+  - family-names: "Krygier"
+    given-names: "Michael C."
+  - family-names: "Severa"
+    given-names: "William"
+  - family-names: "Ho"
+    given-names: "Yang"
+  - family-names: "Rothganger"
+    given-names: "Fred"
+  - family-names: "Wang"
+    given-names: "Felix"
+  - family-names: "Musuvathy"
+    given-names: "Srideep"
+  - family-names: "Aimone"
+    given-names: "James B."
+date-released: "2026-01-25"
+version: "1.4.2"
+repository-code: "https://github.com/sandialabs/Fugu"
+doi: "XX.YYYY/zenodo.1234567" # Optional, if you have a DOI for the repository
+keywords:
+  - "neuromorphic algorithms"
+  - "spiking neural networks"
+license: "BSD-3-clause"
+url: "https://github.com/sandialabs/Fugu"

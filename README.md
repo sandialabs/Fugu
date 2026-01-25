@@ -243,3 +243,50 @@ an input (if calling `Brick.build`) or an output (if returning from `Brick.build
 | ------ | ------ | ------ |
 | 'complete' | All Inputs/Outputs | A neuron that fires when a brick is done processing. |
 | 'begin' | Temporally-coded Inputs/Outputs | A neuron that fires when a brick begins providing output. |
+
+## Citation
+
+If you use this software, please cite both the original article and this software repository.
+
+Software Repository:
+
+```bibtex
+@software{FuguSoftware2026,
+author = {Krygier, Michael C. and Severa, William and Ho, Yang and Rothganger, Fred and Wang, Felix and Musuvathy, Srideep and Aimone, James B.},
+doi = {XX.YYYY/zenodo.1234567},
+license = {BSD-3-clause},
+month = jan,
+title = {{Fugu Software}},
+url = {https://github.com/sandialabs/Fugu},
+version = {1.4.2},
+year = {2026}
+}
+```
+
+APA
+
+> Krygier, M. C., Severa, W., Ho, Y., Rothganger, F., Wang, F., Musuvathy, S., & Aimone, J. B. (2026). Fugu Software (Version 1.4.2) [Computer software]. https://doi.org/XX.YYYY/zenodo.1234567
+
+Original Paper:
+
+```bibtex
+@inproceedings{Aimone2019,
+author = {Aimone, James B. and Severa, William and Vineyard, Craig M.},
+title = {Composing neural algorithms with Fugu},
+year = {2019},
+isbn = {9781450376808},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+url = {https://doi.org/10.1145/3354265.3354268},
+doi = {10.1145/3354265.3354268},
+booktitle = {Proceedings of the International Conference on Neuromorphic Systems},
+articleno = {3},
+numpages = {8},
+location = {Knoxville, TN, USA},
+series = {ICONS '19}
+}
+```
+
+APA Style
+
+> James B. Aimone, William Severa, and Craig M. Vineyard. 2019. Composing neural algorithms with Fugu. In Proceedings of the International Conference on Neuromorphic Systems (ICONS '19). Association for Computing Machinery, New York, NY, USA, Article 3, 1–8. https://doi.org/10.1145/3354265.3354268
