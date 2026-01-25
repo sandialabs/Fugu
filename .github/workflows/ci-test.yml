@@ -27,7 +27,7 @@ jobs:
         python-version: '3.9'
     - name: install deps
       run: |
-        pip install -e .
+        pip install -e .[whetstone,dev,examples]
     - name: Run tests with pytest
       run: |
         pytest
