@@ -388,6 +388,9 @@ class LearningSynapse(Synapse):
                         self._w += self._learning_params.A_p * np.exp(
                             (-pre_spike_time) / self._learning_params.tau
                         )
+                        # Temporary logging to check weight updates
+                        print (f"Updated weight: {self._w}")
+
                     else:
                         self._w += 0
 
@@ -401,11 +404,13 @@ class LearningSynapse(Synapse):
                         self._w += self._learning_params.A_n * np.exp(
                             (-post_spike_time) / self._learning_params.tau
                         )
+                        # Temporary logging to check weight updates
+                        print (f"Updated weight: {self._w}")
+
                     else:
                         self._w += 0
                 else:
                     self._w += 0
-
         elif self._learning_rule == "three-factor":
             pass
 

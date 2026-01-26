@@ -11,6 +11,8 @@ from collections import deque
 from warnings import warn
 
 import fugu.simulators.SpikingNeuralNetwork as snn
+from fugu.simulators.SpikingNeuralNetwork.synapse import Synapse, LearningSynapse
+from fugu.simulators.SpikingNeuralNetwork.neuron import LIFNeuron, InputNeuron
 
 from .backend import Backend, PortDataIterator
 from ..utils.export_utils import results_df_from_dict
@@ -59,13 +61,14 @@ class snn_Backend(Backend):
         for n1, n2, props in self.fugu_graph.edges.data():
             delay  = int(props.get('delay',  1))
             weight =     props.get('weight', 1.0)
-            if learning_rule := props.get('learning_rule', None):
-                print(learning_rule, "The rule in the model")
-                syn = snn.Synapse(neuron_dict[n1], neuron_dict[n2], delay=delay, weight=weight)
+            # Check if learning rule is specified or learning capability is specified
+            if props.get('learning_rule', None) is None:
+                syn = Synapse(neuron_dict[n1], neuron_dict[n2], delay=delay, weight=weight)
             else:
-                print(learning_rule, "The rule in the model")
-                learning_params = props.get('learning_params', {})
-                syn = snn.Synapse(neuron_dict[n1], neuron_dict[n2], delay=delay, weight=weight, learning_rule=learning_rule, learning_params=learning_params)
+                learning_rule = props.get('learning_rule', None)
+            # Option to setup different learning parameters but ideally should be accesing them from the learning_params dataclass
+            #    learning_params = props.get('learning_params', {})
+                syn = LearningSynapse(neuron_dict[n1], neuron_dict[n2], delay=delay, weight=weight, learning_rule=learning_rule, learning_params=None)
             self.nn.add_synapse(syn)
 
         del neuron_dict
