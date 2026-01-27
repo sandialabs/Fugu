@@ -260,6 +260,7 @@ class LearningSynapse(Synapse):
             if not isinstance(mod_neuron, Neuron):
                 raise TypeError("Modulatory neuron must be of type neuron")
             self._mod = mod_neuron
+        # Have a default dictionary for learning parameters instead of the dataclass
         self._learning_params = learning_params if learning_params is not None else LearningParams()
         self._eligibility_trace = 0.0
 
@@ -396,6 +397,7 @@ class LearningSynapse(Synapse):
                         self._w += self._learning_params.A_p * np.exp(
                             (-pre_spike_time) / self._learning_params.tau
                         )
+
                     else:
                         self._w += 0
 
@@ -409,11 +411,11 @@ class LearningSynapse(Synapse):
                         self._w += self._learning_params.A_n * np.exp(
                             (-post_spike_time) / self._learning_params.tau
                         )
+
                     else:
                         self._w += 0
                 else:
                     self._w += 0
-
         elif self._learning_rule == "three-factor":
             pass
 

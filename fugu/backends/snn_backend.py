@@ -11,6 +11,8 @@ from collections import deque
 from warnings import warn
 
 import fugu.simulators.SpikingNeuralNetwork as snn
+from fugu.simulators.SpikingNeuralNetwork.synapse import Synapse, LearningSynapse
+from fugu.simulators.SpikingNeuralNetwork.neuron import LIFNeuron, InputNeuron
 
 from .backend import Backend, PortDataIterator
 from ..utils.export_utils import results_df_from_dict
@@ -59,7 +61,15 @@ class snn_Backend(Backend):
         for n1, n2, props in self.fugu_graph.edges.data():
             delay  = int(props.get('delay',  1))
             weight =     props.get('weight', 1.0)
-            syn = snn.Synapse(neuron_dict[n1], neuron_dict[n2], delay=delay, weight=weight)
+            # Check if learning rule is specified or learning capability is specified
+            if props.get('learning_rule', None) is None:
+                syn = Synapse(neuron_dict[n1], neuron_dict[n2], delay=delay, weight=weight)
+            else:
+                learning_rule = props.get('learning_rule', None)
+            # Option to setup different learning parameters but ideally should be accesing them from the learning_params dataclass
+            
+            learning_params = props.get('learning_params', {}) if learning_params is not None else None
+            syn = LearningSynapse(neuron_dict[n1], neuron_dict[n2], delay=delay, weight=weight, learning_rule=learning_rule, learning_params=learning_params)
             self.nn.add_synapse(syn)
 
         del neuron_dict
@@ -93,7 +103,7 @@ class snn_Backend(Backend):
         output = self.nn.run(n_steps=n_steps,
                              debug_mode=self.debug_mode,
                              record_potentials=return_potentials)
-
+        
         if return_potentials:
             df, final_potentials = output
         else:
@@ -175,13 +185,19 @@ class snn_Backend(Backend):
                                 weight = new_props['weight']
                             elif 'delay' in new_props:
                                 delay = new_props['delay']
+                            elif 'learning_params' in new_props:
+                                learning_params = new_props['learning_params']
+                                self.nn.synps[synapse].set_learning_params(learning_params)
                         if pre in synapse_props:
                             new_props = synapse_props[pre]
                             if 'weight' in new_props:
                                 weight = new_props['weight']
                             elif 'delay' in new_props:
                                 delay = new_props['delay']
-
+                            elif 'learning_params' in new_props:
+                                learning_params = new_props['learning_params']
+                                self.nn.synps[synapse].set_learning_params(learning_params)
+                            
                         self.nn.synps[synapse].set_params(delay, weight)
 
         self.set_input_spikes()
@@ -201,7 +217,6 @@ class snn_Backend(Backend):
             if not port: continue
             data_channel = port.channels.get('data')
             if not data_channel: continue
-
             initial_spikes = {}
             for neuron in data_channel.neurons:
                 initial_spikes[neuron] = []

@@ -1,5 +1,3 @@
-
-
 import numpy as np
 
 from fugu.utils.types import bool_types, float_types, str_types
