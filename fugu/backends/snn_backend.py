@@ -67,8 +67,9 @@ class snn_Backend(Backend):
             else:
                 learning_rule = props.get('learning_rule', None)
             # Option to setup different learning parameters but ideally should be accesing them from the learning_params dataclass
-            #    learning_params = props.get('learning_params', {})
-                syn = LearningSynapse(neuron_dict[n1], neuron_dict[n2], delay=delay, weight=weight, learning_rule=learning_rule, learning_params=None)
+            
+            learning_params = props.get('learning_params', {}) if learning_params is not None else None
+            syn = LearningSynapse(neuron_dict[n1], neuron_dict[n2], delay=delay, weight=weight, learning_rule=learning_rule, learning_params=learning_params)
             self.nn.add_synapse(syn)
 
         del neuron_dict
