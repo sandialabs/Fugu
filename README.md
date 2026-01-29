@@ -244,7 +244,7 @@ an input (if calling `Brick.build`) or an output (if returning from `Brick.build
 | 'complete' | All Inputs/Outputs | A neuron that fires when a brick is done processing. |
 | 'begin' | Temporally-coded Inputs/Outputs | A neuron that fires when a brick begins providing output. |
 
-## Citation
+# Citation
 
 If you use this software, please cite both the original article and this software repository.
 
@@ -253,7 +253,7 @@ Software Repository:
 ```bibtex
 @software{FuguSoftware2026,
 author = {Krygier, Michael C. and Severa, William and Ho, Yang and Rothganger, Fred and Wang, Felix and Musuvathy, Srideep and Aimone, James B.},
-doi = {XX.YYYY/zenodo.1234567},
+doi = {10.5281/zenodo.18418271},
 license = {BSD-3-clause},
 month = jan,
 title = {{Fugu Software}},
@@ -263,9 +263,9 @@ year = {2026}
 }
 ```
 
-APA
+APA Style
 
-> Krygier, M. C., Severa, W., Ho, Y., Rothganger, F., Wang, F., Musuvathy, S., & Aimone, J. B. (2026). Fugu Software (Version 1.4.2) [Computer software]. https://doi.org/XX.YYYY/zenodo.1234567
+> Krygier, M. C., Severa, W., Ho, Y., Rothganger, F., Wang, F., Musuvathy, S., & Aimone, J. B. (2026). Fugu Software (Version 1.4.2) [Computer software]. https://doi.org/10.5281/zenodo.18418271
 
 Original Paper:
 
