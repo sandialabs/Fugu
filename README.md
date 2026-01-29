@@ -246,6 +246,8 @@ an input (if calling `Brick.build`) or an output (if returning from `Brick.build
 
 # Citation
 
+[![DOI](https://zenodo.org/badge/465425461.svg)](https://doi.org/10.5281/zenodo.18418270)
+
 If you use this software, please cite both the original article and this software repository.
 
 Software Repository:
