@@ -36,7 +36,7 @@ setup(
         "dev": ["pre-commit", "isort", "black", "tqdm", "tox", "tox-conda", "coverage"],
         "examples": ["notebook", "matplotlib", "tqdm"],
         "snntorch": ["torch", "snntorch"],
-        "docs": ["sphinx", "sphinx-rtd-theme", "sphinx-gallery"]
+        "docs": ["sphinx", "sphinx-rtd-theme", "sphinx-gallery", "myst-parser"]
     },
     packages=package_list,
     python_requires=">=3.9, <3.12",
