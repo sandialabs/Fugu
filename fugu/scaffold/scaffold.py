@@ -45,7 +45,9 @@ class Scaffold:
 
         Returns:
             The brick. This allows you to collapse brick creation and addition scaffold into single
-            call, while retaining a reference to the created object for making connections. Example:
+            call, while retaining a reference to the created object for making connections. 
+            Example::
+
                 A = scaffold.add_brick(SomeBrick())
 
         Raises:

@@ -182,6 +182,10 @@ class gensa_Backend(Backend):
         pass
 
     def set_properties(self, properties={}):
+        """ 
+        
+        """
+
         for brick in properties:
             if brick != 'compile_args':
                 brick_id = self.brick_to_number[brick]

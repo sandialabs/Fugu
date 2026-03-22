@@ -664,12 +664,21 @@ class lava_Backend(Backend):
         pass  # since run() must called anyway, there is nothing to do here
 
     def set_properties(self, properties={}):
+        """ 
+        
+        """
+
         for brick in properties:
             if brick != 'compile_args':
                 brick_id = self.brick_to_number[brick]
                 self.fugu_circuit.nodes[brick_id]['brick'].set_properties(properties[brick])
         # must call run() for changes to take effect
+
     def set_input_spikes(self):
+        """ 
+        
+        """
+
         # Clean out old spike structures.
         for n, node in self.fugu_graph.nodes.data():
             if 'out_spikes' in node:

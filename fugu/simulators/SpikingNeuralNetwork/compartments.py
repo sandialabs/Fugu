@@ -57,11 +57,13 @@ class Dendrite(abc.ABC):
 
 
 class RecurrentInhibition(Dendrite):
-    """Concrete compartment implementing exponential decay recurrent inhibition.
+    """
+    Concrete compartment implementing exponential decay recurrent inhibition.
 
     Dynamics:
         trace[t] = exp(-dt/tau_syn) * trace[t-1] + presyn_current[t-1]
-    inhibition(t) == trace[t]
+        inhibition(t) == trace[t]
+
     """
 
     def __init__(self, tau_syn: float = 1.0, dt: float = 1.0):

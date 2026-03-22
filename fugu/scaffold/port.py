@@ -59,11 +59,11 @@ class PortUtil:
     @classmethod
     def autoport_match(cls, port_name, query):
         """
-            Determines if query is a legitimate auto-port name derived from port_name.
-            Also returns true if query exactly matches port_name. In that case, it's
-            not actually an auto-port, just a regular port name.
-            (We could add an option for strict, in which case this would only return
-            true if the query has a numeric suffix.)
+        Determines if query is a legitimate auto-port name derived from port_name.
+        Also returns true if query exactly matches port_name. In that case, it's
+        not actually an auto-port, just a regular port name.
+        (We could add an option for strict, in which case this would only return
+        true if the query has a numeric suffix.)
         """
         if not query.startswith(port_name): return False
         prefix = len(port_name)
@@ -115,8 +115,10 @@ class PortUtil:
     def get_autoports(cls, ports: dict[str, PortData], autoport_name: str = 'input', count: int = 1):
         """
         Returns a tuple of ports matching given name.
-        count (int): Size of the tuple to return. Passing zero for count cause the tuple to contain
-            all ports matching the name.
+
+        Args:
+            count (int): Size of the tuple to return. Passing zero for count cause the tuple to contain
+                all ports matching the name.
         """
         result = ()
         for port_name, port in ports.items():

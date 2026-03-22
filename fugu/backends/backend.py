@@ -48,10 +48,12 @@ class Backend(ABC):
     def set_properties(self, properties={}):
         """
         Set properties for specific neurons and synapses
+
         Args:
             properties: dictionary of parameter for bricks
 
-        Example:
+        Example::
+
            for brick in properties:
                neuron_props, synapse_props = self.circuit[brick].get_changes(properties[brick])
                for neuron in neuron_props:
