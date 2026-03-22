@@ -35,7 +35,8 @@ setup(
         "whetstone": ["tensorflow==2.18.0", "keras==3.8.0"],
         "dev": ["pre-commit", "isort", "black", "tqdm", "tox", "tox-conda", "coverage"],
         "examples": ["notebook", "matplotlib", "tqdm"],
-        "snntorch": ["torch", "snntorch"]
+        "snntorch": ["torch", "snntorch"],
+        "docs": ["sphinx", "sphinx-rtd-theme", "sphinx-gallery"]
     },
     packages=package_list,
     python_requires=">=3.9, <3.12",
