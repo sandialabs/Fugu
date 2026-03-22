@@ -207,10 +207,12 @@ class Brick(ABC):
             graph (graph):  networkx graph
             metadata (dictionary): A dictionary of shapes and properties
             control_nodes (list): list of dictionary of auxillary nodes.
+
                 Acceptable keys include:
                     'complete' - A list of neurons that fire when the brick is done
                     'begin' - A list of neurons that fire when the brick begins computation
-                                (used for temporal processing)
+                    (used for temporal processing)
+
             input_lists (list): list of lists of nodes for input neurons
             input_codings (list): list of input coding types (as strings)
         """
@@ -284,10 +286,12 @@ class CompoundBrick(Brick):
             graph: networkx graph
             metadata: A dictionary of shapes and properties
             control_nodes (list): list of dictionary of auxillary nodes.
+
                 Acceptable keys include:
                     'complete' - A list of neurons that fire when the brick is done
-                    'begin' - A list of neurons that fire when the brick begins computation
-                                (used for temporal processing)
+                    'begin' - A list of neurons that fire when the brick begins computation 
+                    (used for temporal processing)
+
             input_lists (list): list of lists of nodes for input neurons
             input_codings (list): list of input coding types (as strings)
         """

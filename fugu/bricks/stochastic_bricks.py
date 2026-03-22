@@ -44,8 +44,10 @@ class PRN(Brick):
             graph: networkx graph to define connections of the computational graph
             metadata (dict): dictionary to define the shapes and parameters of the brick
             control_nodes (dict): dictionary of lists of auxillary networkx nodes.
+
                 Expected keys:
                     'complete' - A list of neurons that fire when the brick is done
+
             input_lists (list): list of nodes that will contain input
             input_coding (list): list of input coding formats.  All coding types supported
 
@@ -146,13 +148,16 @@ class Threshold(Brick):
               input_codings):
         """
         Build Threshold brick.
+
         Args:
             graph: networkx graph to define connections of the computational graph
             metadata (dict): dictionary to define the shapes and parameters of the brick
             control_nodes (list): list of dictionary of auxillary nodes.
+
                   Expected keys:
                       'complete' - A neurons that fire when the brick is done
                       'begin' - A neurons that first when the brick begins processing (for temporal coded inputs)
+
             input_lists (list): list of nodes that will contain input
             input_coding (list): list of input coding formats
 

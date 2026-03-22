@@ -38,8 +38,10 @@ class Register(Brick):
             graph: networkx graph to define connections of the computational graph
             metadata (dict): dictionary to define the shapes and parameters of the brick
             control_nodes (dict): dictionary of lists of auxillary networkx nodes.
+
                 Expected keys:
                     'complete' - A list of neurons that fire when the brick is done
+
             input_lists (list): list of nodes that will contain input
             input_coding (list): list of input coding formats.  All coding types supported
 
@@ -356,8 +358,10 @@ class Max(Brick):
             graph: networkx graph to define connections of the computational graph
             metadata (dict): dictionary to define the shapes and parameters of the brick
             control_nodes (dict): dictionary of lists of auxillary networkx nodes.
+
                 Expected keys:
                     'complete' - A list of neurons that fire when the brick is done
+
             input_lists (list): list of nodes that will contain input
             input_coding (list): list of input coding formats.  All coding types supported
 
@@ -668,12 +672,15 @@ class Addition(Brick):
               input_codings):
         """
         Build Addition brick.
+
         Args:
             graph : networkx graph to define connections of the computational graph
             metadata (dict): dictionary to define the shapes and parameters of the brick
             control_nodes (dict): dictionary of lists of auxillary networkx nodes.
+
                 Expected keys:
                     'complete' - A list of neurons that fire when the brick is done
+
             input_lists (list): list of nodes that will contain input
             input_coding (list): list of input coding formats.  All coding types supported
 
@@ -834,12 +841,15 @@ class Subtraction(CompoundBrick):
               input_codings):
         """
         Build Subtraction brick.
+
         Args:
             graph: networkx graph to define connections of the computational graph
             metadata: dictionary to define the shapes and parameters of the brick
             control_nodes: dictionary of lists of auxillary networkx nodes.
+
                 Expected keys:
                     'complete' - A list of neurons that fire when the brick is done
+
             input_lists: list of nodes that will contain input
             input_coding: list of input coding formats.  All coding types supported
 

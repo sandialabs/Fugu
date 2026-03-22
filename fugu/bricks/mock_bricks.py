@@ -15,6 +15,9 @@ class Mock_Input(Vector_Input):
             self.metadata = {**metadata, **self.metadata}
 
     def build(self, graph, metadata, control_nodes, input_lists, input_codings):
+        """ 
+        
+        """
 
         if type(metadata) is list:
             self.metadata = {**metadata[0], **self.metadata}
@@ -53,12 +56,14 @@ class Mock_Brick(Brick):
             self.metadata = {**metadata, **fugu_brick.metadata}
 
     def build(self, graph, metadata, control_nodes, input_lists, input_codings):
+        """
+
+        """
 
         # if type(metadata) is list:
         #     self.metadata = {**metadata[0], **self.metadata}
         # else:
         #     self.metadata = {**metadata, **self.metadata}
-
         if not self.time_dimension:
             self.dvector = np.expand_dims(self.vector, len(self.vector.shape))
 

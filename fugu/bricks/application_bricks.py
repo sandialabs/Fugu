@@ -7,10 +7,11 @@ class LIS(Brick):
     """
     This brick calculates the length of the longest common subsequence for a given sequence of numbers
     Construtor for this brick.
-        Args:
-            sequence_length: sequence_length - size of the sequence
-            name: Name of the brick.  If not specified, a default will be used.  Name should be unique.
-            output_coding: Output coding type, default is 'temporal-L'
+
+    Args:
+        sequence_length: sequence_length - size of the sequence
+        name: Name of the brick.  If not specified, a default will be used.  Name should be unique.
+        output_coding: Output coding type, default is 'temporal-L'
     """
     def __init__(self,
                  sequence_length,
@@ -38,8 +39,10 @@ class LIS(Brick):
             graph: networkx graph to define connections of the computational graph
             metadata (dict): dictionary to define the shapes and properties of the brick
             control_nodes (dict): dictionary of lists of auxillary networkx nodes.
+
                 Expected keys:
                     'complete' - A list of neurons that fire when the brick is done
+
             input_lists (list): list of nodes that will contain input
             input_coding (list): list of input coding formats.  All coding types supported
 

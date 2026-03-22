@@ -49,8 +49,10 @@ class Dot(Brick):
             graph (any): networkx graph to define connections of the computational graph
             metadata (dict): dictionary to define the shapes and parameters of the brick
             control_nodes (list): list of dictionary of auxillary nodes.
-                Expected keys:
+
+                Expected keys: 
                     'complete' - A list of neurons that fire when the brick is done
+
             input_lists (list): list of nodes that will contain input
             input_coding (list): list of input coding formats.  ('Raster', 'Undefined' supported)
 
@@ -144,8 +146,10 @@ class Copy(Brick):
             graph: networkx graph to define connections of the computational graph
             metadata (dict): dictionary to define the shapes and parameters of the brick
             control_nodes (list): list of dictionaries of auxillary nodes.
-                Expected keys:
+
+                Expected keys: 
                     'complete' - A list of neurons that fire when the brick is done
+
             input_lists (list): list of nodes that will contain input
             input_coding (list): list of input coding formats
 
@@ -238,8 +242,10 @@ class Concatenate(Brick):
             graph: networkx graph to define connections of the computational graph
             metadata (dict): dictionary to define the shapes and parameters of the brick
             control_nodes (list): dictionary of lists of auxillary networkx nodes.
-                Expected keys:
+
+                Expected keys: 
                     'complete' - A list of neurons that fire when the brick is done
+
             input_lists (list): list of nodes that will contain input
             input_coding (list): list of input coding formats.  All codings are allowed except 'current'.
 
@@ -438,8 +444,10 @@ class ParityCheck(Brick):
             graph: networkx graph to define connections of the computational graph
             metadata (dict): dictionary to define the shapes and parameters of the brick
             control_nodes (list): dictionary of lists of auxillary networkx nodes.
-                Expected keys:
+
+                Expected keys: 
                     'complete' - A list of neurons that fire when the brick is done
+
             input_lists (list): list of nodes that will contain input
             input_coding (list): list of input coding formats
         Returns:
@@ -700,9 +708,11 @@ class TemporalAdder(Brick):
             graph: networkx graph to define connections of the computational graph
             metadata: dictionary to define the shapes and parameters of the brick
             control_nodes: dictionary of lists of auxillary networkx nodes.
+
                 Expected keys:
                     'complete' - A list of neurons that fire when the brick is done
                     'begin' - A neurons that first when the brick begins processing (for temporal coded inputs)
+
             input_lists: list of nodes that will contain input
             input_coding: list of input coding formats.  All coding types supported
 

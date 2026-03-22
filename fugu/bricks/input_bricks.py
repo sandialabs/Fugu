@@ -49,16 +49,19 @@ class InputSource:
         Abstract method that tells the scaffold how it should connect the source to the circuit.
         This is accomplished by using a "source" dictionary argument when you create neurons/synapses.
         The "source" dictionary will contain whatever information the backends will need.
+
         Args:
             graph: networkx graph to define connections of the computational graph
+
                 * If the graph has edge weights, this brick will solve the single source shortest paths problem
             metadata (dict): dictionary to define the shapes and parameters of the brick
 
         Example 1:
             Suppose the source was a motion detector (connected to hardware by a usb).
             Everytime there is movement detected, we want a specific neuron to fire.
-            Then connect might look something like:
-                connect():
+            Then connect might look something like::
+
+                def connect():
                     scaffold.graph.add_node(
                                      "Sensor",
                                      threshold=1.0,
@@ -80,8 +83,9 @@ class InputSource:
         Example 2:
             Suppose the source was a network port receiving TCP packets
             We want to fire specific neurons based on which flag bits are set
-            Then connect might look something like:
-                connect():
+            Then connect might look something like::
+
+                def connect():
                     scaffold.graph.add_node(
                                      "TCPPortA",
                                      threshold=1.0,
@@ -136,6 +140,7 @@ class InputSource:
                                      weight=1.0,
                                      delay=1,
                                      )
+
         """
         pass
 
@@ -144,6 +149,7 @@ class Vector_Input(InputBrick):
     """
     Class to handle a vector of spiking input. Inherits from InputBrick
     Construtor for this brick.
+
         Args:
             spikes (array): A numpy array of which neurons should spike at which times
             time_dimension: Time dimesion is included as dimension -1

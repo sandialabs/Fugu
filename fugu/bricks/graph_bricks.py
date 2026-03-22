@@ -9,13 +9,16 @@ from .register_bricks import Register, Max
 
 class SimpleGraphTraversal(Brick):
     """
+
     * This brick traverses a graph (using breadth first search) given a starting vertex.
     * This brick can also be used to solve single source shortest path using edge delays.
     * Predecessor/parent information is returned through edge references.
+
     Args:
         target_graph: NetworkX.Digraph object representing the graph to be searched
         target_node: Node in the graph that is the target of the paths
         name: Name of the brick.
+
             * If not specified, a default will be used. Name should be unique.
         output_coding: Output coding type, default is 'temporal-L'
     """
@@ -46,11 +49,14 @@ class SimpleGraphTraversal(Brick):
 
         Args:
             graph: networkx graph to define connections of the computational graph
+
                 * If the graph has edge weights, this brick will solve the single source shortest paths problem
             metadata (dict): dictionary to define the shapes and parameters of the brick
             control_nodes (dict): dictionary of lists of auxillary networkx nodes.
+
                 Expected keys:
                     'complete' - A list of neurons that fire when the brick is done
+
             input_lists (list): list of nodes that will contain input
             input_coding (list): list of input coding formats.  All coding types supported
 
@@ -218,12 +224,13 @@ class RegisterGraphTraversal(CompoundBrick):
     ):
         """
         Construtor for this brick.
-        Arguments:
-            + target_graph - NetworkX.Digraph object representing the graph to be searched
-            + target_node - Node in the graph that is the target of the paths
-            + name - Name of the brick.
+
+        Args:
+            target_graph: - NetworkX.Digraph object representing the graph to be searched
+            target_node: - Node in the graph that is the target of the paths
+            name: Name of the brick.
                 If not specified, a default will be used. Name should be unique.
-            + output_coding - Output coding type, default is 'temporal-L'
+            output_coding: Output coding type, default is 'temporal-L'
         """
         super(RegisterGraphTraversal, self).__init__(name)
         self.is_built = False

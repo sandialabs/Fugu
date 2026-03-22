@@ -32,8 +32,10 @@ class Delay(Brick):
             graph ({add_node, add_edge}): networkx graph to define connections of the computational graph
             metadata (dict): dictionary to define the shapes and parameters of the brick
             control_nodes (list): list of dictionary of auxillary nodes.
+
                 Expected keys:
                     'complete' - A list of neurons that fire when the brick is done
+
             input_lists (list): list of nodes that will contain input
             input_coding (list): list of input coding formats.  ('Raster', 'Undefined' supported)
 
@@ -134,8 +136,10 @@ class NeuronChain(Brick):
             graph ({add_node, add_edge}): networkx graph to define connections of the computational graph
             metadata (dict): dictionary to define the shapes and parameters of the brick
             control_nodes (list): list of dictionary of auxillary nodes.
+
                 Expected keys:
                     'complete' - A list of neurons that fire when the brick is done
+
             input_lists (list): list of nodes that will contain input
             input_coding (list): list of input coding formats.  ('Raster', 'Undefined' supported)
 
@@ -228,8 +232,10 @@ class InstantDecay(Brick):
             graph ({add_node, add_edge}): networkx graph to define connections of the computational graph
             metadata (dict): dictionary to define the shapes and parameters of the brick
             control_nodes (list): list of dictionary of auxillary nodes.
+
                 Expected keys:
                     'complete' - A list of neurons that fire when the brick is done
+
             input_lists (list): list of nodes that will contain input
             input_coding (list): list of input coding formats.  ('Raster', 'Undefined' supported)
 
@@ -330,12 +336,15 @@ class SynapseProperties(Brick):
               input_codings):
         """
         Build Dot brick.
+
         Args:
             graph: networkx graph to define connections of the computational graph
             metadata (dict): dictionary to define the shapes and parameters of the brick
             control_nodes (list): list of dictionary of auxillary nodes.
-                Expected keys:
+
+                Expected keys: 
                     'complete' - A list of neurons that fire when the brick is done
+
             input_lists (list): list of nodes that will contain input
             input_coding (list): list of input coding formats.  ('Raster', 'Undefined' supported)
 
@@ -427,8 +436,10 @@ class SumOfMaxes(CompoundBrick):
             graph: networkx graph to define connections of the computational graph
             metadata (dict): dictionary to define the shapes and parameters of the brick
             control_nodes (list): list of dictionary of auxillary nodes.
+
                 Expected keys:
                     'complete' - A list of neurons that fire when the brick is done
+
             input_lists (list): list of nodes that will contain input
             input_coding (list): list of input coding formats.  ('Raster', 'Undefined' supported)
 

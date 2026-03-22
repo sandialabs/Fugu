@@ -9,6 +9,7 @@ This brick implements the preprocessing and mapping described in the
 It accepts a weighted directed graph (adjacency list or adjacency matrix)
 and converts it into a Loihi-compatible neuron/synapse representation where
 every directed edge (i -> j) is mapped to:
+
     - a forward synapse i -> j with weight=1 and delay=1 (readout)
     - a backward synapse j -> i with weight=1 and delay=c_{i,j}
 
@@ -28,7 +29,8 @@ from fugu.scaffold.port import ChannelSpec, PortSpec, PortUtil
 import networkx as nx
 
 class LoihiGSBrick(Brick):
-    """Brick that converts a weighted directed graph into a Loihi graph-search SNN.
+    """
+    Brick that converts a weighted directed graph into a Loihi graph-search SNN.
 
     Parameters
     ----------
@@ -41,6 +43,7 @@ class LoihiGSBrick(Brick):
         Brick name used to generate neuron names.
     require_integer_costs : bool
         If True, raise on non-integer costs. If False, costs are rounded.
+
     The input graph is required to be (weakly) connected; this is validated
     on construction/build.
     """
