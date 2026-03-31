@@ -27,7 +27,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install -e .[whetstone,dev,examples,snntorch, docs]
+          pip install -e .[whetstone,dev,examples,snntorch,docs]
 
       - name: Build Sphinx Docs
         run: |
